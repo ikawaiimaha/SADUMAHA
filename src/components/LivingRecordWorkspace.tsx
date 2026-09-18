@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowRight, Check, LockKeyhole, RotateCcw, X } from 'lucide-react';
+import { ArrowRight, Check, LoaderCircle, LockKeyhole, RotateCcw, X } from 'lucide-react';
 import { useI18n } from '../context/I18nContext';
 import { useWorkspace } from '../context/WorkspaceContext';
 import { useLivingRecord } from '../context/LivingRecordContext';
@@ -35,6 +35,7 @@ export function LivingRecordWorkspace() {
   const [modal, setModal] = useState<'handover' | 'report' | 'finance' | 'reset' | null>(null);
   const [reviewVersion, setReviewVersion] = useState(0);
   const [acknowledged, setAcknowledged] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
   const [crateId, setCrateId] = useState('');
   const [sealMatches, setSealMatches] = useState(false);
   const [conditionOutcome, setConditionOutcome] = useState<'clear' | 'issue'>('clear');
@@ -47,12 +48,13 @@ export function LivingRecordWorkspace() {
   const roleLabel = (role: DemoActor | null) => role ? (isAr ? roles.find(item => item.actor === role)?.ar : roles.find(item => item.actor === role)?.en) ?? t('Observer', 'مراقب') : t('Handover complete', 'اكتمل التسليم');
   const time = (value: string) => new Date(value).toLocaleString(isAr ? 'ar-AE-u-nu-arab' : 'en-GB', { dateStyle: 'medium', timeStyle: 'medium', timeZone: 'Asia/Dubai' });
   const envelope = () => ({ actor, at: new Date().toISOString() });
+  const closeDossier = () => { setIsConfirming(false); setModal(null); };
   const go = (target: DemoActor) => {
     const role = roles.find(item => item.actor === target);
     if (!role) return;
     if (target === 'CHAIRMAN' || target === 'DIRECTORATE') setLeadershipView(target);
     switchRole(role.role);
-    setModal(null);
+    closeDossier();
   };
   const openReview = () => { setReviewVersion(state.condition?.version ?? 0); setAcknowledged(false); setModal('handover'); };
   useEffect(() => {
@@ -64,6 +66,20 @@ export function LivingRecordWorkspace() {
   const conditionLink = <button className="lr-link" onClick={() => setModal('report')}>{t('View condition report', 'عرض تقرير الحالة')} <bdi>DEMO-CR-04 / v{state.condition?.version ?? 1}</bdi></button>;
   const status = state.acceptance ? t('Handover acknowledged', 'تم تأكيد التسليم') : state.receiptIssue ? t('Stopped: identity / seal mismatch', 'متوقف: عدم تطابق الهوية أو الختم') : !state.receipt ? t('Expected at loading bay', 'متوقع في منطقة الاستلام') : !state.condition ? t('On site · inspection required', 'في الموقع · بانتظار الفحص') : state.condition.outcome === 'issue' ? t('Condition exception · on hold', 'استثناء في الحالة · معلق') : t('Evidence ready · review required', 'الأدلة جاهزة · بانتظار المراجعة');
   const canReview = !state.acceptance && state.condition?.outcome === 'clear' && Boolean(state.receipt) && !state.receiptIssue;
+  useEffect(() => {
+    if (!isConfirming) return;
+    if (modal !== 'handover' || actor !== 'DIRECTORATE' || !canReview || !acknowledged || reviewVersion !== state.condition?.version) {
+      setIsConfirming(false);
+      return;
+    }
+    // A visible demo pause, not credential verification or a signing service.
+    const timer = window.setTimeout(() => {
+      dispatch({ type: 'ACCEPT', actor, at: new Date().toISOString(), reportVersion: reviewVersion, acknowledged });
+      setIsConfirming(false);
+      setModal(null);
+    }, 900);
+    return () => window.clearTimeout(timer);
+  }, [isConfirming, modal, actor, canReview, acknowledged, reviewVersion, state.condition?.version, dispatch]);
   const newEvent = state.events.at(-1);
   const leadership = actor === 'CHAIRMAN' || actor === 'DIRECTORATE';
   return <div className="living-record" lang={lang} dir={isAr ? 'rtl' : 'ltr'}>
@@ -139,15 +155,27 @@ export function LivingRecordWorkspace() {
       <footer className="lr-bottom"><span>{t('Proposed workflow · institutional delegation requires validation', 'مسار عمل مقترح · يلزم التحقق من التفويض المؤسسي')}</span><div><button onClick={() => setModal('reset')}><RotateCcw/>{t('Reset demo', 'إعادة التجربة')}</button><button onClick={() => setSelectedProgramme(PROGRAMMES[0])}>{t('Other sample workspaces', 'مساحات العمل التجريبية الأخرى')}</button></div></footer>
     </main>
 
-    <dialog ref={dialogRef} className="lr-dialog" aria-labelledby="lr-dialog-title" onCancel={() => setModal(null)} onClose={() => setModal(null)}>
-      <div className="lr-dialog-top"><p className="lr-eyebrow">{t('DEMONSTRATION DOSSIER', 'ملف تجريبي')}</p><button autoFocus onClick={() => setModal(null)} aria-label={t('Close dossier', 'إغلاق الملف')}><X/></button></div>
+    <dialog ref={dialogRef} className="lr-dialog" aria-labelledby="lr-dialog-title" onCancel={closeDossier} onClose={closeDossier}>
+      <div className="lr-dialog-top"><p className="lr-eyebrow">{t('DEMONSTRATION DOSSIER', 'ملف تجريبي')}</p><button autoFocus onClick={closeDossier} aria-label={t('Close dossier', 'إغلاق الملف')}><X/></button></div>
       <h2 id="lr-dialog-title">{modal === 'reset' ? t('Reset this demonstration?', 'إعادة هذه التجربة؟') : modal === 'finance' ? t('Finance exception · review pack', 'استثناء مالي · ملف مراجعة') : modal === 'report' ? t('Sample condition report', 'تقرير حالة تجريبي') : t('Review Handover', 'مراجعة التسليم')}</h2>
       {modal === 'reset' ? <><p>{t('This clears only the fictional actions recorded in this session.', 'يؤدي ذلك إلى مسح الإجراءات الافتراضية المسجلة في هذه الجلسة فقط.')}</p><div className="lr-actions"><button onClick={() => setModal(null)}>{t('Cancel', 'إلغاء')}</button><button className="lr-primary" onClick={() => { dispatch({ type: 'RESET' }); setCrateId(''); setSealMatches(false); setAcknowledged(false); setConditionOutcome('clear'); go('CHAIRMAN'); }}>{t('Reset fictional case', 'إعادة الحالة الافتراضية')}</button></div></>
       : modal === 'finance' ? <><p><bdi>DEMO-FIN-01 / v1</bdi></p><ul><li>{t('Scope: exhibition support package (sample)', 'النطاق: خدمات دعم المعرض (تجريبي)')}</li><li>{t('Budget comparison: exception identified (sample)', 'مقارنة الميزانية: استثناء محدد (تجريبي)')}</li><li>{t('Contract review reference: DEMO-LEGAL-01', 'مرجع مراجعة العقد: DEMO-LEGAL-01')}</li><li>{t('Delegated signatory and threshold: not established', 'صاحب تفويض التوقيع والحد المالي: غير محددين')}</li></ul><p className="lr-issue">{t('Review queue only. Signature and expenditure authorization are unavailable in this mockup.', 'قائمة مراجعة فقط. التوقيع وإجازة الإنفاق غير متاحين في النموذج.')}</p>{actor === 'DIRECTORATE' && state.finance === 'submitted' && <button className="lr-primary" onClick={() => { dispatch({ type: 'ESCALATE_FINANCE', ...envelope() }); setModal(null); }}>{t('Record review & escalate sample', 'تسجيل المراجعة ورفع الملف التجريبي')}</button>}</>
       : <><p><strong>{t('Mounir Fatmi · Crate 4', 'منير فاطمي · الصندوق ٤')}</strong> · <bdi>{CASE_ID}</bdi></p>
         <div className="lr-dossier-evidence"><h3>{t('Condition evidence', 'أدلة الحالة')}</h3><p><bdi>DEMO-CR-04 / v{modal === 'handover' ? reviewVersion : state.condition?.version ?? 1}</bdi></p><p>{t('Recorded by sample Technical role', 'سُجل بواسطة دور الفريق الفني التجريبي')} <bdi>DEMO-TECHNICAL</bdi></p>{state.condition && <p>{time(state.condition.at)}</p>}<p>{state.condition?.outcome === 'issue' ? t('Sample observation: a condition discrepancy requires specialist review.', 'ملاحظة تجريبية: اختلاف في الحالة يتطلب مراجعة مختصة.') : t('Sample observation: identity reconciled; no discrepancy reported in the prepared example.', 'ملاحظة تجريبية: طُوبقت الهوية؛ لم يُسجل اختلاف في المثال المعد.')}</p><a href="/demo/condition-report.html" target="_blank" rel="noreferrer">{t('Open bilingual sample report ↗', 'فتح التقرير التجريبي ثنائي اللغة ↖')}</a><p className="lr-small">{t('Illustrative text only. No real condition photographs or inspection are represented.', 'نص توضيحي فقط. لا يمثل صور حالة أو فحصاً حقيقياً.')}</p></div>
         {modal === 'report' && state.conditionHistory.length > 1 && <details className="lr-report-history"><summary>{t('Earlier report versions', 'إصدارات التقرير السابقة')}</summary><ul>{state.conditionHistory.slice(0, -1).map(report => <li key={report.version}><bdi>{report.id}/v{report.version}</bdi> · {report.outcome === 'issue' ? t('Condition exception', 'استثناء في الحالة') : t('No discrepancy reported', 'لا اختلاف مسجل')} · {time(report.at)}</li>)}</ul></details>}
-        {modal === 'handover' && <><label className="lr-checkbox lr-declaration"><input type="checkbox" checked={acknowledged} onChange={event => setAcknowledged(event.target.checked)}/>{t('I have reviewed this sample report and acknowledge the proposed handover for demonstration purposes. This records no legal custody or digital signature.', 'راجعت هذا التقرير التجريبي وأؤكد التسليم المقترح لأغراض العرض. لا يسجل ذلك حيازة قانونية أو توقيعاً رقمياً.')}</label><p className="lr-small">{t('Recorded as DEMO-DIRECTORATE · declaration DEMO-ACK-1 · browser time. No action is attributed to Mr. Al Qaseer.', 'يُسجل باسم DEMO-DIRECTORATE · الإقرار DEMO-ACK-1 · توقيت المتصفح. لا يُنسب أي إجراء إلى الأستاذ القصير.')}</p><div className="lr-actions"><button onClick={() => setModal(null)}>{t('Cancel', 'إلغاء')}</button><button className="lr-primary" disabled={!acknowledged || actor !== 'DIRECTORATE' || !canReview || reviewVersion !== state.condition?.version} onClick={() => { dispatch({ type: 'ACCEPT', ...envelope(), reportVersion: reviewVersion, acknowledged }); setModal(null); }}>{t('Confirm demo handover', 'تأكيد التسليم التجريبي')}</button></div></>}
+        {modal === 'handover' && <>
+          <p className="lr-signing-label">{t('Simulated signature · demo only', 'محاكاة التوقيع · للعرض التجريبي فقط')}</p>
+          <label className="lr-checkbox lr-declaration"><input type="checkbox" checked={acknowledged} disabled={isConfirming} onChange={event => setAcknowledged(event.target.checked)}/>{t('I have reviewed this sample report and acknowledge the proposed handover for demonstration purposes. This records no legal custody or digital signature.', 'راجعت هذا التقرير التجريبي وأؤكد التسليم المقترح لأغراض العرض. لا يسجل ذلك حيازة قانونية أو توقيعاً رقمياً.')}</label>
+          <p className="lr-small">{t('Recorded as DEMO-DIRECTORATE · declaration DEMO-ACK-1 · browser time. No action is attributed to Mr. Al Qaseer.', 'يُسجل باسم DEMO-DIRECTORATE · الإقرار DEMO-ACK-1 · توقيت المتصفح. لا يُنسب أي إجراء إلى الأستاذ القصير.')}</p>
+          <div className="lr-actions">
+            <button onClick={closeDossier}>{t('Cancel', 'إلغاء')}</button>
+            <button className="lr-primary lr-sign-action" aria-busy={isConfirming} disabled={isConfirming || !acknowledged || actor !== 'DIRECTORATE' || !canReview || reviewVersion !== state.condition?.version} onClick={() => setIsConfirming(true)}>
+              {isConfirming && <LoaderCircle className="lr-progress-icon" aria-hidden="true"/>}
+              {isConfirming ? t('Recording demo acknowledgement…', 'جارٍ تسجيل الإقرار التجريبي…') : t('Sign & Accept Custody (Demo)', 'التوقيع وقبول الحيازة (تجريبي)')}
+            </button>
+          </div>
+          <p className="lr-signing-status lr-small" role="status">{isConfirming ? t('Recording in this session. Cancel stops confirmation.', 'جارٍ التسجيل في هذه الجلسة. الإلغاء يوقف التأكيد.') : ''}</p>
+        </>}
       </>}
     </dialog>
   </div>;

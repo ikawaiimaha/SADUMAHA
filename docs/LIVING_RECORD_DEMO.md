@@ -21,7 +21,7 @@ The full English and Arabic copy is in `src/data/storyChapters.ts`. All chapters
 1. Enter the platform from the presentation. Chairman starts at **3 / 4** sample programmes ready, **60%** required case evidence present, and **0** executive reviews.
 2. Open **Review delivery exception**, then **Open responsible workspace**. In Logistics, enter `DEMO-MF-04` and check the exterior/seal acknowledgement. Record arrival. Evidence completeness becomes **80%**; readiness remains **3 / 4**.
 3. Open Technical and attach the prepared sample condition report. Evidence completeness becomes **100%**, while readiness remains **3 / 4**. Selecting a condition exception blocks handover review.
-4. Open Directorate and **Review Handover**. Inspect the dossier and report reference. Check the explicit demo acknowledgement, then **Confirm demo handover**. The row becomes read-only, with sample actor `DEMO-DIRECTORATE`, browser timestamp, report version, and declaration reference `DEMO-ACK-1`.
+4. Open Directorate and **Review Handover**. Inspect the dossier and report reference. Check the explicit demo acknowledgement, then **Sign & Accept Custody (Demo)**. The simulated signing step shows **Recording demo acknowledgement…** before recording acceptance. Cancel, Escape, closing the dossier, or leaving the workspace during this pause cancels confirmation. The row becomes read-only, with sample actor `DEMO-DIRECTORATE`, browser timestamp, report version, and declaration reference `DEMO-ACK-1`.
 5. Return to Chairman. Readiness is **4 / 4**, calculated from the shared case. This is operational readiness, not opening authorization.
 6. In Coordination, flag the artist statement as missing. Evidence completeness falls to **80%**. Directorate assigns follow-up, after which Coordination can restore the sample statement and return it to **100%**.
 7. In Finance, submit the sample pack. It stays out of the executive queue until Directorate reviews and escalates it. Chairman then shows **1** executive review, with delegation validation still required. No sign or payment action exists.
@@ -36,6 +36,7 @@ The full English and Arabic copy is in `src/data/storyChapters.ts`. All chapters
 - Earlier condition outcomes and versions remain available in the session report history. Accepted reports cannot be replaced through the demonstration controls.
 - State exists only in memory. The history is not durable, authenticated, signed, or protected from client modification. Role selection is for demonstration and is not authorization.
 - All actions are attributed to sample role IDs, never to the officials pictured. No credentials, UAE Pass integration, PIN, digital seal, or signature verification are simulated.
+- The signing control is explicitly labelled as a simulation. Its short progress state records only the demo acknowledgement; it does not verify credentials, create a digital signature, or establish legal custody. Cancellation stops the pending action, and repeated activation cannot record duplicate acceptance.
 - The report link is a bilingual demonstration template. It contains no real inspection photos, signatures, private contact information, bank details, or original operational attachments.
 
 ## Source reconciliation — 18 September 2026
