@@ -1,5 +1,12 @@
 # Audit repair package — 18 September 2026
 
+## Presentation media repair
+
+- Restored three portrait chapters in the active `src/components/StoryMode.tsx`. Their earlier versions were only present in an inactive root-level file in the input ZIP.
+- Reused the three images already committed under `public/`, with root-relative URLs. The live image URLs returned HTTP 200 before the fix; missing storage was not the cause.
+- Updated navigation to accommodate nine chapters, added bilingual chapter labels and portrait alternative text, and allowed long names to wrap without overlapping the body.
+- Marked the new slide copy as a proposed SADU experience, without attributing statements, approvals, or endorsements to the people shown.
+
 ## Included changes
 
 - Initialized the selected sample programme to prevent blank-screen startup.

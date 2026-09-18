@@ -54,6 +54,45 @@ export const StoryMode: React.FC<StoryModeProps> = ({
       highlightBoxAr: 'الهدف الأساسي: حفظ الذاكرة المؤسسية للدائرة بذات الدقة والاهتمام الذي تُدار به مبادراتها الدبلوماسية الثقافية.'
     },
     {
+      id: 'leadership-visionary',
+      icon: BookOpen,
+      titleEn: 'Culture and Institutional Memory',
+      titleAr: 'الثقافة والذاكرة المؤسسية',
+      subtitleEn: 'H.H. Sheikh Dr. Sultan bin Muhammad Al Qasimi',
+      subtitleAr: 'صاحب السمو الشيخ الدكتور سلطان بن محمد القاسمي',
+      imagePath: '/sultan_portrait.jpg',
+      contentEn: 'The proposed SADU experience connects cultural programmes with the people, decisions, and evidence behind them. Artist statements, sources, and programme outcomes remain understandable to the next employee and useful to future research.',
+      contentAr: 'يربط تصور سدو المقترح البرامج الثقافية بالأشخاص والقرارات والأدلة المرتبطة بها. وتبقى بيانات الفنانين ومصادر المعلومات ونتائج البرامج مفهومة للموظف التالي وقابلة للاستفادة منها في البحث مستقبلاً.',
+      highlightBoxEn: 'Design objective: preserve the context of cultural work as it happens.',
+      highlightBoxAr: 'الهدف التصميمي: حفظ سياق العمل الثقافي أثناء إنجازه.'
+    },
+    {
+      id: 'leadership-governance',
+      icon: Building2,
+      titleEn: 'Accountability and Clear Decisions',
+      titleAr: 'المساءلة ووضوح القرارات',
+      subtitleEn: 'H.E. Abdullah bin Mohammed Al Owais',
+      subtitleAr: 'سعادة عبد الله بن محمد العويس',
+      imagePath: '/owais_portrait.jpg',
+      contentEn: 'The proposed leadership view brings readiness, commitments, missing evidence, and pending decisions into one brief. A recorded action should show its responsible role and supporting evidence; formal approval still depends on documented institutional delegation.',
+      contentAr: 'يجمع عرض القيادة المقترح الجاهزية والالتزامات والأدلة الناقصة والقرارات المعلقة في ملخص واحد. وينبغي أن يوضح كل إجراء مسجل الدور المسؤول والأدلة الداعمة له؛ ويظل الاعتماد الرسمي مرهوناً بتفويض مؤسسي موثق.',
+      highlightBoxEn: 'Design objective: make the decision, its evidence, and the next action clear.',
+      highlightBoxAr: 'الهدف التصميمي: توضيح القرار وأدلته والإجراء التالي.'
+    },
+    {
+      id: 'leadership-operational',
+      icon: GitBranch,
+      titleEn: 'Programme Delivery and Handover',
+      titleAr: 'تنفيذ البرامج وتسليم المسؤوليات',
+      subtitleEn: 'Mohammed Ibrahim Al Qaseer',
+      subtitleAr: 'محمد إبراهيم القصير',
+      imagePath: '/qaseer_portrait.jpg',
+      contentEn: 'The proposed delivery view connects exhibition plans with coordinator, technical, and logistics tasks. It makes blockers, dependencies, and the next responsible role visible so a newly assigned employee can continue from a clear handover.',
+      contentAr: 'يربط عرض التنفيذ المقترح خطط المعارض بمهام التنسيق والعمل الفني واللوجستيات. ويوضح المعوقات والاعتماد المتبادل بين المهام والدور المسؤول التالي، ليتمكن الموظف المكلف حديثاً من متابعة العمل انطلاقاً من تسليم واضح.',
+      highlightBoxEn: 'Design objective: show what is ready, what is blocked, and who acts next.',
+      highlightBoxAr: 'الهدف التصميمي: إظهار الجاهز والمتعطل ومن يتولى الإجراء التالي.'
+    },
+    {
       id: 'coordination',
       icon: GitBranch,
       titleEn: 'The Administrative Challenge',
@@ -172,8 +211,8 @@ export const StoryMode: React.FC<StoryModeProps> = ({
             </span>
             <span>{isAr ? 'عرض تعريفي تفاعلي' : 'Guided Institutional Story'}</span>
           </div>
-          <div className="grid grid-cols-6 gap-1.5 h-1.5 w-full bg-sadu-sand/80 rounded-full overflow-hidden">
-            {chapters.map((_, idx) => (
+          <div className="grid gap-1.5 h-1.5 w-full bg-sadu-sand/80 rounded-full overflow-hidden" style={{ gridTemplateColumns: `repeat(${chapters.length}, minmax(0, 1fr))` }}>
+            {chapters.map((chapter, idx) => (
               <button
                 key={idx}
                 onClick={() => {
@@ -183,7 +222,9 @@ export const StoryMode: React.FC<StoryModeProps> = ({
                 className={`h-full transition-all cursor-pointer ${
                   idx === currentChapter ? 'bg-sadu-brick' : idx < currentChapter ? 'bg-sadu-ink' : 'bg-transparent hover:bg-sadu-gold'
                 }`}
-                title={`Chapter ${idx + 1}`}
+                title={isAr ? `الفصل ${formatNumber(idx + 1)}: ${chapter.titleAr}` : `Chapter ${idx + 1}: ${chapter.titleEn}`}
+                aria-label={isAr ? `الفصل ${formatNumber(idx + 1)}: ${chapter.titleAr}` : `Chapter ${idx + 1}: ${chapter.titleEn}`}
+                aria-current={idx === currentChapter ? 'step' : undefined}
               />
             ))}
           </div>
@@ -191,7 +232,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
 
         <div className="bg-sadu-linen border border-sadu-gold rounded-lg p-6 sm:p-8 shadow-xs w-full min-h-[750px] md:min-h-[600px] md:h-[650px] lg:h-[600px] flex flex-col overflow-hidden">
           
-          <div className="flex items-start gap-4 h-[100px] shrink-0 mb-4 pb-3 border-b border-sadu-gold/30">
+          <div className="flex items-start gap-4 min-h-[100px] shrink-0 mb-4 pb-3 border-b border-sadu-gold/30">
             <div className="p-3 rounded-md bg-sadu-sand text-sadu-brick border border-sadu-gold/50 shrink-0">
               <current.icon className="w-7 h-7 sm:w-8 sm:h-8" />
             </div>
@@ -202,7 +243,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
               <h1 className="text-lg sm:text-xl md:text-2xl font-editorial font-bold text-sadu-charcoal mt-1.5 leading-snug line-clamp-2">
                 {isAr ? current.titleAr : current.titleEn}
               </h1>
-              <p className="text-xs sm:text-sm text-sadu-brick font-medium mt-1.5 truncate">
+              <p className="text-xs sm:text-sm text-sadu-brick font-medium mt-1.5">
                 {isAr ? current.subtitleAr : current.subtitleEn}
               </p>
             </div>
@@ -218,12 +259,28 @@ export const StoryMode: React.FC<StoryModeProps> = ({
                   
                   <div className="mt-4 mb-2 p-4 rounded-md bg-sadu-sand border-l-4 rtl:border-l-0 rtl:border-r-4 border-sadu-brick text-xs sm:text-sm text-sadu-charcoal shadow-2xs shrink-0">
                     <span className="font-semibold block text-sadu-brick mb-1">
-                      {isAr ? 'الأصل المؤسسي المعتمد:' : 'Institutional Canon:'}
+                      {current.imagePath
+                        ? (isAr ? 'تصور مقترح لسدو:' : 'Proposed SADU experience:')
+                        : (isAr ? 'الأصل المؤسسي المعتمد:' : 'Institutional Canon:')}
                     </span>
                     {isAr ? current.highlightBoxAr : current.highlightBoxEn}
                   </div>
                 </div>
 
+                {current.imagePath ? (
+                  <figure className="flex flex-col min-h-0 rounded-lg border border-sadu-gold overflow-hidden bg-sadu-sand">
+                    <img
+                      src={current.imagePath}
+                      alt={isAr ? current.subtitleAr : current.subtitleEn}
+                      className="w-full h-72 md:h-64 lg:h-72 object-contain"
+                    />
+                    <figcaption className="p-3 border-t border-sadu-gold text-xs text-sadu-muted leading-relaxed">
+                      {isAr
+                        ? 'محتوى عرض مقترح لسدو، وليس تصريحاً أو تأييداً من الشخصية الظاهرة.'
+                        : 'Proposed SADU presentation content; not a statement or endorsement by the person shown.'}
+                    </figcaption>
+                  </figure>
+                ) : (
                 <div className="relative w-full h-64 md:h-full rounded-lg overflow-hidden border border-sadu-gold shadow-xs group bg-[#F2EDE4] shrink-0">
                   <div className="absolute -top-20 -right-20 w-80 h-80 border-[40px] border-sadu-brick/10 rounded-full transition-transform duration-1000 group-hover:scale-110" />
                   <div className="absolute -bottom-24 -left-24 w-[400px] h-[400px] border-[60px] border-sadu-ink/5 rounded-full transition-transform duration-1000 group-hover:scale-105" />
@@ -244,6 +301,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
                     </p>
                   </div>
                 </div>
+                )}
               </div>
             ) : (
               <div className="grid md:grid-cols-3 gap-6 h-full items-stretch">
