@@ -1,38 +1,72 @@
-# SADUVISION — audited demonstration copy
+# SADUVISION — repaired bilingual demonstration
 
-Reviewed on 18 September 2026 from `SADUVISION-main (5).zip`.
+Complete runnable source prepared for GitHub on 18 September 2026, based on the audited `SADUVISION-main (5).zip`.
 
-This is a browser-only React/Vite prototype with sample data. It has no real authentication, server-side authorization, database, payments, messaging, electronic signatures, or encrypted vault. Role switching demonstrates views; it does not grant institutional authority. Most operational changes reset when their component unmounts or the page reloads.
+This package includes the tested audit fixes. The proposed shared custody-handover record and global programme filtering have **not** been implemented yet.
 
-## Run locally
+## Run and build
 
-Use a current Node.js version compatible with Vite 6 and the committed npm lockfile:
+Tested with Node.js 24.16.0 and npm. Use the included npm lockfile.
 
-```text
+```sh
 npm ci --ignore-scripts
 npm run dev
 ```
 
-Open the local address printed by Vite. The default development server binds to `127.0.0.1`.
+Open the localhost address printed by Vite.
 
-```text
+```sh
 npm run lint
 npm run build
 npm run preview -- --host 127.0.0.1
 ```
 
-`lint` currently means TypeScript checking; there is no ESLint configuration. Build now runs the type check before bundling. No Gemini key or `.env` file is required for the current mockup. Do not enter real banking, identity, or confidential institutional information.
+`lint` runs TypeScript checking. `build` runs that check and then produces the Vite application in `dist/`. No API key or environment file is required for this demonstration.
 
-## Which code runs?
+## Upload to GitHub
 
-`index.html` loads `src/main.tsx`, which loads `src/App.tsx`. Edit the `src/` tree. Similar files at the repository root are inactive legacy copies retained from the supplied archive. TypeScript and the `@` alias now target the active tree. Do not run the legacy `patch*.cjs` scripts as setup steps.
+1. Extract the ZIP.
+2. Open the `SADUVISION` folder.
+3. Put its **contents** at your repository root. `package.json`, `index.html`, `vite.config.ts`, `src/`, and `public/` must be at the same level.
+4. Include `.gitignore` and `package-lock.json`.
+5. Do not upload `node_modules/`, `dist/`, local environment files, or Vercel credentials.
 
-Use `package-lock.json` with npm for this repaired copy. The original `bun.lock` remains as input provenance and does not include the added React type packages; it was not used to validate this repair.
+The standalone ZIP contains the complete active application, assets, and build configuration. It excludes inactive duplicate root components, old repair scripts, the stale Bun lock, and generated builds. This repository retains those previously uploaded legacy files and `dist/`; they have not been removed by this update. Edit `src/`, do not run the legacy repair scripts, and generate a fresh build for deployment. The `.gitignore` prevents new generated files from being added but does not untrack existing files. Use npm with `package-lock.json` and set the build service's install command to `npm ci --ignore-scripts` so it does not select the old `bun.lock`.
 
-## Reports
+## Structure
 
-ASCII reports use the existing vector PDF renderer. Arabic and mixed-script reports open the report view; choose **Print / Save PDF** and the browser's PDF destination. This preserves browser font shaping and all report rows. External Google Fonts still require connectivity on an uncached first load. Sample reports and quotation previews are not approved institutional instruments.
+```text
+src/
+  main.tsx
+  App.tsx
+  components/
+  context/
+  data/
+  i18n/
+  utils/
+  index.css
+  types.ts
+public/
+index.html
+package.json
+package-lock.json
+tsconfig.json
+vite.config.ts
+```
 
-## Review package
+Edit `src/`: `index.html` loads `src/main.tsx`, which loads `src/App.tsx`.
 
-The accompanying `AUDIT.md` explains the architecture, defects fixed, remaining gaps, and test evidence. `changes.patch` records changes against the input ZIP, with banking-like literals redacted. Use the repaired source for builds. The live SADU application and the previously published Vercel mockup were not modified or published by this audit.
+## What is implemented
+
+- Arabic and English demonstration screens, introductory presentation, and selectable role views.
+- Repaired platform startup, KPI controls, navigation guards, RFQ default selection, and storage-failure handling.
+- Complete paginated vector report rows; Arabic and mixed-script reports use the browser's **Print / Save PDF** view.
+- Corrected sample banking, contract-preview, and report labels; a mobile RTL status wrapping fix.
+
+## Demonstration boundaries
+
+This is a browser-only prototype with sample data. It does not implement real sign-in, server authorization, durable case storage, encryption, messaging, signatures, or payments. Local workflow state may reset when changing views or reloading. Programme selection does not yet consistently filter all records. Role names and policy examples do not establish institutional authority.
+
+External Google Fonts require connectivity on an uncached first load. Arabic report export opens a printable view; choose the browser's PDF destination. Sample reports and RFQs are not approved institutional instruments.
+
+See `CHANGELOG.md` for the included fixes and verification summary. This repository update contains the repaired demonstration and its handoff documentation; it does not add a new deployment configuration or implement the proposed shared custody workflow.
