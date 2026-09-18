@@ -218,7 +218,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
                     { role: 'DIRECTORATE' as RoleKey, view: 'MANAGER' as const, labelEn: 'Exhibition manager · Delivery', labelAr: 'مدير المعارض · التنفيذ' },
                     { role: 'SDC_COORDINATOR' as RoleKey, labelEn: 'SDC Coordinator', labelAr: 'منسق عام المهرجانات (SDC)' },
                     { role: 'COMMITTEE' as RoleKey, labelEn: 'Curatorial Jury', labelAr: 'لجنة الاختيار والتحكيم' },
-                    { role: 'EDITORIAL' as RoleKey, labelEn: 'Editorial Bureau (Magazines)', labelAr: 'هيئة تحرير المجلات الثقافية' },
+                    { role: 'EDITORIAL' as RoleKey, labelEn: 'Publishing manager · Proof review', labelAr: 'مدير النشر · مراجعة البروفة' },
                     { role: 'SAF_TECHNICIAN' as RoleKey, labelEn: 'Technical Production', labelAr: 'فريق الإنتاج الفني' },
                     { role: 'SMA_VENUE_ADMIN' as RoleKey, labelEn: 'Venue Administration', labelAr: 'إدارة مواقع العرض' },
                     { role: 'PR_PROTOCOL' as RoleKey, labelEn: 'PR & Diplomacy', labelAr: 'المراسم والبروتوكول' },

@@ -1,4 +1,13 @@
-# Audit repair package — 18 September 2026
+# Audit repair package — 19 September 2026
+
+## SDC Chairman brief and publishing demonstration
+
+- Scoped the Chairman brief to SDC directorate readiness, seven monthly publication titles, and routed executive reviews. Unreported unit and issue status remains unknown.
+- Added a separate fictional publishing case: coordinator attaches a prepared proof, publishing manager checks and routes its version, Chairman records a demo release or return, and publishing manager separately records sample print dispatch.
+- Added version, role, evidence-check, and acknowledgement guards. A revised proof invalidates the current review and decision; prior events remain in session history. No digital signing or actual print dispatch is implied.
+- Removed three unexplained ready-programme seeds. An exhibition delivery only clears its own sample risk, not an entire festival or directorate.
+- Updated presentation chapters 2, 8, and 9 and added source reconciliation covering the official SDC structure, magazine catalogue, and refreshed Drive deliverables template.
+- Verified 16 workflow tests and TypeScript/production build; checked the connected publishing flow in the browser.
 
 ## Cultural Affairs portfolio
 

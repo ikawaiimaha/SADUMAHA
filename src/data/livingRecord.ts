@@ -1,5 +1,6 @@
 // Fictional, session-only demonstration. These guards are not server authorization.
 import type { ExhibitionProgramme } from '../types';
+import { createPublishingRecord, reducePublishingRecord, selectPublishingRecord, type PublishingRecord, type PublishingAction } from './publishingRecord';
 export const CASE_ID = 'DEMO-MF-04';
 export const DEMO_PROGRAMME_ID = 'living-record-demo';
 // Selector metadata only; live readiness is derived by selectLivingRecord below.
@@ -10,8 +11,8 @@ export const DEMO_PROGRAMME: ExhibitionProgramme = {
   budgetPlanned: 0, budgetCommitted: 0, budgetSpent: 0, currency: 'AED',
   progressPercent: 0, gatesReady: 0, gatesTotal: 3, criticalRisks: 0, unresolvedHandoffs: 1,
 };
-export type DemoActor = 'CHAIRMAN' | 'DIRECTORATE' | 'MANAGER' | 'LOGISTICS' | 'TECHNICAL' | 'COORDINATOR' | 'FINANCE' | 'OBSERVER';
-export type EventKind = 'receipt' | 'receipt-issue' | 'condition' | 'handover' | 'statement-missing' | 'statement-task' | 'statement-restored' | 'finance-pack' | 'finance-escalated' | 'delivery-escalated';
+export type DemoActor = 'CHAIRMAN' | 'DIRECTORATE' | 'MANAGER' | 'LOGISTICS' | 'TECHNICAL' | 'COORDINATOR' | 'FINANCE' | 'PUBLISHING_MANAGER' | 'OBSERVER';
+export type EventKind = 'receipt' | 'receipt-issue' | 'condition' | 'handover' | 'statement-missing' | 'statement-task' | 'statement-restored' | 'finance-pack' | 'finance-escalated' | 'delivery-escalated' | 'print-proof' | 'print-routed' | 'print-decision' | 'print-dispatch';
 export interface DemoEvent { id: string; kind: EventKind; actor: DemoActor; at: string; reference: string }
 export interface ConditionEvidence { id: string; version: number; outcome: 'clear' | 'issue'; at: string; actor: DemoActor }
 export interface LivingRecord {
@@ -24,11 +25,13 @@ export interface LivingRecord {
   statementTask: boolean;
   deliveryEscalated: boolean;
   finance: 'draft' | 'submitted' | 'escalated';
+  publishing: PublishingRecord;
   events: DemoEvent[];
 }
-export const createLivingRecord = (): LivingRecord => ({ receipt: null, receiptIssue: false, condition: null, conditionHistory: [], acceptance: null, statementPresent: true, statementTask: false, deliveryEscalated: false, finance: 'draft', events: [] });
+export const createLivingRecord = (): LivingRecord => ({ receipt: null, receiptIssue: false, condition: null, conditionHistory: [], acceptance: null, statementPresent: true, statementTask: false, deliveryEscalated: false, finance: 'draft', publishing: createPublishingRecord(), events: [] });
 type Envelope = { actor: DemoActor; at: string };
 export type DemoAction =
+  | PublishingAction
   | ({ type: 'RECEIVE'; crateId: string; sealMatches: boolean } & Envelope)
   | ({ type: 'CONDITION'; outcome: 'clear' | 'issue' } & Envelope)
   | ({ type: 'ACCEPT'; reportVersion: number; acknowledged: boolean } & Envelope)
@@ -43,6 +46,15 @@ export function livingRecordReducer(state: LivingRecord, action: DemoAction): Li
     events: [...state.events, { id: `DEMO-E${state.events.length + 1}`, kind, actor: action.actor, at: action.at, reference }],
   });
   switch (action.type) {
+    case 'ATTACH_PRINT_PROOF':
+    case 'ROUTE_PRINT_PROOF':
+    case 'DECIDE_PRINT_PROOF':
+    case 'RECORD_PRINT_DISPATCH': {
+      const publishing = reducePublishingRecord(state.publishing, action);
+      if (publishing === state.publishing) return state;
+      const kind: EventKind = action.type === 'ATTACH_PRINT_PROOF' ? 'print-proof' : action.type === 'ROUTE_PRINT_PROOF' ? 'print-routed' : action.type === 'DECIDE_PRINT_PROOF' ? 'print-decision' : 'print-dispatch';
+      return record(kind, { publishing }, `${selectPublishingRecord(publishing).reference}${action.type === 'DECIDE_PRINT_PROOF' ? `/${action.outcome}` : ''}`);
+    }
     case 'RECEIVE':
       if (action.actor !== 'LOGISTICS' || state.receipt || state.acceptance) return state;
       if (action.crateId.trim() !== CASE_ID || !action.sealMatches) {
@@ -80,11 +92,8 @@ export function livingRecordReducer(state: LivingRecord, action: DemoAction): Li
 }
 
 export function selectLivingRecord(state: LivingRecord) {
-  // The other three programmes are explicitly seeded fictional baseline records.
-  const programmes = [
-    { id: 'DEMO-P1', ready: true }, { id: 'DEMO-P2', ready: true }, { id: 'DEMO-P3', ready: true },
-    { id: DEMO_PROGRAMME_ID, ready: Boolean(state.acceptance) },
-  ];
+  // Only the connected fictional exhibition is counted; no department-wide readiness is inferred.
+  const programmes = [{ id: DEMO_PROGRAMME_ID, ready: Boolean(state.acceptance) }];
   const evidence = [
     { id: 'DEMO-CONTRACT-01', present: true }, { id: 'DEMO-PLAN-01', present: true },
     { id: 'DEMO-STATEMENT-01', present: state.statementPresent },
@@ -96,6 +105,6 @@ export function selectLivingRecord(state: LivingRecord) {
   return {
     programmes, evidence, evidenceCount, evidencePercent: Math.round(evidenceCount / evidence.length * 100),
     readyCount: programmes.filter(programme => programme.ready).length,
-    nextActor, custodyReady: Boolean(state.acceptance), executiveQueue: state.finance === 'escalated' ? 1 : 0,
+    nextActor, custodyReady: Boolean(state.acceptance), executiveQueue: (state.finance === 'escalated' ? 1 : 0) + (selectPublishingRecord(state.publishing).queued ? 1 : 0),
   };
 }

@@ -111,3 +111,18 @@
 .lr-basis { font-size:11px; color:#655a55; margin-top:12px; }
 .lr-basis summary { cursor:pointer; text-decoration:underline; text-underline-offset:3px; }
 .lr-basis .lr-small { margin:8px 0 0; }
+.lr-chairman-brief .lr-panel { display:block; }
+.lr-unit-matrix { list-style:none; padding:0; margin:0; }
+.lr-unit-matrix li { padding:12px 0; border-bottom:1px solid #e7ded1; }
+.lr-unit-matrix strong,.lr-unit-matrix .lr-small { display:block; }
+.lr-unit-matrix strong { font-size:14px; }
+.lr-unit-matrix .lr-small { margin:3px 0 0; }
+.lr-unit-matrix .lr-status { margin-top:5px; }
+.lr-magazine-grid { list-style:none; padding:0; margin:14px 0; }
+.lr-magazine-grid li { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:11px 0; border-bottom:1px solid #e7ded1; font-size:12px; }
+.lr-magazine-grid span { color:#655a55; text-align:end; }
+.lr-print-summary,.lr-chairman-brief .lr-print-case { border-top:1px solid #e7ded1; margin-top:18px; padding-top:14px; }
+.lr-print-case .lr-checkbox { margin:16px 0; }
+.lr-print-case .lr-actions .lr-small { flex-basis:100%; }
+.lr-print-case .lr-dialog .lr-checkbox { max-width:none; }
+.lr-chairman-brief .lr-basis { margin-top:16px; }

@@ -137,7 +137,7 @@ function SADUApp() {
   }, []);
 
   const handleSelectRoleAndExplore = (role: RoleKey) => {
-    const connectedDemo = ['DIRECTORATE', 'SDC_COORDINATOR', 'SAF_TECHNICIAN', 'FINANCE', 'LOGISTICS'].includes(role);
+    const connectedDemo = ['DIRECTORATE', 'SDC_COORDINATOR', 'SAF_TECHNICIAN', 'FINANCE', 'LOGISTICS', 'EDITORIAL'].includes(role);
     switchRole(role);
     setSelectedProgramme(connectedDemo ? DEMO_PROGRAMME : PROGRAMMES[0]);
     setLeadershipView('CHAIRMAN');

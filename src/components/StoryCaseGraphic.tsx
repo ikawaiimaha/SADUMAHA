@@ -10,9 +10,9 @@ export function StoryCaseGraphic({ chapter }: { chapter: number }) {
   const t = (en: string, ar: string) => isAr ? ar : en;
   return <div className="story-case-graphic">
     <p className="story-case-eyebrow">{t('SHARED DEMONSTRATION RECORD', 'السجل التجريبي المشترك')}</p>
-    <strong>{t('Mounir Fatmi · Crate 4', 'منير فاطمي · الصندوق ٤')}</strong><bdi>{CASE_ID}</bdi>
+    <strong>{chapter === 7 ? t('SDC internal operations', 'العمليات الداخلية لدائرة الثقافة') : t('Mounir Fatmi · Crate 4', 'منير فاطمي · الصندوق ٤')}</strong><bdi>{chapter === 7 ? `${CASE_ID} · DEMO-PUB-01` : CASE_ID}</bdi>
     {chapter === 7 ? <div className="story-case-metrics">
-      <div><strong><bdi dir="ltr">{formatNumber(metrics.readyCount)} / {formatNumber(4)}</bdi></strong><span>{t('Programmes ready', 'برامج جاهزة')}</span></div>
+      <div><strong>{metrics.custodyReady ? t('Clear', 'مكتمل') : t('Pending', 'معلق')}</strong><span>{t('Sample delivery', 'التسليم التجريبي')}</span></div>
       <div><strong>{formatNumber(metrics.evidencePercent)}%</strong><span>{t('Evidence present', 'اكتمال الأدلة')}</span></div>
       <div><strong>{formatNumber(metrics.executiveQueue)}</strong><span>{t('Executive reviews', 'مراجعات تنفيذية')}</span></div>
     </div> : <ol className="story-case-flow">

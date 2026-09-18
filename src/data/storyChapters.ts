@@ -19,8 +19,8 @@ export const storyChapters = [
     designationEn: 'Chairman of the Department of Culture', designationAr: 'رئيس دائرة الثقافة',
     subtitleEn: 'Accountability and Decisions', subtitleAr: 'المساءلة والقرارات',
     imagePath: '/owais_portrait.jpg', portrait: { width: 2730, height: 1536, viewBox: '1065 0 1228.8 1536' },
-    contentEn: 'The proposed Chairman’s brief distils programme readiness, institutional commitments, and missing evidence into three panels. It brings forward exceptions requiring attention, with their responsible role and supporting record.',
-    contentAr: 'يلخص موجز رئيس الدائرة المقترح جاهزية البرامج والالتزامات المؤسسية والأدلة الناقصة في ثلاث لوحات. ويبرز الاستثناءات التي تتطلب المتابعة مع الدور المسؤول والسجل الداعم.',
+    contentEn: 'The Chairman’s proposed brief focuses on SDC: readiness across directorates, publication cycles, and executive review. It connects internal delivery reports to the decisions requiring attention, with evidence and the applicable authority route.',
+    contentAr: 'يركز موجز رئيس الدائرة المقترح على جاهزية إدارات دائرة الثقافة ودورات النشر والمراجعة التنفيذية. ويربط تقارير الإنجاز الداخلية بالقرارات التي تتطلب المتابعة وأدلتها ومسار الصلاحية المنطبق.',
     highlightBoxEn: 'Executive review is visible. Approval still requires a documented delegation.',
     highlightBoxAr: 'المراجعة التنفيذية واضحة، ويظل الاعتماد مرهوناً بتفويض موثق.'
   },
@@ -66,15 +66,15 @@ export const storyChapters = [
   {
     id: 'roll-up', icon: Award, titleEn: 'Operational Evidence, Executive Clarity', titleAr: 'أدلة تشغيلية ورؤية تنفيذية واضحة',
     subtitleEn: 'Management by exception, calculated from the shared record.', subtitleAr: 'متابعة الاستثناءات انطلاقاً من السجل المشترك.',
-    contentEn: 'When the manager completes the demo handover, the delivery risk clears from the Directorate overview and the Chairman’s readiness count rises from three to four. Routine actions stay with managers; their outcomes update the oversight views.',
-    contentAr: 'عندما يكمل المدير التسليم التجريبي، تزول مخاطر التنفيذ من نظرة الإدارة العامة ويرتفع مؤشر الجاهزية لدى رئيس الدائرة من ثلاثة إلى أربعة. تبقى الإجراءات اليومية لدى المديرين، وتحدّث نتائجها شاشات المتابعة.',
+    contentEn: 'A manager’s completed handover clears its exhibition delivery risk. In the publishing example, a proof reaches executive review only after manager checks and a proposed routing reference. Each result updates the Chairman’s SDC brief.',
+    contentAr: 'يزيل التسليم الذي يكمله المدير مخاطر تنفيذ المعرض المرتبطة به. وفي مثال النشر، تصل البروفة للمراجعة التنفيذية بعد تحققات المدير ومرجع الإحالة المقترح فقط. وتحدّث النتائج موجز رئيس الدائرة.',
     highlightBoxEn: 'Operational readiness remains separate from opening, payment, and signing authorization.', highlightBoxAr: 'تبقى الجاهزية التشغيلية منفصلة عن إذن الافتتاح والدفع والتوقيع.'
   },
   {
     id: 'explore-next', icon: Users, titleEn: 'Follow the Record Across Roles', titleAr: 'تابع السجل عبر الأدوار',
     subtitleEn: 'Oversight follows outcomes. Managers and teams deliver the work.', subtitleAr: 'تتابع القيادة النتائج، وينفذ المديرون والفرق العمل.',
-    contentEn: 'See the department schedule risk in Directorate. Switch demo roles: Logistics records arrival, Technical attaches the sample report, and the Exhibition manager reviews the handover. Return to Directorate and Chairman to see the updated oversight summaries.',
-    contentAr: 'تابع مخاطر جدول القسم في الإدارة. بدّل الأدوار التجريبية: تسجل اللوجستيات الوصول، ويرفق الفريق الفني التقرير، ويراجع مدير المعارض التسليم. عد إلى الإدارة ورئيس الدائرة لمشاهدة ملخصات المتابعة المحدثة.',
-    highlightBoxEn: 'The connected case covers leadership, logistics, technical, coordination, and finance. Other roles open the earlier sample workspaces.', highlightBoxAr: 'تشمل الحالة المترابطة القيادة واللوجستيات والفريق الفني والتنسيق والمالية. وتفتح الأدوار الأخرى مساحات العمل التجريبية السابقة.'
+    contentEn: 'Follow the exhibition handover across delivery roles, or open Coordination to attach a sample print proof. The Publishing manager reviews and routes it. Return to the Chairman to review the brief and record a demo decision.',
+    contentAr: 'تابع تسليم المعرض عبر أدوار التنفيذ، أو افتح التنسيق لإرفاق بروفة تجريبية. يراجعها مدير النشر ويحيلها. عد إلى رئيس الدائرة لمراجعة الموجز وتسجيل قرار تجريبي.',
+    highlightBoxEn: 'Connected sample roles include leadership, delivery, publishing, coordination, and finance. All decisions remain demonstrations.', highlightBoxAr: 'تشمل الأدوار التجريبية المترابطة القيادة والتنفيذ والنشر والتنسيق والمالية. وتبقى جميع القرارات توضيحية.'
   }
 ];

@@ -1,68 +1,52 @@
-# SADU Living Record demonstration
+# SDC Chairman brief and connected demonstrations
 
-This release connects one fictional exhibition case across the presentation, Chairman, Directorate oversight, Exhibition manager, Logistics, Technical, Coordination, and Finance views. The Directorate monitors department delivery and schedules; managers and assigned teams carry out operational work. The older sample workspaces remain available under **Other sample workspaces**.
+Updated 19 September 2026. The separate fictional SADU mockup now contains two connected cases: exhibition delivery and a sample publication proof. All changes exist only in the browser session. The earlier standalone workspaces remain available through Other sample workspaces.
 
-## Presentation sequence
+## Chairman scope
 
-1. His Highness Sheikh Dr. Sultan bin Muhammad Al Qasimi — vision and preservation.
-2. His Excellency Abdullah bin Mohammed Al Owais — accountability and decisions.
-3. Mr. Mohammed Ibrahim Al Qaseer — cultural programmes, delivery and oversight.
-4. One case, one living record.
-5. Arrival is the first checkpoint.
-6. Evidence makes the handover reviewable.
-7. Review first; confirm deliberately.
-8. Operational evidence, executive clarity.
-9. Follow the record across roles.
+Three panels cover SDC internal operations:
 
-The full English and Arabic copy is in `src/data/storyChapters.ts`. All chapters share one viewport frame. The first three use source-specific 4:5 portrait viewports, with decreasing visual scale and aligned captions. The original images are unchanged. The Ruler's portrait is unboxed. IBM Plex Sans Arabic and Inter are loaded explicitly; the presentation frame, direction, progress order, and navigation mirror in Arabic.
+1. Selected internal delivery areas: Cultural Affairs, Theatre, Studies and Publishing, and Eastern Region Administration. They are programme oversight references, not the complete SDC organisation chart. No external board role is included.
+2. Seven monthly magazine titles with current issue dates and stages explicitly awaiting reports. A separate fictional cultural bulletin demonstrates the publishing workflow; it is not a real magazine issue.
+3. Executive review items with evidence, version and routing context. A Finance exception remains review-only with delegation unresolved. A sample publication permits labelled demo decisions under DEMO-ROUTE-PRINT-01, which is a proposed scenario route, not institutional authority.
 
-## Five-minute demonstration
+The old three seeded-ready programmes have been removed. Only the connected fictional exhibition contributes to its delivery readiness. Completing a handover does not establish festival-wide, directorate-wide or opening readiness.
 
-1. Enter the platform from the presentation. Chairman starts at **3 / 4** sample programmes ready, **60%** required case evidence present, and **0** executive reviews.
-2. Open **View department oversight**. Directorate groups eleven entries into awards and criticism (3), forums/festivals/arts (6), and publishing (2). Ten are source-linked programme or output references awaiting manager updates; one is the fictional exhibition case, initially at risk. Filters narrow the table; the three summary metrics always cover the full portfolio. Manager assignments and dates for reference entries are unconfirmed. Switch the demo role to Logistics, enter `DEMO-MF-04`, check the exterior/seal acknowledgement, and record arrival. Evidence completeness becomes **80%**; readiness remains **3 / 4**.
-3. Open Technical and attach the prepared sample condition report. Evidence completeness becomes **100%**, while readiness remains **3 / 4**. Selecting a condition exception blocks handover review.
-4. Open **Exhibition manager**. Optionally **Raise schedule risk to Directorate**: the Director sees the affected milestone, responsible manager, impact, and requested cross-department attention, without receiving an asset-level task. Then use **Review Handover**, inspect the report, check the demo acknowledgement, and **Sign & Accept Custody (Demo)**. The simulated step shows **Recording demo acknowledgement…** before recording acceptance. Cancel, Escape, closing the dossier, or leaving the workspace during this pause cancels it. The row becomes read-only with actor `DEMO-MANAGER`, browser timestamp, report version, and declaration reference `DEMO-ACK-1`.
-5. Return to Directorate: only the fictional exhibition milestone moves to on track. Its delivery risk and open escalation clear; ten reference entries still await updates, and operational history stays with the manager. Chairman readiness is **4 / 4**, calculated from the shared case. This is operational readiness, not opening authorization or proof that the activities have finished.
-6. In Coordination, flag the artist statement as missing. Evidence completeness falls to **80%**. The Exhibition manager assigns follow-up, after which Coordination restores the sample statement and returns it to **100%**.
-7. In Finance, submit the sample pack. It stays out of the executive queue until the assigned Exhibition manager records the exception review and escalates it. Chairman then shows **1** executive review, with delegation validation still required. No financial signing or payment action exists.
-8. Reset the fictional case through its confirmation dialog, or reload the browser to begin a new session.
+## Publishing demonstration
 
-## Data and authority boundaries
+1. In Coordination, choose Attach prepared sample proof. The prepared bilingual template is attached as DEMO-PUB-01/v1; no user file is uploaded. The Chairman's publishing stage immediately changes to manager review, but the executive queue remains empty.
+2. In Publishing manager, choose Review proof and route. Open the proof and acknowledge its language/version and sample credits/rights checks. Route for executive review (Demo) records those prerequisites and the proposed route.
+3. The Chairman's queue now includes the version-bound brief. Choose Review print-release brief. Acknowledge the review, then record a print release or return for revision. These are session decisions attributed to DEMO-CHAIRMAN, not the pictured official's approval or a digital signature.
+4. A release removes the pending queue item and updates the publishing panel. It does not send a file to a printer. Publishing manager separately records sample print dispatch; no actual transmission happens.
+5. A returned proof requires a revised version from Coordination. Any new proof also invalidates the current review/release and requires review again; previous version events remain in session history. A dispatched sample cannot be rewritten through these controls.
 
-- The reducer is the single source of truth for this case. No separate KPI increments or independent per-role arrays are used.
-- Directorate cannot record receipt, condition evidence, handover acceptance, statement task assignment, Finance pack review, or manager escalation. Its overview is read-only. Demo role switching is a presentation control, not impersonation or delegated authority.
-- The Directorate portfolio is a bounded proposal, not the complete institutional structure. The three areas are programme groupings, not formal departments. Official publications support programme identity; they do not establish current status, assignment, direct reporting, or delegation. Department magazines are explicitly marked as department-level context. See DIRECTORATE_PORTFOLIO_SOURCES.md for the source reconciliation.
-- Schedule status is a forecast. The fictional exhibition milestone is at risk until its sample delivery dependency is resolved. The ten public reference entries have no current delivery report and are never counted as on track. Expected outputs are proposed reporting fields, not established individual duties. Only a manager's explicit escalation appears in the Directorate escalation panel. Resolved escalations remain in the operational session history.
-- Three other sample programmes are explicitly seeded as ready. The fourth is ready only after the current report version is acknowledged.
-- Evidence completeness counts five required case records: agreement, plan, artist statement, receipt, and condition report. It measures presence, not verification, legal compliance, or completed-programme archival certification.
-- Receipt mismatch, missing receipt, condition exception, wrong demo role, absent acknowledgement, stale report version, and duplicate acceptance cannot advance the handover.
-- Earlier condition outcomes and versions remain available in the session report history. Accepted reports cannot be replaced through the demonstration controls.
-- State exists only in memory. The history is not durable, authenticated, signed, or protected from client modification. Role selection is for demonstration and is not authorization.
-- All actions are attributed to sample role IDs, never to the officials pictured. No credentials, UAE Pass integration, PIN, digital seal, or signature verification are simulated.
-- The signing control is explicitly labelled as a simulation. Its short progress state records only the demo acknowledgement; it does not verify credentials, create a digital signature, or establish legal custody. Cancellation stops the pending action, and repeated activation cannot record duplicate acceptance.
-- The report link is a bilingual demonstration template. It contains no real inspection photos, signatures, private contact information, bank details, or original operational attachments.
+Every revision uses the same prepared sample text, clearly disclosed in the proof template. No genuine publication, author, copyright approval, vendor, print quantity, signature or credential is represented.
 
-## Source reconciliation — 18 September 2026
+## Exhibition demonstration
 
-The local SADU Source Authority Register and Contract Responsibilities review were consulted before implementation. Two relevant original Drive files were refreshed:
+1. Directorate shows one fictional exhibition risk alongside ten public programme/output references awaiting manager updates.
+2. Logistics records matching crate identity DEMO-MF-04 and seal acknowledgement.
+3. Technical attaches the prepared condition report. A discrepancy prevents handover.
+4. Exhibition manager reviews the version and explicitly acknowledges the proposed handover. The Director never receives this operational action.
+5. The delivery risk clears in Directorate and the Chairman's Cultural Affairs row. This updates only that sample delivery dependency.
+6. Manager schedule escalations appear in Directorate until the delivery dependency is resolved. Missing artist statements and Finance exception routing retain their separate assigned workflows.
 
-- The 2026 bilingual shipping and insurance request form (file modified 1 July 2026) supports separate artwork/package identity, packing, condition evidence, handling, and installation information. It does not delegate custody acceptance.
-- The operational tracker (status 11 August 2026, source records through 21 July; file modified 11 August) reports package-level dependencies and condition-report gaps. It is a derivative, dated review, not evidence of today's delivery state or an authenticated delegation.
+Sample evidence completeness counts presence of five exhibition records, not compliance. It remains available in the Chairman's expandable exhibition evidence detail and in the presentation.
 
-The crate, actions, results, IDs, seeded programme readiness, and example finance pack in this release are fictional design choices. The source documents do not establish Directorate custody powers, Chairman signatory thresholds, or mandatory use of a particular UI pattern. Those remain institutional validation matters.
+## Presentation
 
-### Owner correction — 18 September 2026
+The nine-chapter structure and portrait hierarchy remain. Chapter 2 now describes SDC internal readiness, publishing and executive review. Chapter 3 retains Al Qaseer's oversight boundary. Chapter 8 explains both shared workflows. Chapter 9 links to the connected Publishing manager role.
 
-The owner clarified that Mr. Al Qaseer oversees whether the departments he directs deliver their activities on schedule; routine operations belong to their managers. This instruction corrects the prior mockup assignment. The operational tracker was refreshed for this change and still identifies separate operational workstreams; it is not independent proof of an organisation chart or delegation. The mockup therefore removes operational controls from Directorate rather than inferring custody authority from the Director's title. The assigned manager's simulated handover is also a design assignment, not established legal custody authority.
+## Authority and technical boundaries
 
-Public title and narrative references:
+- Source programme descriptions, editorial mastheads and job titles do not establish a blanket signing, spending, publication, procurement or award-selection power.
+- An attachment alone never creates an executive approval request. The sample manager must review the current proof and record the configured proposed route.
+- Actual deployment of this routing requires authenticated delegation evidence and server-enforced permissions. No backend, UAE Pass, signing service, real finance or external integration is introduced.
+- The reducer enforces sample role, sequence, evidence, version and duplicate guards in the UI demonstration. Client state is not durable, authenticated or tamper-proof.
+- Reset clears both fictional cases and their session events. Browser reload also resets them.
 
-- [Sharjah Department of Culture — About SDC](https://sdc.gov.ae/en/about-sdc), checked 18 September 2026: cultural continuity and the Ruler's institutional designation. The website flags its English translation as machine translated.
-- [SDC — fourth evening of the Sharjah Arabic Poetry Festival, 9 January 2026](https://sdc.gov.ae/en/media-center/news/9/1/2026/in-the-fourth-evening-of-the-sharjah-arabic-poetry-festival-texts-reaching-toward-distant): Chairman and Cultural Affairs Director titles. Public titles do not establish project-specific delegations.
-- [IBM Plex primary repository](https://github.com/IBM/plex): Arabic family and UI use. Visual weight parity is a design calibration requiring human bilingual review, not a certification.
+## Evidence and verification
 
-## Verification
+See SDC_CHAIRMAN_SOURCE_RECONCILIATION.md and DIRECTORATE_PORTFOLIO_SOURCES.md for source identity, dates, scope and unresolved questions.
 
-Run `npm run test:demo` for the state-transition tests and `npm run build` for TypeScript and the Vite build.
-
-Browser checks cover English/Arabic, all nine chapter positions, portrait scale, captions, mobile reading surfaces, receipt mismatch, condition exception, revised reports, explicit acknowledgement, cancellation, Finance routing, statement follow-up, and reset. The existing Vite large-chunk warning remains; this release does not change the application's bundling strategy.
+Run npm run test:demo and npm run build. Sixteen tests cover original delivery boundaries plus publication prerequisites, wrong roles, stale versions, return/revision, dispatch separation, queue aggregation and reset. The existing Vite large-chunk warning remains.
