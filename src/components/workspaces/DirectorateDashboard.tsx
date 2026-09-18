@@ -1,6 +1,7 @@
 import React from 'react';
 import { Language } from '../../types';
 import { useI18n } from '../../context/I18nContext';
+import { INSTITUTIONAL_INFO } from '../../data/mockData';
 import { KpiCard } from '../common/KpiCard';
 import { 
   Globe, 
@@ -23,6 +24,42 @@ export const DirectorateDashboard: React.FC<DirectorateDashboardProps> = (props)
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
+      <section aria-label={isAr ? 'نظرة عامة على القيادة' : 'Leadership overview'}>
+        <ol className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <li className="md:col-span-2 rounded-lg border border-sadu-gold border-t-4 border-t-sadu-brick bg-sadu-linen p-5 sm:p-8">
+            <div className="grid lg:grid-cols-[1.3fr_1fr] gap-6 items-center">
+              <div>
+                <p className="text-xs font-semibold text-sadu-brick mb-3">
+                  {isAr ? 'الرؤية الثقافية' : 'Cultural Vision'}
+                </p>
+                <h2 className="font-editorial font-bold text-2xl sm:text-3xl lg:text-4xl leading-snug text-sadu-charcoal">
+                  {isAr ? 'صاحب السمو الشيخ الدكتور سلطان بن محمد القاسمي' : 'H.H. Sheikh Dr. Sultan bin Muhammad Al Qasimi'}
+                </h2>
+                <p className="text-sm sm:text-base text-sadu-ink mt-3">
+                  {isAr ? 'الثقافة والذاكرة المؤسسية' : 'Culture and Institutional Memory'}
+                </p>
+              </div>
+              <img
+                src="/sultan_portrait.jpg"
+                alt={isAr ? 'صاحب السمو الشيخ الدكتور سلطان بن محمد القاسمي' : 'H.H. Sheikh Dr. Sultan bin Muhammad Al Qasimi'}
+                width={2816}
+                height={1536}
+                className="w-full h-auto object-contain rounded-lg border border-sadu-gold"
+              />
+            </div>
+          </li>
+          <li className="rounded-lg border border-sadu-gold bg-sadu-linen p-5">
+            <h3 className="font-editorial font-bold text-lg text-sadu-charcoal">
+              {isAr ? INSTITUTIONAL_INFO.chairmanAr : INSTITUTIONAL_INFO.chairmanEn}
+            </h3>
+          </li>
+          <li className="rounded-lg border border-sadu-gold bg-sadu-linen p-5">
+            <h3 className="font-editorial font-bold text-lg text-sadu-charcoal">
+              {isAr ? INSTITUTIONAL_INFO.directorAr : INSTITUTIONAL_INFO.directorEn}
+            </h3>
+          </li>
+        </ol>
+      </section>
       
       {/* Header Banner */}
       <div className="bg-sadu-linen border border-sadu-gold rounded-lg p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs">

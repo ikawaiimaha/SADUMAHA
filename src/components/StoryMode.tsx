@@ -42,24 +42,12 @@ export const StoryMode: React.FC<StoryModeProps> = ({
 
   const chapters = [
     {
-      id: 'continuity',
-      icon: BookOpen,
-      titleEn: 'The Scale of Sharjah\'s Cultural Mission',
-      titleAr: 'حجم المهمة الثقافية لإمارة الشارقة',
-      subtitleEn: 'Supporting global initiatives with robust administrative architecture.',
-      subtitleAr: 'دعم المبادرات العالمية بمنظومة إدارية راسخة.',
-      contentEn: 'Managing initiatives like the Houses of Poetry across the Arab world and "Sharjah Cultural Days" requires unified administration. The Department generates profound intellectual output through every festival, publication, and exhibition. To prevent this vast documentation from fragmenting across disconnected channels, a central system is required.',
-      contentAr: 'تتطلب إدارة مبادرات كبرى كـ "بيوت الشعر" في الوطن العربي و"أيام الشارقة الثقافية" نظاماً إدارياً موحداً. تُنتج الدائرة رصيداً فكرياً ضخماً من خلال المهرجانات والإصدارات والمعارض. ولضمان عدم تشتت هذه الوثائق في قنوات اتصال غير مترابطة، برزت الحاجة لنظام مركزي.',
-      highlightBoxEn: 'The Goal: To safeguard the Department\'s institutional memory with the same dedication applied to its cultural diplomacy.',
-      highlightBoxAr: 'الهدف الأساسي: حفظ الذاكرة المؤسسية للدائرة بذات الدقة والاهتمام الذي تُدار به مبادراتها الدبلوماسية الثقافية.'
-    },
-    {
       id: 'leadership-visionary',
       icon: BookOpen,
-      titleEn: 'Culture and Institutional Memory',
-      titleAr: 'الثقافة والذاكرة المؤسسية',
-      subtitleEn: 'H.H. Sheikh Dr. Sultan bin Muhammad Al Qasimi',
-      subtitleAr: 'صاحب السمو الشيخ الدكتور سلطان بن محمد القاسمي',
+      titleEn: 'H.H. Sheikh Dr. Sultan bin Muhammad Al Qasimi',
+      titleAr: 'صاحب السمو الشيخ الدكتور سلطان بن محمد القاسمي',
+      subtitleEn: 'Culture and Institutional Memory',
+      subtitleAr: 'الثقافة والذاكرة المؤسسية',
       imagePath: '/sultan_portrait.jpg',
       contentEn: 'The proposed SADU experience connects cultural programmes with the people, decisions, and evidence behind them. Artist statements, sources, and programme outcomes remain understandable to the next employee and useful to future research.',
       contentAr: 'يربط تصور سدو المقترح البرامج الثقافية بالأشخاص والقرارات والأدلة المرتبطة بها. وتبقى بيانات الفنانين ومصادر المعلومات ونتائج البرامج مفهومة للموظف التالي وقابلة للاستفادة منها في البحث مستقبلاً.',
@@ -91,6 +79,18 @@ export const StoryMode: React.FC<StoryModeProps> = ({
       contentAr: 'يربط عرض التنفيذ المقترح خطط المعارض بمهام التنسيق والعمل الفني واللوجستيات. ويوضح المعوقات والاعتماد المتبادل بين المهام والدور المسؤول التالي، ليتمكن الموظف المكلف حديثاً من متابعة العمل انطلاقاً من تسليم واضح.',
       highlightBoxEn: 'Design objective: show what is ready, what is blocked, and who acts next.',
       highlightBoxAr: 'الهدف التصميمي: إظهار الجاهز والمتعطل ومن يتولى الإجراء التالي.'
+    },
+    {
+      id: 'continuity',
+      icon: BookOpen,
+      titleEn: 'The Scale of Sharjah\'s Cultural Mission',
+      titleAr: 'حجم المهمة الثقافية لإمارة الشارقة',
+      subtitleEn: 'Supporting global initiatives with robust administrative architecture.',
+      subtitleAr: 'دعم المبادرات العالمية بمنظومة إدارية راسخة.',
+      contentEn: 'Managing initiatives like the Houses of Poetry across the Arab world and "Sharjah Cultural Days" requires unified administration. The Department generates profound intellectual output through every festival, publication, and exhibition. To prevent this vast documentation from fragmenting across disconnected channels, a central system is required.',
+      contentAr: 'تتطلب إدارة مبادرات كبرى كـ "بيوت الشعر" في الوطن العربي و"أيام الشارقة الثقافية" نظاماً إدارياً موحداً. تُنتج الدائرة رصيداً فكرياً ضخماً من خلال المهرجانات والإصدارات والمعارض. ولضمان عدم تشتت هذه الوثائق في قنوات اتصال غير مترابطة، برزت الحاجة لنظام مركزي.',
+      highlightBoxEn: 'The Goal: To safeguard the Department\'s institutional memory with the same dedication applied to its cultural diplomacy.',
+      highlightBoxAr: 'الهدف الأساسي: حفظ الذاكرة المؤسسية للدائرة بذات الدقة والاهتمام الذي تُدار به مبادراتها الدبلوماسية الثقافية.'
     },
     {
       id: 'coordination',
@@ -155,6 +155,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
   ];
 
   const current = chapters[currentChapter];
+  const isLeadChapter = current.id === 'leadership-visionary';
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -230,20 +231,20 @@ export const StoryMode: React.FC<StoryModeProps> = ({
           </div>
         </div>
 
-        <div className="bg-sadu-linen border border-sadu-gold rounded-lg p-6 sm:p-8 shadow-xs w-full min-h-[750px] md:min-h-[600px] md:h-[650px] lg:h-[600px] flex flex-col overflow-hidden">
+        <div className={`bg-sadu-linen border border-sadu-gold rounded-lg p-6 sm:p-8 shadow-xs w-full flex flex-col ${isLeadChapter ? 'border-t-4 border-t-sadu-brick' : 'min-h-[750px] md:min-h-[600px] md:h-[650px] lg:h-[600px] overflow-hidden'}`}>
           
           <div className="flex items-start gap-4 min-h-[100px] shrink-0 mb-4 pb-3 border-b border-sadu-gold/30">
-            <div className="p-3 rounded-md bg-sadu-sand text-sadu-brick border border-sadu-gold/50 shrink-0">
+            {!isLeadChapter && <div className="p-3 rounded-md bg-sadu-sand text-sadu-brick border border-sadu-gold/50 shrink-0">
               <current.icon className="w-7 h-7 sm:w-8 sm:h-8" />
-            </div>
+            </div>}
             <div className="flex-1 min-w-0 pt-0.5">
               <span className="text-[10px] sm:text-xs uppercase tracking-widest text-sadu-ink font-semibold block truncate">
                 {isAr ? INSTITUTIONAL_INFO.departmentAr : INSTITUTIONAL_INFO.departmentEn}
               </span>
-              <h1 className="text-lg sm:text-xl md:text-2xl font-editorial font-bold text-sadu-charcoal mt-1.5 leading-snug line-clamp-2">
+              <h1 className={`font-editorial font-bold text-sadu-charcoal mt-1.5 leading-snug ${isLeadChapter ? 'text-2xl sm:text-3xl md:text-4xl' : 'text-lg sm:text-xl md:text-2xl line-clamp-2'}`}>
                 {isAr ? current.titleAr : current.titleEn}
               </h1>
-              <p className="text-xs sm:text-sm text-sadu-brick font-medium mt-1.5">
+              <p className={`text-sadu-brick font-medium mt-1.5 ${isLeadChapter ? 'text-base sm:text-lg' : 'text-xs sm:text-sm'}`}>
                 {isAr ? current.subtitleAr : current.subtitleEn}
               </p>
             </div>
@@ -251,8 +252,8 @@ export const StoryMode: React.FC<StoryModeProps> = ({
 
           <div key={currentChapter} className="pt-2 flex-1 flex flex-col h-full animate-in fade-in duration-150">
             {currentChapter < chapters.length - 1 ? (
-              <div className="grid md:grid-cols-2 gap-8 h-full items-stretch">
-                <div className="flex flex-col justify-between h-full overflow-y-auto pr-2 rtl:pl-2 rtl:pr-0">
+              <div className={`grid gap-6 items-stretch ${isLeadChapter ? '' : 'md:grid-cols-2 md:gap-8 h-full'}`}>
+                <div className={isLeadChapter ? 'grid md:grid-cols-2 gap-6 items-start' : 'flex flex-col justify-between h-full overflow-y-auto pr-2 rtl:pl-2 rtl:pr-0'}>
                   <p className="text-sm sm:text-base leading-relaxed text-sadu-charcoal">
                     {isAr ? current.contentAr : current.contentEn}
                   </p>
@@ -268,11 +269,11 @@ export const StoryMode: React.FC<StoryModeProps> = ({
                 </div>
 
                 {current.imagePath ? (
-                  <figure className="flex flex-col min-h-0 rounded-lg border border-sadu-gold overflow-hidden bg-sadu-sand">
+                  <figure className={`flex flex-col min-h-0 rounded-lg border border-sadu-gold overflow-hidden bg-sadu-sand ${isLeadChapter ? 'order-first' : ''}`}>
                     <img
                       src={current.imagePath}
-                      alt={isAr ? current.subtitleAr : current.subtitleEn}
-                      className="w-full h-72 md:h-64 lg:h-72 object-contain"
+                      alt={isLeadChapter ? (isAr ? current.titleAr : current.titleEn) : (isAr ? current.subtitleAr : current.subtitleEn)}
+                      className={`w-full object-contain ${isLeadChapter ? 'h-auto' : 'h-72 md:h-64 lg:h-72'}`}
                     />
                     <figcaption className="p-3 border-t border-sadu-gold text-xs text-sadu-muted leading-relaxed">
                       {isAr

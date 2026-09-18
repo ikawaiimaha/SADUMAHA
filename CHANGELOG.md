@@ -1,5 +1,11 @@
 # Audit repair package — 18 September 2026
 
+## Leadership presentation hierarchy
+
+- Made H.H. Sheikh Dr. Sultan bin Muhammad Al Qasimi the opening chapter, with the largest heading and a full-width portrait that retains the complete source image.
+- Added his full-width portrait card above the Chairman and Director cards in the active Directorate dashboard, in both languages.
+- Preserved proposed-content labels. Presentation prominence does not grant system or institutional authority.
+
 ## Presentation media repair
 
 - Restored three portrait chapters in the active `src/components/StoryMode.tsx`. Their earlier versions were only present in an inactive root-level file in the input ZIP.
