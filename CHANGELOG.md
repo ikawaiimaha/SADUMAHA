@@ -2,6 +2,7 @@
 
 ## Leadership presentation hierarchy
 
+- Made chapter 2 compact with text beside the uncropped portrait and its caption below the image. The layout mirrors in Arabic and stacks on mobile; chapter 1 is unchanged.
 - Distinguished Al Owais as the second tier: full name as the chapter 2 heading, a medium-width uncropped portrait, and a dedicated dashboard row between the lead portrait and Al Qaseer. The first chapter retains the largest portrait, largest name heading, and exclusive top accent.
 - Chapter navigation returns to the top so each name and portrait is introduced from the beginning when slide heights differ.
 - Made H.H. Sheikh Dr. Sultan bin Muhammad Al Qasimi the opening chapter, with the largest heading and a full-width portrait that retains the complete source image.

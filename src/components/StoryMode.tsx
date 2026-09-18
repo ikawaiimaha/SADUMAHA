@@ -258,8 +258,8 @@ export const StoryMode: React.FC<StoryModeProps> = ({
 
           <div key={currentChapter} className="pt-2 flex-1 flex flex-col h-full animate-in fade-in duration-150">
             {currentChapter < chapters.length - 1 ? (
-              <div className={`grid gap-6 items-stretch ${isFeaturedPortrait ? '' : 'md:grid-cols-2 md:gap-8 h-full'}`}>
-                <div className={isFeaturedPortrait ? 'grid md:grid-cols-2 gap-6 items-start' : 'flex flex-col justify-between h-full overflow-y-auto pr-2 rtl:pl-2 rtl:pr-0'}>
+              <div className={`grid gap-6 items-stretch ${isLeadChapter ? '' : isSecondChapter ? 'md:grid-cols-2 md:gap-8' : 'md:grid-cols-2 md:gap-8 h-full'}`}>
+                <div className={isLeadChapter ? 'grid md:grid-cols-2 gap-6 items-start' : isSecondChapter ? 'flex flex-col justify-between' : 'flex flex-col justify-between h-full overflow-y-auto pr-2 rtl:pl-2 rtl:pr-0'}>
                   <p className="text-sm sm:text-base leading-relaxed text-sadu-charcoal">
                     {isAr ? current.contentAr : current.contentEn}
                   </p>
@@ -275,7 +275,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
                 </div>
 
                 {current.imagePath ? (
-                  <figure className={`flex flex-col min-h-0 rounded-lg border border-sadu-gold overflow-hidden bg-sadu-sand ${isLeadChapter ? 'order-first' : isSecondChapter ? 'order-first w-[88%] md:w-full max-w-3xl mx-auto' : ''}`}>
+                  <figure className={`flex flex-col min-h-0 rounded-lg border border-sadu-gold overflow-hidden bg-sadu-sand ${isLeadChapter ? 'order-first' : isSecondChapter ? 'w-[88%] md:w-full mx-auto self-start' : ''}`}>
                     <img
                       src={current.imagePath}
                       alt={isFeaturedPortrait ? (isAr ? current.titleAr : current.titleEn) : (isAr ? current.subtitleAr : current.subtitleEn)}
