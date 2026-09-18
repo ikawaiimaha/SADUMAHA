@@ -90,6 +90,11 @@
 .lr-portfolio-table th,.lr-portfolio-table td { text-align:start; vertical-align:top; padding:14px 12px; border-bottom:1px solid #e7ded1; }
 .lr-portfolio-table thead { background:#f7f4ed; color:#655a55; }
 .lr-portfolio-table .lr-status { margin:0; }
+.lr-portfolio-table th[scope=row] { width:30%; font-weight:400; }
+.lr-portfolio-filters { display:flex; flex-wrap:wrap; gap:8px; margin:18px 0 8px; }
+.living-record .lr-portfolio-filters button[aria-pressed=true] { background:var(--lr-burgundy); color:white; border-color:var(--lr-burgundy); }
+.lr-portfolio-filters button span { margin-inline-start:6px; font-variant-numeric:tabular-nums; }
+.lr-source-link { display:block; color:var(--lr-burgundy); text-decoration:underline; text-underline-offset:3px; font-size:12px; margin-top:6px; }
 .lr-cell-note { display:block; margin-top:5px; }
 .lr-oversight-escalation { border-inline-start:3px solid var(--lr-gold); padding-inline-start:18px; }
 .lr-oversight-escalation dl { display:grid; grid-template-columns:minmax(100px,160px) 1fr; gap:8px 16px; font-size:13px; }

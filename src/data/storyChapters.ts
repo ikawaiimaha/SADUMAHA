@@ -28,10 +28,10 @@ export const storyChapters = [
     id: 'leadership-operational', icon: GitBranch,
     titleEn: 'Mr. Mohammed Ibrahim Al Qaseer', titleAr: 'الأستاذ محمد إبراهيم القصير',
     designationEn: 'Director of Cultural Affairs', designationAr: 'مدير إدارة الشؤون الثقافية',
-    subtitleEn: 'Department Performance and Schedules', subtitleAr: 'أداء الأقسام والجداول الزمنية',
+    subtitleEn: 'Cultural Programmes, Delivery and Oversight', subtitleAr: 'البرامج الثقافية والإنجاز والمتابعة',
     imagePath: '/qaseer_portrait.jpg', portrait: { width: 1728, height: 2418, viewBox: '525 550 1024 1280' },
-    contentEn: 'The Director of Cultural Affairs oversees whether the departments under his direction are delivering their activities on schedule. His overview brings together department performance, upcoming milestones, responsible managers, and escalated risks.',
-    contentAr: 'يتابع مدير إدارة الشؤون الثقافية مدى تنفيذ الأقسام التي يشرف عليها لأنشطتها وفق الجداول المحددة. وتجمع نظرته العامة أداء الأقسام والمراحل المقبلة والمديرين المسؤولين والمخاطر المصعّدة.',
+    contentEn: 'Across awards, cultural programmes, and publishing, the Director follows manager reports, milestones, and escalated risks. The proposed overview distinguishes programme references from reported delivery.',
+    contentAr: 'تجمع النظرة المقترحة الجوائز والبرامج الثقافية والنشر. ويتابع مدير الإدارة تقارير المديرين والمراحل والمخاطر المصعّدة، مع التمييز بين مراجع البرامج المنشورة وتقارير الإنجاز.',
     highlightBoxEn: 'Managers own day-to-day delivery and handovers. The Director oversees outcomes, schedules, and cross-department priorities.',
     highlightBoxAr: 'يتولى المديرون التنفيذ اليومي والتسليم. ويتابع مدير الإدارة النتائج والجداول والأولويات بين الأقسام.'
   },

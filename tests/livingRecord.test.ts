@@ -104,11 +104,12 @@ test('Directorate cannot execute routine manager, technical, logistics or financ
   assert.equal(selectLivingRecord(ready).nextActor, 'MANAGER');
 });
 
-test('Directorate sees department forecasts and only explicit manager escalations; resolution rolls up', () => {
+test('Directorate sees reported forecasts and explicit manager escalations without inventing programme progress', () => {
   let state = createLivingRecord();
-  assert.equal(selectDirectoratePortfolio(state).sectionCount, 3);
-  assert.equal(selectDirectoratePortfolio(state).sectionsOnTrack, 2);
-  assert.equal(selectDirectoratePortfolio(state).activities.length, 4);
+  assert.equal(selectDirectoratePortfolio(state).areas.length, 3);
+  assert.equal(selectDirectoratePortfolio(state).reportedCount, 1);
+  assert.equal(selectDirectoratePortfolio(state).awaitingUpdateCount, 10);
+  assert.equal(selectDirectoratePortfolio(state).activities.length, 11);
   assert.equal(selectDirectoratePortfolio(state).activitiesAtRisk, 1);
   assert.equal(selectDirectoratePortfolio(state).escalations.length, 0);
   for (const actor of actors.filter(actor => actor !== 'MANAGER')) {
@@ -119,10 +120,27 @@ test('Directorate sees department forecasts and only explicit manager escalation
   assert.equal(reduce(state, { type: 'ESCALATE_DELIVERY', actor: 'MANAGER', at }), state);
   state = reduce(reduce(reduce(state, arrival), report), accept);
   const overview = selectDirectoratePortfolio(state);
-  assert.equal(overview.sectionsOnTrack, 3);
+  assert.equal(overview.reportedCount, 1);
+  assert.equal(overview.awaitingUpdateCount, 10);
+  assert.equal(overview.activities.filter(activity => activity.forecast === 'on-track').length, 1);
   assert.equal(overview.activitiesAtRisk, 0);
   assert.equal(overview.escalations.length, 0);
   assert.equal(selectLivingRecord(state).readyCount, 4);
   assert.equal(state.events.filter(event => event.kind === 'delivery-escalated').length, 1);
   assert.equal(reduce(state, { type: 'ESCALATE_DELIVERY', actor: 'MANAGER', at }), state);
+});
+
+test('portfolio filters isolate areas while summary totals remain scoped to the whole portfolio', () => {
+  const state = createLivingRecord();
+  for (const [area, count] of [['awards', 3], ['programmes', 6], ['publishing', 2]] as const) {
+    const portfolio = selectDirectoratePortfolio(state, area);
+    assert.equal(portfolio.visibleActivities.length, count);
+    assert.ok(portfolio.visibleActivities.every(activity => activity.area === area));
+    assert.equal(portfolio.activities.length, 11);
+    assert.equal(portfolio.reportedCount, 1);
+    assert.equal(portfolio.activitiesAtRisk, 1);
+  }
+  const references = selectDirectoratePortfolio(state).activities.filter(activity => activity.scope !== 'fictional-case');
+  assert.ok(references.every(activity => activity.source && !activity.due && !activity.managerEn && !activity.escalated && activity.forecast === 'awaiting-update'));
+  assert.equal(references.find(activity => activity.id === 'REF-MAGAZINES')?.scope, 'department-output');
 });

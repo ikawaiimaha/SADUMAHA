@@ -1,5 +1,13 @@
 # Audit repair package — 18 September 2026
 
+## Cultural Affairs portfolio
+
+- Broadened Directorate oversight into awards and criticism, forums/festivals/arts, and publishing. These are proposed portfolio groups, not a confirmed organisation chart.
+- Added ten source-linked programme/output references and retained the fictional exhibition as the only connected delivery report. Unreported programmes do not count as on track; department magazines do not imply a direct reporting line.
+- Added area filters, explicit reporting coverage, bilingual source labels, and the missing novel category for the Arab Creativity Award.
+- Updated chapter 3 and source reconciliation. Manager-only operational actions and the stable presentation frame remain in place.
+- Verified ten workflow tests, TypeScript/build, English/Arabic filtering, mobile overflow, and the manager-to-Directorate risk roll-up.
+
 ## Leadership portrait composition
 
 - Unified the three leadership headings: name first, existing theme beneath. Al Qaseer's name is now the chapter heading in both languages; the extra icon is removed.
