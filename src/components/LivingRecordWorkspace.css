@@ -17,6 +17,7 @@
 .lr-context>span:first-child { color:var(--lr-burgundy); font-weight:600; letter-spacing:.06em; }
 .lr-roles { display:flex; flex-wrap:wrap; gap:7px; margin:14px 0 20px; }
 .lr-roles button[aria-pressed=true] { border-color:var(--lr-burgundy); background:var(--lr-burgundy); color:white; }
+.living-record .lr-roles button[aria-pressed=true]:hover { background:#502330; color:white; }
 .lr-anchor { display:flex; align-items:center; gap:24px; min-height:122px; padding-bottom:16px; border-bottom:1px solid #d9cdbd; margin-bottom:18px; }
 .lr-portrait { width:80px; height:100px; flex-shrink:0; border-radius:4px; border:1px solid #e7e5e4; }
 .lr-anchor h1 { font-size:clamp(20px,2vw,28px); font-weight:600; line-height:1.35; margin:7px 0; }
@@ -83,6 +84,17 @@
 .lr-dossier-evidence a { color:var(--lr-burgundy); text-decoration:underline; }
 .lr-dossier-evidence p { margin:7px 0; }
 .lr-declaration { max-width:none!important; margin-top:18px; }
+.lr-oversight-intro { max-width:850px; margin:0 0 20px; font-size:15px; }
+.lr-oversight .lr-brief .lr-panel { min-height:190px; }
+.lr-portfolio-table { width:100%; min-width:700px; border-collapse:collapse; font-size:13px; margin-top:18px; }
+.lr-portfolio-table th,.lr-portfolio-table td { text-align:start; vertical-align:top; padding:14px 12px; border-bottom:1px solid #e7ded1; }
+.lr-portfolio-table thead { background:#f7f4ed; color:#655a55; }
+.lr-portfolio-table .lr-status { margin:0; }
+.lr-cell-note { display:block; margin-top:5px; }
+.lr-oversight-escalation { border-inline-start:3px solid var(--lr-gold); padding-inline-start:18px; }
+.lr-oversight-escalation dl { display:grid; grid-template-columns:minmax(100px,160px) 1fr; gap:8px 16px; font-size:13px; }
+.lr-oversight-escalation dt { font-weight:600; }
+.lr-oversight .lr-section-title { flex-wrap:wrap; }
 .lr-signing-label { color:var(--lr-burgundy); font-size:13px; font-weight:600; }
 .lr-sign-action { display:inline-flex; align-items:center; gap:8px; }
 .lr-progress-icon { width:16px; height:16px; flex-shrink:0; animation:lr-progress 1s linear infinite; }

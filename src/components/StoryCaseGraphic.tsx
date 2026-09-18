@@ -19,7 +19,7 @@ export function StoryCaseGraphic({ chapter }: { chapter: number }) {
       {[
         { en: 'Logistics', ar: 'اللوجستيات', actionEn: 'Record arrival', actionAr: 'تسجيل الوصول', done: Boolean(state.receipt), active: chapter === 4 },
         { en: 'Technical', ar: 'الفريق الفني', actionEn: 'Attach condition evidence', actionAr: 'إرفاق أدلة الحالة', done: Boolean(state.condition), active: chapter === 5 },
-        { en: 'Directorate', ar: 'إدارة الشؤون الثقافية', actionEn: 'Review & acknowledge handover', actionAr: 'مراجعة التسليم وتأكيده', done: Boolean(state.acceptance), active: chapter === 6 },
+        { en: 'Exhibition manager', ar: 'مدير المعارض', actionEn: 'Review & acknowledge handover', actionAr: 'مراجعة التسليم وتأكيده', done: Boolean(state.acceptance), active: chapter === 6 },
       ].map((step, i) => <li key={step.en} className={step.active ? 'is-active' : ''}><div>{step.done ? <Check/> : <Circle/>}<strong>{t(step.en, step.ar)}</strong><span>{t(step.actionEn, step.actionAr)}</span></div>{i < 2 && <ArrowRight className="story-case-arrow" aria-hidden="true"/>}</li>)}
     </ol>}
     <p className="story-case-note">{t('Current session state · fictional records · no official approvals', 'حالة الجلسة الحالية · سجلات افتراضية · لا اعتمادات رسمية')}</p>

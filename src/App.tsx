@@ -162,6 +162,7 @@ function SADUApp() {
         <StoryMode
           lang={lang}
           onSelectRoleAndExplore={handleSelectRoleAndExplore}
+          onSelectManagementView={view => { handleSelectRoleAndExplore('DIRECTORATE'); setLeadershipView(view); }}
           onSkipToPlatform={() => handleSelectRoleAndExplore('DIRECTORATE')}
           onToggleLanguage={toggleLang}
         />

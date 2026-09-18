@@ -28,12 +28,12 @@ export const storyChapters = [
     id: 'leadership-operational', icon: GitBranch,
     titleEn: 'Mr. Mohammed Ibrahim Al Qaseer', titleAr: 'الأستاذ محمد إبراهيم القصير',
     designationEn: 'Director of Cultural Affairs', designationAr: 'مدير إدارة الشؤون الثقافية',
-    subtitleEn: 'Programme Delivery and Handover', subtitleAr: 'تنفيذ البرامج وتسليم المسؤوليات',
+    subtitleEn: 'Department Performance and Schedules', subtitleAr: 'أداء الأقسام والجداول الزمنية',
     imagePath: '/qaseer_portrait.jpg', portrait: { width: 1728, height: 2418, viewBox: '525 550 1024 1280' },
-    contentEn: 'The proposed delivery table connects exhibition plans with coordination, technical evidence, and logistics. Each row shows the asset, its blocker, the next responsible role, and the evidence needed to continue.',
-    contentAr: 'يربط جدول التنفيذ المقترح خطط المعارض بالتنسيق والأدلة الفنية واللوجستيات. ويعرض كل صف الأصل ومعوقه والدور المسؤول التالي والأدلة اللازمة لاستكمال العمل.',
-    highlightBoxEn: 'Review the dossier, acknowledge the handover, then pass on an understandable record.',
-    highlightBoxAr: 'راجع الملف وأكد التسليم، ثم انقل سجلاً واضحاً لمن يتولى المتابعة.'
+    contentEn: 'The Director of Cultural Affairs oversees whether the departments under his direction are delivering their activities on schedule. His overview brings together department performance, upcoming milestones, responsible managers, and escalated risks.',
+    contentAr: 'يتابع مدير إدارة الشؤون الثقافية مدى تنفيذ الأقسام التي يشرف عليها لأنشطتها وفق الجداول المحددة. وتجمع نظرته العامة أداء الأقسام والمراحل المقبلة والمديرين المسؤولين والمخاطر المصعّدة.',
+    highlightBoxEn: 'Managers own day-to-day delivery and handovers. The Director oversees outcomes, schedules, and cross-department priorities.',
+    highlightBoxAr: 'يتولى المديرون التنفيذ اليومي والتسليم. ويتابع مدير الإدارة النتائج والجداول والأولويات بين الأقسام.'
   },
   {
     id: 'one-record', icon: Layers, titleEn: 'One Case, One Living Record', titleAr: 'حالة واحدة وسجل حي واحد',
@@ -52,29 +52,29 @@ export const storyChapters = [
   {
     id: 'evidence', icon: BookOpen, titleEn: 'Evidence Makes the Handover Reviewable', titleAr: 'الأدلة تتيح مراجعة التسليم',
     subtitleEn: 'A condition report stays linked to the asset and its version.', subtitleAr: 'يبقى تقرير الحالة مرتبطاً بالأصل وإصداره.',
-    contentEn: 'The Technical role attaches a prepared sample condition report. A reported discrepancy keeps the handover on hold. A clear sample report routes the case to the Directorate for review; later versions remain distinguishable in session history.',
-    contentAr: 'يرفق الدور الفني تقرير حالة تجريبياً معداً مسبقاً. ويُبقي الاختلاف المسجل التسليم معلقاً. أما التقرير التجريبي الخالي من الاختلافات فيحيل الحالة إلى الإدارة للمراجعة، مع تمييز الإصدارات في سجل الجلسة.',
+    contentEn: 'The Technical role attaches a prepared sample condition report. A reported discrepancy keeps the handover on hold. A clear sample report routes the case to the assigned exhibition manager for review; report versions remain visible in session history.',
+    contentAr: 'يرفق الدور الفني تقرير حالة تجريبياً معداً مسبقاً. ويُبقي الاختلاف المسجل التسليم معلقاً. ويُحال التقرير التجريبي الخالي من الاختلافات إلى مدير المعارض المكلف للمراجعة، مع حفظ الإصدارات في سجل الجلسة.',
     highlightBoxEn: 'Evidence is attributable to a sample role, source reference, version, and time.', highlightBoxAr: 'ترتبط الأدلة بدور تجريبي ومرجع مصدر وإصدار ووقت.'
   },
   {
     id: 'handover', icon: GitBranch, titleEn: 'Review First. Confirm Deliberately.', titleAr: 'المراجعة أولاً ثم التأكيد الصريح',
     subtitleEn: 'A two-step acknowledgement preserves the reviewed version.', subtitleAr: 'تأكيد من خطوتين يحفظ مرجع الإصدار المراجع.',
-    contentEn: 'Review Handover opens the asset dossier and its condition evidence. An explicit acknowledgement is required before confirmation. The demo records the sample role, time, and report version, then makes that handover read-only.',
-    contentAr: 'يفتح إجراء مراجعة التسليم ملف الأصل وأدلة حالته. ويلزم إقرار صريح قبل التأكيد. يسجل النموذج الدور التجريبي والوقت وإصدار التقرير، ثم يصبح التسليم للقراءة فقط.',
+    contentEn: 'In the manager workspace, Review Handover opens the asset dossier and condition evidence. An explicit acknowledgement is required before confirmation. The demo records the sample manager, time, and report version, then makes that handover read-only.',
+    contentAr: 'في مساحة المدير، تفتح مراجعة التسليم ملف الأصل وأدلة حالته. ويلزم إقرار صريح قبل التأكيد. يسجل النموذج المدير التجريبي والوقت وإصدار التقرير، ثم يصبح التسليم للقراءة فقط.',
     highlightBoxEn: 'This is a demonstration acknowledgement, not a digital signature or legal custody instrument.', highlightBoxAr: 'هذا تأكيد تجريبي، وليس توقيعاً رقمياً أو سند حيازة قانونية.'
   },
   {
     id: 'roll-up', icon: Award, titleEn: 'Operational Evidence, Executive Clarity', titleAr: 'أدلة تشغيلية ورؤية تنفيذية واضحة',
     subtitleEn: 'Management by exception, calculated from the shared record.', subtitleAr: 'متابعة الاستثناءات انطلاقاً من السجل المشترك.',
-    contentEn: 'After the demo handover, the readiness count moves from three to four sample programmes. A missing artist statement lowers evidence completeness. A Finance pack reaches executive review only after Directorate review. Each change has a visible cause.',
-    contentAr: 'بعد التسليم التجريبي يرتفع عدد البرامج الجاهزة من ثلاثة إلى أربعة. ويخفض نقص بيان الفنان نسبة اكتمال الأدلة. ولا يصل الملف المالي إلى المراجعة التنفيذية إلا بعد مراجعة الإدارة. لكل تغير سبب واضح.',
+    contentEn: 'When the manager completes the demo handover, the delivery risk clears from the Directorate overview and the Chairman’s readiness count rises from three to four. Routine actions stay with managers; their outcomes update the oversight views.',
+    contentAr: 'عندما يكمل المدير التسليم التجريبي، تزول مخاطر التنفيذ من نظرة الإدارة العامة ويرتفع مؤشر الجاهزية لدى رئيس الدائرة من ثلاثة إلى أربعة. تبقى الإجراءات اليومية لدى المديرين، وتحدّث نتائجها شاشات المتابعة.',
     highlightBoxEn: 'Operational readiness remains separate from opening, payment, and signing authorization.', highlightBoxAr: 'تبقى الجاهزية التشغيلية منفصلة عن إذن الافتتاح والدفع والتوقيع.'
   },
   {
     id: 'explore-next', icon: Users, titleEn: 'Follow the Record Across Roles', titleAr: 'تابع السجل عبر الأدوار',
-    subtitleEn: 'Begin with the Chairman’s brief, then resolve its delivery exception.', subtitleAr: 'ابدأ بموجز رئيس الدائرة، ثم عالج استثناء التسليم.',
-    contentEn: 'Start with the blocked programme. Record its crate arrival in Logistics, attach the sample condition report in Technical, and confirm the proposed handover in Directorate. Return to the Chairman’s brief to see the same record update the count.',
-    contentAr: 'ابدأ بالبرنامج المعلق. سجل وصول صندوقه في اللوجستيات، وأرفق تقرير الحالة التجريبي في مساحة الفريق الفني، وأكد التسليم المقترح في الإدارة. عد إلى موجز رئيس الدائرة لتشاهد أثر السجل نفسه في المؤشر.',
+    subtitleEn: 'Oversight follows outcomes. Managers and teams deliver the work.', subtitleAr: 'تتابع القيادة النتائج، وينفذ المديرون والفرق العمل.',
+    contentEn: 'See the department schedule risk in Directorate. Switch demo roles: Logistics records arrival, Technical attaches the sample report, and the Exhibition manager reviews the handover. Return to Directorate and Chairman to see the updated oversight summaries.',
+    contentAr: 'تابع مخاطر جدول القسم في الإدارة. بدّل الأدوار التجريبية: تسجل اللوجستيات الوصول، ويرفق الفريق الفني التقرير، ويراجع مدير المعارض التسليم. عد إلى الإدارة ورئيس الدائرة لمشاهدة ملخصات المتابعة المحدثة.',
     highlightBoxEn: 'The connected case covers leadership, logistics, technical, coordination, and finance. Other roles open the earlier sample workspaces.', highlightBoxAr: 'تشمل الحالة المترابطة القيادة واللوجستيات والفريق الفني والتنسيق والمالية. وتفتح الأدوار الأخرى مساحات العمل التجريبية السابقة.'
   }
 ];

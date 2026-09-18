@@ -26,6 +26,7 @@ import {
 interface StoryModeProps {
   lang: Language;
   onSelectRoleAndExplore: (role: RoleKey) => void;
+  onSelectManagementView: (view: 'DIRECTORATE' | 'MANAGER') => void;
   onSkipToPlatform: () => void;
   onToggleLanguage: () => void;
 }
@@ -33,6 +34,7 @@ interface StoryModeProps {
 export const StoryMode: React.FC<StoryModeProps> = ({
   lang,
   onSelectRoleAndExplore,
+  onSelectManagementView,
   onSkipToPlatform,
   onToggleLanguage
 }) => {
@@ -212,6 +214,8 @@ export const StoryMode: React.FC<StoryModeProps> = ({
                 <div className="story-role-grid">
                   {[
                     { role: 'DIRECTORATE' as RoleKey, labelEn: 'Start with the Chairman’s brief', labelAr: 'ابدأ بموجز رئيس الدائرة' },
+                    { role: 'DIRECTORATE' as RoleKey, view: 'DIRECTORATE' as const, labelEn: 'Directorate · Department oversight', labelAr: 'الإدارة · متابعة الأقسام' },
+                    { role: 'DIRECTORATE' as RoleKey, view: 'MANAGER' as const, labelEn: 'Exhibition manager · Delivery', labelAr: 'مدير المعارض · التنفيذ' },
                     { role: 'SDC_COORDINATOR' as RoleKey, labelEn: 'SDC Coordinator', labelAr: 'منسق عام المهرجانات (SDC)' },
                     { role: 'COMMITTEE' as RoleKey, labelEn: 'Curatorial Jury', labelAr: 'لجنة الاختيار والتحكيم' },
                     { role: 'EDITORIAL' as RoleKey, labelEn: 'Editorial Bureau (Magazines)', labelAr: 'هيئة تحرير المجلات الثقافية' },
@@ -223,8 +227,8 @@ export const StoryMode: React.FC<StoryModeProps> = ({
                     { role: 'ARTIST' as RoleKey, labelEn: 'Artist Studio', labelAr: 'استوديو الفنان' },
                   ].map((item) => (
                     <button
-                      key={item.role}
-                      onClick={() => onSelectRoleAndExplore(item.role)}
+                      key={item.view ?? item.labelEn}
+                      onClick={() => item.view ? onSelectManagementView(item.view) : onSelectRoleAndExplore(item.role)}
                       className="rounded-md border border-sadu-gold bg-sadu-linen hover:bg-sadu-brick hover:text-white text-left rtl:text-right transition-colors group cursor-pointer shadow-2xs flex items-center justify-between gap-2"
                     >
                       <span className="story-role-label font-bold group-hover:text-white text-sadu-charcoal">

@@ -10,8 +10,8 @@ export const DEMO_PROGRAMME: ExhibitionProgramme = {
   budgetPlanned: 0, budgetCommitted: 0, budgetSpent: 0, currency: 'AED',
   progressPercent: 0, gatesReady: 0, gatesTotal: 3, criticalRisks: 0, unresolvedHandoffs: 1,
 };
-export type DemoActor = 'CHAIRMAN' | 'DIRECTORATE' | 'LOGISTICS' | 'TECHNICAL' | 'COORDINATOR' | 'FINANCE' | 'OBSERVER';
-export type EventKind = 'receipt' | 'receipt-issue' | 'condition' | 'handover' | 'statement-missing' | 'statement-task' | 'statement-restored' | 'finance-pack' | 'finance-escalated';
+export type DemoActor = 'CHAIRMAN' | 'DIRECTORATE' | 'MANAGER' | 'LOGISTICS' | 'TECHNICAL' | 'COORDINATOR' | 'FINANCE' | 'OBSERVER';
+export type EventKind = 'receipt' | 'receipt-issue' | 'condition' | 'handover' | 'statement-missing' | 'statement-task' | 'statement-restored' | 'finance-pack' | 'finance-escalated' | 'delivery-escalated';
 export interface DemoEvent { id: string; kind: EventKind; actor: DemoActor; at: string; reference: string }
 export interface ConditionEvidence { id: string; version: number; outcome: 'clear' | 'issue'; at: string; actor: DemoActor }
 export interface LivingRecord {
@@ -22,16 +22,17 @@ export interface LivingRecord {
   acceptance: { at: string; actor: DemoActor; reportId: string; reportVersion: number; declarationVersion: string } | null;
   statementPresent: boolean;
   statementTask: boolean;
+  deliveryEscalated: boolean;
   finance: 'draft' | 'submitted' | 'escalated';
   events: DemoEvent[];
 }
-export const createLivingRecord = (): LivingRecord => ({ receipt: null, receiptIssue: false, condition: null, conditionHistory: [], acceptance: null, statementPresent: true, statementTask: false, finance: 'draft', events: [] });
+export const createLivingRecord = (): LivingRecord => ({ receipt: null, receiptIssue: false, condition: null, conditionHistory: [], acceptance: null, statementPresent: true, statementTask: false, deliveryEscalated: false, finance: 'draft', events: [] });
 type Envelope = { actor: DemoActor; at: string };
 export type DemoAction =
   | ({ type: 'RECEIVE'; crateId: string; sealMatches: boolean } & Envelope)
   | ({ type: 'CONDITION'; outcome: 'clear' | 'issue' } & Envelope)
   | ({ type: 'ACCEPT'; reportVersion: number; acknowledged: boolean } & Envelope)
-  | ({ type: 'FLAG_STATEMENT' | 'ASSIGN_STATEMENT' | 'RESTORE_STATEMENT' | 'SUBMIT_FINANCE' | 'ESCALATE_FINANCE' } & Envelope)
+  | ({ type: 'FLAG_STATEMENT' | 'ASSIGN_STATEMENT' | 'RESTORE_STATEMENT' | 'SUBMIT_FINANCE' | 'ESCALATE_FINANCE' | 'ESCALATE_DELIVERY' } & Envelope)
   | { type: 'RESET' };
 
 export function livingRecordReducer(state: LivingRecord, action: DemoAction): LivingRecord {
@@ -55,13 +56,13 @@ export function livingRecordReducer(state: LivingRecord, action: DemoAction): Li
       return record('condition', { condition, conditionHistory: [...state.conditionHistory, condition] }, `DEMO-CR-04/v${version}`);
     }
     case 'ACCEPT':
-      if (action.actor !== 'DIRECTORATE' || !state.receipt || state.receiptIssue || !state.condition || state.condition.outcome !== 'clear' || state.acceptance || !action.acknowledged || action.reportVersion !== state.condition.version) return state;
+      if (action.actor !== 'MANAGER' || !state.receipt || state.receiptIssue || !state.condition || state.condition.outcome !== 'clear' || state.acceptance || !action.acknowledged || action.reportVersion !== state.condition.version) return state;
       return record('handover', { acceptance: { at: action.at, actor: action.actor, reportId: state.condition.id, reportVersion: state.condition.version, declarationVersion: 'DEMO-ACK-1' } }, `${state.condition.id}/v${state.condition.version}`);
     case 'FLAG_STATEMENT':
       if (action.actor !== 'COORDINATOR' || !state.statementPresent) return state;
       return record('statement-missing', { statementPresent: false }, 'DEMO-STATEMENT-01');
     case 'ASSIGN_STATEMENT':
-      if (action.actor !== 'DIRECTORATE' || state.statementPresent || state.statementTask) return state;
+      if (action.actor !== 'MANAGER' || state.statementPresent || state.statementTask) return state;
       return record('statement-task', { statementTask: true }, 'DEMO-TASK-01');
     case 'RESTORE_STATEMENT':
       if (action.actor !== 'COORDINATOR' || state.statementPresent || !state.statementTask) return state;
@@ -70,8 +71,11 @@ export function livingRecordReducer(state: LivingRecord, action: DemoAction): Li
       if (action.actor !== 'FINANCE' || state.finance !== 'draft') return state;
       return record('finance-pack', { finance: 'submitted' }, 'DEMO-FIN-01/v1');
     case 'ESCALATE_FINANCE':
-      if (action.actor !== 'DIRECTORATE' || state.finance !== 'submitted') return state;
+      if (action.actor !== 'MANAGER' || state.finance !== 'submitted') return state;
       return record('finance-escalated', { finance: 'escalated' }, 'DEMO-FIN-01/v1');
+    case 'ESCALATE_DELIVERY':
+      if (action.actor !== 'MANAGER' || state.acceptance || state.deliveryEscalated) return state;
+      return record('delivery-escalated', { deliveryEscalated: true }, 'DEMO-SCHEDULE-01');
   }
 }
 
@@ -88,7 +92,7 @@ export function selectLivingRecord(state: LivingRecord) {
     { id: 'DEMO-CR-04', present: Boolean(state.condition) },
   ];
   const evidenceCount = evidence.filter(item => item.present).length;
-  const nextActor: DemoActor | null = state.acceptance ? null : !state.receipt ? 'LOGISTICS' : !state.condition || state.condition.outcome === 'issue' ? 'TECHNICAL' : 'DIRECTORATE';
+  const nextActor: DemoActor | null = state.acceptance ? null : !state.receipt ? 'LOGISTICS' : !state.condition || state.condition.outcome === 'issue' ? 'TECHNICAL' : 'MANAGER';
   return {
     programmes, evidence, evidenceCount, evidencePercent: Math.round(evidenceCount / evidence.length * 100),
     readyCount: programmes.filter(programme => programme.ready).length,

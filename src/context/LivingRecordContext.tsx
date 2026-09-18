@@ -4,13 +4,13 @@ import { createLivingRecord, livingRecordReducer, DemoAction, LivingRecord } fro
 interface LivingRecordContextValue {
   state: LivingRecord;
   dispatch: React.Dispatch<DemoAction>;
-  leadershipView: 'CHAIRMAN' | 'DIRECTORATE';
-  setLeadershipView: React.Dispatch<React.SetStateAction<'CHAIRMAN' | 'DIRECTORATE'>>;
+  leadershipView: 'CHAIRMAN' | 'DIRECTORATE' | 'MANAGER';
+  setLeadershipView: React.Dispatch<React.SetStateAction<'CHAIRMAN' | 'DIRECTORATE' | 'MANAGER'>>;
 }
 const Context = createContext<LivingRecordContextValue | null>(null);
 export function LivingRecordProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(livingRecordReducer, undefined, createLivingRecord);
-  const [leadershipView, setLeadershipView] = useState<'CHAIRMAN' | 'DIRECTORATE'>('CHAIRMAN');
+  const [leadershipView, setLeadershipView] = useState<'CHAIRMAN' | 'DIRECTORATE' | 'MANAGER'>('CHAIRMAN');
   return <Context.Provider value={{ state, dispatch, leadershipView, setLeadershipView }}>{children}</Context.Provider>;
 }
 export function useLivingRecord() {
