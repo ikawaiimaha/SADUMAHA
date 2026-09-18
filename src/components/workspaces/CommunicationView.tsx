@@ -1,0 +1,336 @@
+import React, { useState } from 'react';
+import { Language, MessageRecord, RoleKey, WorkspaceTab } from '../../types';
+import { INITIAL_MESSAGES } from '../../data/mockData';
+import { useI18n } from '../../context/I18nContext';
+import { useWorkspace } from '../../context/WorkspaceContext';
+import { 
+  MessageSquare, 
+  Send, 
+  Paperclip, 
+  ShieldCheck, 
+  CheckCircle2, 
+  FileText, 
+  Clock, 
+  CornerDownLeft,
+  Lock,
+  PlusCircle
+} from 'lucide-react';
+
+export interface InstitutionalTemplate {
+  id: string;
+  labelEn: string;
+  labelAr: string;
+  contentEn: string;
+  contentAr: string;
+}
+
+export const INSTITUTIONAL_TEMPLATES: InstitutionalTemplate[] = [
+  {
+    id: 'tpl-01',
+    labelEn: 'Permission Request for Artwork Modification',
+    labelAr: 'طلب تصريح بتعديل العمل الفني',
+    contentEn: 'Subject: Approval Request for Proposed Artwork Treatment\n\nDear Directorate Team,\n\nWe hereby submit an official request to approve a minor conservation and structural adjustment for the proposed artwork. The proposed treatment adheres strictly to archival conservation standards and will not alter the approved conceptual narrative of the Biennial.',
+    contentAr: 'الموضوع: طلب اعتماد مقترح المعالجة الفنية للعمل\n\nسعادة إدارة الشؤون الثقافية المحترمين،\n\nنتقدم بطلب رسمي لاعتماد تعديل إنشائي وترميمي طفيف على العمل الفني المقترح، مع الالتزام التام بمعايير الحفظ المتحفي ودون المساس بالرؤية الفكرية المعتمدة للبينالي.',
+  },
+  {
+    id: 'tpl-02',
+    labelEn: 'Technical Clarification Request',
+    labelAr: 'طلب استيضاحات هندسية وفنية',
+    contentEn: 'Subject: Technical Clarifications Required for Artwork Installation\n\nDear Artist,\n\nIn preparation for gallery installation at Sharjah Art Museum, our engineering team requires immediate clarification regarding mounting anchor specs, required floor point-load tolerances (kg/m²), and electrical lumen limits for your designated gallery space.',
+    contentAr: 'الموضوع: استيضاحات هندسية لازمة لتثبيت العمل الفني\n\nالفنان العزيز،\n\nاستعداداً لتركيب الأعمال بمتحف الشارقة للفنون، يرجى تزويد الفريق الفني فوراً بمواصفات صفائح التثبيت، قدرة تحمل الأرضيات (كجم/م²)، وحدود شدة الإضاءة المطلوبة لقاعتكم.',
+  },
+  {
+    id: 'tpl-03',
+    labelEn: 'Approval Request for Fabrication',
+    labelAr: 'طلب اعتماد التصنيع والإنتاج',
+    contentEn: 'Subject: Approval Required Before Production\n\nDear Curatorial Committee,\n\nPlease review and approve the finalized foundry fabrication specifications and material samples for the site-specific commission. In accordance with Directorate governance, production will commence only upon your formal written sign-off.',
+    contentAr: 'الموضوع: طلب اعتماد مسبق للبدء في التصنيع والإنتاج\n\nالسادة أعضاء لجنة الاختيار والتقييم المحترمين،\n\nنرجو التكرم بمراجعة واعتماد المخطط التنفيذي وعينات المواد للتكليف الفني المكاني، علماً بأن الإنتاج في المسكب لن يبدأ إلا بعد استلام الموافقة الخطية الرسمية منكم.',
+  },
+  {
+    id: 'tpl-04',
+    labelEn: 'Request for Installation Guidelines',
+    labelAr: 'طلب إرشادات التثبيت والتركيب',
+    contentEn: 'Subject: Request for Installation Guidelines\n\nDear Artist,\n\nTo ensure flawless presentation during the official opening, please provide comprehensive step-by-step assembly diagrams, unpacking safety protocols, and designated spatial offsets for your Biennial artwork.',
+    contentAr: 'الموضوع: طلب الدليل الإرشادي لتركيب وتثبيت العمل الفني\n\nالأستاذ الفنان المحترم،\n\nحرصاً على العرض الأمثل لعملكم في الافتتاح الرسمي، يرجى موافاتنا بمخطط التركيب خطوة بخطوة، وإجراءات السلامة لفض الصناديق، والمسافات الفراغية المعتمدة للعمل.',
+  },
+  {
+    id: 'tpl-05',
+    labelEn: 'Request for Final Technical Files',
+    labelAr: 'طلب الملفات الفنية النهائية',
+    contentEn: 'Subject: Request for Final Technical Files\n\nDear Artist,\n\nPlease transmit the master uncompressed media playback files (Apple ProRes 422HQ / Master DCP), projection schematics, and high-resolution raw imagery required for the official Exhibition Catalogue print run.',
+    contentAr: 'الموضوع: طلب استلام الملفات الفنية الرقمية النهائية\n\nالأستاذ الفنان المحترم،\n\nيرجى إرسال النسخ الرئيسية غير المضغوطة لملفات العرض (ProRes 422HQ / DCP)، ومخطط العرض الضوئي، والصور عالية الدقة المخصصة لطباعة كتالوج المعرض الرسمي.',
+  },
+  {
+    id: 'tpl-06',
+    labelEn: 'External Transport Request',
+    labelAr: 'طلب دعم النقل والترحيل الخارجي',
+    contentEn: 'Subject: Request for Transportation Support\n\nDear Logistics Partner,\n\nWe request scheduled climate-controlled air/sea freight routing and customs clearance escort for participating artworks under Sharjah Department of Culture wall-to-wall institutional transit insurance.',
+    contentAr: 'الموضوع: طلب خدمات النقل والشحن الدولي المراقب\n\nالسادة شركاء النقل واللوجستيات المحترمين،\n\nنطلب جدولة الشحن الجوي/البحري المبرد والمحمي مناخياً مع مرافقة التخليص الجمركي للأعمال الفنية المعتمدة والمشمولة بالتأمين الشامل لدائرة الثقافة.',
+  },
+  {
+    id: 'tpl-07',
+    labelEn: 'Equipment Request to External Partner',
+    labelAr: 'طلب استعارة أجهزة وتجهيزات تقنية',
+    contentEn: 'Subject: Request for Equipment Support\n\nDear Partner Institution,\n\nUnder our institutional cultural cooperation protocol, we request the reservation of high-lumen 4K laser projection hardware and specialized acoustic directional speakers for the upcoming Calligraphy Biennial installation.',
+    contentAr: 'الموضوع: طلب إعارة تجهيزات ومعدات تقنية متقدمة\n\nالأخوة في المؤسسة الشريكة المحترمين،\n\nاستناداً إلى بروتوكول التعاون الثقافي المشترك، نلتمس حجز أجهزة إسقاط ليزرية بدقة 4K وسماعات صوتية موجهة للتجهيز الفني المشارك في بينالي الشارقة للخط.',
+  },
+  {
+    id: 'tpl-08',
+    labelEn: 'Written Confirmation Requested',
+    labelAr: 'طلب تأكيد خطي رسمي (بديل نموذج الموافقة)',
+    contentEn: 'Subject: Written Confirmation Requested - Replacement for Consent Form\n\nDear Artist,\n\nIn accordance with Sharjah Directorate guidelines, please provide your formal written acknowledgement affirming that all artworks will be shipped unframed and without glass, and acknowledging the Department\'s 10-day intake condition inspection window.',
+    contentAr: 'الموضوع: طلب تأكيد خطي رسمي (بديل نموذج الموافقة)\n\nالأستاذ الفنان المحترم،\n\nوفقاً للائحة إدارة الشؤون الثقافية، نرجو موافاتنا بتأكيد خطي رسمي يفيد بالتزامكم بشحن كافة الأعمال بدون براويز أو زجاج، والموافقة على مهلة فحص الحالة (10 أيام) من تاريخ الاستلام.',
+  },
+];
+
+export interface CommunicationViewProps {
+  lang?: Language;
+  currentRole?: RoleKey;
+  onNavigateTab?: (tab: WorkspaceTab) => void;
+}
+
+export const CommunicationView: React.FC<CommunicationViewProps> = (props) => {
+  const i18n = useI18n();
+  const workspace = useWorkspace();
+
+  const lang = props.lang ?? i18n.lang;
+  const isAr = lang === 'ar';
+  const currentRole = props.currentRole ?? workspace.currentRole;
+  const onNavigateTab = props.onNavigateTab ?? workspace.navigateTab;
+
+  const [messages, setMessages] = useState<MessageRecord[]>(INITIAL_MESSAGES);
+  const [draftContent, setDraftContent] = useState('');
+  const [withAttachment, setWithAttachment] = useState(false);
+  const [taskLinkedToast, setTaskLinkedToast] = useState<string | null>(null);
+
+  const handleTemplateSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedId = e.target.value;
+    if (!selectedId) return;
+
+    const tpl = INSTITUTIONAL_TEMPLATES.find(t => t.id === selectedId);
+    if (tpl) {
+      setDraftContent(isAr ? tpl.contentAr : tpl.contentEn);
+    }
+    // Reset selector back to default
+    e.target.value = '';
+  };
+
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!draftContent.trim()) return;
+
+    const newMessage: MessageRecord = {
+      id: `msg-${Date.now()}`,
+      senderNameEn: currentRole === 'ARTIST' ? 'Youssef Nabhan (Artist)' : 'Salma Al-Suwaidi (Coordinator)',
+      senderNameAr: currentRole === 'ARTIST' ? 'يوسف نبهان (الفنان)' : 'سلمى السويدي (المنسق)',
+      senderRole: currentRole === 'ARTIST' ? 'ARTIST' : 'COORDINATOR',
+      recipientRole: currentRole === 'ARTIST' ? 'COORDINATOR' : 'ARTIST',
+      timestamp: isAr ? 'الآن' : 'Just now',
+      contentEn: draftContent,
+      contentAr: draftContent,
+      hasAttachment: withAttachment,
+      attachmentName: withAttachment ? (isAr ? `Engineering_Floor_Load_Clearance.pdf (${i18n.formatNumber(1.2)} ميجابايت)` : 'Engineering_Floor_Load_Clearance.pdf (1.2 MB)') : undefined,
+    };
+
+    setMessages([...messages, newMessage]);
+    setDraftContent('');
+    setWithAttachment(false);
+  };
+
+  const handleConvertMessageToTask = (msgId: string) => {
+    setTaskLinkedToast(
+      isAr 
+        ? 'تم تحويل إفادة المراسلة بنجاح إلى بند انتباه ومهمة متابعة في غرفة التحكم'
+        : 'Message clarification successfully converted into linked attention task in Control Room'
+    );
+    setTimeout(() => setTaskLinkedToast(null), 4000);
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Toast Alert */}
+      {taskLinkedToast && (
+        <div className="p-3.5 bg-sadu-sage-light border border-sadu-sage rounded-md text-sadu-ink text-xs font-semibold flex items-center justify-between shadow-xs">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-sadu-sage" />
+            <span>{taskLinkedToast}</span>
+          </div>
+          <button onClick={() => setTaskLinkedToast(null)} className="text-sadu-muted hover:text-sadu-charcoal">✕</button>
+        </div>
+      )}
+
+      {/* Header */}
+      <div className="bg-sadu-linen border border-sadu-gold rounded-lg p-6 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-bold text-sadu-brick uppercase tracking-wider mb-1">
+              <MessageSquare className="w-4 h-4" />
+              <span>{isAr ? 'بوابة المراسلات المؤسسية المعتمدة (Communication Gateway V2)' : 'Official Institutional Communication Gateway V2'}</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-editorial font-bold text-sadu-charcoal">
+              {isAr ? 'قناة المراسلات الرسمية: يوسف نبهان ↔ سلمى السويدي' : 'Official Thread: Youssef Nabhan ↔ Salma Al-Suwaidi'}
+            </h1>
+            <p className="text-xs sm:text-sm text-sadu-muted mt-1">
+              {isAr
+                ? 'القناة المعتمدة حصراً للتواصل بين المنسق والفنان · تحفظ في ملف الإغلاق الأرشيفي الدائم للمعرض'
+                : 'The only authoritative institutional channel between Coordinator & Artist · Retained in permanent exhibition dossier.'}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="px-3 py-1 rounded bg-sadu-sand border border-sadu-gold text-xs font-mono font-bold text-sadu-ink">
+              THREAD-SCB-2026-YN
+            </span>
+          </div>
+        </div>
+
+        {/* Evidence vs Authority Rule Box */}
+        <div className="mt-4 p-3.5 bg-sadu-paper border-l-4 rtl:border-l-0 rtl:border-r-4 border-sadu-ink text-xs leading-relaxed">
+          <span className="font-bold text-sadu-ink block mb-0.5">
+            {isAr ? 'قانون الحوكمة (الأدلة مقابل سلطة القرار):' : 'Governance Principle (Evidence vs Decision Authority):'}
+          </span>
+          {isAr
+            ? 'تُعتبر كافة الرسائل والمرفقات المتبادلة "أدلة تواصلية موثقة". الرسالة لا تُنشئ بمفردها تعديلاً على النطاق المعتمد ولا تعتمد صرف مبالغ مالية، بل يتم تحويلها إلى طلب تعديل نطاق رسمي يتطلب توقيع مدير إدارة الشؤون الثقافية.'
+            : 'All correspondence represents "Attributable Communication Evidence". A message alone cannot silently alter Approved Scope or authorize disbursement; it must be converted into a formal change record requiring designated institutional sign-off.'}
+        </div>
+      </div>
+
+      {/* Message Stream */}
+      <div className="bg-sadu-linen border border-sadu-gold rounded-lg p-6 shadow-xs space-y-4">
+        <div className="flex items-center justify-between border-b border-sadu-gold/40 pb-3 text-xs text-sadu-muted">
+          <span className="font-semibold text-sadu-charcoal">
+            {isAr ? `المراسلات المسجلة في ملف المشاركة (${i18n.formatNumber(messages.length)} رسالة):` : `Recorded Communications in Assignment Dossier (${messages.length}):`}
+          </span>
+          <span className="flex items-center gap-1">
+            <Lock className="w-3.5 h-3.5 text-sadu-sage" />
+            {isAr ? 'أرشيف مراسلات مشفر ومحمي' : 'Encrypted Institutional Record'}
+          </span>
+        </div>
+
+        <div className="space-y-4">
+          {messages.map(msg => {
+            const isMe = msg.senderRole === currentRole;
+            return (
+              <div
+                key={msg.id}
+                className={`p-4 rounded-md border transition-all ${
+                  isMe
+                    ? 'bg-sadu-sand border-sadu-gold mr-6 rtl:mr-0 rtl:ml-6'
+                    : 'bg-sadu-paper border-sadu-gold ml-6 rtl:ml-0 rtl:mr-6'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2 text-xs">
+                  <span className="font-bold text-sadu-charcoal">
+                    {isAr ? msg.senderNameAr : msg.senderNameEn}
+                  </span>
+                  <span className="text-sadu-muted text-[11px] flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {msg.timestamp}
+                  </span>
+                </div>
+
+                <p className="text-xs sm:text-sm text-sadu-charcoal leading-relaxed">
+                  {isAr ? msg.contentAr : msg.contentEn}
+                </p>
+
+                {msg.hasAttachment && (
+                  <div className="mt-3 p-2.5 bg-sadu-linen rounded border border-sadu-gold text-xs flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sadu-ink font-medium">
+                      <Paperclip className="w-4 h-4 text-sadu-brick" />
+                      <span>{msg.attachmentName}</span>
+                    </div>
+                    <span className="text-[10px] text-sadu-sage font-semibold">
+                      ✓ {isAr ? 'فحص النزاهة مطابق (SHA-256)' : 'Checksum Verified'}
+                    </span>
+                  </div>
+                )}
+
+                {/* Convert to Task Action for Coordinators */}
+                {currentRole === 'COORDINATOR' && (
+                  <div className="mt-3 pt-2 border-t border-sadu-gold/40 flex justify-end">
+                    <button
+                      onClick={() => handleConvertMessageToTask(msg.id)}
+                      className="px-2.5 py-1 text-[11px] font-semibold text-sadu-brick hover:bg-sadu-sand rounded border border-sadu-brick/30 transition-colors flex items-center gap-1 cursor-pointer"
+                    >
+                      <PlusCircle className="w-3.5 h-3.5" />
+                      <span>{isAr ? 'تحويل المراسلة إلى مهمة بغرفة التحكم' : 'Convert to Linked Task in Control Room'}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Message Composer */}
+        <form onSubmit={handleSendMessage} className="mt-6 pt-4 border-t border-sadu-gold space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-sadu-muted">
+            <span className="font-semibold text-sadu-charcoal">
+              {isAr ? 'كتابة رسالة مؤسسية رسمية:' : 'Compose Attributable Institutional Message:'}
+            </span>
+
+            <div className="flex items-center gap-3">
+              <select
+                id="select-institutional-template"
+                defaultValue=""
+                onChange={handleTemplateSelect}
+                className="text-xs bg-sadu-sand border border-sadu-gold text-sadu-charcoal focus:border-sadu-brick rounded-md px-2.5 py-1 cursor-pointer outline-hidden transition-colors"
+                title={isAr ? 'إدراج نموذج مراسلة رسمي معتمد' : 'Insert approved institutional correspondence template'}
+              >
+                <option value="" disabled>
+                  {isAr ? 'إدراج نموذج سريع...' : 'Quick Insert Template...'}
+                </option>
+                {INSTITUTIONAL_TEMPLATES.map(tpl => (
+                  <option key={tpl.id} value={tpl.id}>
+                    {isAr ? tpl.labelAr : tpl.labelEn}
+                  </option>
+                ))}
+              </select>
+
+              <label className="flex items-center gap-1.5 cursor-pointer text-xs text-sadu-ink">
+                <input
+                  type="checkbox"
+                  checked={withAttachment}
+                  onChange={e => setWithAttachment(e.target.checked)}
+                  className="rounded text-sadu-brick focus:ring-0"
+                />
+                <Paperclip className="w-3.5 h-3.5" />
+                <span>{isAr ? 'إرفاق وثيقة هندسية / فنية (PDF)' : 'Attach Verified Document (PDF)'}</span>
+              </label>
+            </div>
+          </div>
+
+          <textarea
+            value={draftContent}
+            onChange={e => setDraftContent(e.target.value)}
+            rows={3}
+            placeholder={
+              isAr
+                ? 'اكتب رسالتك الرسمية هنا... (تُحفظ تلقائياً في السجل وتُوثق بالساعة والتاريخ)'
+                : 'Write official message... (Recorded permanently with timestamp & immutable attribution)'
+            }
+            className="w-full p-3 text-xs sm:text-sm bg-sadu-linen border border-sadu-gold rounded-md focus:border-sadu-brick focus:outline-hidden text-sadu-charcoal"
+          />
+
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] text-sadu-muted">
+              {isAr ? 'المرسل: ' : 'Sender: '}
+              <strong>
+                {currentRole === 'ARTIST' ? (isAr ? 'يوسف نبهان' : 'Youssef Nabhan') : (isAr ? 'سلمى السويدي (المنسق)' : 'Salma Al-Suwaidi (Coordinator)')}
+              </strong>
+            </span>
+
+            <button
+              type="submit"
+              disabled={!draftContent.trim()}
+              className="px-5 py-2 text-xs font-bold text-white bg-sadu-brick hover:bg-sadu-brick-dark disabled:opacity-40 rounded-md transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
+            >
+              <span>{isAr ? 'إرسال وتوثيق' : 'Send & Record'}</span>
+              <Send className="w-3.5 h-3.5 rtl:rotate-180" />
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};

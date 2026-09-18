@@ -1,0 +1,8 @@
+{
+  "name": "Remix SADU — System for Arts Data Unification",
+  "description": "Bilingual cultural programme operating system and institutional record connecting leadership, curation, committee evaluation, scope, contracts, specialist operations, and accountable closure.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

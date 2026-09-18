@@ -1,0 +1,546 @@
+@import "tailwindcss";
+
+@theme {
+  --color-sadu-brick: #8B3A1F;
+  --color-sadu-brick-dark: #722F19;
+  --color-sadu-brick-light: #FBF4F1;
+  --color-sadu-ink: #2F4A5B;
+  --color-sadu-ink-dark: #233845;
+  --color-sadu-ink-light: #EEF3F6;
+  --color-sadu-linen: #FFFDF7;
+  --color-sadu-sand: #F7F1E6;
+  --color-sadu-cream: #F7F1E6;
+  --color-sadu-sand-dark: #E7D8C1;
+  --color-sadu-gold: #CBB89F;
+  --color-sadu-charcoal: #211B17;
+  --color-sadu-sage: #6F8172;
+  --color-sadu-sage-light: #DCE5DC;
+  --color-sadu-muted: #6E6259;
+  --color-sadu-ochre: #B8893A;
+  --color-sadu-paper: #FFFAF0;
+}
+
+@layer base {
+  :root {
+    --bg-ground: #F7F1E6;
+    --surface-white: #FFFDF7;
+    --surface-paper: #FFFAF0;
+    --surface-muted: #F1E7D6;
+    --text-primary: #211B17;
+    --text-supporting: #6E6259;
+    --border-rule: #CBB89F;
+    --accent-brick: #8B3A1F;
+    --accent-deepink: #2F4A5B;
+    --accent-ochre: #B8893A;
+    --state-sage: #6F8172;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', 'Noto Naskh Arabic', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #211B17;
+    background-color: #F7F1E6;
+  }
+
+  /* RTL / Arabic root adjustments */
+  [dir="rtl"],
+  [lang="ar"] {
+    font-family: 'Noto Naskh Arabic', 'Amiri', Tahoma, sans-serif;
+    /* Arabic cursive script requires normal letter-spacing to preserve unbroken glyph connections */
+    letter-spacing: normal;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  [dir="rtl"] body,
+  [lang="ar"] body {
+    line-height: 1.8;
+  }
+
+  /* Prevent tracking/letter-spacing inheritance that breaks cursive Arabic letterforms */
+  [dir="rtl"] h1,
+  [dir="rtl"] h2,
+  [dir="rtl"] h3,
+  [dir="rtl"] h4,
+  [dir="rtl"] h5,
+  [dir="rtl"] h6,
+  [dir="rtl"] p,
+  [dir="rtl"] span,
+  [dir="rtl"] blockquote,
+  [dir="rtl"] label,
+  [dir="rtl"] button,
+  [dir="rtl"] input,
+  [dir="rtl"] select,
+  [dir="rtl"] textarea,
+  [lang="ar"] h1,
+  [lang="ar"] h2,
+  [lang="ar"] h3,
+  [lang="ar"] h4,
+  [lang="ar"] h5,
+  [lang="ar"] h6,
+  [lang="ar"] p,
+  [lang="ar"] span,
+  [lang="ar"] blockquote,
+  [lang="ar"] label,
+  [lang="ar"] button,
+  [lang="ar"] input,
+  [lang="ar"] select,
+  [lang="ar"] textarea {
+    letter-spacing: 0;
+  }
+
+  /* Calibrated heading line-heights for Arabic diacritics and high ascenders */
+  [dir="rtl"] h1,
+  [lang="ar"] h1 {
+    line-height: 1.5;
+  }
+
+  [dir="rtl"] h2,
+  [lang="ar"] h2 {
+    line-height: 1.55;
+  }
+
+  [dir="rtl"] h3,
+  [lang="ar"] h3 {
+    line-height: 1.6;
+  }
+
+  [dir="rtl"] p,
+  [lang="ar"] p {
+    line-height: 1.85;
+  }
+}
+
+/* ==========================================================================
+   GLOBAL ARABIC COMPONENT METRICS ENGINE
+   Calibrated padding, line-heights, and vertical clearances for Noto Naskh
+   Arabic & Amiri to accommodate taller character heights and prevent clipping
+   ========================================================================== */
+
+/* 1. Arabic Line-Height Scaling & Leading Utility Relaxation */
+html[dir="rtl"] .leading-none,
+html[lang="ar"] .leading-none,
+[dir="rtl"] .leading-none,
+[lang="ar"] .leading-none {
+  line-height: 1.35 !important;
+}
+
+html[dir="rtl"] .leading-tight,
+html[lang="ar"] .leading-tight,
+[dir="rtl"] .leading-tight,
+[lang="ar"] .leading-tight {
+  line-height: 1.5 !important;
+}
+
+html[dir="rtl"] .leading-snug,
+html[lang="ar"] .leading-snug,
+[dir="rtl"] .leading-snug,
+[lang="ar"] .leading-snug {
+  line-height: 1.62 !important;
+}
+
+html[dir="rtl"] .leading-normal,
+html[lang="ar"] .leading-normal,
+[dir="rtl"] .leading-normal,
+[lang="ar"] .leading-normal {
+  line-height: 1.75 !important;
+}
+
+html[dir="rtl"] .leading-relaxed,
+html[lang="ar"] .leading-relaxed,
+[dir="rtl"] .leading-relaxed,
+[lang="ar"] .leading-relaxed {
+  line-height: 1.9 !important;
+}
+
+html[dir="rtl"] .leading-loose,
+html[lang="ar"] .leading-loose,
+[dir="rtl"] .leading-loose,
+[lang="ar"] .leading-loose {
+  line-height: 2.15 !important;
+}
+
+/* Typography scale line-heights for Arabic script */
+html[dir="rtl"] .text-\[9px\],
+html[lang="ar"] .text-\[9px\] {
+  line-height: 1.62;
+}
+
+html[dir="rtl"] .text-\[10px\],
+html[lang="ar"] .text-\[10px\] {
+  line-height: 1.65;
+}
+
+html[dir="rtl"] .text-\[11px\],
+html[lang="ar"] .text-\[11px\] {
+  line-height: 1.68;
+}
+
+html[dir="rtl"] .text-xs,
+html[lang="ar"] .text-xs {
+  line-height: 1.7;
+}
+
+html[dir="rtl"] .text-sm,
+html[lang="ar"] .text-sm {
+  line-height: 1.75;
+}
+
+html[dir="rtl"] .text-base,
+html[lang="ar"] .text-base {
+  line-height: 1.85;
+}
+
+/* 2. Global Arabic Badges, Status Pills, Tags, and Chips */
+html[dir="rtl"] .badge,
+html[lang="ar"] .badge,
+html[dir="rtl"] [data-badge],
+html[lang="ar"] [data-badge],
+html[dir="rtl"] .status-pill,
+html[lang="ar"] .status-pill,
+html[dir="rtl"] span[class*="rounded"][class*="text-"],
+html[lang="ar"] span[class*="rounded"][class*="text-"],
+html[dir="rtl"] div[class*="rounded"][class*="text-"][class*="px-"],
+html[lang="ar"] div[class*="rounded"][class*="text-"][class*="px-"],
+html[dir="rtl"] .rounded-full[class*="text-"],
+html[lang="ar"] .rounded-full[class*="text-"] {
+  line-height: 1.6;
+  letter-spacing: 0;
+  display: inline-flex;
+  align-items: center;
+  overflow: visible;
+}
+
+/* Specific vertical padding elevations for badges with tight utility classes */
+html[dir="rtl"] span.py-0\.2,
+html[lang="ar"] span.py-0\.2,
+html[dir="rtl"] .badge.py-0\.2,
+html[lang="ar"] .badge.py-0\.2,
+html[dir="rtl"] [class*="rounded"].py-0\.2,
+html[lang="ar"] [class*="rounded"].py-0\.2 {
+  padding-top: 0.2rem !important;
+  padding-bottom: 0.22rem !important;
+  line-height: 1.52 !important;
+}
+
+html[dir="rtl"] span.py-0\.5,
+html[lang="ar"] span.py-0\.5,
+html[dir="rtl"] .badge.py-0\.5,
+html[lang="ar"] .badge.py-0\.5,
+html[dir="rtl"] [class*="rounded"].py-0\.5,
+html[lang="ar"] [class*="rounded"].py-0\.5 {
+  padding-top: 0.26rem !important;
+  padding-bottom: 0.3rem !important;
+  line-height: 1.58 !important;
+}
+
+html[dir="rtl"] span.py-1,
+html[lang="ar"] span.py-1,
+html[dir="rtl"] .badge.py-1,
+html[lang="ar"] .badge.py-1,
+html[dir="rtl"] [class*="rounded"].py-1,
+html[lang="ar"] [class*="rounded"].py-1 {
+  padding-top: 0.36rem !important;
+  padding-bottom: 0.4rem !important;
+  line-height: 1.6 !important;
+}
+
+html[dir="rtl"] span.py-1\.5,
+html[lang="ar"] span.py-1\.5,
+html[dir="rtl"] [class*="rounded"].py-1\.5,
+html[lang="ar"] [class*="rounded"].py-1\.5 {
+  padding-top: 0.46rem !important;
+  padding-bottom: 0.5rem !important;
+  line-height: 1.62 !important;
+}
+
+/* Horizontal clearance for pill badges in Arabic to accommodate cursive word ends */
+html[dir="rtl"] .rounded-full[class*="text-"],
+html[lang="ar"] .rounded-full[class*="text-"] {
+  padding-left: max(0.6rem, 0.6rem);
+  padding-right: max(0.6rem, 0.6rem);
+}
+
+/* Keyboard shortcut keycaps in Arabic */
+html[dir="rtl"] kbd,
+html[lang="ar"] kbd {
+  font-family: inherit;
+  line-height: 1.5 !important;
+  padding-top: 0.18rem !important;
+  padding-bottom: 0.2rem !important;
+  padding-left: 0.4rem !important;
+  padding-right: 0.4rem !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+}
+
+/* 3. Global Arabic Buttons & Interactive Triggers */
+html[dir="rtl"] button,
+html[lang="ar"] button,
+html[dir="rtl"] [role="button"],
+html[lang="ar"] [role="button"],
+html[dir="rtl"] .btn,
+html[lang="ar"] .btn,
+html[dir="rtl"] input[type="button"],
+html[dir="rtl"] input[type="submit"] {
+  line-height: 1.62;
+  letter-spacing: 0;
+  text-align: inherit;
+}
+
+/* Ensure text buttons maintain optical vertical clearance and don't clip */
+html[dir="rtl"] button[class*="px-"]:not([class*="h-"]),
+html[lang="ar"] button[class*="px-"]:not([class*="h-"]) {
+  min-height: 1.95rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Elevated vertical paddings for button sizes in Arabic */
+html[dir="rtl"] button.py-0\.5,
+html[lang="ar"] button.py-0\.5 {
+  padding-top: 0.28rem !important;
+  padding-bottom: 0.32rem !important;
+  line-height: 1.58 !important;
+}
+
+html[dir="rtl"] button.py-1,
+html[lang="ar"] button.py-1 {
+  padding-top: 0.38rem !important;
+  padding-bottom: 0.42rem !important;
+  line-height: 1.6 !important;
+}
+
+html[dir="rtl"] button.py-1\.5,
+html[lang="ar"] button.py-1\.5 {
+  padding-top: 0.48rem !important;
+  padding-bottom: 0.52rem !important;
+  line-height: 1.62 !important;
+}
+
+html[dir="rtl"] button.py-2,
+html[lang="ar"] button.py-2 {
+  padding-top: 0.58rem !important;
+  padding-bottom: 0.62rem !important;
+  line-height: 1.65 !important;
+}
+
+html[dir="rtl"] button.py-2\.5,
+html[lang="ar"] button.py-2\.5 {
+  padding-top: 0.68rem !important;
+  padding-bottom: 0.72rem !important;
+  line-height: 1.65 !important;
+}
+
+/* Ensure button label text spans inherit line-height and zero tracking */
+html[dir="rtl"] button span,
+html[lang="ar"] button span {
+  letter-spacing: 0;
+  line-height: inherit;
+}
+
+/* 4. Global Arabic Form Inputs, Selects, Textareas & Labels */
+html[dir="rtl"] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]),
+html[lang="ar"] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]) {
+  font-family: 'Noto Naskh Arabic', 'Inter', -apple-system, sans-serif;
+  line-height: 1.65 !important;
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.52rem !important;
+  min-height: 2.45rem;
+  letter-spacing: normal !important;
+}
+
+html[dir="rtl"] select,
+html[lang="ar"] select {
+  font-family: 'Noto Naskh Arabic', 'Inter', -apple-system, sans-serif;
+  line-height: 1.65 !important;
+  padding-top: 0.46rem !important;
+  padding-bottom: 0.5rem !important;
+  min-height: 2.45rem;
+  letter-spacing: normal !important;
+}
+
+html[dir="rtl"] select option,
+html[lang="ar"] select option {
+  font-family: 'Noto Naskh Arabic', sans-serif;
+  padding: 0.4rem 0.6rem;
+  line-height: 1.65;
+}
+
+html[dir="rtl"] textarea,
+html[lang="ar"] textarea {
+  font-family: 'Noto Naskh Arabic', 'Inter', -apple-system, sans-serif;
+  line-height: 1.85 !important;
+  padding-top: 0.65rem !important;
+  padding-bottom: 0.65rem !important;
+  letter-spacing: normal !important;
+}
+
+/* Placeholder text styling in Arabic */
+html[dir="rtl"] input::placeholder,
+html[lang="ar"] input::placeholder,
+html[dir="rtl"] textarea::placeholder,
+html[lang="ar"] textarea::placeholder {
+  font-family: 'Noto Naskh Arabic', 'Inter', sans-serif;
+  line-height: 1.65;
+  letter-spacing: normal;
+  opacity: 0.72;
+}
+
+/* Form labels and helper text */
+html[dir="rtl"] label,
+html[lang="ar"] label,
+html[dir="rtl"] .form-label,
+html[lang="ar"] .form-label {
+  font-family: 'Noto Naskh Arabic', 'Inter', sans-serif;
+  line-height: 1.6;
+  letter-spacing: normal;
+  margin-bottom: 0.35rem;
+}
+
+/* Optical vertical alignment for checkboxes with taller Arabic line heights */
+html[dir="rtl"] input[type="checkbox"],
+html[lang="ar"] input[type="checkbox"],
+html[dir="rtl"] input[type="radio"],
+html[lang="ar"] input[type="radio"] {
+  margin-top: 0.18rem;
+}
+
+/* Amiri Font Specifics: Classical Naskh / Bulaq proportions with tall ascenders and deep descenders */
+.font-amiri {
+  font-family: 'Amiri', 'Fraunces', Georgia, serif;
+  line-height: 1.95;
+  letter-spacing: 0;
+  font-feature-settings: "kern" 1, "calt" 1, "liga" 1, "dlig" 1;
+  text-rendering: optimizeLegibility;
+}
+
+/* Noto Naskh Arabic Specifics: Balanced digital institutional body text */
+.font-noto-naskh {
+  font-family: 'Noto Naskh Arabic', -apple-system, BlinkMacSystemFont, sans-serif;
+  line-height: 1.8;
+  letter-spacing: normal;
+  font-feature-settings: "kern" 1, "calt" 1, "liga" 1;
+  text-rendering: optimizeLegibility;
+}
+
+.font-editorial {
+  font-family: 'Playfair Display', 'Amiri', Georgia, serif;
+  line-height: 1.4;
+}
+
+[dir="rtl"] .font-editorial,
+[lang="ar"] .font-editorial {
+  font-family: 'Amiri', 'Playfair Display', Georgia, serif;
+  line-height: 1.55;
+  letter-spacing: 0;
+}
+
+.font-arabic-heading {
+  font-family: 'Amiri', 'Playfair Display', Georgia, serif;
+  line-height: 1.5;
+  letter-spacing: 0;
+  font-feature-settings: "kern" 1, "calt" 1, "liga" 1;
+}
+
+.font-ui {
+  font-family: 'Plus Jakarta Sans', 'Noto Naskh Arabic', sans-serif;
+}
+
+/* Institutional long-form reading typography for archival documents and curatorial statements */
+.institutional-prose-ar {
+  font-family: 'Noto Naskh Arabic', 'Amiri', serif;
+  line-height: 1.95;
+  letter-spacing: 0;
+  word-spacing: 0.02em;
+  text-align: start;
+  font-feature-settings: "kern" 1, "calt" 1, "liga" 1;
+}
+
+.institutional-heading-ar {
+  font-family: 'Amiri', serif;
+  line-height: 1.55;
+  letter-spacing: 0;
+  font-weight: 700;
+  font-feature-settings: "kern" 1, "calt" 1, "liga" 1;
+}
+
+/* Custom subtle scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F1E7D6;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBB89F;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2F4A5B;
+}
+
+/* Global Card Component Stabilization: enforce min-h-[160px] and flex-col layout to prevent layout flickering during transitions */
+@layer components {
+  .card,
+  .sadu-card,
+  .kpi-card,
+  .institutional-card,
+  [data-card] {
+    min-height: 160px;
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+/* Institutional Printable Report Styles */
+@media print {
+  body {
+    background-color: #FFFFFF !important;
+    color: #1C1C1E !important;
+    font-size: 11pt !important;
+  }
+
+  /* Hide navigation, fixed action bars, buttons, and decorative overlays during print */
+  nav,
+  header,
+  aside,
+  button,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Ensure printable report expands naturally across pages */
+  .printable-report-content {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    page-break-inside: avoid;
+  }
+
+  table {
+    page-break-inside: auto;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 15mm 15mm 15mm 15mm;
+  }
+}
+
