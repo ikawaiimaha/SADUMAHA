@@ -6,6 +6,10 @@ export function readIntakeDraft(storage: DraftStorage): DraftEnvelope | null {
   const raw = storage.getItem(INTAKE_DRAFT_KEY); if (!raw) return null;
   if (raw.length > 150000) throw new Error('invalid-draft');
   const draft = JSON.parse(raw) as DraftEnvelope;
+  // Older backups predate separate legal-name fields. Migrate only these known additions.
+  if (draft?.schema === 1 && draft.data?.profile && typeof draft.data.profile === 'object') {
+    draft.data.profile.legalNameEn ??= ''; draft.data.profile.legalNameAr ??= '';
+  }
   if (draft.schema !== 1 || typeof draft.revision !== 'string' || draft.revision.length > 100 || !Number.isFinite(Date.parse(draft.savedAt)) || !isIntakeDraft(draft.data)) throw new Error('invalid-draft');
   return { ...draft, data: recoverableDraft(draft.data) };
 }

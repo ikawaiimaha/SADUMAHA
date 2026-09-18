@@ -7,7 +7,7 @@ export type ProgrammeId = typeof INTAKE_PROGRAMMES[number]['id'];
 export const BUDGET_CATEGORIES = ['materials', 'equipment', 'shipping', 'fees', 'other'] as const;
 export type BudgetCategory = typeof BUDGET_CATEGORIES[number];
 export interface ArtistProfile {
-  id: string; nameEn: string; nameAr: string; translationHelp: boolean; bio: string; website: string;
+  id: string; legalNameEn: string; legalNameAr: string; nameEn: string; nameAr: string; translationHelp: boolean; bio: string; website: string;
   country: string; city: string; email: string; phone: string;
   representation: 'independent' | 'gallery' | 'agency'; organisation: string; contactName: string; contactEmail: string;
 }
@@ -16,18 +16,18 @@ export interface ArtistProposal {
   translationHelp: boolean; technical: string; portfolioUrl: string; budget: Record<BudgetCategory, string>;
 }
 export interface IntakeDraft { profile: ArtistProfile; proposals: Record<ProgrammeId, ArtistProposal> }
-export interface IntakeAsset { id: string; slot: 'cv' | ProgrammeId; name: string; size: number; type: string; url: string }
+export interface IntakeAsset { id: string; slot: 'cv' | 'portfolio' | ProgrammeId; name: string; size: number; type: string; url: string }
 export interface IntakeSubmission {
   id: string; version: number; at: string; programmeId: ProgrammeId; snapshot: IntakeDraft;
   assets: IntakeAsset[]; status: 'received' | 'revision' | 'checked'; note: string; reviewedAt?: string;
 }
 export function createIntakeDraft(): IntakeDraft {
   const proposal = (programmeId: ProgrammeId): ArtistProposal => ({ profileId: ARTIST_ID, programmeId, titleEn: '', titleAr: '', conceptEn: '', conceptAr: '', translationHelp: false, technical: '', portfolioUrl: '', budget: { materials: '', equipment: '', shipping: '', fees: '', other: '' } });
-  return { profile: { id: ARTIST_ID, nameEn: '', nameAr: '', translationHelp: false, bio: '', website: '', country: '', city: '', email: '', phone: '', representation: 'independent', organisation: '', contactName: '', contactEmail: '' }, proposals: { 'DEMO-CALL-01': proposal('DEMO-CALL-01'), 'DEMO-CALL-02': proposal('DEMO-CALL-02') } };
+  return { profile: { id: ARTIST_ID, legalNameEn: '', legalNameAr: '', nameEn: '', nameAr: '', translationHelp: false, bio: '', website: '', country: '', city: '', email: '', phone: '', representation: 'independent', organisation: '', contactName: '', contactEmail: '' }, proposals: { 'DEMO-CALL-01': proposal('DEMO-CALL-01'), 'DEMO-CALL-02': proposal('DEMO-CALL-02') } };
 }
 export function sampleIntakeDraft(): IntakeDraft {
   const draft = createIntakeDraft();
-  Object.assign(draft.profile, { nameEn: 'Sample Artist', nameAr: 'فنان تجريبي', bio: 'A fictional artist exploring materials, everyday objects and shared memory.', email: 'artist@example.com', country: 'Sample country', city: 'Sample city' });
+  Object.assign(draft.profile, { legalNameEn: 'Sample Legal Name', legalNameAr: 'اسم قانوني تجريبي', nameEn: 'Sample Artist', nameAr: 'فنان تجريبي', bio: 'A fictional artist exploring materials, everyday objects and shared memory.', email: 'artist@example.com', country: 'Sample country', city: 'Sample city' });
   Object.assign(draft.proposals['DEMO-CALL-01'], { titleEn: 'Layers of Memory', titleAr: 'طبقات الذاكرة', conceptEn: 'A freestanding arrangement of paper panels invites visitors to reflect on the stories carried by everyday materials.', conceptAr: 'يدعو ترتيب مستقل من الألواح الورقية الزوار إلى التأمل في الحكايات التي تحملها المواد اليومية.', technical: 'Footprint 2 × 2 m; height 2 m. No powered equipment. Installation method requires specialist review.', portfolioUrl: 'https://example.com/sample-portfolio', budget: { materials: '1200', equipment: '500', shipping: '300', fees: '2000', other: '0' } });
   return draft;
 }

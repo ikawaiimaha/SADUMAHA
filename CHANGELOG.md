@@ -1,5 +1,13 @@
 # Audit repair package — 19 September 2026
 
+## Standalone institutional roster
+
+- Added `/join` and `/artist/register`, global bilingual registration links, and SPA rewrites for direct navigation on Vercel.
+- Added separate sample legal and catalogue names, progressive representation fields, and one PDF CV plus one PDF general portfolio.
+- Kept the RHF drafting engine mounted across routes; immediate device backup requests and debounced status announcements preserve the existing recovery, conflict and storage-failure controls.
+- Added three fictional pre-registered artist entities with simulated verification, pending-review registration snapshots, and `/roster` programme creation using existing artist IDs.
+- Verified 31 automated tests, TypeScript/build, registration and programme creation, Arabic/mobile layout and direct-route reload/recovery.
+
 ## Artist profile, proposals and draft recovery
 
 - Added a four-step bilingual artist intake linked from the presentation and connected role bar. Two fictional briefs share a sample profile while retaining separate proposals and budgets.

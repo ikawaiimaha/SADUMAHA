@@ -13,6 +13,9 @@ import { WorkspaceProvider, useWorkspace } from './context/WorkspaceContext';
 import { LivingRecordProvider, useLivingRecord } from './context/LivingRecordContext';
 import { LivingRecordWorkspace } from './components/LivingRecordWorkspace';
 import { ArtistIntakeProvider } from './context/ArtistIntakeContext';
+import { IntakeDraftBackupProvider } from './context/IntakeDraftBackupContext';
+import { NavigationProvider, useNavigation } from './context/NavigationContext';
+import { RosterRegistration } from './components/RosterRegistration';
 import { DEMO_PROGRAMME_ID, DEMO_PROGRAMME } from './data/livingRecord';
 import { HeaderNav } from './components/HeaderNav';
 import { DemoNotice } from './components/DemoNotice';
@@ -51,6 +54,7 @@ import {
 } from 'lucide-react';
 
 function SADUApp() {
+  const { path } = useNavigation();
   const { lang, toggleLang, isAr } = useI18n();
   const { setLeadershipView } = useLivingRecord();
   const {
@@ -154,6 +158,10 @@ function SADUApp() {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  if (path === '/join' || path === '/artist/register' || path === '/roster') {
+    return <><DemoNotice/><RosterRegistration rosterView={path === '/roster'}/></>;
+  }
 
   // If in Story Mode, render the full animated institutional presentation
   if (experienceMode === 'story') {
@@ -385,7 +393,7 @@ export default function App() {
   return (
     <I18nProvider initialLang="ar">
       <WorkspaceProvider initialRole="DIRECTORATE" initialExperienceMode="story">
-        <LivingRecordProvider><ArtistIntakeProvider><SADUApp /></ArtistIntakeProvider></LivingRecordProvider>
+        <LivingRecordProvider><ArtistIntakeProvider><IntakeDraftBackupProvider><NavigationProvider><SADUApp /></NavigationProvider></IntakeDraftBackupProvider></ArtistIntakeProvider></LivingRecordProvider>
       </WorkspaceProvider>
     </I18nProvider>
   );

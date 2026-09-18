@@ -11,6 +11,8 @@ import { ChairmanBrief } from './ChairmanBrief';
 import { PublishingCase } from './PublishingCase';
 import { ArtistIntake, ArtistIntakeQueue } from './ArtistIntake';
 import { IntakeDraftBackup } from './IntakeDraftBackup';
+import { RosterNavLink } from './RosterNavLink';
+import { useNavigation } from '../context/NavigationContext';
 import './LivingRecordWorkspace.css';
 
 const roles: { actor: DemoActor; role: RoleKey; en: string; ar: string }[] = [
@@ -42,6 +44,7 @@ const eventLabels: Record<DemoEvent['kind'], [string, string]> = {
 };
 
 export function LivingRecordWorkspace() {
+  const { navigate } = useNavigation();
   const { isAr, lang, toggleLang, formatNumber } = useI18n();
   const { currentRole, switchRole, setExperienceMode, setSelectedProgramme } = useWorkspace();
   const { state, dispatch, leadershipView, setLeadershipView } = useLivingRecord();
@@ -98,7 +101,7 @@ export function LivingRecordWorkspace() {
   return <div className="living-record" lang={lang} dir={isAr ? 'rtl' : 'ltr'}>
     <header className="lr-toolbar">
       <div><strong className="lr-brand">{t('SADU', 'سدو')}</strong><span>{t('The Living Record', 'السجل الحي')}</span></div>
-      <div><button onClick={() => setExperienceMode('story')}>{t('Presentation', 'العرض التقديمي')}</button><button onClick={toggleLang}>{isAr ? 'English' : 'العربية'}</button></div>
+      <nav aria-label={t('Global navigation', 'التنقل العام')}><RosterNavLink/><button onClick={() => setExperienceMode('story')}>{t('Presentation', 'العرض التقديمي')}</button><button onClick={toggleLang}>{isAr ? 'English' : 'العربية'}</button></nav>
     </header>
     <main className="lr-main">
       <div className="lr-context">{actor === 'ARTIST' ? <span>{t('ARTIST INTAKE · FICTIONAL PROGRAMMES', 'تقديم الفنان · برامج افتراضية')}</span> : actor === 'CHAIRMAN' ? <span>{t('SDC INTERNAL OPERATIONS · PROPOSED VIEW', 'العمليات الداخلية لدائرة الثقافة · عرض مقترح')}</span> : actor === 'PUBLISHING_MANAGER' ? <span>{t('SDC PUBLISHING · FICTIONAL ISSUE', 'النشر في دائرة الثقافة · عدد افتراضي')}</span> : actor === 'DIRECTORATE' ? <span>{t('CULTURAL PORTFOLIO · PROPOSED VIEW', 'محفظة البرامج الثقافية · عرض مقترح')}</span> : <><span>{t('FICTIONAL CASE · SESSION ONLY', 'حالة افتراضية · لهذه الجلسة فقط')}</span><bdi>{CASE_ID}</bdi><span>{t('Mounir Fatmi — demonstration scenario', 'منير فاطمي — سيناريو توضيحي')}</span></>}</div>
@@ -115,7 +118,7 @@ export function LivingRecordWorkspace() {
       </header>
 
       <IntakeDraftBackup visible={actor === 'ARTIST'}/>
-      {actor === 'COORDINATOR' && <ArtistIntakeQueue/>}
+      {actor === 'COORDINATOR' && <><section className="lr-panel"><h2>{t('Artist roster and programme planning', 'سجل الفنانين وتخطيط البرامج')}</h2><p>{t('Reuse pre-registered fictional profiles when creating a new sample programme.', 'أعد استخدام الملفات الوهمية المسجلة مسبقاً عند إنشاء برنامج تجريبي جديد.')}</p><button onClick={() => navigate('/roster')}>{t('Open demo roster & programme setup', 'فتح السجل التجريبي وإعداد البرامج')}</button></section><ArtistIntakeQueue/></>}
       {actor === 'ARTIST' ? <ArtistIntake onCoordinator={() => go('COORDINATOR')}/> : actor === 'CHAIRMAN' ? <ChairmanBrief onDirectorate={() => go('DIRECTORATE')} onPublishing={() => go('PUBLISHING_MANAGER')} onFinance={() => setModal('finance')}/> : actor === 'DIRECTORATE' ? <DirectorateOversight/> : actor === 'PUBLISHING_MANAGER' ? <section className="lr-panel"><h2>{t('Studies and Publishing · sample pipeline', 'الدراسات والنشر · مسار تجريبي')}</h2><PublishingCase actor={actor}/></section> : <>
         <section className="lr-panel lr-ledger"><div className="lr-section-title"><h2>{t('Delivery and handover', 'التنفيذ والتسليم')}</h2><span className="lr-status">{t('One shared case', 'حالة مشتركة واحدة')}</span></div>
           <ol className="lr-steps" aria-label={t('Custody sequence', 'تسلسل التسليم')}>

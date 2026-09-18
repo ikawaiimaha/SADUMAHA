@@ -4,6 +4,7 @@ import { ROLE_PROFILES, PROGRAMMES, INSTITUTIONAL_INFO } from '../data/mockData'
 import { useI18n } from '../context/I18nContext';
 import { useWorkspace } from '../context/WorkspaceContext';
 import { NotificationsPopover } from './NotificationsPopover';
+import { RosterNavLink } from './RosterNavLink';
 import { 
   Globe, 
   ChevronDown, 
@@ -102,6 +103,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = (props) => {
         </div>
       </div>
 
+      <nav className="max-w-7xl mx-auto px-4 sm:px-6 py-2" aria-label={isAr ? 'التسجيل في سجل الفنانين' : 'Artist roster registration'}><RosterNavLink/></nav>
       {/* Main Brand & Tool Bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
         

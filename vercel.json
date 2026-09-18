@@ -1,0 +1,7 @@
+{
+  "rewrites": [
+    { "source": "/join", "destination": "/index.html" },
+    { "source": "/artist/register", "destination": "/index.html" },
+    { "source": "/roster", "destination": "/index.html" }
+  ]
+}

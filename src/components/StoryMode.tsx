@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './StoryMode.css';
+import { RosterNavLink } from './RosterNavLink';
 import { storyChapters } from '../data/storyChapters';
 import { StoryCaseGraphic } from './StoryCaseGraphic';
 import { AuthoredBand } from './AuthoredBand';
@@ -75,7 +76,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
   return (
     <div className="story-shell bg-sadu-sand text-sadu-charcoal">
       <header className="story-toolbar border-b border-sadu-gold bg-sadu-linen px-4 sm:px-6 py-2 shadow-xs">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
+        <div className="max-w-6xl mx-auto flex flex-wrap gap-2 items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="font-editorial text-2xl font-bold tracking-tight text-sadu-brick">
               {isAr ? 'سدو' : 'SADU'}
@@ -85,7 +86,8 @@ export const StoryMode: React.FC<StoryModeProps> = ({
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <RosterNavLink/>
             <button
               onClick={onToggleLanguage}
               className="px-3 py-1.5 text-xs font-medium border border-sadu-gold rounded-md bg-sadu-sand hover:bg-sadu-sand/80 transition-colors cursor-pointer"

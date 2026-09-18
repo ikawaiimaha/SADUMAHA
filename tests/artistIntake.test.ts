@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createIntakeDraft, sampleIntakeDraft, recoverableDraft, validateIntake, reviewSubmission, type IntakeSubmission } from '../src/data/artistIntake.ts';
 import { INTAKE_DRAFT_KEY, readIntakeDraft, writeIntakeDraft } from '../src/utils/intakeDraftStorage.ts';
+import { seedRoster, registerProfile, validateRegistration, createRosterProgramme } from '../src/data/artistRoster.ts';
 const at = '2026-09-19T09:00:00Z';
 function memoryStorage() {
   const map = new Map<string, string>();
@@ -80,4 +81,54 @@ test('coordinator review requires a reason for revision and cannot rewrite a rev
   const revised = reviewSubmission(submission, 'COORDINATOR', 'revision', 'Clarify mounting method.', at);
   assert.equal(revised.status, 'revision'); assert.equal(submission.status, 'received');
   assert.equal(reviewSubmission(revised, 'COORDINATOR', 'checked', '', at), revised);
+});
+
+test('roster registration validates identity independently of all programme proposals', () => {
+  const draft = createIntakeDraft(); draft.profile = sampleIntakeDraft().profile;
+  assert.deepEqual(validateRegistration(draft.profile), []);
+  assert.ok(validateIntake(draft, 'DEMO-CALL-01').length > 0);
+  draft.profile.legalNameAr = ''; draft.profile.legalNameEn = '';
+  assert.ok(validateRegistration(draft.profile).some(i => i.path === 'profile.legalNameEn'));
+  draft.profile.legalNameEn = 'O’Neill — اسم تجريبي';
+  assert.deepEqual(validateRegistration(draft.profile), []);
+});
+
+test('three seeded profiles are independent fictional entities; submitted profiles await review', () => {
+  const seeds = seedRoster(); assert.equal(new Set(seeds.map(x => x.id)).size, 3);
+  assert.ok(seeds.every(x => x.status === 'verified-sample' && x.profile.email.endsWith('@example.com')));
+  const profile = sampleIntakeDraft().profile;
+  const added = registerProfile(seeds, profile, [], at);
+  assert.equal(added.length, 4); assert.equal(added.at(-1)!.status, 'pending-review');
+  profile.nameEn = 'Updated sample'; assert.equal(added.at(-1)!.profile.nameEn, 'Sample Artist');
+  const updated = registerProfile(added, profile, [], at);
+  assert.equal(updated.length, 4); assert.equal(updated.at(-1)!.profile.nameEn, 'Updated sample');
+  assert.equal(seeds.length, 3);
+});
+
+test('programmes link eligible existing roster IDs without duplicating profiles or approving artists', () => {
+  const roster = registerProfile(seedRoster(), sampleIntakeDraft().profile, [], at);
+  const input = { id: 'DEMO-PROGRAMME-test', titleEn: 'Sample programme', titleAr: 'برنامج تجريبي', createdAt: at, artistIds: [roster[0].id, roster[0].id, roster[1].id] };
+  const programme = createRosterProgramme(roster, input)!;
+  assert.deepEqual(programme.artistIds, [roster[0].id, roster[1].id]);
+  assert.equal(createRosterProgramme(roster, { ...input, artistIds: [roster[3].id] }), null);
+  assert.equal(createRosterProgramme(roster, { ...input, artistIds: ['unknown'] }), null);
+  assert.equal(createRosterProgramme(roster, { ...input, titleAr: '' }), null);
+  assert.equal(createRosterProgramme(roster, { ...input, artistIds: [] }), null);
+  assert.equal(roster[3].status, 'pending-review');
+});
+
+test('roster snapshots contain general PDFs only, not programme-specific files', () => {
+  const assets = ['cv', 'portfolio', 'DEMO-CALL-01'].map(slot => ({ id: slot, slot, name: 'sample.pdf', size: 10, type: 'application/pdf', url: 'blob:sample' })) as IntakeSubmission['assets'];
+  const roster = registerProfile(seedRoster(), sampleIntakeDraft().profile, assets, at);
+  assert.deepEqual(roster.at(-1)!.assets.map(a => a.slot), ['cv', 'portfolio']);
+});
+
+test('old saved drafts migrate missing legal-name fields without losing bilingual text', () => {
+  const storage = memoryStorage(); const draft = sampleIntakeDraft();
+  const old = JSON.parse(JSON.stringify(draft)); delete old.profile.legalNameEn; delete old.profile.legalNameAr;
+  storage.setItem(INTAKE_DRAFT_KEY, JSON.stringify({ schema: 1, revision: 'old', savedAt: at, data: old }));
+  const restored = readIntakeDraft(storage)!;
+  assert.equal(restored.data.profile.nameAr, 'فنان تجريبي');
+  assert.equal(restored.data.profile.legalNameEn, '');
+  assert.equal(recoverableDraft(draft).profile.legalNameAr, '');
 });
