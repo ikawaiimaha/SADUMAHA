@@ -150,12 +150,15 @@ function SADUApp() {
   // If in Story Mode, render the full animated institutional presentation
   if (experienceMode === 'story') {
     return (
-      <><DemoNotice /><StoryMode
-        lang={lang}
-        onSelectRoleAndExplore={handleSelectRoleAndExplore}
-        onSkipToPlatform={() => setExperienceMode('platform')}
-        onToggleLanguage={toggleLang}
-      /></>
+      <div className="story-experience">
+        <DemoNotice />
+        <StoryMode
+          lang={lang}
+          onSelectRoleAndExplore={handleSelectRoleAndExplore}
+          onSkipToPlatform={() => setExperienceMode('platform')}
+          onToggleLanguage={toggleLang}
+        />
+      </div>
     );
   }
 

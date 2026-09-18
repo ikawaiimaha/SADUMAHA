@@ -58,9 +58,10 @@ Edit `src/`: `index.html` loads `src/main.tsx`, which loads `src/App.tsx`.
 
 ## What is implemented
 
-- Leadership presentation order is Al Qasimi, Al Owais, then Al Qaseer. Chapter 2 gives Al Owais a name heading, text beside an uncropped portrait, and a caption beneath the image. The compact two-column layout mirrors in Arabic and stacks on mobile; chapter 1 retains its larger portrait and strongest emphasis. The Directorate overview uses three separate rows in the same order.
+- All nine presentation chapters share a viewport-sized frame with stable card boundaries and navigation. Text and visuals sit side by side on desktop; mobile stacks the content inside a scrollable reading card while keeping navigation visible. Arabic mirrors the layout.
+- Leadership presentation order is Al Qasimi, Al Owais, then Al Qaseer. Typography, portrait scale, and an exclusive first-slide accent preserve this hierarchy within the shared frame. All three portraits remain uncropped with captions below. The Directorate overview uses three separate rows in the same order.
 - Arabic and English demonstration screens, introductory presentation, and selectable role views.
-- The nine-chapter introduction opens with H.H. Sheikh Dr. Sultan bin Muhammad Al Qasimi, with his full name as the main heading and a full-width, uncropped portrait. Al Owais and Al Qaseer follow in chapters 2–3. The active Directorate dashboard also places his full-width portrait card above their cards. This presentation hierarchy does not change system permissions or delegated authority. The accompanying copy is proposed SADU content, not attributed statements or endorsements. These are in-app slides, not separate PDF or PowerPoint attachments.
+- The nine-chapter introduction opens with H.H. Sheikh Dr. Sultan bin Muhammad Al Qasimi, with his full name as the main heading. Al Owais and Al Qaseer follow in chapters 2–3. The active Directorate dashboard places his full-width portrait card above their cards. This presentation hierarchy does not change system permissions or delegated authority. The accompanying copy is proposed SADU content, not attributed statements or endorsements. These are in-app slides, not separate PDF or PowerPoint attachments.
 - Repaired platform startup, KPI controls, navigation guards, RFQ default selection, and storage-failure handling.
 - Complete paginated vector report rows; Arabic and mixed-script reports use the browser's **Print / Save PDF** view.
 - Corrected sample banking, contract-preview, and report labels; a mobile RTL status wrapping fix.

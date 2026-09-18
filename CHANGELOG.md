@@ -1,5 +1,13 @@
 # Audit repair package — 18 September 2026
 
+## Stable presentation frame
+
+- Replaced content-dependent slide heights and vertical centring with one viewport-sized frame across all nine chapters, including the demonstration notice, toolbar, and footer.
+- Put opening-slide text beside the uncropped portrait, matching the structure of the other portrait chapters. Preserved leadership prominence through typography, portrait scale, and the opening accent.
+- Anchored Previous, Autoplay, and Next below the card. Mobile content scrolls within the reading card; chapter changes reset its scroll position without moving navigation.
+- Reserved image space before loading and removed chapter-entry motion. Kept captions below each portrait and made role-choice labels readable in the compact final slide.
+- Supersedes the earlier full-width first-slide layout and variable-height navigation treatment described below. Directorate workspace layouts are unchanged.
+
 ## Leadership presentation hierarchy
 
 - Made chapter 2 compact with text beside the uncropped portrait and its caption below the image. The layout mirrors in Arabic and stacks on mobile; chapter 1 is unchanged.

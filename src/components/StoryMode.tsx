@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import './StoryMode.css';
 import { AuthoredBand } from './AuthoredBand';
 import { Language, RoleKey } from '../types';
 import { INSTITUTIONAL_INFO } from '../data/mockData';
@@ -39,6 +40,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
   const { formatNumber, localizeDigits } = i18n;
   const [currentChapter, setCurrentChapter] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const cardRef = useRef<HTMLElement>(null);
 
   const chapters = [
     {
@@ -160,6 +162,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
   const isFeaturedPortrait = isLeadChapter || isSecondChapter;
 
   useEffect(() => {
+    cardRef.current?.scrollTo({ top: 0, behavior: 'instant' });
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, [currentChapter]);
 
@@ -178,8 +181,8 @@ export const StoryMode: React.FC<StoryModeProps> = ({
   }, [isPlaying, currentChapter, chapters.length]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-sadu-sand text-sadu-charcoal">
-      <header className="border-b border-sadu-gold bg-sadu-linen px-6 py-4 sticky top-0 z-30 shadow-xs">
+    <div className="story-shell bg-sadu-sand text-sadu-charcoal">
+      <header className="story-toolbar border-b border-sadu-gold bg-sadu-linen px-4 sm:px-6 py-2 shadow-xs">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="font-editorial text-2xl font-bold tracking-tight text-sadu-brick">
@@ -208,10 +211,10 @@ export const StoryMode: React.FC<StoryModeProps> = ({
         </div>
       </header>
 
-      <AuthoredBand className="my-2" />
+      <AuthoredBand compact className="my-2" />
 
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 flex flex-col justify-center">
-        <div className="mb-4">
+      <main className="story-main max-w-6xl w-full mx-auto">
+        <div className="story-progress">
           <div className="flex items-center justify-between mb-2.5 text-xs text-sadu-muted">
             <span className="font-semibold uppercase tracking-wider text-sadu-brick">
               {isAr ? `الفصل ${formatNumber(currentChapter + 1)} من ${formatNumber(chapters.length)}` : `Chapter ${currentChapter + 1} of ${chapters.length}`}
@@ -237,9 +240,9 @@ export const StoryMode: React.FC<StoryModeProps> = ({
           </div>
         </div>
 
-        <div className={`bg-sadu-linen border border-sadu-gold rounded-lg p-6 sm:p-8 shadow-xs w-full flex flex-col ${isLeadChapter ? 'border-t-4 border-t-sadu-brick' : isSecondChapter ? '' : 'min-h-[750px] md:min-h-[600px] md:h-[650px] lg:h-[600px] overflow-hidden'}`}>
+        <section ref={cardRef} aria-labelledby="story-title" tabIndex={0} className={`story-card bg-sadu-linen border border-sadu-gold rounded-lg ${isLeadChapter ? 'story-card--lead' : ''}`}>
           
-          <div className="flex items-start gap-4 min-h-[100px] shrink-0 mb-4 pb-3 border-b border-sadu-gold/30">
+          <div className="story-heading flex items-start gap-4 border-b border-sadu-gold/30">
             {!isFeaturedPortrait && <div className="p-3 rounded-md bg-sadu-sand text-sadu-brick border border-sadu-gold/50 shrink-0">
               <current.icon className="w-7 h-7 sm:w-8 sm:h-8" />
             </div>}
@@ -247,7 +250,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
               <span className="text-[10px] sm:text-xs uppercase tracking-widest text-sadu-ink font-semibold block truncate">
                 {isAr ? INSTITUTIONAL_INFO.departmentAr : INSTITUTIONAL_INFO.departmentEn}
               </span>
-              <h1 className={`font-editorial font-bold text-sadu-charcoal mt-1.5 leading-snug ${isLeadChapter ? 'text-2xl sm:text-3xl md:text-4xl' : isSecondChapter ? 'text-xl sm:text-2xl md:text-3xl' : 'text-lg sm:text-xl md:text-2xl line-clamp-2'}`}>
+              <h1 id="story-title" className={`story-title font-editorial font-bold text-sadu-charcoal mt-1.5 ${isLeadChapter ? 'story-title--lead' : isSecondChapter ? 'story-title--second' : ''}`}>
                 {isAr ? current.titleAr : current.titleEn}
               </h1>
               <p className={`text-sadu-brick font-medium mt-1.5 ${isLeadChapter ? 'text-base sm:text-lg' : 'text-xs sm:text-sm'}`}>
@@ -256,15 +259,15 @@ export const StoryMode: React.FC<StoryModeProps> = ({
             </div>
           </div>
 
-          <div key={currentChapter} className="pt-2 flex-1 flex flex-col h-full animate-in fade-in duration-150">
+          <div key={currentChapter} className="story-body">
             {currentChapter < chapters.length - 1 ? (
-              <div className={`grid gap-6 items-stretch ${isLeadChapter ? '' : isSecondChapter ? 'md:grid-cols-2 md:gap-8' : 'md:grid-cols-2 md:gap-8 h-full'}`}>
-                <div className={isLeadChapter ? 'grid md:grid-cols-2 gap-6 items-start' : isSecondChapter ? 'flex flex-col justify-between' : 'flex flex-col justify-between h-full overflow-y-auto pr-2 rtl:pl-2 rtl:pr-0'}>
-                  <p className="text-sm sm:text-base leading-relaxed text-sadu-charcoal">
+              <div className="story-content-grid">
+                <div className="story-copy">
+                  <p className="story-description text-sadu-charcoal">
                     {isAr ? current.contentAr : current.contentEn}
                   </p>
                   
-                  <div className="mt-4 mb-2 p-4 rounded-md bg-sadu-sand border-l-4 rtl:border-l-0 rtl:border-r-4 border-sadu-brick text-xs sm:text-sm text-sadu-charcoal shadow-2xs shrink-0">
+                  <div className="story-highlight rounded-md bg-sadu-sand border-l-4 rtl:border-l-0 rtl:border-r-4 border-sadu-brick text-sadu-charcoal shadow-2xs">
                     <span className="font-semibold block text-sadu-brick mb-1">
                       {current.imagePath
                         ? (isAr ? 'تصور مقترح لسدو:' : 'Proposed SADU experience:')
@@ -275,20 +278,22 @@ export const StoryMode: React.FC<StoryModeProps> = ({
                 </div>
 
                 {current.imagePath ? (
-                  <figure className={`flex flex-col min-h-0 rounded-lg border border-sadu-gold overflow-hidden bg-sadu-sand ${isLeadChapter ? 'order-first' : isSecondChapter ? 'w-[88%] md:w-full mx-auto self-start' : ''}`}>
-                    <img
-                      src={current.imagePath}
-                      alt={isFeaturedPortrait ? (isAr ? current.titleAr : current.titleEn) : (isAr ? current.subtitleAr : current.subtitleEn)}
-                      className={`w-full object-contain ${isFeaturedPortrait ? 'h-auto' : 'h-72 md:h-64 lg:h-72'}`}
-                    />
-                    <figcaption className="p-3 border-t border-sadu-gold text-xs text-sadu-muted leading-relaxed">
+                  <figure className={`story-figure rounded-lg border border-sadu-gold bg-sadu-sand ${isLeadChapter ? 'story-figure--lead' : isSecondChapter ? 'story-figure--second' : ''}`}>
+                    <div className="story-portrait-stage">
+                      <img
+                        src={current.imagePath}
+                        alt={isFeaturedPortrait ? (isAr ? current.titleAr : current.titleEn) : (isAr ? current.subtitleAr : current.subtitleEn)}
+                        className="story-portrait"
+                      />
+                    </div>
+                    <figcaption className="story-caption border-t border-sadu-gold text-sadu-muted">
                       {isAr
                         ? 'محتوى عرض مقترح لسدو، وليس تصريحاً أو تأييداً من الشخصية الظاهرة.'
                         : 'Proposed SADU presentation content; not a statement or endorsement by the person shown.'}
                     </figcaption>
                   </figure>
                 ) : (
-                <div className="relative w-full h-64 md:h-full rounded-lg overflow-hidden border border-sadu-gold shadow-xs group bg-[#F2EDE4] shrink-0">
+                <div className="story-placeholder relative w-full rounded-lg overflow-hidden border border-sadu-gold shadow-xs group bg-[#F2EDE4]">
                   <div className="absolute -top-20 -right-20 w-80 h-80 border-[40px] border-sadu-brick/10 rounded-full transition-transform duration-1000 group-hover:scale-110" />
                   <div className="absolute -bottom-24 -left-24 w-[400px] h-[400px] border-[60px] border-sadu-ink/5 rounded-full transition-transform duration-1000 group-hover:scale-105" />
                   <div className="absolute inset-0 bg-[linear-gradient(rgba(140,96,30,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(140,96,30,0.08)_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
@@ -311,8 +316,8 @@ export const StoryMode: React.FC<StoryModeProps> = ({
                 )}
               </div>
             ) : (
-              <div className="grid md:grid-cols-3 gap-6 h-full items-stretch">
-                <div className="md:col-span-1 flex flex-col justify-between h-full">
+              <div className="story-role-layout">
+                <div className="story-copy">
                   <div>
                     <h3 className="text-sm font-bold text-sadu-charcoal mb-2">
                       {isAr ? 'اختر الدور الذي ترغب في استكشافه:' : 'Choose a role to step into:'}
@@ -322,7 +327,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
                     </p>
                   </div>
                   
-                  <div className="mt-4 p-3.5 rounded-md bg-sadu-sand border-l-4 rtl:border-l-0 rtl:border-r-4 border-sadu-brick text-xs text-sadu-charcoal shadow-2xs">
+                  <div className="p-3.5 rounded-md bg-sadu-sand border-l-4 rtl:border-l-0 rtl:border-r-4 border-sadu-brick text-xs text-sadu-charcoal shadow-2xs">
                     <span className="font-semibold block text-sadu-brick mb-0.5">
                       {isAr ? 'بيئة تشغيلية متكاملة:' : 'Live Interactive Mockup:'}
                     </span>
@@ -330,7 +335,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
                   </div>
                 </div>
 
-                <div className="md:col-span-2 grid grid-cols-2 gap-2 h-full content-center">
+                <div className="story-role-grid">
                   {[
                     { role: 'DIRECTORATE' as RoleKey, labelEn: 'H.E. Chairman & Directorate', labelAr: 'رئيس الدائرة والإدارة التنفيذية' },
                     { role: 'SDC_COORDINATOR' as RoleKey, labelEn: 'SDC Coordinator', labelAr: 'منسق عام المهرجانات (SDC)' },
@@ -346,23 +351,21 @@ export const StoryMode: React.FC<StoryModeProps> = ({
                     <button
                       key={item.role}
                       onClick={() => onSelectRoleAndExplore(item.role)}
-                      className="p-2.5 rounded-md border border-sadu-gold bg-sadu-linen hover:bg-sadu-brick hover:text-white text-left rtl:text-right transition-all group cursor-pointer shadow-2xs flex flex-col justify-center"
+                      className="rounded-md border border-sadu-gold bg-sadu-linen hover:bg-sadu-brick hover:text-white text-left rtl:text-right transition-colors group cursor-pointer shadow-2xs flex items-center justify-between gap-2"
                     >
-                      <span className="text-xs font-bold block group-hover:text-white text-sadu-charcoal truncate">
+                      <span className="story-role-label font-bold group-hover:text-white text-sadu-charcoal">
                         {isAr ? item.labelAr : item.labelEn}
                       </span>
-                      <span className="text-[10px] text-sadu-muted group-hover:text-white/80 block mt-0.5">
-                        {isAr ? 'دخول فوري ←' : 'Launch role →'}
-                      </span>
+                      <ArrowRight aria-hidden="true" className="w-3.5 h-3.5 shrink-0 rtl:rotate-180" />
                     </button>
                   ))}
                 </div>
               </div>
             )}
           </div>
-        </div>
+        </section>
 
-        <div className="mt-5 flex items-center justify-between pt-4 border-t border-sadu-gold">
+        <div className="story-controls flex items-center justify-between border-t border-sadu-gold">
           <div className="flex items-center gap-2">
             <button
               onClick={() => setCurrentChapter((prev) => Math.max(0, prev - 1))}
@@ -413,7 +416,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
         </div>
       </main>
 
-      <footer className="border-t border-sadu-gold bg-sadu-linen px-6 py-3 text-center text-xs text-sadu-muted">
+      <footer className="story-footer border-t border-sadu-gold bg-sadu-linen text-center text-sadu-muted">
         <span>
           {isAr ? INSTITUTIONAL_INFO.taglineAr : INSTITUTIONAL_INFO.taglineEn}
         </span>
