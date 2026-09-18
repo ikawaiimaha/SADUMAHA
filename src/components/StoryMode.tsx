@@ -57,10 +57,10 @@ export const StoryMode: React.FC<StoryModeProps> = ({
     {
       id: 'leadership-governance',
       icon: Building2,
-      titleEn: 'Accountability and Clear Decisions',
-      titleAr: 'المساءلة ووضوح القرارات',
-      subtitleEn: 'H.E. Abdullah bin Mohammed Al Owais',
-      subtitleAr: 'سعادة عبد الله بن محمد العويس',
+      titleEn: 'H.E. Abdullah bin Mohammed Al Owais',
+      titleAr: 'سعادة عبد الله بن محمد العويس',
+      subtitleEn: 'Accountability and Clear Decisions',
+      subtitleAr: 'المساءلة ووضوح القرارات',
       imagePath: '/owais_portrait.jpg',
       contentEn: 'The proposed leadership view brings readiness, commitments, missing evidence, and pending decisions into one brief. A recorded action should show its responsible role and supporting evidence; formal approval still depends on documented institutional delegation.',
       contentAr: 'يجمع عرض القيادة المقترح الجاهزية والالتزامات والأدلة الناقصة والقرارات المعلقة في ملخص واحد. وينبغي أن يوضح كل إجراء مسجل الدور المسؤول والأدلة الداعمة له؛ ويظل الاعتماد الرسمي مرهوناً بتفويض مؤسسي موثق.',
@@ -156,6 +156,12 @@ export const StoryMode: React.FC<StoryModeProps> = ({
 
   const current = chapters[currentChapter];
   const isLeadChapter = current.id === 'leadership-visionary';
+  const isSecondChapter = current.id === 'leadership-governance';
+  const isFeaturedPortrait = isLeadChapter || isSecondChapter;
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [currentChapter]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -231,17 +237,17 @@ export const StoryMode: React.FC<StoryModeProps> = ({
           </div>
         </div>
 
-        <div className={`bg-sadu-linen border border-sadu-gold rounded-lg p-6 sm:p-8 shadow-xs w-full flex flex-col ${isLeadChapter ? 'border-t-4 border-t-sadu-brick' : 'min-h-[750px] md:min-h-[600px] md:h-[650px] lg:h-[600px] overflow-hidden'}`}>
+        <div className={`bg-sadu-linen border border-sadu-gold rounded-lg p-6 sm:p-8 shadow-xs w-full flex flex-col ${isLeadChapter ? 'border-t-4 border-t-sadu-brick' : isSecondChapter ? '' : 'min-h-[750px] md:min-h-[600px] md:h-[650px] lg:h-[600px] overflow-hidden'}`}>
           
           <div className="flex items-start gap-4 min-h-[100px] shrink-0 mb-4 pb-3 border-b border-sadu-gold/30">
-            {!isLeadChapter && <div className="p-3 rounded-md bg-sadu-sand text-sadu-brick border border-sadu-gold/50 shrink-0">
+            {!isFeaturedPortrait && <div className="p-3 rounded-md bg-sadu-sand text-sadu-brick border border-sadu-gold/50 shrink-0">
               <current.icon className="w-7 h-7 sm:w-8 sm:h-8" />
             </div>}
             <div className="flex-1 min-w-0 pt-0.5">
               <span className="text-[10px] sm:text-xs uppercase tracking-widest text-sadu-ink font-semibold block truncate">
                 {isAr ? INSTITUTIONAL_INFO.departmentAr : INSTITUTIONAL_INFO.departmentEn}
               </span>
-              <h1 className={`font-editorial font-bold text-sadu-charcoal mt-1.5 leading-snug ${isLeadChapter ? 'text-2xl sm:text-3xl md:text-4xl' : 'text-lg sm:text-xl md:text-2xl line-clamp-2'}`}>
+              <h1 className={`font-editorial font-bold text-sadu-charcoal mt-1.5 leading-snug ${isLeadChapter ? 'text-2xl sm:text-3xl md:text-4xl' : isSecondChapter ? 'text-xl sm:text-2xl md:text-3xl' : 'text-lg sm:text-xl md:text-2xl line-clamp-2'}`}>
                 {isAr ? current.titleAr : current.titleEn}
               </h1>
               <p className={`text-sadu-brick font-medium mt-1.5 ${isLeadChapter ? 'text-base sm:text-lg' : 'text-xs sm:text-sm'}`}>
@@ -252,8 +258,8 @@ export const StoryMode: React.FC<StoryModeProps> = ({
 
           <div key={currentChapter} className="pt-2 flex-1 flex flex-col h-full animate-in fade-in duration-150">
             {currentChapter < chapters.length - 1 ? (
-              <div className={`grid gap-6 items-stretch ${isLeadChapter ? '' : 'md:grid-cols-2 md:gap-8 h-full'}`}>
-                <div className={isLeadChapter ? 'grid md:grid-cols-2 gap-6 items-start' : 'flex flex-col justify-between h-full overflow-y-auto pr-2 rtl:pl-2 rtl:pr-0'}>
+              <div className={`grid gap-6 items-stretch ${isFeaturedPortrait ? '' : 'md:grid-cols-2 md:gap-8 h-full'}`}>
+                <div className={isFeaturedPortrait ? 'grid md:grid-cols-2 gap-6 items-start' : 'flex flex-col justify-between h-full overflow-y-auto pr-2 rtl:pl-2 rtl:pr-0'}>
                   <p className="text-sm sm:text-base leading-relaxed text-sadu-charcoal">
                     {isAr ? current.contentAr : current.contentEn}
                   </p>
@@ -269,11 +275,11 @@ export const StoryMode: React.FC<StoryModeProps> = ({
                 </div>
 
                 {current.imagePath ? (
-                  <figure className={`flex flex-col min-h-0 rounded-lg border border-sadu-gold overflow-hidden bg-sadu-sand ${isLeadChapter ? 'order-first' : ''}`}>
+                  <figure className={`flex flex-col min-h-0 rounded-lg border border-sadu-gold overflow-hidden bg-sadu-sand ${isLeadChapter ? 'order-first' : isSecondChapter ? 'order-first w-[88%] md:w-full max-w-3xl mx-auto' : ''}`}>
                     <img
                       src={current.imagePath}
-                      alt={isLeadChapter ? (isAr ? current.titleAr : current.titleEn) : (isAr ? current.subtitleAr : current.subtitleEn)}
-                      className={`w-full object-contain ${isLeadChapter ? 'h-auto' : 'h-72 md:h-64 lg:h-72'}`}
+                      alt={isFeaturedPortrait ? (isAr ? current.titleAr : current.titleEn) : (isAr ? current.subtitleAr : current.subtitleEn)}
+                      className={`w-full object-contain ${isFeaturedPortrait ? 'h-auto' : 'h-72 md:h-64 lg:h-72'}`}
                     />
                     <figcaption className="p-3 border-t border-sadu-gold text-xs text-sadu-muted leading-relaxed">
                       {isAr

@@ -58,6 +58,7 @@ Edit `src/`: `index.html` loads `src/main.tsx`, which loads `src/App.tsx`.
 
 ## What is implemented
 
+- Leadership presentation order is Al Qasimi, Al Owais, then Al Qaseer. Chapter 2 gives Al Owais a name heading and medium-width portrait, subordinate in scale to chapter 1. The Directorate overview uses three separate rows in the same order, with the first card retaining the strongest emphasis.
 - Arabic and English demonstration screens, introductory presentation, and selectable role views.
 - The nine-chapter introduction opens with H.H. Sheikh Dr. Sultan bin Muhammad Al Qasimi, with his full name as the main heading and a full-width, uncropped portrait. Al Owais and Al Qaseer follow in chapters 2–3. The active Directorate dashboard also places his full-width portrait card above their cards. This presentation hierarchy does not change system permissions or delegated authority. The accompanying copy is proposed SADU content, not attributed statements or endorsements. These are in-app slides, not separate PDF or PowerPoint attachments.
 - Repaired platform startup, KPI controls, navigation guards, RFQ default selection, and storage-failure handling.

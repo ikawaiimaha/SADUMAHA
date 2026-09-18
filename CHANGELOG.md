@@ -2,6 +2,8 @@
 
 ## Leadership presentation hierarchy
 
+- Distinguished Al Owais as the second tier: full name as the chapter 2 heading, a medium-width uncropped portrait, and a dedicated dashboard row between the lead portrait and Al Qaseer. The first chapter retains the largest portrait, largest name heading, and exclusive top accent.
+- Chapter navigation returns to the top so each name and portrait is introduced from the beginning when slide heights differ.
 - Made H.H. Sheikh Dr. Sultan bin Muhammad Al Qasimi the opening chapter, with the largest heading and a full-width portrait that retains the complete source image.
 - Added his full-width portrait card above the Chairman and Director cards in the active Directorate dashboard, in both languages.
 - Preserved proposed-content labels. Presentation prominence does not grant system or institutional authority.

@@ -25,8 +25,8 @@ export const DirectorateDashboard: React.FC<DirectorateDashboardProps> = (props)
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <section aria-label={isAr ? 'نظرة عامة على القيادة' : 'Leadership overview'}>
-        <ol className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <li className="md:col-span-2 rounded-lg border border-sadu-gold border-t-4 border-t-sadu-brick bg-sadu-linen p-5 sm:p-8">
+        <ol className="flex flex-col gap-3">
+          <li className="rounded-lg border border-sadu-gold border-t-4 border-t-sadu-brick bg-sadu-linen p-5 sm:p-8">
             <div className="grid lg:grid-cols-[1.3fr_1fr] gap-6 items-center">
               <div>
                 <p className="text-xs font-semibold text-sadu-brick mb-3">
@@ -48,12 +48,26 @@ export const DirectorateDashboard: React.FC<DirectorateDashboardProps> = (props)
               />
             </div>
           </li>
-          <li className="rounded-lg border border-sadu-gold bg-sadu-linen p-5">
-            <h3 className="font-editorial font-bold text-lg text-sadu-charcoal">
-              {isAr ? INSTITUTIONAL_INFO.chairmanAr : INSTITUTIONAL_INFO.chairmanEn}
-            </h3>
+          <li className="w-full md:w-5/6 mx-auto rounded-lg border border-sadu-gold bg-sadu-linen p-5">
+            <div className="flex flex-col sm:flex-row gap-5 items-center">
+              <div className="min-w-0 flex-1 w-full">
+                <h3 className="font-editorial font-bold text-xl sm:text-2xl text-sadu-charcoal leading-snug">
+                  {isAr ? INSTITUTIONAL_INFO.chairmanAr : INSTITUTIONAL_INFO.chairmanEn}
+                </h3>
+                <p className="text-xs sm:text-sm text-sadu-muted mt-2">
+                  {isAr ? 'المساءلة ووضوح القرارات' : 'Accountability and Clear Decisions'}
+                </p>
+              </div>
+              <img
+                src="/owais_portrait.jpg"
+                alt={isAr ? INSTITUTIONAL_INFO.chairmanAr : INSTITUTIONAL_INFO.chairmanEn}
+                width={2730}
+                height={1536}
+                className="w-4/5 sm:w-56 h-auto object-contain shrink-0 rounded-lg border border-sadu-gold"
+              />
+            </div>
           </li>
-          <li className="rounded-lg border border-sadu-gold bg-sadu-linen p-5">
+          <li className="w-full md:w-2/3 mx-auto rounded-lg border border-sadu-gold bg-sadu-linen p-5">
             <h3 className="font-editorial font-bold text-lg text-sadu-charcoal">
               {isAr ? INSTITUTIONAL_INFO.directorAr : INSTITUTIONAL_INFO.directorEn}
             </h3>
