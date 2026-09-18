@@ -2,7 +2,9 @@
 
 Complete runnable source prepared for GitHub on 18 September 2026, based on the audited `SADUVISION-main (5).zip`.
 
-This package includes the tested audit fixes. The proposed shared custody-handover record and global programme filtering have **not** been implemented yet.
+The connected fictional demonstration now includes a shared delivery record, manager handover, Directorate oversight, SDC Chairman brief, publishing pipeline, and bilingual artist intake. Legacy workspaces remain illustrative. There is no production authentication, server persistence, institutional authorization, or real submission service.
+
+Artist intake reuses one sample profile across two separate programme proposals. Optional device backup stores an allowlisted subset of text; contacts, files and submission receipts remain session-only. A coordinator can return a version for revision or record a completeness check. See [ARTIST_INTAKE_DEMO.md](ARTIST_INTAKE_DEMO.md) for the walkthrough and evidence limits.
 
 ## Run and build
 

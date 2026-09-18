@@ -1,5 +1,14 @@
 # Audit repair package — 19 September 2026
 
+## Artist profile, proposals and draft recovery
+
+- Added a four-step bilingual artist intake linked from the presentation and connected role bar. Two fictional briefs share a sample profile while retaining separate proposals and budgets.
+- Added optional device-only text backup with schema checks, revision conflicts, Web Locks, explicit restore, truthful status messages and text export. Contacts, file contents and submission receipts are excluded from backup.
+- Added local PDF/JPEG/PNG previews, versioned submission snapshots, coordinator revision feedback and completeness checks. No artistic selection or real institutional registration is implied.
+- Preserved the leadership hierarchy, oversight boundaries and presentation frame. Updated the final chapter's entry point and narrative.
+- Refreshed two relevant original Drive templates and documented source limits in ARTIST_INTAKE_DEMO.md.
+- Verified 26 automated tests, TypeScript/build, browser submit–revise–resubmit flow, recovery, cross-tab conflict, Arabic field directions and phone-width overflow.
+
 ## SDC Chairman brief and publishing demonstration
 
 - Scoped the Chairman brief to SDC directorate readiness, seven monthly publication titles, and routed executive reviews. Unreported unit and issue status remains unknown.

@@ -11,7 +11,7 @@ export const DEMO_PROGRAMME: ExhibitionProgramme = {
   budgetPlanned: 0, budgetCommitted: 0, budgetSpent: 0, currency: 'AED',
   progressPercent: 0, gatesReady: 0, gatesTotal: 3, criticalRisks: 0, unresolvedHandoffs: 1,
 };
-export type DemoActor = 'CHAIRMAN' | 'DIRECTORATE' | 'MANAGER' | 'LOGISTICS' | 'TECHNICAL' | 'COORDINATOR' | 'FINANCE' | 'PUBLISHING_MANAGER' | 'OBSERVER';
+export type DemoActor = 'CHAIRMAN' | 'DIRECTORATE' | 'MANAGER' | 'LOGISTICS' | 'TECHNICAL' | 'COORDINATOR' | 'FINANCE' | 'PUBLISHING_MANAGER' | 'ARTIST' | 'OBSERVER';
 export type EventKind = 'receipt' | 'receipt-issue' | 'condition' | 'handover' | 'statement-missing' | 'statement-task' | 'statement-restored' | 'finance-pack' | 'finance-escalated' | 'delivery-escalated' | 'print-proof' | 'print-routed' | 'print-decision' | 'print-dispatch';
 export interface DemoEvent { id: string; kind: EventKind; actor: DemoActor; at: string; reference: string }
 export interface ConditionEvidence { id: string; version: number; outcome: 'clear' | 'issue'; at: string; actor: DemoActor }

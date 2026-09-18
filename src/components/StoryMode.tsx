@@ -224,7 +224,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
                     { role: 'PR_PROTOCOL' as RoleKey, labelEn: 'PR & Diplomacy', labelAr: 'المراسم والبروتوكول' },
                     { role: 'FINANCE' as RoleKey, labelEn: 'Finance & LPOs', labelAr: 'المالية والمشتريات' },
                     { role: 'LOGISTICS' as RoleKey, labelEn: 'Fine Art Logistics', labelAr: 'الشحن واللوجستيات' },
-                    { role: 'ARTIST' as RoleKey, labelEn: 'Artist Studio', labelAr: 'استوديو الفنان' },
+                    { role: 'ARTIST' as RoleKey, labelEn: 'Artist intake', labelAr: 'تقديم الفنان' },
                   ].map((item) => (
                     <button
                       key={item.view ?? item.labelEn}

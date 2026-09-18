@@ -9,6 +9,8 @@ import { RoleKey } from '../types';
 import { DirectorateOversight } from './DirectorateOversight';
 import { ChairmanBrief } from './ChairmanBrief';
 import { PublishingCase } from './PublishingCase';
+import { ArtistIntake, ArtistIntakeQueue } from './ArtistIntake';
+import { IntakeDraftBackup } from './IntakeDraftBackup';
 import './LivingRecordWorkspace.css';
 
 const roles: { actor: DemoActor; role: RoleKey; en: string; ar: string }[] = [
@@ -20,6 +22,7 @@ const roles: { actor: DemoActor; role: RoleKey; en: string; ar: string }[] = [
   { actor: 'COORDINATOR', role: 'SDC_COORDINATOR', en: 'Coordination', ar: 'التنسيق' },
   { actor: 'FINANCE', role: 'FINANCE', en: 'Finance', ar: 'المالية' },
   { actor: 'PUBLISHING_MANAGER', role: 'EDITORIAL', en: 'Publishing manager', ar: 'مدير النشر' },
+  { actor: 'ARTIST', role: 'ARTIST', en: 'Artist intake', ar: 'تقديم الفنان' },
 ];
 const eventLabels: Record<DemoEvent['kind'], [string, string]> = {
   'print-proof': ['Sample print proof attached', 'أُرفقت البروفة التجريبية'],
@@ -53,7 +56,7 @@ export function LivingRecordWorkspace() {
   const t = (en: string, ar: string) => isAr ? ar : en;
   const actor: DemoActor = currentRole === 'DIRECTORATE' || currentRole === 'LEADERSHIP' ? leadershipView
     : currentRole === 'LOGISTICS' ? 'LOGISTICS' : ['SAF_TECHNICIAN', 'TECHNICAL', 'TECHNICAL_MUSEUM'].includes(currentRole) ? 'TECHNICAL'
-    : ['SDC_COORDINATOR', 'COORDINATOR'].includes(currentRole) ? 'COORDINATOR' : currentRole === 'FINANCE' ? 'FINANCE' : currentRole === 'EDITORIAL' ? 'PUBLISHING_MANAGER' : 'OBSERVER';
+    : ['SDC_COORDINATOR', 'COORDINATOR'].includes(currentRole) ? 'COORDINATOR' : currentRole === 'FINANCE' ? 'FINANCE' : currentRole === 'EDITORIAL' ? 'PUBLISHING_MANAGER' : currentRole === 'ARTIST' ? 'ARTIST' : 'OBSERVER';
   const metrics = selectLivingRecord(state);
   const roleLabel = (role: DemoActor | null) => role ? (isAr ? roles.find(item => item.actor === role)?.ar : roles.find(item => item.actor === role)?.en) ?? t('Observer', 'مراقب') : t('Handover complete', 'اكتمل التسليم');
   const time = (value: string) => new Date(value).toLocaleString(isAr ? 'ar-AE-u-nu-arab' : 'en-GB', { dateStyle: 'medium', timeStyle: 'medium', timeZone: 'Asia/Dubai' });
@@ -98,7 +101,7 @@ export function LivingRecordWorkspace() {
       <div><button onClick={() => setExperienceMode('story')}>{t('Presentation', 'العرض التقديمي')}</button><button onClick={toggleLang}>{isAr ? 'English' : 'العربية'}</button></div>
     </header>
     <main className="lr-main">
-      <div className="lr-context">{actor === 'CHAIRMAN' ? <span>{t('SDC INTERNAL OPERATIONS · PROPOSED VIEW', 'العمليات الداخلية لدائرة الثقافة · عرض مقترح')}</span> : actor === 'PUBLISHING_MANAGER' ? <span>{t('SDC PUBLISHING · FICTIONAL ISSUE', 'النشر في دائرة الثقافة · عدد افتراضي')}</span> : actor === 'DIRECTORATE' ? <span>{t('CULTURAL PORTFOLIO · PROPOSED VIEW', 'محفظة البرامج الثقافية · عرض مقترح')}</span> : <><span>{t('FICTIONAL CASE · SESSION ONLY', 'حالة افتراضية · لهذه الجلسة فقط')}</span><bdi>{CASE_ID}</bdi><span>{t('Mounir Fatmi — demonstration scenario', 'منير فاطمي — سيناريو توضيحي')}</span></>}</div>
+      <div className="lr-context">{actor === 'ARTIST' ? <span>{t('ARTIST INTAKE · FICTIONAL PROGRAMMES', 'تقديم الفنان · برامج افتراضية')}</span> : actor === 'CHAIRMAN' ? <span>{t('SDC INTERNAL OPERATIONS · PROPOSED VIEW', 'العمليات الداخلية لدائرة الثقافة · عرض مقترح')}</span> : actor === 'PUBLISHING_MANAGER' ? <span>{t('SDC PUBLISHING · FICTIONAL ISSUE', 'النشر في دائرة الثقافة · عدد افتراضي')}</span> : actor === 'DIRECTORATE' ? <span>{t('CULTURAL PORTFOLIO · PROPOSED VIEW', 'محفظة البرامج الثقافية · عرض مقترح')}</span> : <><span>{t('FICTIONAL CASE · SESSION ONLY', 'حالة افتراضية · لهذه الجلسة فقط')}</span><bdi>{CASE_ID}</bdi><span>{t('Mounir Fatmi — demonstration scenario', 'منير فاطمي — سيناريو توضيحي')}</span></>}</div>
       <nav className="lr-roles" aria-label={t('Demonstration roles', 'الأدوار التجريبية')}>
         {roles.map(role => <button key={role.actor} aria-pressed={actor === role.actor} onClick={() => go(role.actor)}>{isAr ? role.ar : role.en}</button>)}
       </nav>
@@ -111,7 +114,9 @@ export function LivingRecordWorkspace() {
         </div>
       </header>
 
-      {actor === 'CHAIRMAN' ? <ChairmanBrief onDirectorate={() => go('DIRECTORATE')} onPublishing={() => go('PUBLISHING_MANAGER')} onFinance={() => setModal('finance')}/> : actor === 'DIRECTORATE' ? <DirectorateOversight/> : actor === 'PUBLISHING_MANAGER' ? <section className="lr-panel"><h2>{t('Studies and Publishing · sample pipeline', 'الدراسات والنشر · مسار تجريبي')}</h2><PublishingCase actor={actor}/></section> : <>
+      <IntakeDraftBackup visible={actor === 'ARTIST'}/>
+      {actor === 'COORDINATOR' && <ArtistIntakeQueue/>}
+      {actor === 'ARTIST' ? <ArtistIntake onCoordinator={() => go('COORDINATOR')}/> : actor === 'CHAIRMAN' ? <ChairmanBrief onDirectorate={() => go('DIRECTORATE')} onPublishing={() => go('PUBLISHING_MANAGER')} onFinance={() => setModal('finance')}/> : actor === 'DIRECTORATE' ? <DirectorateOversight/> : actor === 'PUBLISHING_MANAGER' ? <section className="lr-panel"><h2>{t('Studies and Publishing · sample pipeline', 'الدراسات والنشر · مسار تجريبي')}</h2><PublishingCase actor={actor}/></section> : <>
         <section className="lr-panel lr-ledger"><div className="lr-section-title"><h2>{t('Delivery and handover', 'التنفيذ والتسليم')}</h2><span className="lr-status">{t('One shared case', 'حالة مشتركة واحدة')}</span></div>
           <ol className="lr-steps" aria-label={t('Custody sequence', 'تسلسل التسليم')}>
             {[[t('Arrival', 'الوصول'), Boolean(state.receipt)], [t('Condition evidence', 'أدلة الحالة'), Boolean(state.condition)], [t('Handover review', 'مراجعة التسليم'), Boolean(state.acceptance)]].map(([label, done], index) => <li key={index} className={done ? 'is-clear' : ''}><span>{done ? <Check aria-label={t('Recorded', 'مسجل')}/> : formatNumber(index + 1)}</span>{label}{index < 2 && <ArrowRight className="lr-direction" aria-hidden="true"/>}</li>)}
@@ -142,8 +147,8 @@ export function LivingRecordWorkspace() {
       </>}
       {actor === 'COORDINATOR' ? <section className="lr-panel"><h2>{t('Publishing handover · sample', 'تسليم النشر · تجريبي')}</h2><PublishingCase actor={actor}/></section> : null}
       {actor === 'MANAGER' && <section className="lr-panel"><h2>{t('Escalate a schedule risk', 'تصعيد مخاطر الجدول')}</h2><p>{t('Raise an impact on installation readiness for Directorate attention. Operational follow-up stays with the exhibition manager and assigned team.', 'ارفع أثر المخاطر على الجاهزية للتركيب إلى الإدارة. تبقى المتابعة التشغيلية لدى مدير المعارض والفريق المكلف.')}</p><button className="lr-primary" disabled={Boolean(state.acceptance) || state.deliveryEscalated} onClick={() => dispatch({ type: 'ESCALATE_DELIVERY', ...envelope() })}>{state.acceptance ? t('Delivery dependency resolved', 'عولج متطلب التنفيذ') : state.deliveryEscalated ? t('Schedule risk raised', 'رُفعت مخاطر الجدول') : t('Raise schedule risk to Directorate', 'رفع مخاطر الجدول إلى الإدارة')}</button></section>}
-      <p className="lr-announcement" role="status">{actor === 'DIRECTORATE' ? t('Manager reports update this overview. Operational actions remain in the assigned workspaces.', 'تحدّث تقارير المديرين هذه النظرة العامة. تبقى الإجراءات التشغيلية في مساحات العمل المكلفة.') : newEvent ? t('Latest record: ', 'آخر سجل: ') + eventLabels[newEvent.kind][isAr ? 1 : 0] : t('Explore department oversight, then switch to the assigned manager and delivery roles.', 'استكشف متابعة الأقسام، ثم انتقل إلى المدير المكلف وأدوار التنفيذ.')}</p>
-      <footer className="lr-bottom"><span>{t('Proposed workflow · institutional delegation requires validation', 'مسار عمل مقترح · يلزم التحقق من التفويض المؤسسي')}</span><div><button onClick={() => setModal('reset')}><RotateCcw/>{t('Reset demo', 'إعادة التجربة')}</button><button onClick={() => setSelectedProgramme(PROGRAMMES[0])}>{t('Other sample workspaces', 'مساحات العمل التجريبية الأخرى')}</button></div></footer>
+      <p className="lr-announcement" role="status">{actor === 'ARTIST' ? t('Your profile supports separate proposals. The assigned coordinator checks submitted versions.', 'يدعم ملفك مقترحات مستقلة. يراجع المنسق المكلف الإصدارات المقدمة.') : actor === 'DIRECTORATE' ? t('Manager reports update this overview. Operational actions remain in the assigned workspaces.', 'تحدّث تقارير المديرين هذه النظرة العامة. تبقى الإجراءات التشغيلية في مساحات العمل المكلفة.') : newEvent ? t('Latest record: ', 'آخر سجل: ') + eventLabels[newEvent.kind][isAr ? 1 : 0] : t('Explore department oversight, then switch to the assigned manager and delivery roles.', 'استكشف متابعة الأقسام، ثم انتقل إلى المدير المكلف وأدوار التنفيذ.')}</p>
+      <footer className="lr-bottom"><span>{t('Proposed workflow · institutional delegation requires validation', 'مسار عمل مقترح · يلزم التحقق من التفويض المؤسسي')}</span><div>{actor !== 'ARTIST' && <button onClick={() => setModal('reset')}><RotateCcw/>{t('Reset delivery and publishing demo', 'إعادة تجربة التنفيذ والنشر')}</button>}<button onClick={() => setSelectedProgramme(PROGRAMMES[0])}>{t('Other sample workspaces', 'مساحات العمل التجريبية الأخرى')}</button></div></footer>
     </main>
 
     <dialog ref={dialogRef} className="lr-dialog" aria-labelledby="lr-dialog-title" onCancel={closeDossier} onClose={closeDossier}>

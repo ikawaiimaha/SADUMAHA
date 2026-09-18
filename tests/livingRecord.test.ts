@@ -8,7 +8,7 @@ const at = '2026-09-18T08:00:00.000Z';
 const arrival = { type: 'RECEIVE', actor: 'LOGISTICS', crateId: CASE_ID, sealMatches: true, at } as const;
 const report = { type: 'CONDITION', actor: 'TECHNICAL', outcome: 'clear', at } as const;
 const accept = { type: 'ACCEPT', actor: 'MANAGER', reportVersion: 1, acknowledged: true, at } as const;
-const actors: DemoActor[] = ['CHAIRMAN', 'DIRECTORATE', 'MANAGER', 'LOGISTICS', 'TECHNICAL', 'COORDINATOR', 'FINANCE', 'PUBLISHING_MANAGER', 'OBSERVER'];
+const actors: DemoActor[] = ['CHAIRMAN', 'DIRECTORATE', 'MANAGER', 'LOGISTICS', 'TECHNICAL', 'COORDINATOR', 'FINANCE', 'PUBLISHING_MANAGER', 'ARTIST', 'OBSERVER'];
 
 test('receipt and evidence do not independently clear the executive readiness gate', () => {
   let state = createLivingRecord();

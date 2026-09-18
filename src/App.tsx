@@ -12,6 +12,7 @@ import { I18nProvider, useI18n } from './context/I18nContext';
 import { WorkspaceProvider, useWorkspace } from './context/WorkspaceContext';
 import { LivingRecordProvider, useLivingRecord } from './context/LivingRecordContext';
 import { LivingRecordWorkspace } from './components/LivingRecordWorkspace';
+import { ArtistIntakeProvider } from './context/ArtistIntakeContext';
 import { DEMO_PROGRAMME_ID, DEMO_PROGRAMME } from './data/livingRecord';
 import { HeaderNav } from './components/HeaderNav';
 import { DemoNotice } from './components/DemoNotice';
@@ -137,7 +138,7 @@ function SADUApp() {
   }, []);
 
   const handleSelectRoleAndExplore = (role: RoleKey) => {
-    const connectedDemo = ['DIRECTORATE', 'SDC_COORDINATOR', 'SAF_TECHNICIAN', 'FINANCE', 'LOGISTICS', 'EDITORIAL'].includes(role);
+    const connectedDemo = ['DIRECTORATE', 'SDC_COORDINATOR', 'SAF_TECHNICIAN', 'FINANCE', 'LOGISTICS', 'EDITORIAL', 'ARTIST'].includes(role);
     switchRole(role);
     setSelectedProgramme(connectedDemo ? DEMO_PROGRAMME : PROGRAMMES[0]);
     setLeadershipView('CHAIRMAN');
@@ -384,7 +385,7 @@ export default function App() {
   return (
     <I18nProvider initialLang="ar">
       <WorkspaceProvider initialRole="DIRECTORATE" initialExperienceMode="story">
-        <LivingRecordProvider><SADUApp /></LivingRecordProvider>
+        <LivingRecordProvider><ArtistIntakeProvider><SADUApp /></ArtistIntakeProvider></LivingRecordProvider>
       </WorkspaceProvider>
     </I18nProvider>
   );

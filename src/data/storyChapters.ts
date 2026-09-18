@@ -73,8 +73,8 @@ export const storyChapters = [
   {
     id: 'explore-next', icon: Users, titleEn: 'Follow the Record Across Roles', titleAr: 'تابع السجل عبر الأدوار',
     subtitleEn: 'Oversight follows outcomes. Managers and teams deliver the work.', subtitleAr: 'تتابع القيادة النتائج، وينفذ المديرون والفرق العمل.',
-    contentEn: 'Follow the exhibition handover across delivery roles, or open Coordination to attach a sample print proof. The Publishing manager reviews and routes it. Return to the Chairman to review the brief and record a demo decision.',
-    contentAr: 'تابع تسليم المعرض عبر أدوار التنفيذ، أو افتح التنسيق لإرفاق بروفة تجريبية. يراجعها مدير النشر ويحيلها. عد إلى رئيس الدائرة لمراجعة الموجز وتسجيل قرار تجريبي.',
+    contentEn: 'Follow an exhibition handover or a print proof from its assigned team to the appropriate review. Artist intake offers a separate path: one profile, a proposal for each programme, and coordinator feedback before any selection decision.',
+    contentAr: 'تابع تسليم المعرض أو بروفة الطباعة من الفريق المكلف إلى المراجعة المناسبة. ويوفر تقديم الفنان مساراً مستقلاً: ملف واحد ومقترح لكل برنامج وملاحظات المنسق قبل أي قرار اختيار.',
     highlightBoxEn: 'Connected sample roles include leadership, delivery, publishing, coordination, and finance. All decisions remain demonstrations.', highlightBoxAr: 'تشمل الأدوار التجريبية المترابطة القيادة والتنفيذ والنشر والتنسيق والمالية. وتبقى جميع القرارات توضيحية.'
   }
 ];
