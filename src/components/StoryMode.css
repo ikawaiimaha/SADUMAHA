@@ -45,7 +45,7 @@
   margin-bottom: 16px;
 }
 
-.story-card .story-title { font-size: 22px; line-height: 1.4; }
+.story-card .story-title { font-size: 22px; line-height: 1.4; text-wrap: balance; }
 .story-card .story-title--lead { font-size: 30px; }
 .story-card .story-title--second { font-size: 26px; }
 
@@ -72,25 +72,67 @@
 .story-card .story-description { font-size: 14px; line-height: 1.7; }
 .story-highlight { padding: 12px; font-size: 13px; line-height: 1.6; }
 
-.story-figure {
-  min-height: 0;
+/* Portraits share the heading/body height; the footer is aligned with the callout. */
+.story-card--portrait {
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
-  overflow: hidden;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr);
+  grid-template-rows: auto minmax(0, 1fr) 76px;
+  gap: 16px 28px;
+}
+.story-card--portrait .story-heading {
+  grid-column: 1;
+  grid-row: 1;
+  min-height: 170px;
+  margin: 0;
+}
+.story-card--portrait .story-body,
+.story-card--portrait .story-content-grid,
+.story-card--portrait .story-copy { display: contents; }
+.story-card--portrait .story-description {
+  grid-column: 1;
+  grid-row: 2;
+  min-height: 0;
+  overflow-y: auto;
+}
+.story-card--portrait .story-highlight { grid-column: 1; grid-row: 3; }
+.story-figure {
+  grid-column: 2;
+  grid-row: 1 / 4;
+  min-height: 0;
+  min-width: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) 76px;
+  gap: 16px;
 }
 
-.story-portrait-stage { position: relative; min-height: 0; }
-.story-portrait {
-  position: absolute;
-  inset: 0;
-  margin: auto;
-  width: 80%;
-  height: 80%;
-  object-fit: contain;
+.story-portrait-stage {
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.story-figure--lead .story-portrait { width: 100%; height: 100%; }
-.story-figure--second .story-portrait { width: 88%; height: 88%; }
-.story-caption { padding: 8px 10px; font-size: 11px; line-height: 1.6; }
+.story-portrait {
+  display: block;
+  flex-shrink: 0;
+  width: auto;
+  height: 84%;
+  max-width: 100%;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border: 1px solid #e7e5e4;
+  border-radius: 6px;
+}
+.story-figure--lead .story-portrait { height: 100%; }
+.story-figure--second .story-portrait { height: 92%; }
+.story-caption {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 0;
+  font-size: 11px;
+  line-height: 1.6;
+  text-align: center;
+}
 .story-placeholder { min-height: 0; }
 
 .story-role-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
@@ -126,7 +168,16 @@
   .story-content-grid,
   .story-role-layout { grid-template-columns: minmax(0, 1fr); height: auto; gap: 20px; }
   .story-copy { overflow: visible; }
-  .story-figure { height: 280px; }
+  .story-card--portrait {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: repeat(4, max-content);
+    align-content: start;
+  }
+  .story-card--portrait .story-heading { min-height: 0; }
+  .story-card--portrait .story-description { grid-row: 3; overflow: visible; }
+  .story-card--portrait .story-highlight { grid-row: 4; }
+  .story-figure { grid-column: 1; grid-row: 2; grid-template-rows: 300px auto; gap: 8px; }
+  .story-caption { padding: 8px 0; }
   .story-placeholder { height: 240px; }
   .story-role-grid { grid-template-rows: repeat(5, minmax(56px, auto)); }
   .story-controls { display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: 6px; padding-top: 8px; }
@@ -137,4 +188,5 @@
 
 @media (min-width: 768px) and (max-height: 650px) {
   .story-body { flex: 0 0 260px; }
+  .story-card--portrait { grid-template-rows: auto minmax(140px, 1fr) 76px; }
 }

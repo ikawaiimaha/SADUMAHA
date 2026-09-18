@@ -51,6 +51,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
       subtitleEn: 'Culture and Institutional Memory',
       subtitleAr: 'الثقافة والذاكرة المؤسسية',
       imagePath: '/sultan_portrait.jpg',
+      portrait: { width: 2816, height: 1536, viewBox: '1000 0 1228.8 1536' },
       contentEn: 'The proposed SADU experience connects cultural programmes with the people, decisions, and evidence behind them. Artist statements, sources, and programme outcomes remain understandable to the next employee and useful to future research.',
       contentAr: 'يربط تصور سدو المقترح البرامج الثقافية بالأشخاص والقرارات والأدلة المرتبطة بها. وتبقى بيانات الفنانين ومصادر المعلومات ونتائج البرامج مفهومة للموظف التالي وقابلة للاستفادة منها في البحث مستقبلاً.',
       highlightBoxEn: 'Design objective: preserve the context of cultural work as it happens.',
@@ -64,6 +65,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
       subtitleEn: 'Accountability and Clear Decisions',
       subtitleAr: 'المساءلة ووضوح القرارات',
       imagePath: '/owais_portrait.jpg',
+      portrait: { width: 2730, height: 1536, viewBox: '1065 0 1228.8 1536' },
       contentEn: 'The proposed leadership view brings readiness, commitments, missing evidence, and pending decisions into one brief. A recorded action should show its responsible role and supporting evidence; formal approval still depends on documented institutional delegation.',
       contentAr: 'يجمع عرض القيادة المقترح الجاهزية والالتزامات والأدلة الناقصة والقرارات المعلقة في ملخص واحد. وينبغي أن يوضح كل إجراء مسجل الدور المسؤول والأدلة الداعمة له؛ ويظل الاعتماد الرسمي مرهوناً بتفويض مؤسسي موثق.',
       highlightBoxEn: 'Design objective: make the decision, its evidence, and the next action clear.',
@@ -72,11 +74,12 @@ export const StoryMode: React.FC<StoryModeProps> = ({
     {
       id: 'leadership-operational',
       icon: GitBranch,
-      titleEn: 'Programme Delivery and Handover',
-      titleAr: 'تنفيذ البرامج وتسليم المسؤوليات',
-      subtitleEn: 'Mohammed Ibrahim Al Qaseer',
-      subtitleAr: 'محمد إبراهيم القصير',
+      titleEn: 'Mohammed Ibrahim Al Qaseer',
+      titleAr: 'محمد إبراهيم القصير',
+      subtitleEn: 'Programme Delivery and Handover',
+      subtitleAr: 'تنفيذ البرامج وتسليم المسؤوليات',
       imagePath: '/qaseer_portrait.jpg',
+      portrait: { width: 1728, height: 2418, viewBox: '525 550 1024 1280' },
       contentEn: 'The proposed delivery view connects exhibition plans with coordinator, technical, and logistics tasks. It makes blockers, dependencies, and the next responsible role visible so a newly assigned employee can continue from a clear handover.',
       contentAr: 'يربط عرض التنفيذ المقترح خطط المعارض بمهام التنسيق والعمل الفني واللوجستيات. ويوضح المعوقات والاعتماد المتبادل بين المهام والدور المسؤول التالي، ليتمكن الموظف المكلف حديثاً من متابعة العمل انطلاقاً من تسليم واضح.',
       highlightBoxEn: 'Design objective: show what is ready, what is blocked, and who acts next.',
@@ -159,7 +162,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
   const current = chapters[currentChapter];
   const isLeadChapter = current.id === 'leadership-visionary';
   const isSecondChapter = current.id === 'leadership-governance';
-  const isFeaturedPortrait = isLeadChapter || isSecondChapter;
+  const isPortraitChapter = Boolean(current.imagePath);
 
   useEffect(() => {
     cardRef.current?.scrollTo({ top: 0, behavior: 'instant' });
@@ -240,10 +243,10 @@ export const StoryMode: React.FC<StoryModeProps> = ({
           </div>
         </div>
 
-        <section ref={cardRef} aria-labelledby="story-title" tabIndex={0} className={`story-card bg-sadu-linen border border-sadu-gold rounded-lg ${isLeadChapter ? 'story-card--lead' : ''}`}>
+        <section ref={cardRef} aria-labelledby="story-title" tabIndex={0} className={`story-card bg-sadu-linen border border-sadu-gold rounded-lg ${isPortraitChapter ? 'story-card--portrait' : ''} ${isLeadChapter ? 'story-card--lead' : ''}`}>
           
           <div className="story-heading flex items-start gap-4 border-b border-sadu-gold/30">
-            {!isFeaturedPortrait && <div className="p-3 rounded-md bg-sadu-sand text-sadu-brick border border-sadu-gold/50 shrink-0">
+            {!isPortraitChapter && <div className="p-3 rounded-md bg-sadu-sand text-sadu-brick border border-sadu-gold/50 shrink-0">
               <current.icon className="w-7 h-7 sm:w-8 sm:h-8" />
             </div>}
             <div className="flex-1 min-w-0 pt-0.5">
@@ -277,16 +280,20 @@ export const StoryMode: React.FC<StoryModeProps> = ({
                   </div>
                 </div>
 
-                {current.imagePath ? (
-                  <figure className={`story-figure rounded-lg border border-sadu-gold bg-sadu-sand ${isLeadChapter ? 'story-figure--lead' : isSecondChapter ? 'story-figure--second' : ''}`}>
+                {current.imagePath && current.portrait ? (
+                  <figure className={`story-figure ${isLeadChapter ? 'story-figure--lead' : isSecondChapter ? 'story-figure--second' : ''}`}>
                     <div className="story-portrait-stage">
-                      <img
-                        src={current.imagePath}
-                        alt={isFeaturedPortrait ? (isAr ? current.titleAr : current.titleEn) : (isAr ? current.subtitleAr : current.subtitleEn)}
+                      {/* Source-specific 4:5 viewport: original illustration pixels are unchanged. */}
+                      <svg
+                        viewBox={current.portrait.viewBox}
+                        role="img"
+                        aria-label={isAr ? current.titleAr : current.titleEn}
                         className="story-portrait"
-                      />
+                      >
+                        <image href={current.imagePath} width={current.portrait.width} height={current.portrait.height} />
+                      </svg>
                     </div>
-                    <figcaption className="story-caption border-t border-sadu-gold text-sadu-muted">
+                    <figcaption className="story-caption text-sadu-muted">
                       {isAr
                         ? 'محتوى عرض مقترح لسدو، وليس تصريحاً أو تأييداً من الشخصية الظاهرة.'
                         : 'Proposed SADU presentation content; not a statement or endorsement by the person shown.'}

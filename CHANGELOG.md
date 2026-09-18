@@ -1,5 +1,15 @@
 # Audit repair package — 18 September 2026
 
+## Leadership portrait composition
+
+- Unified the three leadership headings: name first, existing theme beneath. Al Qaseer's name is now the chapter heading in both languages; the extra icon is removed.
+- Replaced the landscape contain treatment with individually positioned 4:5 presentation crops. SVG viewports reference the original JPEGs unchanged, retaining the existing illustrations rather than generating new faces or attire.
+- Kept the opening portrait largest, followed by 92% and 84% height for the next two. Crop positions bring the eye levels close while retaining the full headwear.
+- Removed the inner beige portrait box. A subtle border follows the portrait itself, with a plain caption below.
+- Aligned desktop callout and caption rows. Reserved consistent heading space, balanced long title wrapping, and placed the portrait beside both heading and description to use the fixed frame more effectively.
+- Verified the stacked phone layout and corrected its initial grid-row compression so images, captions, and text cannot overlap. The stable outer card and navigation remain unchanged.
+- Supersedes the earlier full-image contain framing in the presentation. Original assets and Directorate dashboard composition are unchanged.
+
 ## Stable presentation frame
 
 - Replaced content-dependent slide heights and vertical centring with one viewport-sized frame across all nine chapters, including the demonstration notice, toolbar, and footer.
