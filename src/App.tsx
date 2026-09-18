@@ -10,6 +10,9 @@ import {
 import { PROGRAMMES, ROLE_PROFILES } from './data/mockData';
 import { I18nProvider, useI18n } from './context/I18nContext';
 import { WorkspaceProvider, useWorkspace } from './context/WorkspaceContext';
+import { LivingRecordProvider, useLivingRecord } from './context/LivingRecordContext';
+import { LivingRecordWorkspace } from './components/LivingRecordWorkspace';
+import { DEMO_PROGRAMME_ID, DEMO_PROGRAMME } from './data/livingRecord';
 import { HeaderNav } from './components/HeaderNav';
 import { DemoNotice } from './components/DemoNotice';
 import { AuthoredBand } from './components/AuthoredBand';
@@ -48,6 +51,7 @@ import {
 
 function SADUApp() {
   const { lang, toggleLang, isAr } = useI18n();
+  const { setLeadershipView } = useLivingRecord();
   const {
     currentRole,
     setCurrentRole,
@@ -133,9 +137,12 @@ function SADUApp() {
   }, []);
 
   const handleSelectRoleAndExplore = (role: RoleKey) => {
+    const connectedDemo = ['DIRECTORATE', 'SDC_COORDINATOR', 'SAF_TECHNICIAN', 'FINANCE', 'LOGISTICS'].includes(role);
     switchRole(role);
+    setSelectedProgramme(connectedDemo ? DEMO_PROGRAMME : PROGRAMMES[0]);
+    setLeadershipView('CHAIRMAN');
     setExperienceMode('platform');
-    setShowRoleOnboarding(true);
+    setShowRoleOnboarding(!connectedDemo);
   };
 
   const handleRoleChangeFromNav = (role: RoleKey) => {
@@ -155,7 +162,7 @@ function SADUApp() {
         <StoryMode
           lang={lang}
           onSelectRoleAndExplore={handleSelectRoleAndExplore}
-          onSkipToPlatform={() => setExperienceMode('platform')}
+          onSkipToPlatform={() => handleSelectRoleAndExplore('DIRECTORATE')}
           onToggleLanguage={toggleLang}
         />
       </div>
@@ -163,6 +170,10 @@ function SADUApp() {
   }
 
   const roleProfile = ROLE_PROFILES[currentRole];
+
+  if (selectedProgramme?.id === DEMO_PROGRAMME_ID) {
+    return <><DemoNotice /><LivingRecordWorkspace /></>;
+  }
 
   return (
     <div className={`min-h-screen bg-sadu-cream text-sadu-charcoal flex flex-col font-sans selection:bg-sadu-brick selection:text-white ${density === 'compact' ? 'text-xs' : ''}`}>
@@ -371,8 +382,8 @@ function SADUApp() {
 export default function App() {
   return (
     <I18nProvider initialLang="ar">
-      <WorkspaceProvider initialRole="COORDINATOR" initialExperienceMode="story">
-        <SADUApp />
+      <WorkspaceProvider initialRole="DIRECTORATE" initialExperienceMode="story">
+        <LivingRecordProvider><SADUApp /></LivingRecordProvider>
       </WorkspaceProvider>
     </I18nProvider>
   );

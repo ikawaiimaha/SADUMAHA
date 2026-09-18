@@ -46,8 +46,11 @@
 }
 
 .story-card .story-title { font-size: 22px; line-height: 1.4; text-wrap: balance; }
-.story-card .story-title--lead { font-size: 30px; }
-.story-card .story-title--second { font-size: 26px; }
+.story-card .story-title--lead { font-size: 26px; }
+.story-card .story-title--second { font-size: 23px; }
+.story-designation { display:block; font:500 13px/1.55 'Inter',sans-serif; margin-top:8px; }
+.story-shell { font-family:'Inter',sans-serif; }
+[dir=rtl] .story-shell, [dir=rtl] .story-shell :is(h1,p,span,button,strong), [dir=rtl] .story-designation { font-family:'IBM Plex Sans Arabic',Tahoma,sans-serif; }
 
 .story-body { flex: 1; min-height: 0; }
 .story-content-grid,
@@ -70,7 +73,7 @@
 }
 
 .story-card .story-description { font-size: 14px; line-height: 1.7; }
-.story-highlight { padding: 12px; font-size: 13px; line-height: 1.6; }
+.story-highlight { padding: 8px 12px; font-size: 12px; line-height: 1.5; }
 
 /* Portraits share the heading/body height; the footer is aligned with the callout. */
 .story-card--portrait {
@@ -82,7 +85,7 @@
 .story-card--portrait .story-heading {
   grid-column: 1;
   grid-row: 1;
-  min-height: 170px;
+  min-height: 210px;
   margin: 0;
 }
 .story-card--portrait .story-body,
@@ -122,7 +125,7 @@
   border: 1px solid #e7e5e4;
   border-radius: 6px;
 }
-.story-figure--lead .story-portrait { height: 100%; }
+.story-figure--lead .story-portrait { height: 100%; border:0; border-radius:0; }
 .story-figure--second .story-portrait { height: 92%; }
 .story-caption {
   display: flex;
@@ -150,14 +153,27 @@
 .story-controls { padding-top: 10px; gap: 12px; }
 .story-footer { padding: 6px 16px; font-size: 11px; line-height: 1.6; }
 
+/* Equal chrome geometry in both languages; content, rather than the frame, adapts. */
+.story-experience > [role="note"] { height:36px; padding:4px 16px; display:grid; place-items:center; margin:0; font-size:12px; line-height:1.5; }
+.story-toolbar { height:56px; display:flex; align-items:center; }
+.story-toolbar > div { width:100%; }
+.story-progress > div:first-child { height:18px; }
+.story-progress span { line-height:18px; }
+.story-footer { height:30px; display:flex; align-items:center; justify-content:center; flex-wrap:wrap; }
+.story-footer span { line-height:1.6; }
+.story-controls button { height:40px; }
+.story-controls button span { line-height:1.5; }
+
 @media (min-width: 1024px) and (min-height: 820px) {
-  .story-card .story-title--lead { font-size: 34px; }
-  .story-card .story-title--second { font-size: 28px; }
+  .story-card .story-title--lead { font-size: 30px; }
+  .story-card .story-title--second { font-size: 26px; }
   .story-card .story-description { font-size: 16px; }
 }
 
 /* Keep controls anchored on phones; scroll only the reading surface. */
 @media (max-width: 767px) {
+  .story-experience > [role="note"] { height:66px; }
+  .story-footer { height:48px; align-content:center; }
   .story-main { padding: 8px 12px; gap: 8px; }
   .story-card { padding: 16px; }
   .story-heading { min-height: 0; }
@@ -190,3 +206,20 @@
   .story-body { flex: 0 0 260px; }
   .story-card--portrait { grid-template-rows: auto minmax(140px, 1fr) 76px; }
 }
+
+.story-case-graphic { display:flex; flex-direction:column; justify-content:center; gap:12px; padding:24px; min-height:0; overflow:auto; border-inline-start:1px solid #cbb89f; }
+.story-case-eyebrow { font-size:10px; letter-spacing:.08em; color:#652f3c; }
+.story-case-graphic>bdi { font-size:11px; color:#655a55; }
+.story-case-flow { list-style:none; margin:0; padding:0; display:grid; gap:8px; }
+.story-case-flow li>div { display:grid; grid-template-columns:20px 1fr; gap:3px 8px; padding:9px; border-inline-start:3px solid transparent; }
+.story-case-flow li.is-active>div { border-color:#652f3c; background:#f7f1e6; }
+.story-case-flow svg { width:16px; height:16px; grid-row:1/3; margin-top:4px; }
+.story-case-flow strong { font-size:13px; }
+.story-case-flow span { font-size:11px; }
+.story-case-flow .story-case-arrow { display:none; }
+.story-case-note { font-size:10px; color:#655a55; line-height:1.6; }
+.story-case-metrics { display:grid; gap:12px; }
+.story-case-metrics>div { display:flex; align-items:center; gap:16px; padding-bottom:10px; border-bottom:1px solid #e7ded1; }
+.story-case-metrics strong { min-width:90px; font-size:28px; color:#652f3c; font-variant-numeric:tabular-nums; }
+.story-case-metrics span { font-size:12px; }
+@media(max-width:767px) { .story-case-graphic { border-inline-start:0; border-top:1px solid #cbb89f; padding:18px 0; min-height:290px; } }

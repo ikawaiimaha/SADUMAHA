@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { RoleKey, ExhibitionProgramme, WorkspaceTab, DisplayDensity, ExperienceMode } from '../types';
 import { PROGRAMMES, ROLE_PROFILES } from '../data/mockData';
+import { DEMO_PROGRAMME } from '../data/livingRecord';
 import { readPreference, writePreference } from '../utils/preferences';
 
 interface WorkspaceContextType {
@@ -45,7 +46,7 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
       : initialExperienceMode;
   });
   const [currentRole, setCurrentRoleState] = useState<RoleKey>(initialRole);
-  const [selectedProgramme, setProgrammeState] = useState<ExhibitionProgramme>(PROGRAMMES[0]);
+  const [selectedProgramme, setProgrammeState] = useState<ExhibitionProgramme>(DEMO_PROGRAMME);
   const setSelectedProgramme = (programme: ExhibitionProgramme | undefined) => setProgrammeState(programme ?? PROGRAMMES[0]);
   const firstTab = (role: RoleKey) => ROLE_PROFILES[role].permittedViews[0] as WorkspaceTab;
   const [activeTab, setActiveTabState] = useState<WorkspaceTab>(() => firstTab(initialRole));
