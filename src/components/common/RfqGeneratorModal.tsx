@@ -154,7 +154,7 @@ export const RfqGeneratorModal: React.FC<RfqGeneratorModalProps> = ({
               </p>
             </div>
 
-            <div className="text-right rtl:text-left space-y-1 font-sans text-xs">
+            <div className="text-end space-y-1 font-sans text-xs">
               <div className="inline-block px-3 py-1 bg-sadu-linen border border-sadu-gold rounded font-mono font-bold text-sadu-ink">
                 {rfqNumber}
               </div>
@@ -239,7 +239,7 @@ export const RfqGeneratorModal: React.FC<RfqGeneratorModalProps> = ({
 
                 <div className="space-y-2">
                   <h4 className="font-bold text-xs text-sadu-charcoal">{isAr ? 'نطاق العمل ومحددات التصنيع الهندسية المطلوبة:' : 'Mandatory Engineering Fabrication SOW:'}</h4>
-                  <ul className="list-disc list-inside space-y-1.5 text-sadu-charcoal pl-2 text-xs leading-relaxed">
+                  <ul className="list-disc list-inside space-y-1.5 text-sadu-charcoal ps-2 text-xs leading-relaxed">
                     <li>
                       <strong>{isAr ? 'صفيحة توزيع الحمل الإنشائي:' : 'Load Dispersion Base Plate:'}</strong> {isAr ? 'صفيحة فولاذية مدرفلة على البارد بقطر 60 سم وسماكة 8 ملم بدقة قص بالليزر (CNC).' : 'Cold-rolled structural carbon steel plate, 60cm diameter, 8mm calibrated thickness, precision CNC laser-cut.'}
                     </li>
@@ -280,7 +280,7 @@ export const RfqGeneratorModal: React.FC<RfqGeneratorModalProps> = ({
 
                 <div className="space-y-2">
                   <h4 className="font-bold text-xs text-sadu-charcoal">{isAr ? 'المواصفات المطبعية والتجليد المعتمدة:' : 'Printing & Finishing Specifications:'}</h4>
-                  <ul className="list-disc list-inside space-y-1.5 text-sadu-charcoal pl-2 text-xs leading-relaxed">
+                  <ul className="list-disc list-inside space-y-1.5 text-sadu-charcoal ps-2 text-xs leading-relaxed">
                     <li>{isAr ? 'الغلاف الخارجي: قماش كتان هولندي طبيعي بلون السدو الرملي مع بصمة ذهبية حرارية (Hot Foil Stamping).' : 'Cover: Dutch natural linen cloth (Sadu Sand hue) with custom gold hot-foil debossing.'}</li>
                     <li>{isAr ? 'الورق الداخلي: ورق آرت غير لامع مطفأ خالي من الأحماض 170 جم/م² (FSC Certified Acid-free).' : 'Inside Pages: 170 gsm FSC-certified acid-free matte art paper with spot UV varnish on color plates.'}</li>
                     <li>{isAr ? 'التجليد: خياطة حريرية كاملة مع كعب مقوس وشريط قماشي فاخر.' : 'Binding: Thread-sewn casebound with round spine and dual silk bookmark ribbons.'}</li>

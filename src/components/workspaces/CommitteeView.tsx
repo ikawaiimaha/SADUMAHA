@@ -259,7 +259,7 @@ export const CommitteeView: React.FC<CommitteeViewProps> = (props) => {
                       </h3>
                     </div>
                   </div>
-                  <div className="text-right rtl:text-left bg-sadu-sand px-4 py-2 rounded-md border border-sadu-gold">
+                  <div className="text-end bg-sadu-sand px-4 py-2 rounded-md border border-sadu-gold">
                     <span className="text-xs text-sadu-muted block">
                       {isAr ? 'مجموع البوابة الأولى' : 'Gate 1 Total Score'}
                     </span>
@@ -684,7 +684,7 @@ export const CommitteeView: React.FC<CommitteeViewProps> = (props) => {
 
           {activeTab === 'conditions' && (
             <div className="space-y-4">
-              <div className="p-3.5 bg-sadu-paper rounded-md border-l-4 rtl:border-l-0 rtl:border-r-4 border-sadu-brick text-xs">
+              <div className="p-3.5 bg-sadu-paper rounded-md border-s-4 border-sadu-brick text-xs">
                 <span className="font-bold text-sadu-brick block mb-1">
                   {isAr ? 'شروط اعتماد اللجنة الملزمة (تُلحق بنسخة النطاق المعتمد v1.2):' : 'Binding Committee Conditions (Attached to Approved Scope Revision v1.2):'}
                 </span>

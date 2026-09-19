@@ -509,7 +509,7 @@ export const EditorialPipeline: React.FC = () => {
                 </div>
 
                 {/* Institutional Warning Rule Header */}
-                <div className="mt-3 p-2.5 rounded bg-[#FFF9EE] border-l-4 rtl:border-l-0 rtl:border-r-4 border-sadu-ochre text-[11px] text-[#8C601E] font-medium leading-relaxed flex items-start gap-2 shadow-2xs">
+                <div className="mt-3 p-2.5 rounded bg-[#FFF9EE] border-s-4 border-sadu-ochre text-[11px] text-[#8C601E] font-medium leading-relaxed flex items-start gap-2 shadow-2xs">
                   <AlertCircle className="w-4 h-4 shrink-0 text-sadu-ochre mt-0.5" />
                   <span>
                     {isAr
@@ -713,9 +713,9 @@ export const EditorialPipeline: React.FC = () => {
             placeholder={isAr ? 'بحث بالرمز، العنوان، أو الفنان...' : 'Search by code, title, or artist...'}
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            className="w-full sm:w-64 pl-8 pr-3 py-1.5 text-xs bg-sadu-sand/60 border border-sadu-gold rounded focus:outline-hidden focus:ring-1 focus:ring-sadu-ink text-sadu-charcoal"
+            className="w-full sm:w-64 ps-8 pe-3 py-1.5 text-xs bg-sadu-sand/60 border border-sadu-gold rounded focus:outline-hidden focus:ring-1 focus:ring-sadu-ink text-sadu-charcoal"
           />
-          <Search className="w-3.5 h-3.5 text-sadu-muted absolute left-2.5 top-2" />
+          <Search className="w-3.5 h-3.5 text-sadu-muted absolute start-2.5 top-2" />
         </div>
       </div>
 

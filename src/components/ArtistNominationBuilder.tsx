@@ -157,7 +157,7 @@ export const ArtistNominationBuilder: React.FC<ArtistNominationBuilderProps> = (
           </div>
 
           {/* Institutional Audit Receipt Card */}
-          <div className="bg-sadu-sand rounded-lg border border-sadu-gold p-4 text-xs text-left rtl:text-right space-y-3 shadow-2xs">
+          <div className="bg-sadu-sand rounded-lg border border-sadu-gold p-4 text-xs text-start space-y-3 shadow-2xs">
             <div className="flex items-center justify-between border-b border-sadu-gold/50 pb-2">
               <span className="font-bold text-sadu-charcoal flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4 text-sadu-sage" />

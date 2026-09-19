@@ -115,13 +115,13 @@ export const GalleryLabelPrintView: React.FC<GalleryLabelPrintViewProps> = ({
                 style={{ breakInside: 'avoid' }}
               >
                 {/* Crop & Registration Marks for Plotter/Printer (Corner Guides) */}
-                <span className="absolute top-1 left-1 w-2 h-2 border-t border-l border-gray-400 opacity-60 print:opacity-100 pointer-events-none" />
-                <span className="absolute top-1 right-1 w-2 h-2 border-t border-r border-gray-400 opacity-60 print:opacity-100 pointer-events-none" />
-                <span className="absolute bottom-1 left-1 w-2 h-2 border-b border-l border-gray-400 opacity-60 print:opacity-100 pointer-events-none" />
-                <span className="absolute bottom-1 right-1 w-2 h-2 border-b border-r border-gray-400 opacity-60 print:opacity-100 pointer-events-none" />
+                <span className="absolute top-1 start-1 w-2 h-2 border-t border-s border-gray-400 opacity-60 print:opacity-100 pointer-events-none" />
+                <span className="absolute top-1 end-1 w-2 h-2 border-t border-e border-gray-400 opacity-60 print:opacity-100 pointer-events-none" />
+                <span className="absolute bottom-1 start-1 w-2 h-2 border-b border-s border-gray-400 opacity-60 print:opacity-100 pointer-events-none" />
+                <span className="absolute bottom-1 end-1 w-2 h-2 border-b border-e border-gray-400 opacity-60 print:opacity-100 pointer-events-none" />
 
                 {/* TOP HALF: ARABIC SECTION (RTL) */}
-                <div dir="rtl" className="text-right space-y-1">
+                <div dir="rtl" className="text-start space-y-1">
                   <h3 className="text-lg font-bold font-serif text-gray-950 tracking-normal leading-snug">
                     {item.artworkTitleAr}
                   </h3>
@@ -137,7 +137,7 @@ export const GalleryLabelPrintView: React.FC<GalleryLabelPrintViewProps> = ({
                 <div className="border-t border-gray-200 my-2 print:border-gray-300" />
 
                 {/* BOTTOM HALF: ENGLISH SECTION (LTR) */}
-                <div dir="ltr" className="text-left space-y-1">
+                <div dir="ltr" className="text-start space-y-1">
                   <h3 className="text-lg font-bold font-serif text-gray-950 tracking-normal leading-snug">
                     {item.artworkTitleEn}
                   </h3>

@@ -19,12 +19,17 @@
 .lr-roles button[aria-pressed=true] { border-color:var(--lr-burgundy); background:var(--lr-burgundy); color:white; }
 .living-record .lr-roles button[aria-pressed=true]:hover { background:#502330; color:white; }
 .lr-anchor { display:flex; align-items:center; gap:24px; min-height:122px; padding-bottom:16px; border-bottom:1px solid #d9cdbd; margin-bottom:18px; }
-.lr-portrait { width:80px; height:100px; flex-shrink:0; border-radius:4px; border:1px solid #e7e5e4; }
+.lr-portrait { width:100px; height:125px; flex-shrink:0; }
 .lr-anchor h1 { font-size:clamp(20px,2vw,28px); font-weight:600; line-height:1.35; margin:7px 0; }
 .lr-anchor--work { min-height:130px; }
 .lr-eyebrow { font-size:11px; font-weight:600; letter-spacing:.12em; color:var(--lr-burgundy); margin:0; }
 .lr-subtitle { color:var(--lr-burgundy); font-size:14px; }
 .lr-small { font-size:12px; color:#655a55; margin:10px 0 0; line-height:1.65; }
+.lr-outlook { margin-block:16px; inline-size:100%; }
+.lr-outlook>div { display:flex; align-items:center; gap:18px; margin-block-end:12px; }
+.lr-outlook>div>span { font-size:13px; line-height:1.6; }
+.lr-outlook .lr-metric { flex-shrink:0; }
+.lr-unit-detail { inline-size:100%; }
 .lr-brief { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; }
 .lr-panel { background:#fffefa; border:1px solid #dfd5c7; border-radius:8px; padding:23px; min-width:0; margin-bottom:18px; }
 .lr-panel h2 { font-size:18px; font-weight:600; line-height:1.5; margin:0 0 12px; }
@@ -65,6 +70,14 @@
 .lr-exceptions { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
 .lr-exceptions button { margin-top:12px; }
 .lr-log summary { cursor:pointer; font-weight:600; }
+.lr-log-table { width:100%; border-collapse:collapse; font-size:12px; margin-top:16px; }
+.lr-log-table caption { text-align:start; color:#655a55; padding-block:8px; }
+.lr-log-table th,.lr-log-table td { text-align:start; vertical-align:top; padding:12px; border-bottom:1px solid #e7ded1; overflow-wrap:anywhere; }
+.lr-log-table thead th { background:#f7f4ed; }
+.lr-log-table time,.lr-log-table td>bdi { display:block; margin-block-start:5px; font-weight:400; color:#655a55; }
+.lr-log-scroll-hint { display:none; }
+.lr-log .lr-table-wrap:focus-visible { outline:2px solid var(--lr-burgundy); outline-offset:3px; }
+@media(max-width:800px) { .lr-log-scroll-hint { display:block; margin-block-start:12px; } }
 .lr-log ol { padding-inline-start:20px; }
 .lr-log li { margin-top:18px; padding-inline-start:6px; }
 .lr-log li>span,.lr-log li>bdi { display:block; color:#655a55; font-size:12px; }
@@ -83,6 +96,12 @@
 .lr-dossier-evidence h3 { font-size:15px; font-weight:600; }
 .lr-dossier-evidence a { color:var(--lr-burgundy); text-decoration:underline; }
 .lr-dossier-evidence p { margin:7px 0; }
+.lr-evidence-metadata { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,2fr); gap:8px 16px; margin-block:14px; }
+.lr-evidence-metadata dt { color:#655a55; }
+.lr-evidence-metadata dd { margin:0; overflow-wrap:anywhere; }
+.lr-dossier-evidence summary { cursor:pointer; font-weight:600; }
+.lr-signature-preview a { color:var(--lr-burgundy); text-decoration:underline; }
+@media(max-width:480px) { .lr-evidence-metadata { grid-template-columns:minmax(0,1fr); gap:4px; } .lr-evidence-metadata dd { margin-block-end:10px; } }
 .lr-declaration { max-width:none!important; margin-top:18px; }
 .lr-oversight-intro { max-width:850px; margin:0 0 20px; font-size:15px; }
 .lr-oversight .lr-brief .lr-panel { min-height:190px; }
@@ -126,3 +145,11 @@
 .lr-print-case .lr-actions .lr-small { flex-basis:100%; }
 .lr-print-case .lr-dialog .lr-checkbox { max-width:none; }
 .lr-chairman-brief .lr-basis { margin-top:16px; }
+.lr-integration-readiness { border-block:1px solid #d9cdbd; margin-block:16px; padding-block:12px; font-size:13px; }
+.lr-integration-readiness summary { cursor:pointer; font-weight:600; }
+.lr-integration-readiness summary span { display:inline-block; margin-inline-start:12px; color:#655a55; font-size:12px; font-weight:400; }
+.lr-integration-readiness dl { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr)); gap:16px 24px; margin-block:20px 12px; }
+.lr-integration-readiness dt { font-weight:600; margin-block-end:6px; }
+.lr-integration-readiness dd { margin:0; }
+.lr-integration-readiness dd strong { color:#652f3c; font-weight:500; }
+.lr-integration-readiness dd p { color:#655a55; font-size:12px; margin-block-start:4px; }

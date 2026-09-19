@@ -4,11 +4,50 @@ import { CASE_ID, createLivingRecord, livingRecordReducer as reduce, selectLivin
 import { selectDirectoratePortfolio } from '../src/data/directoratePortfolio.ts';
 import { PRINT_ROUTE_ID, selectPublishingRecord } from '../src/data/publishingRecord.ts';
 import { selectChairmanBrief } from '../src/data/chairmanBrief.ts';
+import { selectReadinessOutlook } from '../src/data/readinessOutlook.ts';
+import { hasPortraitEvidence, leadershipPortraits, type ApprovedPortrait } from '../src/data/leadershipMedia.ts';
 const at = '2026-09-18T08:00:00.000Z';
 const arrival = { type: 'RECEIVE', actor: 'LOGISTICS', crateId: CASE_ID, sealMatches: true, at } as const;
 const report = { type: 'CONDITION', actor: 'TECHNICAL', outcome: 'clear', at } as const;
 const accept = { type: 'ACCEPT', actor: 'MANAGER', reportVersion: 1, acknowledged: true, at } as const;
 const actors: DemoActor[] = ['CHAIRMAN', 'DIRECTORATE', 'MANAGER', 'LOGISTICS', 'TECHNICAL', 'COORDINATOR', 'FINANCE', 'PUBLISHING_MANAGER', 'ARTIST', 'OBSERVER'];
+
+test('leadership media cannot render without source and presentation approval evidence', () => {
+  assert.ok(Object.values(leadershipPortraits).every(asset => !hasPortraitEvidence(asset)));
+  const fixture: ApprovedPortrait = { src: '/assets/leadership/test.jpg', sourceUrl: 'https://example.com/source', credit: 'Test fixture', approvalReference: 'TEST-ONLY', approvedFor: 'sadu-presentation' };
+  assert.equal(hasPortraitEvidence(fixture), true);
+  assert.equal(hasPortraitEvidence({ ...fixture, approvalReference: '' }), false);
+  assert.equal(hasPortraitEvidence({ ...fixture, sourceUrl: '' }), false);
+  assert.equal(hasPortraitEvidence({ ...fixture, src: '/sultan_portrait.jpg' }), false);
+  assert.equal(hasPortraitEvidence(null), false);
+});
+
+test('readiness outlook distinguishes approaching, overdue and unreported milestones', () => {
+  const state = createLivingRecord();
+  const before = selectReadinessOutlook(state, '2026-09-14');
+  assert.equal(before.dueSoon.length, 0);
+  assert.equal(selectReadinessOutlook(state, '2026-09-15').dueSoon.length, 1);
+  assert.equal(selectReadinessOutlook(state, '2026-09-22').dueSoon.length, 1);
+  const late = selectReadinessOutlook(state, '2026-09-23');
+  assert.equal(late.dueSoon.length, 0);
+  assert.equal(late.overdue.length, 1);
+  assert.equal(late.awaitingReports, selectDirectoratePortfolio(state).awaitingUpdateCount);
+  const invalid = selectReadinessOutlook(state, '2026-02-30');
+  assert.equal(invalid.validDate, false);
+  assert.equal(invalid.dueSoon.length, 0);
+  assert.equal(invalid.overdue.length, 0);
+});
+
+test('only manager acceptance clears the approaching delivery risk; unknown reports stay unknown', () => {
+  let state = reduce(reduce(createLivingRecord(), arrival), report);
+  assert.equal(selectReadinessOutlook(state).dueSoon.length, 1);
+  const unknown = selectReadinessOutlook(state).awaitingReports;
+  state = reduce(state, accept);
+  assert.equal(selectReadinessOutlook(state).dueSoon.length, 0);
+  assert.equal(selectReadinessOutlook(state, '2026-09-23').overdue.length, 0);
+  assert.equal(selectReadinessOutlook(state).awaitingReports, unknown);
+  assert.equal(selectReadinessOutlook(state).caseDeadline?.dependencyOpen, false);
+});
 
 test('receipt and evidence do not independently clear the executive readiness gate', () => {
   let state = createLivingRecord();

@@ -104,7 +104,7 @@ export const InstitutionalBreadcrumb: React.FC<InstitutionalBreadcrumbProps> = (
             </span>
             <button
               onClick={onOpenRoleOnboarding}
-              className="text-sadu-brick hover:underline font-bold ml-1 rtl:ml-0 rtl:mr-1 cursor-pointer"
+              className="text-sadu-brick hover:underline font-bold ms-1 cursor-pointer"
               title={isAr ? 'عرض بطاقة الصلاحيات والحدود' : 'View Role Scope & Boundaries'}
             >
               ({isAr ? 'البطاقة' : 'Card'})

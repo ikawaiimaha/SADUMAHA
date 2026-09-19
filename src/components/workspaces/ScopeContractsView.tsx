@@ -59,7 +59,7 @@ export const ScopeContractsView: React.FC<ScopeContractsViewProps> = (props) => 
               </div>
             </div>
 
-            <div className="mt-4 p-4 rounded-md bg-sadu-sand border-l-4 rtl:border-l-0 rtl:border-r-4 border-sadu-brick text-xs leading-relaxed space-y-2">
+            <div className="mt-4 p-4 rounded-md bg-sadu-sand border-s-4 border-sadu-brick text-xs leading-relaxed space-y-2">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-sadu-brick shrink-0" />
                 <span className="font-bold text-sadu-brick text-sm">
@@ -97,7 +97,7 @@ export const ScopeContractsView: React.FC<ScopeContractsViewProps> = (props) => 
                   <div key={art.id} className="p-3 bg-sadu-linen rounded-md border border-sadu-gold flex flex-col justify-between min-h-[140px]">
                     <div>
                       <div className="flex items-start justify-between font-bold text-sadu-charcoal mb-1">
-                        <span className="line-clamp-2 pr-2 rtl:pl-2">{isAr ? `العمل رقم ${formatNumber(idx + 1)}: ` : `Item #${idx + 1}: `} {isAr ? art.titleAr : art.titleEn}</span>
+                        <span className="line-clamp-2 pe-2">{isAr ? `العمل رقم ${formatNumber(idx + 1)}: ` : `Item #${idx + 1}: `} {isAr ? art.titleAr : art.titleEn}</span>
                         <span className="font-mono text-sadu-brick shrink-0">{isAr ? `${formatNumber(art.insuranceValueUsd)} دولار` : `$${art.insuranceValueUsd.toLocaleString()}`}</span>
                       </div>
                       <div className="text-sadu-muted">{art.canonicalCode} · {localizeDigits(art.dimensionsCm)}</div>

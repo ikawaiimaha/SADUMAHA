@@ -93,7 +93,7 @@ export const LeadershipPersonaSuite: React.FC<LeadershipPersonaSuiteProps> = (pr
           {/* Persona 1: The Visionary */}
           <button
             onClick={() => setActivePersona('visionary')}
-            className={`p-3.5 rounded-lg border text-left rtl:text-right transition-all cursor-pointer flex flex-col justify-between min-h-[160px] ${
+            className={`p-3.5 rounded-lg border text-start transition-all cursor-pointer flex flex-col justify-between min-h-[160px] ${
               activePersona === 'visionary'
                 ? 'bg-sadu-ink text-white border-sadu-ink shadow-md ring-2 ring-sadu-brick/30'
                 : 'bg-sadu-sand text-sadu-charcoal border-sadu-gold hover:bg-sadu-sand/80'
@@ -122,7 +122,7 @@ export const LeadershipPersonaSuite: React.FC<LeadershipPersonaSuiteProps> = (pr
           {/* Persona 2: The Governance Executive */}
           <button
             onClick={() => setActivePersona('executive')}
-            className={`p-3.5 rounded-lg border text-left rtl:text-right transition-all cursor-pointer flex flex-col justify-between min-h-[160px] ${
+            className={`p-3.5 rounded-lg border text-start transition-all cursor-pointer flex flex-col justify-between min-h-[160px] ${
               activePersona === 'executive'
                 ? 'bg-sadu-ink text-white border-sadu-ink shadow-md ring-2 ring-sadu-brick/30'
                 : 'bg-sadu-sand text-sadu-charcoal border-sadu-gold hover:bg-sadu-sand/80'
@@ -151,7 +151,7 @@ export const LeadershipPersonaSuite: React.FC<LeadershipPersonaSuiteProps> = (pr
           {/* Persona 3: The Portfolio Director */}
           <button
             onClick={() => setActivePersona('director')}
-            className={`p-3.5 rounded-lg border text-left rtl:text-right transition-all cursor-pointer flex flex-col justify-between min-h-[160px] ${
+            className={`p-3.5 rounded-lg border text-start transition-all cursor-pointer flex flex-col justify-between min-h-[160px] ${
               activePersona === 'director'
                 ? 'bg-sadu-ink text-white border-sadu-ink shadow-md ring-2 ring-sadu-brick/30'
                 : 'bg-sadu-sand text-sadu-charcoal border-sadu-gold hover:bg-sadu-sand/80'
@@ -205,7 +205,7 @@ export const LeadershipPersonaSuite: React.FC<LeadershipPersonaSuiteProps> = (pr
             </div>
 
             {/* Critique & Constructive Feedback Box */}
-            <div className="mt-5 p-4 bg-sadu-sand rounded-md border-l-4 rtl:border-l-0 rtl:border-r-4 border-sadu-brick">
+            <div className="mt-5 p-4 bg-sadu-sand rounded-md border-s-4 border-sadu-brick">
               <div className="flex items-center gap-2 text-xs font-bold text-sadu-brick uppercase tracking-wider mb-1">
                 <Sparkles className="w-4 h-4" />
                 <span>{isAr ? 'التقييم النقدي والتوجيه البناء للراعي المؤسسي' : 'Visionary Sponsor Critique & Constructive Guidance'}</span>
@@ -309,7 +309,7 @@ export const LeadershipPersonaSuite: React.FC<LeadershipPersonaSuiteProps> = (pr
             </div>
 
             {/* Critique & Constructive Guidance */}
-            <div className="mt-5 p-4 bg-sadu-sand rounded-md border-l-4 rtl:border-l-0 rtl:border-r-4 border-sadu-ink">
+            <div className="mt-5 p-4 bg-sadu-sand rounded-md border-s-4 border-sadu-ink">
               <div className="flex items-center gap-2 text-xs font-bold text-sadu-ink uppercase tracking-wider mb-1">
                 <ShieldCheck className="w-4 h-4" />
                 <span>{isAr ? 'تقييم رئيس الدائرة والتوجيه الإداري' : 'Chairman Governance Critique & Audit Guidance'}</span>
@@ -400,7 +400,7 @@ export const LeadershipPersonaSuite: React.FC<LeadershipPersonaSuiteProps> = (pr
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-xs text-left rtl:text-right border-collapse">
+              <table className="w-full text-xs text-start border-collapse">
                 <thead>
                   <tr className="bg-sadu-ink text-white">
                     <th className="p-2.5 font-semibold">{isAr ? 'المستوى الوظيفي' : 'Statutory Role'}</th>
@@ -489,7 +489,7 @@ export const LeadershipPersonaSuite: React.FC<LeadershipPersonaSuiteProps> = (pr
             </div>
 
             {/* Critique & Guidance */}
-            <div className="mt-5 p-4 bg-sadu-sand rounded-md border-l-4 rtl:border-l-0 rtl:border-r-4 border-sadu-brick">
+            <div className="mt-5 p-4 bg-sadu-sand rounded-md border-s-4 border-sadu-brick">
               <div className="flex items-center gap-2 text-xs font-bold text-sadu-brick uppercase tracking-wider mb-1">
                 <Wrench className="w-4 h-4" />
                 <span>{isAr ? 'تقييم مدير إدارة الشؤون الثقافية والتوجيه العملياتي' : 'Portfolio Director Operational Critique & Guidance'}</span>

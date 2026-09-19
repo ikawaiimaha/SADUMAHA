@@ -450,7 +450,7 @@ export const OperationsView: React.FC<OperationsViewProps> = (props) => {
               <tab.icon className="w-3.5 h-3.5" />
               <span>{isAr ? tab.labelAr : tab.labelEn}</span>
               {tab.id === 'visa' && !isPrProtocolReady && (
-                <span className="w-2 h-2 rounded-full bg-sadu-brick animate-pulse ml-0.5" title="Pending PR Clearance" />
+                <span className="w-2 h-2 rounded-full bg-sadu-brick animate-pulse ms-0.5" title="Pending PR Clearance" />
               )}
             </button>
           ))}
@@ -479,7 +479,7 @@ export const OperationsView: React.FC<OperationsViewProps> = (props) => {
               </div>
 
               <div className="flex items-center gap-3">
-                <div className="text-right rtl:text-left">
+                <div className="text-end">
                   <span className="text-[10px] text-sadu-muted block uppercase font-bold">
                     {isAr ? 'الدرجة التشغيلية المعتمدة' : 'Effective Operational Score'}
                   </span>
@@ -1300,7 +1300,7 @@ export const OperationsView: React.FC<OperationsViewProps> = (props) => {
                       : 'Flight: EK-412 (Arrival: 12 Oct 2026 at DXB T3) · Hotel: Chedi Al Bait Sharjah'}
                   </span>
                 </div>
-                <div className="text-right rtl:text-left">
+                <div className="text-end">
                   <span className="font-mono text-[11px] px-2 py-0.5 rounded bg-sadu-sand text-sadu-ink font-bold border border-sadu-gold/50">
                     {isAr ? `TOKEN: SHJ-PR-${localizeDigits('9082')}` : 'TOKEN: SHJ-PR-9082'}
                   </span>
@@ -1366,7 +1366,7 @@ export const OperationsView: React.FC<OperationsViewProps> = (props) => {
                     </p>
                   </div>
 
-                  <div className="text-right rtl:text-left shrink-0">
+                  <div className="text-end shrink-0">
                     <span className="text-sm font-bold font-mono text-sadu-charcoal block">
                       {isAr ? `${formatCurrency(50400, 'AED')}` : 'AED 50,400'}
                     </span>
@@ -1415,7 +1415,7 @@ export const OperationsView: React.FC<OperationsViewProps> = (props) => {
                     </p>
                   </div>
 
-                  <div className="text-right rtl:text-left shrink-0">
+                  <div className="text-end shrink-0">
                     <span className="text-sm font-bold font-mono text-sadu-charcoal block">
                       {isAr ? `${formatCurrency(117600, 'AED')}` : 'AED 117,600'}
                     </span>
@@ -1563,7 +1563,7 @@ export const OperationsView: React.FC<OperationsViewProps> = (props) => {
                           </p>
                         </div>
 
-                        <div className="text-right rtl:text-left shrink-0 space-y-1">
+                        <div className="text-end shrink-0 space-y-1">
                           <span className="text-xs text-sadu-muted block">
                             {isAr ? 'الموازنة التقديرية المعتمدة' : 'Allocated Budget'}
                           </span>
@@ -1685,7 +1685,7 @@ export const OperationsView: React.FC<OperationsViewProps> = (props) => {
                                   </div>
                                 </div>
 
-                                <div className="text-right rtl:text-left shrink-0">
+                                <div className="text-end shrink-0">
                                   <span className="font-mono font-bold text-sm text-sadu-charcoal block">
                                     {formatCurrency(bid.submittedPrice, 'AED')}
                                   </span>

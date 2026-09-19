@@ -61,7 +61,7 @@ export const ProcurementBiddingGate: React.FC<{ lang?: 'en' | 'ar' }> = ({ lang 
     <div className="space-y-6 animate-in fade-in duration-200">
       
       {/* Strict Compliance Warning */}
-      <div className="p-4 rounded-md bg-rose-50 border-l-4 rtl:border-l-0 rtl:border-r-4 border-rose-700 flex items-start gap-3 shadow-xs">
+      <div className="p-4 rounded-md bg-rose-50 border-s-4 border-rose-700 flex items-start gap-3 shadow-xs">
         <AlertTriangle className="w-5 h-5 text-rose-700 shrink-0 mt-0.5" />
         <div>
           <span className="font-bold text-rose-900 block text-sm mb-1">

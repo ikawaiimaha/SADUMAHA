@@ -1,3 +1,5 @@
+import { PortraitHierarchy, PortraitCredit } from './PortraitHierarchy';
+import { ExecutiveQuote } from './ExecutiveQuote';
 import React, { useState, useEffect, useRef } from 'react';
 import './StoryMode.css';
 import { RosterNavLink } from './RosterNavLink';
@@ -52,7 +54,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
   const current = chapters[currentChapter];
   const isLeadChapter = current.id === 'leadership-visionary';
   const isSecondChapter = current.id === 'leadership-governance';
-  const isPortraitChapter = Boolean(current.imagePath);
+  const isPortraitChapter = Boolean(current.leadershipRank);
 
   useEffect(() => {
     cardRef.current?.scrollTo({ top: 0, behavior: 'instant' });
@@ -81,7 +83,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
             <span className="font-editorial text-2xl font-bold tracking-tight text-sadu-brick">
               {isAr ? 'سدو' : 'SADU'}
             </span>
-            <span className="hidden sm:inline text-xs text-sadu-muted border-l border-sadu-gold pl-3 rtl:border-l-0 rtl:border-r rtl:pl-0 rtl:pr-3">
+            <span className="hidden sm:inline text-xs text-sadu-muted border-s border-sadu-gold ps-3">
               {isAr ? INSTITUTIONAL_INFO.systemNameAr : INSTITUTIONAL_INFO.systemNameEn}
             </span>
           </div>
@@ -158,11 +160,9 @@ export const StoryMode: React.FC<StoryModeProps> = ({
             {currentChapter < chapters.length - 1 ? (
               <div className="story-content-grid">
                 <div className="story-copy">
-                  <p className="story-description text-sadu-charcoal">
-                    {isAr ? current.contentAr : current.contentEn}
-                  </p>
+                  <>{isLeadChapter ? <ExecutiveQuote isAr={isAr}/> : <p className="story-description text-sadu-charcoal">{isAr ? current.contentAr : current.contentEn}</p>}</>
                   
-                  <div className="story-highlight rounded-md bg-sadu-sand border-l-4 rtl:border-l-0 rtl:border-r-4 border-sadu-brick text-sadu-charcoal shadow-2xs">
+                  <div className="story-highlight rounded-md bg-sadu-sand border-s-4 border-sadu-brick text-sadu-charcoal shadow-2xs">
                     <span className="font-semibold block text-sadu-brick mb-1">
                       {isAr ? 'الفكرة الأساسية:' : 'Key principle:'}
                     </span>
@@ -170,24 +170,12 @@ export const StoryMode: React.FC<StoryModeProps> = ({
                   </div>
                 </div>
 
-                {current.imagePath && current.portrait ? (
-                  <figure className={`story-figure ${isLeadChapter ? 'story-figure--lead' : isSecondChapter ? 'story-figure--second' : ''}`}>
+                {current.leadershipRank ? (
+                  <figure className="story-figure">
                     <div className="story-portrait-stage">
-                      {/* Source-specific 4:5 viewport: original illustration pixels are unchanged. */}
-                      <svg
-                        viewBox={current.portrait.viewBox}
-                        role="img"
-                        aria-label={isAr ? current.titleAr : current.titleEn}
-                        className="story-portrait"
-                      >
-                        <image href={current.imagePath} width={current.portrait.width} height={current.portrait.height} />
-                      </svg>
+                      <PortraitHierarchy rank={current.leadershipRank} isAr={isAr}/>
                     </div>
-                    <figcaption className="story-caption text-sadu-muted">
-                      {isAr
-                        ? 'محتوى عرض مقترح لسدو، وليس تصريحاً أو تأييداً من الشخصية الظاهرة.'
-                        : 'Proposed SADU presentation content; not a statement or endorsement by the person shown.'}
-                    </figcaption>
+                    <figcaption className="story-caption text-sadu-muted"><PortraitCredit rank={current.leadershipRank} isAr={isAr}/></figcaption>
                   </figure>
                 ) : (
                 <StoryCaseGraphic chapter={currentChapter} />
@@ -205,7 +193,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
                     </p>
                   </div>
                   
-                  <div className="p-3.5 rounded-md bg-sadu-sand border-l-4 rtl:border-l-0 rtl:border-r-4 border-sadu-brick text-xs text-sadu-charcoal shadow-2xs">
+                  <div className="p-3.5 rounded-md bg-sadu-sand border-s-4 border-sadu-brick text-xs text-sadu-charcoal shadow-2xs">
                     <span className="font-semibold block text-sadu-brick mb-0.5">
                       {isAr ? 'حالة تجريبية مشتركة:' : 'Shared demonstration case:'}
                     </span>
@@ -231,7 +219,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
                     <button
                       key={item.view ?? item.labelEn}
                       onClick={() => item.view ? onSelectManagementView(item.view) : onSelectRoleAndExplore(item.role)}
-                      className="rounded-md border border-sadu-gold bg-sadu-linen hover:bg-sadu-brick hover:text-white text-left rtl:text-right transition-colors group cursor-pointer shadow-2xs flex items-center justify-between gap-2"
+                      className="rounded-md border border-sadu-gold bg-sadu-linen hover:bg-sadu-brick hover:text-white text-start transition-colors group cursor-pointer shadow-2xs flex items-center justify-between gap-2"
                     >
                       <span className="story-role-label font-bold group-hover:text-white text-sadu-charcoal">
                         {isAr ? item.labelAr : item.labelEn}

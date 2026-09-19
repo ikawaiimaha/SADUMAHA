@@ -119,7 +119,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = (props) => {
               </span>
             </div>
             
-            <div className="hidden lg:flex items-center gap-2 border-l rtl:border-l-0 rtl:border-r border-sadu-gold pl-3 rtl:pr-3">
+            <div className="hidden lg:flex items-center gap-2 border-s border-sadu-gold ps-3">
               <span className="px-2 py-0.5 rounded-sm bg-sadu-brick text-white text-[10px] font-bold tracking-wider font-mono whitespace-nowrap">
                 {isAr ? 'الدورة 12' : '12th Edition'}
               </span>
@@ -130,7 +130,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = (props) => {
             </div>
           </div>
 
-          <div className="relative hidden sm:block ml-2 rtl:mr-2">
+          <div className="relative hidden sm:block ms-2">
             <button onClick={() => setProgrammeDropdownOpen(!programmeDropdownOpen)} className="flex items-center gap-1.5 px-3 h-9 text-xs font-medium bg-sadu-sand hover:bg-sadu-sand-dark border border-sadu-gold rounded-md transition-colors cursor-pointer text-sadu-charcoal shrink-0">
               <span className="text-sadu-brick font-bold whitespace-nowrap">{isAr ? 'المعرض:' : 'Scope:'}</span>
               <span className="max-w-[150px] md:max-w-[210px] truncate font-semibold">{isAr ? selectedProgramme.titleAr : selectedProgramme.titleEn}</span>
@@ -141,7 +141,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = (props) => {
                 <div className="fixed inset-0 z-40" onClick={() => setProgrammeDropdownOpen(false)} />
                 <div className="absolute top-full mt-1.5 w-72 bg-sadu-linen border-2 border-sadu-gold rounded-lg shadow-lg z-50 p-2 text-xs">
                   {PROGRAMMES.map((prog) => (
-                    <button key={prog.id} onClick={() => { onProgrammeChange(prog); setProgrammeDropdownOpen(false); }} className={`w-full text-left rtl:text-right px-2.5 py-2 rounded-md hover:bg-sadu-sand transition-colors flex flex-col cursor-pointer ${prog.id === selectedProgramme.id ? 'bg-sadu-sand font-semibold border-l-2 rtl:border-l-0 rtl:border-r-2 border-sadu-brick' : ''}`}>
+                    <button key={prog.id} onClick={() => { onProgrammeChange(prog); setProgrammeDropdownOpen(false); }} className={`w-full text-start px-2.5 py-2 rounded-md hover:bg-sadu-sand transition-colors flex flex-col cursor-pointer ${prog.id === selectedProgramme.id ? 'bg-sadu-sand font-semibold border-s-2 border-sadu-brick' : ''}`}>
                       <span className="text-sadu-charcoal font-medium">{isAr ? prog.titleAr : prog.titleEn}</span>
                     </button>
                   ))}
@@ -170,7 +170,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = (props) => {
           <div className="relative">
             <button onClick={() => setNotificationsOpen(!notificationsOpen)} className="w-9 h-9 flex items-center justify-center text-xs text-sadu-charcoal hover:bg-sadu-sand rounded-md border border-sadu-gold transition-colors cursor-pointer relative shrink-0">
               <Bell className="w-4 h-4 text-sadu-brick" />
-              <span className="absolute -top-1 -right-1 rtl:-right-auto rtl:-left-1 w-4 h-4 rounded-full bg-sadu-brick text-white text-[9px] font-bold flex items-center justify-center">
+              <span className="absolute -top-1 -end-1 w-4 h-4 rounded-full bg-sadu-brick text-white text-[9px] font-bold flex items-center justify-center">
                 {formatNumber(3)}
               </span>
             </button>
@@ -186,11 +186,11 @@ export const HeaderNav: React.FC<HeaderNavProps> = (props) => {
             {roleDropdownOpen && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setRoleDropdownOpen(false)} />
-                <div className="absolute right-0 rtl:right-auto rtl:left-0 top-full mt-1.5 w-80 bg-sadu-linen border-2 border-sadu-gold rounded-lg shadow-xl z-50 p-2 text-xs h-96 overflow-y-auto">
+                <div className="absolute end-0 top-full mt-1.5 w-80 bg-sadu-linen border-2 border-sadu-gold rounded-lg shadow-xl z-50 p-2 text-xs h-96 overflow-y-auto">
                   {rolesList.map((rk) => {
                     const rp = ROLE_PROFILES[rk];
                     return (
-                      <button key={rk} onClick={() => { onRoleChange(rk); setRoleDropdownOpen(false); }} className="w-full text-left rtl:text-right px-2.5 py-2 rounded-md hover:bg-sadu-sand transition-colors flex flex-col cursor-pointer">
+                      <button key={rk} onClick={() => { onRoleChange(rk); setRoleDropdownOpen(false); }} className="w-full text-start px-2.5 py-2 rounded-md hover:bg-sadu-sand transition-colors flex flex-col cursor-pointer">
                         <span className="font-semibold">{isAr ? rp?.nameAr : rp?.nameEn}</span>
                       </button>
                     );

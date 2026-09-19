@@ -185,7 +185,7 @@ export const CommunicationView: React.FC<CommunicationViewProps> = (props) => {
         </div>
 
         {/* Evidence vs Authority Rule Box */}
-        <div className="mt-4 p-3.5 bg-sadu-paper border-l-4 rtl:border-l-0 rtl:border-r-4 border-sadu-ink text-xs leading-relaxed">
+        <div className="mt-4 p-3.5 bg-sadu-paper border-s-4 border-sadu-ink text-xs leading-relaxed">
           <span className="font-bold text-sadu-ink block mb-0.5">
             {isAr ? 'قانون الحوكمة (الأدلة مقابل سلطة القرار):' : 'Governance Principle (Evidence vs Decision Authority):'}
           </span>
@@ -215,8 +215,8 @@ export const CommunicationView: React.FC<CommunicationViewProps> = (props) => {
                 key={msg.id}
                 className={`p-4 rounded-md border transition-all ${
                   isMe
-                    ? 'bg-sadu-sand border-sadu-gold mr-6 rtl:mr-0 rtl:ml-6'
-                    : 'bg-sadu-paper border-sadu-gold ml-6 rtl:ml-0 rtl:mr-6'
+                    ? 'bg-sadu-sand border-sadu-gold me-6'
+                    : 'bg-sadu-paper border-sadu-gold ms-6'
                 }`}
               >
                 <div className="flex items-center justify-between mb-2 text-xs">

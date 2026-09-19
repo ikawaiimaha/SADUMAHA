@@ -172,7 +172,7 @@ export const ArchiveView: React.FC<ArchiveViewProps> = (props) => {
 
         {/* Desktop Semantic Table */}
         <div className="hidden md:block w-full overflow-hidden rounded-lg border border-sadu-gold/50">
-          <table className="w-full text-xs text-left rtl:text-right border-collapse">
+          <table className="w-full text-xs text-start border-collapse">
             <thead>
               <tr className="bg-sadu-ink text-white">
                 <th className="p-3 font-semibold">{isAr ? 'الرمز والمسمى' : 'Document Code & Title'}</th>

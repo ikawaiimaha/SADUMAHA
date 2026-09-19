@@ -1,3 +1,4 @@
+import { PortraitHierarchy } from './PortraitHierarchy';
 import React, { useEffect, useRef, useState } from 'react';
 import { ArrowRight, Check, LoaderCircle, LockKeyhole, RotateCcw, X } from 'lucide-react';
 import { useI18n } from '../context/I18nContext';
@@ -8,6 +9,7 @@ import { PROGRAMMES } from '../data/mockData';
 import { RoleKey } from '../types';
 import { DirectorateOversight } from './DirectorateOversight';
 import { ChairmanBrief } from './ChairmanBrief';
+import { SignatureJourneyPreview } from './SignatureJourneyPreview';
 import { PublishingCase } from './PublishingCase';
 import { ArtistIntake, ArtistIntakeQueue } from './ArtistIntake';
 import { IntakeDraftBackup } from './IntakeDraftBackup';
@@ -48,7 +50,7 @@ export function LivingRecordWorkspace() {
   const { isAr, lang, toggleLang, formatNumber } = useI18n();
   const { currentRole, switchRole, setExperienceMode, setSelectedProgramme } = useWorkspace();
   const { state, dispatch, leadershipView, setLeadershipView } = useLivingRecord();
-  const [modal, setModal] = useState<'handover' | 'report' | 'finance' | 'reset' | null>(null);
+  const [modal, setModal] = useState<'handover' | 'report' | 'finance' | 'reset' | 'signature-preview' | null>(null);
   const [reviewVersion, setReviewVersion] = useState(0);
   const [acknowledged, setAcknowledged] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
@@ -61,9 +63,30 @@ export function LivingRecordWorkspace() {
     : currentRole === 'LOGISTICS' ? 'LOGISTICS' : ['SAF_TECHNICIAN', 'TECHNICAL', 'TECHNICAL_MUSEUM'].includes(currentRole) ? 'TECHNICAL'
     : ['SDC_COORDINATOR', 'COORDINATOR'].includes(currentRole) ? 'COORDINATOR' : currentRole === 'FINANCE' ? 'FINANCE' : currentRole === 'EDITORIAL' ? 'PUBLISHING_MANAGER' : currentRole === 'ARTIST' ? 'ARTIST' : 'OBSERVER';
   const metrics = selectLivingRecord(state);
+  const evidenceReport = modal === 'handover' ? state.conditionHistory.find(report => report.version === reviewVersion) : state.condition;
   const roleLabel = (role: DemoActor | null) => role ? (isAr ? roles.find(item => item.actor === role)?.ar : roles.find(item => item.actor === role)?.en) ?? t('Observer', 'مراقب') : t('Handover complete', 'اكتمل التسليم');
   const time = (value: string) => new Date(value).toLocaleString(isAr ? 'ar-AE-u-nu-arab' : 'en-GB', { dateStyle: 'medium', timeStyle: 'medium', timeZone: 'Asia/Dubai' });
   const envelope = () => ({ actor, at: new Date().toISOString() });
+  const exportSessionLog = () => {
+    const snapshot = {
+      schemaVersion: 1,
+      scope: 'fictional-demo-session',
+      exportedAt: new Date().toISOString(),
+      clockSource: 'browser',
+      authenticatedActors: false,
+      tamperProtected: false,
+      digitalSignatures: false,
+      events: state.events,
+    };
+    const url = URL.createObjectURL(new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'SADU-demo-session-log.json';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
   const closeDossier = () => { setIsConfirming(false); setModal(null); };
   const go = (target: DemoActor) => {
     const role = roles.find(item => item.actor === target);
@@ -77,6 +100,7 @@ export function LivingRecordWorkspace() {
     const dialog = dialogRef.current;
     if (modal && !dialog?.open) dialog?.showModal();
     else if (!modal && dialog?.open) dialog.close();
+    if (modal) dialog?.querySelector<HTMLButtonElement>('.lr-dialog-top button')?.focus();
   }, [modal]);
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, [actor]);
   const conditionLink = <button className="lr-link" onClick={() => setModal('report')}>{t('View condition report', 'عرض تقرير الحالة')} <bdi>DEMO-CR-04 / v{state.condition?.version ?? 1}</bdi></button>;
@@ -109,11 +133,11 @@ export function LivingRecordWorkspace() {
         {roles.map(role => <button key={role.actor} aria-pressed={actor === role.actor} onClick={() => go(role.actor)}>{isAr ? role.ar : role.en}</button>)}
       </nav>
       <header className={`lr-anchor ${leadership ? '' : 'lr-anchor--work'}`}>
-        {leadership && <svg role="img" aria-label={actor === 'CHAIRMAN' ? t('Illustration of Abdullah bin Mohammed Al Owais', 'رسم لعبد الله بن محمد العويس') : t('Illustration of Mohammed Ibrahim Al Qaseer', 'رسم لمحمد إبراهيم القصير')} viewBox={actor === 'CHAIRMAN' ? '1065 0 1228.8 1536' : '525 550 1024 1280'} className="lr-portrait"><image href={actor === 'CHAIRMAN' ? '/owais_portrait.jpg' : '/qaseer_portrait.jpg'} width={actor === 'CHAIRMAN' ? 2730 : 1728} height={actor === 'CHAIRMAN' ? 1536 : 2418}/></svg>}
+        {leadership && <div className="lr-portrait"><PortraitHierarchy rank={actor === 'CHAIRMAN' ? 'chairman' : 'director'} isAr={isAr} compact/></div>}
         <div><p className="lr-eyebrow">{t('SHARJAH DEPARTMENT OF CULTURE', 'دائرة الثقافة في الشارقة')}</p>
           <h1>{actor === 'CHAIRMAN' ? t('His Excellency Abdullah bin Mohammed Al Owais', 'سعادة عبد الله بن محمد العويس') : actor === 'DIRECTORATE' ? t('Mr. Mohammed Ibrahim Al Qaseer', 'الأستاذ محمد إبراهيم القصير') : roleLabel(actor)}</h1>
           <p className="lr-subtitle">{actor === 'CHAIRMAN' ? t('Chairman of the Department of Culture · SDC internal oversight', 'رئيس دائرة الثقافة · متابعة العمليات الداخلية') : actor === 'DIRECTORATE' ? t('Director of Cultural Affairs · Cultural portfolio oversight', 'مدير إدارة الشؤون الثقافية · متابعة البرامج الثقافية') : actor === 'MANAGER' ? t('Assigned delivery management · sample role', 'إدارة التنفيذ المكلفة · دور تجريبي') : t('One record. A clear next action.', 'سجل واحد وخطوة تالية واضحة.')}</p>
-          <p className="lr-small">{leadership ? t('Proposed workspace; actions are attributed to sample roles, never to the officials shown.', 'مساحة عمل مقترحة؛ تُنسب الإجراءات إلى أدوار تجريبية، ولا تُنسب إلى المسؤولين الظاهرين.') : t('Sample evidence only. Nothing is uploaded or sent outside this browser session.', 'أدلة تجريبية فقط. لا يُرفع أو يُرسل أي شيء خارج جلسة المتصفح هذه.')}</p>
+          <p className="lr-small">{leadership ? t('Proposed workspace; actions are attributed to sample roles, never to the named officials.', 'مساحة عمل مقترحة؛ تُنسب الإجراءات إلى أدوار تجريبية، ولا تُنسب إلى المسؤولين المذكورين.') : t('Sample evidence only. Nothing is uploaded or sent outside this browser session.', 'أدلة تجريبية فقط. لا يُرفع أو يُرسل أي شيء خارج جلسة المتصفح هذه.')}</p>
         </div>
       </header>
 
@@ -146,7 +170,21 @@ export function LivingRecordWorkspace() {
         </div></section>}
         {actor === 'COORDINATOR' && <section className="lr-panel"><h2>{t('Evidence completeness', 'اكتمال الأدلة')}</h2><p>{state.statementPresent ? t('Sample artist statement is present.', 'بيان الفنان التجريبي موجود.') : state.statementTask ? t('Your follow-up task is assigned. Restore the prepared sample statement to complete it.', 'أُسندت إليك المتابعة. أعد إرفاق البيان التجريبي المعد لإكمالها.') : t('Missing statement flagged. The exhibition manager assigns follow-up.', 'سُجل البيان الناقص. يسند مدير المعارض المتابعة.')}</p><div className="lr-actions"><button disabled={!state.statementPresent} onClick={() => dispatch({ type: 'FLAG_STATEMENT', ...envelope() })}>{t('Flag missing artist statement', 'تسجيل نقص بيان الفنان')}</button><button className="lr-primary" disabled={state.statementPresent || !state.statementTask} onClick={() => dispatch({ type: 'RESTORE_STATEMENT', ...envelope() })}>{t('Restore sample statement', 'إعادة إرفاق البيان التجريبي')}</button></div></section>}
         {actor === 'FINANCE' && <section className="lr-panel"><h2>{t('Prepare an executive exception', 'إعداد استثناء للمراجعة التنفيذية')}</h2><p>{t('Sample procurement pack: scope, budget comparison, and contract review references. No real vendor, amount, threshold, or signature is used.', 'ملف مشتريات تجريبي: النطاق ومقارنة الميزانية ومراجع مراجعة العقد. لا يُستخدم مورد أو مبلغ أو حد مالي أو توقيع حقيقي.')}</p><div className="lr-actions"><button onClick={() => setModal('finance')}>{t('View sample finance pack', 'عرض الملف المالي التجريبي')}</button><button className="lr-primary" disabled={state.finance !== 'draft'} onClick={() => dispatch({ type: 'SUBMIT_FINANCE', ...envelope() })}>{t('Submit sample pack to manager', 'إرسال الملف التجريبي إلى المدير')}</button></div></section>}
-        <details className="lr-panel lr-log"><summary>{t('Continuity log', 'سجل استمرارية العمل')} · {formatNumber(state.events.length)}</summary><p className="lr-small">{t('Session history with sample actor IDs and browser timestamps, shown in UAE time. It is not a tamper-proof audit log.', 'سجل جلسة بمعرّفات أدوار تجريبية وتوقيت المتصفح، معروض بتوقيت الإمارات. ليس سجل تدقيق محمياً من التعديل.')}</p>{state.events.length ? <ol>{state.events.map(event => <li key={event.id}><strong>{eventLabels[event.kind][isAr ? 1 : 0]}</strong><span>{roleLabel(event.actor)} · <bdi>DEMO-{event.actor}</bdi> · {time(event.at)}</span><bdi>{event.reference}</bdi></li>)}</ol> : <p>{t('No actions recorded in this session.', 'لم تُسجل إجراءات في هذه الجلسة.')}</p>}</details>
+        <details className="lr-panel lr-log"><summary>{t('Session activity log', 'سجل نشاط الجلسة')} · {formatNumber(state.events.length)}</summary>
+          <p className="lr-small">{t('Sample roles and browser timestamps, shown in UAE time. Refreshing or resetting clears this history. It is not an authenticated, permanent, or tamper-protected audit record.', 'أدوار تجريبية وتوقيت المتصفح، معروض بتوقيت الإمارات. يُمسح السجل عند تحديث الصفحة أو إعادة التجربة. ليس سجل تدقيق موثّقاً أو دائماً أو محمياً من التعديل.')}</p>
+          <div className="lr-actions"><button disabled={!state.events.length} onClick={exportSessionLog}>{t('Download session log (JSON)', 'تنزيل سجل الجلسة (JSON)')}</button></div>
+          {state.events.length > 0 && <p className="lr-small lr-log-scroll-hint">{t('Scroll the table sideways to view all four columns.', 'مرّر الجدول أفقياً لعرض الأعمدة الأربعة.')}</p>}
+          {state.events.length ? <div className="lr-table-wrap" role="region" aria-label={t('Session activity table', 'جدول نشاط الجلسة')} tabIndex={0}><table className="lr-log-table">
+            <caption>{t('Recorded demo transitions; navigation and rejected actions are not logged.', 'انتقالات الحالة التجريبية المسجلة؛ لا يُسجل التنقل أو الإجراءات المرفوضة.')}</caption>
+            <thead><tr><th scope="col">{t('Event / time', 'الحدث / الوقت')}</th><th scope="col">{t('Action', 'الإجراء')}</th><th scope="col">{t('Sample role', 'الدور التجريبي')}</th><th scope="col">{t('Record / version reference', 'مرجع السجل / الإصدار')}</th></tr></thead>
+            <tbody>{state.events.map(event => <tr key={event.id}>
+              <th scope="row"><bdi>{event.id}</bdi><time dateTime={event.at}>{time(event.at)}</time></th>
+              <td>{eventLabels[event.kind][isAr ? 1 : 0]}<bdi>{event.kind}</bdi></td>
+              <td>{roleLabel(event.actor)}<bdi>DEMO-{event.actor}</bdi></td>
+              <td><bdi>{event.reference}</bdi></td>
+            </tr>)}</tbody>
+          </table></div> : <p>{t('No actions recorded in this session.', 'لم تُسجل إجراءات في هذه الجلسة.')}</p>}
+        </details>
       </>}
       {actor === 'COORDINATOR' ? <section className="lr-panel"><h2>{t('Publishing handover · sample', 'تسليم النشر · تجريبي')}</h2><PublishingCase actor={actor}/></section> : null}
       {actor === 'MANAGER' && <section className="lr-panel"><h2>{t('Escalate a schedule risk', 'تصعيد مخاطر الجدول')}</h2><p>{t('Raise an impact on installation readiness for Directorate attention. Operational follow-up stays with the exhibition manager and assigned team.', 'ارفع أثر المخاطر على الجاهزية للتركيب إلى الإدارة. تبقى المتابعة التشغيلية لدى مدير المعارض والفريق المكلف.')}</p><button className="lr-primary" disabled={Boolean(state.acceptance) || state.deliveryEscalated} onClick={() => dispatch({ type: 'ESCALATE_DELIVERY', ...envelope() })}>{state.acceptance ? t('Delivery dependency resolved', 'عولج متطلب التنفيذ') : state.deliveryEscalated ? t('Schedule risk raised', 'رُفعت مخاطر الجدول') : t('Raise schedule risk to Directorate', 'رفع مخاطر الجدول إلى الإدارة')}</button></section>}
@@ -156,21 +194,41 @@ export function LivingRecordWorkspace() {
 
     <dialog ref={dialogRef} className="lr-dialog" aria-labelledby="lr-dialog-title" onCancel={closeDossier} onClose={closeDossier}>
       <div className="lr-dialog-top"><p className="lr-eyebrow">{t('DEMONSTRATION DOSSIER', 'ملف تجريبي')}</p><button autoFocus onClick={closeDossier} aria-label={t('Close dossier', 'إغلاق الملف')}><X/></button></div>
-      <h2 id="lr-dialog-title">{modal === 'reset' ? t('Reset this demonstration?', 'إعادة هذه التجربة؟') : modal === 'finance' ? t('Finance exception · review pack', 'استثناء مالي · ملف مراجعة') : modal === 'report' ? t('Sample condition report', 'تقرير حالة تجريبي') : t('Review Handover', 'مراجعة التسليم')}</h2>
-      {modal === 'reset' ? <><p>{t('This clears only the fictional actions recorded in this session.', 'يؤدي ذلك إلى مسح الإجراءات الافتراضية المسجلة في هذه الجلسة فقط.')}</p><div className="lr-actions"><button onClick={() => setModal(null)}>{t('Cancel', 'إلغاء')}</button><button className="lr-primary" onClick={() => { dispatch({ type: 'RESET' }); setCrateId(''); setSealMatches(false); setAcknowledged(false); setConditionOutcome('clear'); go('CHAIRMAN'); }}>{t('Reset fictional case', 'إعادة الحالة الافتراضية')}</button></div></>
+      <h2 id="lr-dialog-title">{modal === 'signature-preview' ? t('Proposed UAE PASS journey', 'مسار الهوية الرقمية المقترح') : modal === 'reset' ? t('Reset this demonstration?', 'إعادة هذه التجربة؟') : modal === 'finance' ? t('Finance exception · review pack', 'استثناء مالي · ملف مراجعة') : modal === 'report' ? t('Sample condition report', 'تقرير حالة تجريبي') : t('Review Handover', 'مراجعة التسليم')}</h2>
+      {modal === 'signature-preview' ? <SignatureJourneyPreview isAr={isAr} onBack={() => setModal('handover')}/>
+      : modal === 'reset' ? <><p>{t('This clears only the fictional actions recorded in this session.', 'يؤدي ذلك إلى مسح الإجراءات الافتراضية المسجلة في هذه الجلسة فقط.')}</p><div className="lr-actions"><button onClick={() => setModal(null)}>{t('Cancel', 'إلغاء')}</button><button className="lr-primary" onClick={() => { dispatch({ type: 'RESET' }); setCrateId(''); setSealMatches(false); setAcknowledged(false); setConditionOutcome('clear'); go('CHAIRMAN'); }}>{t('Reset fictional case', 'إعادة الحالة الافتراضية')}</button></div></>
       : modal === 'finance' ? <><p><bdi>DEMO-FIN-01 / v1</bdi></p><ul><li>{t('Scope: exhibition support package (sample)', 'النطاق: خدمات دعم المعرض (تجريبي)')}</li><li>{t('Budget comparison: exception identified (sample)', 'مقارنة الميزانية: استثناء محدد (تجريبي)')}</li><li>{t('Contract review reference: DEMO-LEGAL-01', 'مرجع مراجعة العقد: DEMO-LEGAL-01')}</li><li>{t('Delegated signatory and threshold: not established', 'صاحب تفويض التوقيع والحد المالي: غير محددين')}</li></ul><p className="lr-issue">{t('Review queue only. Signature and expenditure authorization are unavailable in this mockup.', 'قائمة مراجعة فقط. التوقيع وإجازة الإنفاق غير متاحين في النموذج.')}</p>{actor === 'MANAGER' && state.finance === 'submitted' && <button className="lr-primary" onClick={() => { dispatch({ type: 'ESCALATE_FINANCE', ...envelope() }); setModal(null); }}>{t('Record review & escalate sample', 'تسجيل المراجعة ورفع الملف التجريبي')}</button>}</>
       : <><p><strong>{t('Mounir Fatmi · Crate 4', 'منير فاطمي · الصندوق ٤')}</strong> · <bdi>{CASE_ID}</bdi></p>
-        <div className="lr-dossier-evidence"><h3>{t('Condition evidence', 'أدلة الحالة')}</h3><p><bdi>DEMO-CR-04 / v{modal === 'handover' ? reviewVersion : state.condition?.version ?? 1}</bdi></p><p>{t('Recorded by sample Technical role', 'سُجل بواسطة دور الفريق الفني التجريبي')} <bdi>DEMO-TECHNICAL</bdi></p>{state.condition && <p>{time(state.condition.at)}</p>}<p>{state.condition?.outcome === 'issue' ? t('Sample observation: a condition discrepancy requires specialist review.', 'ملاحظة تجريبية: اختلاف في الحالة يتطلب مراجعة مختصة.') : t('Sample observation: identity reconciled; no discrepancy reported in the prepared example.', 'ملاحظة تجريبية: طُوبقت الهوية؛ لم يُسجل اختلاف في المثال المعد.')}</p><a href="/demo/condition-report.html" target="_blank" rel="noreferrer">{t('Open bilingual sample report ↗', 'فتح التقرير التجريبي ثنائي اللغة ↖')}</a><p className="lr-small">{t('Illustrative text only. No real condition photographs or inspection are represented.', 'نص توضيحي فقط. لا يمثل صور حالة أو فحصاً حقيقياً.')}</p></div>
+        <div className="lr-dossier-evidence"><h3>{t('Evidence record · demo', 'سجل الأدلة · تجريبي')}</h3>
+          {evidenceReport ? <>
+            <dl className="lr-evidence-metadata">
+              <dt>{t('Record / version', 'السجل / الإصدار')}</dt><dd><bdi>{evidenceReport.id} / v{evidenceReport.version}</bdi></dd>
+              <dt>{t('Recorded by', 'سجّله')}</dt><dd>{roleLabel(evidenceReport.actor)} · <bdi>DEMO-{evidenceReport.actor}</bdi></dd>
+              <dt>{t('Recorded at · browser clock', 'وقت التسجيل · ساعة المتصفح')}</dt><dd><time dateTime={evidenceReport.at}>{time(evidenceReport.at)}</time></dd>
+              <dt>{t('Review status', 'حالة المراجعة')}</dt><dd>{state.acceptance?.reportVersion === evidenceReport.version ? t('Acknowledged in this session', 'تم الإقرار في هذه الجلسة') : evidenceReport.outcome === 'issue' ? t('Specialist review required', 'تلزم مراجعة مختصة') : t('Awaiting demo manager review', 'بانتظار مراجعة المدير التجريبي')}</dd>
+              {state.acceptance?.reportVersion === evidenceReport.version && <><dt>{t('Acknowledged by / at', 'صاحب الإقرار / وقته')}</dt><dd><bdi>DEMO-{state.acceptance.actor}</bdi> · <time dateTime={state.acceptance.at}>{time(state.acceptance.at)}</time></dd></>}
+            </dl>
+            <p>{evidenceReport.outcome === 'issue' ? t('Sample observation: a condition discrepancy requires specialist review.', 'ملاحظة تجريبية: اختلاف في الحالة يتطلب مراجعة مختصة.') : t('Sample observation: identity reconciled; no discrepancy reported in the prepared example.', 'ملاحظة تجريبية: طُوبقت الهوية؛ لم يُسجل اختلاف في المثال المعد.')}</p>
+          </> : <p>{t('No condition record is available.', 'لا يتوفر سجل للحالة.')}</p>}
+          <a href="/demo/condition-report.html" target="_blank" rel="noreferrer">{t('Open bilingual illustrative report ↗', 'فتح التقرير التوضيحي ثنائي اللغة ↖')}</a>
+          <p className="lr-small">{t('The linked illustration is not a signed file or a versioned export of this record. No real inspection or condition photographs are represented.', 'المثال المرتبط ليس ملفاً موقّعاً أو تصديراً لإصدار هذا السجل. لا يمثل فحصاً حقيقياً أو صوراً للحالة.')}</p>
+          <details><summary>{t('Verification status', 'حالة التحقق')}</summary><dl className="lr-evidence-metadata">
+            <dt>{t('File hash', 'بصمة الملف')}</dt><dd>{t('Not calculated', 'لم تُحسب')}</dd>
+            <dt>{t('Provider signature receipt', 'إثبات التوقيع من مزوّد الخدمة')}</dt><dd>{t('Not available · UAE PASS not connected', 'غير متوفر · لا يوجد ربط مع الهوية الرقمية')}</dd>
+            <dt>{t('Record protection', 'حماية السجل')}</dt><dd>{t('Session only · not tamper-protected', 'ضمن الجلسة فقط · غير محمي من التعديل')}</dd>
+          </dl></details>
+        </div>
         {modal === 'report' && state.conditionHistory.length > 1 && <details className="lr-report-history"><summary>{t('Earlier report versions', 'إصدارات التقرير السابقة')}</summary><ul>{state.conditionHistory.slice(0, -1).map(report => <li key={report.version}><bdi>{report.id}/v{report.version}</bdi> · {report.outcome === 'issue' ? t('Condition exception', 'استثناء في الحالة') : t('No discrepancy reported', 'لا اختلاف مسجل')} · {time(report.at)}</li>)}</ul></details>}
         {modal === 'handover' && <>
-          <p className="lr-signing-label">{t('Simulated signature · demo only', 'محاكاة التوقيع · للعرض التجريبي فقط')}</p>
+          <p className="lr-signing-label">{t('Manager acknowledgement · demo only', 'إقرار المدير · للعرض التجريبي فقط')}</p>
+          <button className="lr-link" disabled={isConfirming} onClick={() => { setAcknowledged(false); setModal('signature-preview'); }}>{t('Preview proposed UAE PASS journey', 'معاينة مسار الهوية الرقمية المقترح')}</button>
           <label className="lr-checkbox lr-declaration"><input type="checkbox" checked={acknowledged} disabled={isConfirming} onChange={event => setAcknowledged(event.target.checked)}/>{t('I have reviewed this sample report and acknowledge the proposed handover for demonstration purposes. This records no legal custody or digital signature.', 'راجعت هذا التقرير التجريبي وأؤكد التسليم المقترح لأغراض العرض. لا يسجل ذلك حيازة قانونية أو توقيعاً رقمياً.')}</label>
           <p className="lr-small">{t('Recorded as DEMO-MANAGER · declaration DEMO-ACK-1 · browser time. Sample manager role only; no official signature is recorded.', 'يُسجل باسم DEMO-MANAGER · الإقرار DEMO-ACK-1 · توقيت المتصفح. دور مدير تجريبي فقط؛ لا يُسجل أي توقيع رسمي.')}</p>
           <div className="lr-actions">
             <button onClick={closeDossier}>{t('Cancel', 'إلغاء')}</button>
             <button className="lr-primary lr-sign-action" aria-busy={isConfirming} disabled={isConfirming || !acknowledged || actor !== 'MANAGER' || !canReview || reviewVersion !== state.condition?.version} onClick={() => setIsConfirming(true)}>
               {isConfirming && <LoaderCircle className="lr-progress-icon" aria-hidden="true"/>}
-              {isConfirming ? t('Recording demo acknowledgement…', 'جارٍ تسجيل الإقرار التجريبي…') : t('Sign & Accept Custody (Demo)', 'التوقيع وقبول الحيازة (تجريبي)')}
+              {isConfirming ? t('Recording demo acknowledgement…', 'جارٍ تسجيل الإقرار التجريبي…') : t('Confirm demo handover', 'تأكيد التسليم التجريبي')}
             </button>
           </div>
           <p className="lr-signing-status lr-small" role="status">{isConfirming ? t('Recording in this session. Cancel stops confirmation.', 'جارٍ التسجيل في هذه الجلسة. الإلغاء يوقف التأكيد.') : ''}</p>

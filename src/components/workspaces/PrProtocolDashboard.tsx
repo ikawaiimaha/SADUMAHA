@@ -59,7 +59,7 @@ export const PrProtocolDashboard: React.FC = () => {
     <div className="space-y-6">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-20 right-6 rtl:right-auto rtl:left-6 z-50 bg-sadu-brick text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-2 text-xs font-semibold animate-in fade-in">
+        <div className="fixed top-20 end-6 z-50 bg-sadu-brick text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-2 text-xs font-semibold animate-in fade-in">
           <CheckCircle2 className="w-4 h-4 text-amber-200" />
           <span>{toastMessage}</span>
         </div>
@@ -96,7 +96,7 @@ export const PrProtocolDashboard: React.FC = () => {
 
       {/* Production Hold Notice when not 7/7 */}
       {!isFullyCleared && (
-        <div className="p-4 rounded-lg bg-rose-50 border-l-4 rtl:border-l-0 rtl:border-r-4 border-rose-700 flex items-start gap-3 shadow-xs">
+        <div className="p-4 rounded-lg bg-rose-50 border-s-4 border-rose-700 flex items-start gap-3 shadow-xs">
           <ShieldAlert className="w-5 h-5 text-rose-700 shrink-0 mt-0.5" />
           <div className="space-y-1">
             <h4 className="font-bold text-rose-900 text-sm">

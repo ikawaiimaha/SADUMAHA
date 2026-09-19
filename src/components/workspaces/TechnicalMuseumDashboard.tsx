@@ -103,7 +103,7 @@ export const TechnicalMuseumDashboard: React.FC = () => {
     <div className="space-y-6">
       {/* Toast */}
       {permitActionToast && (
-        <div className="fixed top-20 right-6 rtl:right-auto rtl:left-6 z-50 bg-sadu-brick text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-2 text-xs font-semibold animate-in fade-in">
+        <div className="fixed top-20 end-6 z-50 bg-sadu-brick text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-2 text-xs font-semibold animate-in fade-in">
           <CheckCircle2 className="w-4 h-4 text-amber-200" />
           <span>{permitActionToast}</span>
         </div>
@@ -223,7 +223,7 @@ export const TechnicalMuseumDashboard: React.FC = () => {
               {isAr ? 'مصفوفة التقييم التشغيلي والميداني (35 نقطة)' : 'Gate 2: 35-Point Operational Feasibility Rubric'}
             </h2>
           </div>
-          <div className="text-right rtl:text-left">
+          <div className="text-end">
             <span className="text-[10px] text-sadu-muted uppercase block">
               {isAr ? 'الدرجة التشغيلية المعتمدة' : 'Effective Feasibility Score'}
             </span>

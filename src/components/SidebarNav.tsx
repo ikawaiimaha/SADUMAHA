@@ -168,7 +168,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
 
   return (
     <aside 
-      className={`bg-sadu-linen border-r rtl:border-r-0 rtl:border-l border-sadu-gold/70 flex flex-col shrink-0 transition-all duration-200 ${
+      className={`bg-sadu-linen border-e border-sadu-gold/70 flex flex-col shrink-0 transition-all duration-200 ${
         collapsed ? 'w-16' : 'w-64'
       } ${className}`}
       aria-label={isAr ? 'القائمة الجانبية للتنقل' : 'Sidebar Navigation'}
@@ -221,7 +221,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
             <button
               key={item.id}
               onClick={() => handleNavigate(item.id)}
-              className={`w-full text-left rtl:text-right group flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer relative ${
+              className={`w-full text-start group flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer relative ${
                 isActive
                   ? 'bg-sadu-brick text-white font-bold shadow-xs'
                   : 'text-sadu-charcoal hover:bg-sadu-sand hover:text-sadu-ink'

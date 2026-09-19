@@ -64,7 +64,7 @@ export const LogisticsDashboard: React.FC = () => {
     <div className="space-y-6">
       {/* Toast */}
       {rfqSuccessToast && (
-        <div className="fixed top-20 right-6 rtl:right-auto rtl:left-6 z-50 bg-sadu-brick text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-2 text-xs font-semibold animate-in fade-in">
+        <div className="fixed top-20 end-6 z-50 bg-sadu-brick text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-2 text-xs font-semibold animate-in fade-in">
           <CheckCircle2 className="w-4 h-4 text-amber-200" />
           <span>{rfqSuccessToast}</span>
         </div>
@@ -115,14 +115,14 @@ export const LogisticsDashboard: React.FC = () => {
             </span>
           </div>
 
-          <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+          <div className="space-y-3 max-h-80 overflow-y-auto pe-1">
             {messages.map(msg => (
               <div 
                 key={msg.id}
                 className={`p-3 rounded-lg border text-xs space-y-1 ${
                   msg.isFromDesk 
-                    ? 'bg-sadu-linen/80 border-sadu-gold ml-6 rtl:ml-0 rtl:mr-6' 
-                    : 'bg-white border-sadu-gold/70 mr-6 rtl:mr-0 rtl:ml-6'
+                    ? 'bg-sadu-linen/80 border-sadu-gold ms-6'
+                    : 'bg-white border-sadu-gold/70 me-6'
                 }`}
               >
                 <div className="flex items-center justify-between text-[11px] font-bold text-sadu-charcoal">

@@ -80,7 +80,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
       />
 
       {/* Drawer */}
-      <div className="relative w-4/5 max-w-xs sm:max-w-sm bg-sadu-linen h-full shadow-2xl z-50 flex flex-col border-r rtl:border-r-0 rtl:border-l border-sadu-gold overflow-y-auto">
+      <div className="relative w-4/5 max-w-xs sm:max-w-sm bg-sadu-linen h-full shadow-2xl z-50 flex flex-col border-e border-sadu-gold overflow-y-auto">
         {/* Drawer Header */}
         <div className="p-4 bg-sadu-ink text-white flex items-center justify-between">
           <div>

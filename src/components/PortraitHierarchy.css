@@ -1,0 +1,5 @@
+.portrait-hierarchy { container-type:size; inline-size:100%; block-size:100%; min-block-size:0; display:grid; place-items:center; }
+.portrait-hierarchy__frame { inline-size:min(100cqw,80cqh); aspect-ratio:4/5; transform:scale(var(--portrait-scale)); transform-origin:center; }
+.portrait-hierarchy__frame img { display:block; inline-size:100%; block-size:100%; object-fit:contain; object-position:center; }
+.portrait-hierarchy__pending { block-size:100%; display:grid; place-items:center; padding:16px; text-align:center; border-block:1px solid #ded3c4; color:#6e6259; font-size:14px; line-height:1.7; }
+.portrait-hierarchy--compact .portrait-hierarchy__pending { padding:4px; font-size:11px; }

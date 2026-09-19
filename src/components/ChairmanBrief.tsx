@@ -3,6 +3,8 @@ import { useLivingRecord } from '../context/LivingRecordContext';
 import { SDC_MAGAZINES_SOURCE, SDC_STRUCTURE_SOURCE, selectChairmanBrief } from '../data/chairmanBrief';
 import { selectLivingRecord } from '../data/livingRecord';
 import { PublishingCase, printStages } from './PublishingCase';
+import { selectReadinessOutlook } from '../data/readinessOutlook';
+import { IntegrationReadiness } from './IntegrationReadiness';
 
 interface Props { onDirectorate: () => void; onPublishing: () => void; onFinance: () => void }
 export function ChairmanBrief({ onDirectorate, onPublishing, onFinance }: Props) {
@@ -11,20 +13,34 @@ export function ChairmanBrief({ onDirectorate, onPublishing, onFinance }: Props)
   const t = (en: string, ar: string) => isAr ? ar : en;
   const brief = selectChairmanBrief(state);
   const caseMetrics = selectLivingRecord(state);
+  const outlook = selectReadinessOutlook(state);
+  const deadline = outlook.caseDeadline?.due;
+  const deadlineLabel = deadline ? new Intl.DateTimeFormat(isAr ? 'ar-AE' : 'en-GB', { dateStyle: 'long', timeZone: 'UTC' }).format(new Date(`${deadline}T00:00:00Z`)) : t('Not reported', 'غير مُبلّغ');
   return <>
+    <IntegrationReadiness isAr={isAr}/>
     <p className="lr-oversight-intro">{t('SDC internal operations: readiness across directorates, publication cycles, and decisions raised for executive review.', 'العمليات الداخلية لدائرة الثقافة: الجاهزية عبر الإدارات ودورات النشر والقرارات المرفوعة للمراجعة التنفيذية.')}</p>
     <div className="lr-brief lr-chairman-brief">
       <section className="lr-panel">
         <p className="lr-eyebrow">{t('01 · PROGRAMME READINESS', '٠١ · جاهزية البرامج')}</p>
-        <h2>{t('Across SDC directorates', 'عبر إدارات دائرة الثقافة')}</h2>
+        <h2>{t('Readiness outlook', 'استشراف الجاهزية')}</h2>
+        <p className="lr-small">{t('Rule-based demonstration · scenario date', 'عرض تجريبي بقواعد محددة · تاريخ السيناريو')} <bdi>{outlook.asOf}</bdi></p>
+        <div className="lr-outlook" aria-live="polite" aria-atomic="true">
+          <div><strong className="lr-metric" data-testid="upcoming-risks">{formatNumber(outlook.dueSoon.length)}</strong><span>{t('Unresolved delivery milestones due within 7 days', 'مراحل تسليم غير مكتملة يحين موعدها خلال ٧ أيام')}</span></div>
+          <p className="lr-status" data-testid="readiness-outlook">{state.acceptance ? t('Sample delivery dependency cleared', 'اكتمل متطلب التسليم التجريبي') : t('Manager follow-up needed before the milestone', 'تلزم متابعة المدير قبل موعد المرحلة')}</p>
+          <p className="lr-small">{t('Installation milestone', 'مرحلة التركيب')} · {deadlineLabel}</p>
+          <p className="lr-small">{formatNumber(outlook.awaitingReports)} · {t('Portfolio activities awaiting dated reports; no forecast assigned.', 'أنشطة ضمن محفظة البرامج تنتظر تقارير مؤرخة؛ لم تُسند إليها توقعات.')}</p>
+        </div>
+        <details className="lr-basis"><summary>{t('Outlook calculation', 'طريقة حساب الاستشراف')}</summary><p>{t('Flags a dated milestone when its manager handover is incomplete and its due date is within seven calendar days of the scenario date. The handover is the sample dependency; other opening requirements are outside this indicator. Unknown reports stay unknown. No AI model, probability, government target, funding instruction or opening approval is implied.', 'يُعلّم المؤشر مرحلة مؤرخة إذا لم يكتمل تسليم المدير وكان موعدها خلال سبعة أيام تقويمية من تاريخ السيناريو. التسليم هو المتطلب التجريبي، ولا يشمل المؤشر بقية متطلبات الافتتاح. تبقى التقارير غير المتاحة غير معلومة. لا يتضمن ذلك نموذج ذكاء اصطناعي أو احتمالاً أو هدفاً حكومياً أو توجيهاً للتمويل أو إذناً بالافتتاح.')}</p></details>
+        <details className="lr-basis lr-unit-detail"><summary>{t('Across SDC directorates', 'عبر إدارات دائرة الثقافة')}</summary>
         <ul className="lr-unit-matrix">{brief.units.map(unit => <li key={unit.id} data-unit={unit.id}>
           <strong>{t(unit.en, unit.ar)}</strong><span className="lr-small">{t(unit.examplesEn, unit.examplesAr)}</span>
           <span className={`lr-status ${unit.state === 'sample-cleared' ? 'is-clear' : unit.state === 'sample-risk' ? 'is-waiting' : ''}`}>{unit.state === 'sample-cleared' ? t('Sample exhibition: delivery cleared', 'المعرض التجريبي: اكتمل التسليم') : unit.state === 'sample-risk' ? t('Sample exhibition: delivery risk', 'المعرض التجريبي: مخاطر في التسليم') : unit.state === 'sample-publishing' ? printStages[brief.publishing.stage][isAr ? 1 : 0] : t('Awaiting directorate report', 'بانتظار تقرير الإدارة')}</span>
         </li>)}</ul>
         <p className="lr-small">{t('Examples identify SDC programmes. Only the separate fictional cases have connected status; clearing one delivery does not clear an entire festival or directorate.', 'تحدد الأمثلة برامج الدائرة. ترتبط الحالة بالتجارب الافتراضية المستقلة فقط؛ ولا يعني اكتمال تسليم واحد جاهزية المهرجان أو الإدارة بأكملها.')}</p>
-        <button className="lr-link" onClick={onDirectorate}>{t('View Cultural Affairs oversight', 'عرض متابعة الشؤون الثقافية')}</button>
-        <details className="lr-basis"><summary>{t('Sample exhibition evidence', 'أدلة المعرض التجريبي')}</summary><p data-testid="evidence-health">{formatNumber(caseMetrics.evidencePercent)}{isAr ? '٪' : '%'} · {t('Five required case records; presence is not compliance or opening authorization.', 'خمسة سجلات مطلوبة للحالة؛ وجودها ليس إثبات امتثال أو إذناً بالافتتاح.')}</p></details>
+        <p className="lr-small" data-testid="evidence-health">{formatNumber(caseMetrics.evidencePercent)}{isAr ? '٪' : '%'} · {t('Five required case records; presence is not compliance or opening authorization.', 'خمسة سجلات مطلوبة للحالة؛ وجودها ليس إثبات امتثال أو إذناً بالافتتاح.')}</p>
         <a className="lr-source-link" href={SDC_STRUCTURE_SOURCE} target="_blank" rel="noreferrer">{t('SDC department reference', 'مرجع إدارات الدائرة')}</a>
+        </details>
+        <button className="lr-link" onClick={onDirectorate}>{t('View Cultural Affairs oversight', 'عرض متابعة الشؤون الثقافية')}</button>
       </section>
       <section className="lr-panel">
         <p className="lr-eyebrow">{t('02 · PUBLISHING CYCLES', '٠٢ · دورات النشر')}</p>

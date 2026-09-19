@@ -303,7 +303,7 @@ export const ArtistView: React.FC<ArtistViewProps> = (props) => {
                 {isAr ? `صُرفت تلقائياً بموجب توقيع العقد الثنائي في ${localizeDigits('18 أغسطس 2026')}` : 'Unlocked automatically upon Bilateral Contract execution. Disbursed 18 Aug 2026.'}
               </span>
             </div>
-            <div className="text-right rtl:text-left">
+            <div className="text-end">
               <span className="font-mono font-bold text-sadu-sage text-sm">{isAr ? `${formatCurrency(5040, 'USD')}` : '$5,040 USD'}</span>
               <span className="text-[10px] text-sadu-sage block font-semibold">✓ {isAr ? 'تم الصرف' : 'Disbursed'}</span>
             </div>
@@ -321,7 +321,7 @@ export const ArtistView: React.FC<ArtistViewProps> = (props) => {
                   : 'Gated and unlocked strictly when the exhibition officially opens to the public at Sharjah Art Museum.'}
               </span>
             </div>
-            <div className="text-right rtl:text-left">
+            <div className="text-end">
               <span className="font-mono font-bold text-sadu-charcoal text-sm">{isAr ? `${formatCurrency(11760, 'USD')}` : '$11,760 USD'}</span>
               <span className="text-[10px] text-amber-800 bg-amber-100 border border-amber-300 px-1.5 py-0.5 rounded block font-semibold mt-0.5">
                 ● {isAr ? 'معلق لحين الافتتاح الرسمي' : 'Pending Exhibition Opening'}

@@ -72,7 +72,7 @@ export const EditorialDashboard: React.FC = () => {
     <div className="space-y-6">
       {/* Toast */}
       {toastMessage && (
-        <div className="fixed top-20 right-6 rtl:right-auto rtl:left-6 z-50 bg-sadu-brick text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-2 text-xs font-semibold animate-in fade-in">
+        <div className="fixed top-20 end-6 z-50 bg-sadu-brick text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-2 text-xs font-semibold animate-in fade-in">
           <CheckCircle2 className="w-4 h-4 text-amber-200" />
           <span>{toastMessage}</span>
         </div>

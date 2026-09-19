@@ -419,7 +419,7 @@ export const StatusProgressIndicator: React.FC<StatusProgressIndicatorProps> = (
           </div>
 
           {/* Micro Milestone Stepper in Popover */}
-          <div className="space-y-1.5 py-1 max-h-48 overflow-y-auto pr-1">
+          <div className="space-y-1.5 py-1 max-h-48 overflow-y-auto pe-1">
             {activeStages.map((stage, idx) => {
               const isPast = idx < calculatedCurrent - 1 || (idx < calculatedCurrent && resolvedStatus === 'completed');
               const isCurrent = idx === calculatedCurrent - 1 && resolvedStatus !== 'completed';

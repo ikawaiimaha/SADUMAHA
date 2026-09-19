@@ -19,7 +19,7 @@ export const PresenterDrawer: React.FC<PresenterDrawerProps> = ({ isOpen, onClos
 
   return (
     <div className="fixed inset-0 z-50 bg-sadu-charcoal/50 backdrop-blur-xs flex justify-end">
-      <div className="bg-sadu-linen border-l rtl:border-l-0 rtl:border-r border-sadu-gold w-full max-w-xl h-full shadow-2xl overflow-y-auto p-6 sm:p-8 flex flex-col justify-between text-sadu-charcoal">
+      <div className="bg-sadu-linen border-s border-sadu-gold w-full max-w-xl h-full shadow-2xl overflow-y-auto p-6 sm:p-8 flex flex-col justify-between text-sadu-charcoal">
         <div>
           <div className="flex items-center justify-between pb-4 border-b border-sadu-gold">
             <div className="flex items-center gap-2 text-xs font-bold text-sadu-brick uppercase tracking-wider">

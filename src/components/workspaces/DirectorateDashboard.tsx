@@ -1,3 +1,4 @@
+import { PortraitHierarchy } from '../PortraitHierarchy';
 import React from 'react';
 import { Language } from '../../types';
 import { useI18n } from '../../context/I18nContext';
@@ -33,19 +34,13 @@ export const DirectorateDashboard: React.FC<DirectorateDashboardProps> = (props)
                   {isAr ? 'الرؤية الثقافية' : 'Cultural Vision'}
                 </p>
                 <h2 className="font-editorial font-bold text-2xl sm:text-3xl lg:text-4xl leading-snug text-sadu-charcoal">
-                  {isAr ? 'صاحب السمو الشيخ الدكتور سلطان بن محمد القاسمي' : 'H.H. Sheikh Dr. Sultan bin Muhammad Al Qasimi'}
+                  {isAr ? 'صاحب السمو الشيخ الدكتور سلطان بن محمد القاسمي' : 'His Highness Sheikh Dr. Sultan bin Muhammad Al Qasimi'}
                 </h2>
                 <p className="text-sm sm:text-base text-sadu-ink mt-3">
                   {isAr ? 'الثقافة والذاكرة المؤسسية' : 'Culture and Institutional Memory'}
                 </p>
               </div>
-              <img
-                src="/sultan_portrait.jpg"
-                alt={isAr ? 'صاحب السمو الشيخ الدكتور سلطان بن محمد القاسمي' : 'H.H. Sheikh Dr. Sultan bin Muhammad Al Qasimi'}
-                width={2816}
-                height={1536}
-                className="w-full h-auto object-contain rounded-lg border border-sadu-gold"
-              />
+              <div className="h-64 w-52 shrink-0"><PortraitHierarchy rank="ruler" isAr={isAr}/></div>
             </div>
           </li>
           <li className="w-full md:w-5/6 mx-auto rounded-lg border border-sadu-gold bg-sadu-linen p-5">
@@ -58,13 +53,7 @@ export const DirectorateDashboard: React.FC<DirectorateDashboardProps> = (props)
                   {isAr ? 'المساءلة ووضوح القرارات' : 'Accountability and Clear Decisions'}
                 </p>
               </div>
-              <img
-                src="/owais_portrait.jpg"
-                alt={isAr ? INSTITUTIONAL_INFO.chairmanAr : INSTITUTIONAL_INFO.chairmanEn}
-                width={2730}
-                height={1536}
-                className="w-4/5 sm:w-56 h-auto object-contain shrink-0 rounded-lg border border-sadu-gold"
-              />
+              <div className="h-64 w-52 shrink-0"><PortraitHierarchy rank="chairman" isAr={isAr}/></div>
             </div>
           </li>
           <li className="w-full md:w-2/3 mx-auto rounded-lg border border-sadu-gold bg-sadu-linen p-5">
@@ -122,7 +111,7 @@ export const DirectorateDashboard: React.FC<DirectorateDashboardProps> = (props)
           </h2>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left rtl:text-right">
+          <table className="w-full text-xs text-start">
             <thead className="bg-sadu-sand text-sadu-muted border-b border-sadu-gold">
               <tr>
                 <th className="px-4 py-3 font-semibold w-1/3">{isAr ? 'المهرجان / الملتقى' : 'Festival / Forum'}</th>

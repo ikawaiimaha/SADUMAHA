@@ -152,7 +152,7 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
                 </p>
               </div>
 
-              <div className="sm:text-right text-xs space-y-0.5 font-mono text-sadu-muted shrink-0">
+              <div className="sm:text-end text-xs space-y-0.5 font-mono text-sadu-muted shrink-0">
                 <div className="font-bold text-sadu-brick text-sm">{refCode}</div>
                 <div>{currentDateStr}</div>
                 <div className="text-[10px] bg-sadu-sand text-sadu-ink px-2 py-0.5 rounded inline-block font-sans font-semibold mt-1">
@@ -230,7 +230,7 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
               </div>
 
               <div className="border border-sadu-gold/60 rounded-md overflow-hidden text-xs">
-                <table className="w-full text-left rtl:text-right border-collapse">
+                <table className="w-full text-start border-collapse">
                   <thead>
                     <tr className="bg-sadu-sand text-[11px] font-bold text-sadu-charcoal border-b border-sadu-gold/60">
                       <th className="py-2 px-3">{isAr ? 'المرجع' : 'Ref / ID'}</th>

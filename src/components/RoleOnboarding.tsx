@@ -26,7 +26,7 @@ export const RoleOnboarding: React.FC<RoleOnboardingProps> = ({
       <div className="bg-sadu-linen border-2 border-sadu-gold rounded-lg max-w-2xl w-full p-6 sm:p-8 shadow-xl text-sadu-charcoal relative">
         <button
           onClick={onDismiss}
-          className="absolute top-4 right-4 rtl:right-auto rtl:left-4 p-1 text-sadu-muted hover:text-sadu-charcoal hover:bg-sadu-sand/70 rounded-md transition-colors cursor-pointer"
+          className="absolute top-4 end-4 p-1 text-sadu-muted hover:text-sadu-charcoal hover:bg-sadu-sand/70 rounded-md transition-colors cursor-pointer"
           title={isAr ? 'إغلاق ومتابعة' : 'Close and proceed'}
         >
           <X className="w-5 h-5" />

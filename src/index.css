@@ -256,8 +256,8 @@ html[lang="ar"] [class*="rounded"].py-1\.5 {
 /* Horizontal clearance for pill badges in Arabic to accommodate cursive word ends */
 html[dir="rtl"] .rounded-full[class*="text-"],
 html[lang="ar"] .rounded-full[class*="text-"] {
-  padding-left: max(0.6rem, 0.6rem);
-  padding-right: max(0.6rem, 0.6rem);
+  padding-inline-start: max(0.6rem, 0.6rem);
+  padding-inline-end: max(0.6rem, 0.6rem);
 }
 
 /* Keyboard shortcut keycaps in Arabic */
@@ -267,8 +267,8 @@ html[lang="ar"] kbd {
   line-height: 1.5 !important;
   padding-top: 0.18rem !important;
   padding-bottom: 0.2rem !important;
-  padding-left: 0.4rem !important;
-  padding-right: 0.4rem !important;
+  padding-inline-start: 0.4rem !important;
+  padding-inline-end: 0.4rem !important;
   display: inline-flex;
   align-items: center;
   justify-content: center;

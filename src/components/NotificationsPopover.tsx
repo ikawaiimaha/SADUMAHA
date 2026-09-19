@@ -68,7 +68,7 @@ export const NotificationsPopover: React.FC<NotificationsPopoverProps> = ({
       />
 
       {/* Popover Card */}
-      <div className="absolute right-0 rtl:right-auto rtl:left-0 top-full mt-2 w-80 sm:w-96 bg-sadu-linen border-2 border-sadu-gold rounded-lg shadow-2xl z-50 overflow-hidden text-xs animate-in fade-in zoom-in-95 duration-100">
+      <div className="absolute end-0 top-full mt-2 w-80 sm:w-96 bg-sadu-linen border-2 border-sadu-gold rounded-lg shadow-2xl z-50 overflow-hidden text-xs animate-in fade-in zoom-in-95 duration-100">
         <div className="p-3.5 bg-sadu-ink text-white flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Bell className="w-4 h-4 text-amber-300" />
@@ -88,7 +88,7 @@ export const NotificationsPopover: React.FC<NotificationsPopoverProps> = ({
               <button
                 key={item.id}
                 onClick={() => handleItemClick(item.category)}
-                className="w-full text-left rtl:text-right p-2.5 hover:bg-sadu-sand rounded-md transition-colors flex items-start gap-3 cursor-pointer group"
+                className="w-full text-start p-2.5 hover:bg-sadu-sand rounded-md transition-colors flex items-start gap-3 cursor-pointer group"
               >
                 <div className={`p-1.5 rounded mt-0.5 shrink-0 ${
                   item.priority === 'critical' 

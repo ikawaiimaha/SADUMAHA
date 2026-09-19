@@ -293,7 +293,7 @@ function SADUApp() {
       {showBackToTop && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-6 right-6 rtl:right-auto rtl:left-6 z-30 p-2.5 bg-sadu-brick text-white rounded-full shadow-lg hover:bg-sadu-brick-dark transition-all cursor-pointer animate-in fade-in"
+          className="fixed bottom-6 end-6 z-30 p-2.5 bg-sadu-brick text-white rounded-full shadow-lg hover:bg-sadu-brick-dark transition-all cursor-pointer animate-in fade-in"
           title={isAr ? 'العودة إلى أعلى الصفحة' : 'Back to top'}
         >
           <ArrowUp className="w-4 h-4" />
@@ -363,7 +363,7 @@ function SADUApp() {
 
       {/* Sovereign Institutional Footer */}
       <footer className="border-t border-sadu-gold bg-sadu-linen mt-12 py-5 px-4 sm:px-6 text-xs text-sadu-muted">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left rtl:sm:text-right">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-start">
           <div>
             <span className="font-editorial font-bold text-sadu-brick">
               {isAr ? 'سدو (SADU)' : 'SADU (System for Arts Data Unification)'}

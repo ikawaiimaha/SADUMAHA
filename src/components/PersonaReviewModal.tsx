@@ -164,7 +164,7 @@ export const PersonaReviewModal: React.FC<PersonaReviewModalProps> = ({
                 </p>
               </div>
 
-              <div className="p-3 bg-sadu-sand rounded-md border-l-3 rtl:border-l-0 rtl:border-r-3 border-sadu-brick">
+              <div className="p-3 bg-sadu-sand rounded-md border-s-3 border-sadu-brick">
                 <span className="font-bold text-sadu-brick block mb-1">
                   {isAr ? 'التوجيه والتقييم البناء (Feedback):' : 'Constructive Persona Feedback:'}
                 </span>
@@ -210,7 +210,7 @@ export const PersonaReviewModal: React.FC<PersonaReviewModalProps> = ({
                 </p>
               </div>
 
-              <div className="p-3 bg-sadu-sand rounded-md border-l-3 rtl:border-l-0 rtl:border-r-3 border-sadu-ink">
+              <div className="p-3 bg-sadu-sand rounded-md border-s-3 border-sadu-ink">
                 <span className="font-bold text-sadu-ink block mb-1">
                   {isAr ? 'التوجيه والتقييم البناء (Feedback):' : 'Constructive Persona Feedback:'}
                 </span>
@@ -256,7 +256,7 @@ export const PersonaReviewModal: React.FC<PersonaReviewModalProps> = ({
                 </p>
               </div>
 
-              <div className="p-3 bg-sadu-sand rounded-md border-l-3 rtl:border-l-0 rtl:border-r-3 border-amber-800">
+              <div className="p-3 bg-sadu-sand rounded-md border-s-3 border-amber-800">
                 <span className="font-bold text-amber-800 block mb-1">
                   {isAr ? 'التوجيه والتقييم البناء (Feedback):' : 'Constructive Persona Feedback:'}
                 </span>
