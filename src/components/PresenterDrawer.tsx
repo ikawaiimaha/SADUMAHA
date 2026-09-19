@@ -41,8 +41,8 @@ export const PresenterDrawer: React.FC<PresenterDrawerProps> = ({ isOpen, onClos
           </h3>
           <p className="text-xs text-sadu-muted leading-relaxed mb-6">
             {isAr
-              ? `هذه المنصة التفاعلية تجسد "الرؤية النهائية المستهدفة" لنظام سدو وفقاً لتقرير التدقيق المعماري الصادر في ${localizeDigits('12 سبتمبر 2026')}، وتراعي المعايير الدقيقة التي وضعتها دائرة الثقافة بالشارقة.`
-              : 'This interactive platform implements the "Ultimate Vision" target state for SADU according to the Architecture & Mockup Audit (12 September 2026), calibrated strictly for Sharjah Department of Culture.'}
+              ? 'عرض سدو تجريبي لبحث مسارات عمل مقترحة. ليس نظاماً مؤسسياً معتمداً؛ يلزم التحقق من المتطلبات والصلاحيات من مصادرها الأصلية.'
+              : 'SADU demonstrates proposed workflows for review. This is not an approved institutional system; requirements and authority require verification against original sources.'}
           </p>
 
           <div className="space-y-4 text-xs">
@@ -67,8 +67,8 @@ export const PresenterDrawer: React.FC<PresenterDrawerProps> = ({ isOpen, onClos
               </div>
               <p className="text-sadu-charcoal leading-relaxed">
                 {isAr
-                  ? 'تم حل ملاحظات التدقيق: الفنان لا يرى تقييمات المحكمين الخاصة، واللجنة لا تطّلع على جوازات السفر أو الحسابات البنكية، ويحصل فريق العلاقات العامة على تصاريح السفر دون تسريب وثائق الجواز الأصلية.'
-                  : 'Audit findings M01/M02 corrected: Artist never sees private jury comments; Committee never sees passports or banking; PR/Visa receives secure travel clearance tokens without exposing raw passport scans.'}
+                  ? "توضح المعاينات التجريبية فصل المعلومات. لا يُعرض تفويض موثق أو خزنة مستندات خاصة أو خدمة سفر متصلة."
+                  : "Sample views illustrate separation of information. No authenticated authorization, private document vault or connected travel service is demonstrated."}
               </p>
             </div>
 
@@ -76,12 +76,12 @@ export const PresenterDrawer: React.FC<PresenterDrawerProps> = ({ isOpen, onClos
             <div className="p-3.5 bg-sadu-sand rounded-md border border-sadu-gold">
               <div className="flex items-center gap-1.5 font-bold text-sadu-brick mb-1">
                 <FileText className="w-3.5 h-3.5" />
-                <span>{isAr ? `${formatNumber(3)}. النطاق المعتمد والعقد غير القابل للتعديل` : '3. Immutable Approved Scope & Contract Chain'}</span>
+                <span>{isAr ? `${formatNumber(3)}. سلسلة نطاق وعقد تجريبية` : "3. Sample scope and contract chain"}</span>
               </div>
               <p className="text-sadu-charcoal leading-relaxed">
                 {isAr
-                  ? 'النطاق المعتمد يُثبّت بنسخ مرقمة (v1.2) ويُعد المرجع الوحيد لملحقات العقود، وبيانات الشحن، ومحاضر الاستلام، مما يحفظ حق الدائرة في استبعاد أي عمل غير مطابق.'
-                  : 'Approved Scope is frozen into immutable revisions (v1.2). All downstream contracts, freight manifests, and installation labels reference this versioned snapshot, protecting the Directorate’s contractual exclusion clause.'}
+                  ? "توضح تسميات الإصدارات لقطة نطاق مقترحة. المساحات القديمة أمثلة مستقلة؛ لم يُثبت حفظ الإصدارات أو الاتساق بين السجلات."
+                  : "Version labels illustrate a proposed scope snapshot. Legacy workspaces are isolated samples; durable versioning and cross-record consistency are not established."}
               </p>
             </div>
 
@@ -93,8 +93,8 @@ export const PresenterDrawer: React.FC<PresenterDrawerProps> = ({ isOpen, onClos
               </div>
               <p className="text-sadu-charcoal leading-relaxed">
                 {isAr
-                  ? 'كافة أسماء البرامج (خطوط من حبر، الملح والنخيل، طبقات الذاكرة) والفنانين هي بيانات نموذجية متصلة ومبنية لعرض المنهجية الكاملة دون استخدام بيانات حقيقية غير معتمدة.'
-                  : 'All programmes ("Lines of Ink", "Salt and Palm", "Layers of Memory") and artists are synthetic, highly realistic test datasets demonstrating the entire lifecycle with complete auditability.'}
+                  ? 'حالات البرامج والأرقام والإجراءات أمثلة تجريبية. ظهور اسم حقيقي لا يثبت المشاركة أو التأييد. السجلات في المساحات القديمة مستقلة ولا تُحفظ بصورة دائمة.'
+                  : 'Programme states, figures and actions are illustrative. A real name does not establish participation or endorsement. Legacy workspace records are isolated and not durably stored.'}
               </p>
             </div>
 
@@ -102,12 +102,12 @@ export const PresenterDrawer: React.FC<PresenterDrawerProps> = ({ isOpen, onClos
             <div className="p-3.5 bg-sadu-sand rounded-md border-2 border-sadu-brick">
               <div className="flex items-center gap-1.5 font-bold text-sadu-brick mb-1">
                 <Compass className="w-3.5 h-3.5" />
-                <span>{isAr ? `${formatNumber(5)}. منظار القيادة الثلاثي (الراعي، الرئيس، المدير)` : '5. Three Leadership Personas & Master Audit'}</span>
+                <span>{isAr ? `${formatNumber(5)}. محاور مراجعة مقترحة` : '5. Proposed review lenses'}</span>
               </div>
               <p className="text-sadu-charcoal leading-relaxed">
                 {isAr
-                  ? `تمت مراجعة النظام من ${formatNumber(3)} زوايا: سمو الحاكم (كرامة الفنان واللغة العربية والإرث المستدام)، رئيس الدائرة (سلسلة الصلاحيات ومصفوفة التفويض وحظر الالتفاف)، ومدير الشؤون الثقافية (محاكي سلاسل الأثر لمعوقات الأرضية والافتتاح).`
-                  : 'Audited across 3 specific leadership tiers: The Visionary Sponsor (artist dignity, Arabic primacy, enduring heritage), The Governance Chairman (statutory authority, bypass prevention), and the Portfolio Director (ripple effect simulation for the 120kg sculpture plinth).'}
+                  ? 'ثلاثة محاور من إعداد سدو تشمل السياق الثقافي والمساءلة والإشراف على البرامج. ليست مراجعات أو تأييداً من أي مسؤول.'
+                  : "Three SADU-authored review lenses cover cultural context, accountability and portfolio oversight. They are not reviews or endorsements by officials."}
               </p>
             </div>
           </div>

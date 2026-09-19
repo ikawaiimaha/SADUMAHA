@@ -137,8 +137,8 @@ export const CommitteeView: React.FC<CommitteeViewProps> = (props) => {
             <ShieldCheck className="w-4 h-4 text-sadu-brick shrink-0" />
             <span>
               {isAr
-                ? 'ضمان الخصوصية المؤسسية: لا صلاحية للجنة للاطلاع على جوازات السفر، التأشيرات، أو أرقام الحسابات البنكية للمتقدمين.'
-                : 'Zero Identity Leak Guarantee: Committee sessions have no access to passports, visa identity, or private bank account details.'}
+                ? "تستبعد معاينة المراجعة التجريبية مستندات الهوية والمصرف. هذا خيار عرض وليس ضبط وصول موثقاً؛ استخدم بيانات افتراضية فقط."
+                : "Sample review view excludes identity and bank documents. This display choice is not authenticated access control; use fictional data only."}
             </span>
           </div>
           <span className="font-mono text-[11px] text-sadu-muted shrink-0 font-bold">

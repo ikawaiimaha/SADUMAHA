@@ -21,6 +21,7 @@ export interface ReportItemRecord {
   status: string;
   assigneeOrArtist?: string;
   dueDateOrProgress?: string;
+  dimensions?: string;
 }
 
 export interface PrintableReportModalProps {
@@ -44,6 +45,8 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
   const [downloadSuccess, setDownloadSuccess] = React.useState(false);
 
   const [refCode] = React.useState(() => `DEMO-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`);
+  const isBaseline = metadata.scopeMode === 'unfiltered-sample';
+  const baselineTitle = isAr ? 'تقرير العمليات الشامل (غير مفلتر)' : 'Global Operations Report (Unfiltered)';
   const needsPrint = isAr || requiresBrowserPrint(metadata, metrics, records);
   if (!isOpen) return null;
 
@@ -82,12 +85,10 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
             </div>
             <div>
               <h2 id="report-modal-title" className="text-sm font-bold font-editorial text-sadu-charcoal">
-                {isAr ? 'تقرير المؤشرات المؤسسي القابل للطباعة والتحميل' : 'Institutional KPI Audit Report & Print Document'}
+                {isBaseline ? baselineTitle : (isAr ? 'تقرير المؤشرات المؤسسي القابل للطباعة والتحميل' : 'Institutional KPI Audit Report & Print Document')}
               </h2>
               <p className="text-[11px] text-sadu-muted">
-                {isAr 
-                  ? `تقرير تجريبي غير معتمد (${records.length} سجلاً وفق التصفية الحالية)`
-                  : `Unapproved sample report (${records.length} records matching current filter)`}
+                {isBaseline ? (isAr ? 'بيانات تجريبية ثابتة النطاق؛ حالات مؤقتة' : 'Fixed sample dataset; temporary session states') : (isAr ? `تقرير تجريبي غير معتمد (${records.length} سجلاً وفق التصفية الحالية)` : `Unapproved sample report (${records.length} records matching current filter)`)}
               </p>
             </div>
           </div>
@@ -121,7 +122,7 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
             <button
               onClick={onClose}
               className="p-2 text-sadu-muted hover:text-sadu-charcoal hover:bg-sadu-sand-dark rounded-md transition-colors cursor-pointer"
-              aria-label="Close modal"
+              aria-label={isAr ? 'إغلاق التقرير' : 'Close modal'}
             >
               <X className="w-5 h-5" />
             </button>
@@ -145,7 +146,7 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
                   <span>{isAr ? 'منصة سدو للفنون واللجان المؤسسية' : 'SADU ART PLATFORM & INSTITUTIONAL COMMISSIONS'}</span>
                 </div>
                 <h1 className="text-xl sm:text-2xl font-editorial font-bold text-sadu-charcoal">
-                  {isAr ? 'سجل التدقيق والمؤشرات التنفيذية' : 'Institutional Audit & Executive KPI Ledger'}
+                  {isBaseline ? baselineTitle : (isAr ? 'سجل التدقيق والمؤشرات التنفيذية' : 'Institutional Audit & Executive KPI Ledger')}
                 </h1>
                 <p className="text-xs text-sadu-muted mt-0.5">
                   {metadata.programmeName}
@@ -153,13 +154,17 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
               </div>
 
               <div className="sm:text-end text-xs space-y-0.5 font-mono text-sadu-muted shrink-0">
-                <div className="font-bold text-sadu-brick text-sm">{refCode}</div>
+                <div className="font-bold text-sadu-brick text-sm">{isBaseline ? 'DEMO-OPS-BASELINE-26' : refCode}</div>
                 <div>{currentDateStr}</div>
                 <div className="text-[10px] bg-sadu-sand text-sadu-ink px-2 py-0.5 rounded inline-block font-sans font-semibold mt-1">
                   {isAr ? 'تقرير تجريبي — غير معتمد' : 'SAMPLE — NOT VERIFIED'}
                 </div>
               </div>
             </div>
+
+            {isBaseline && <p role="note" className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-950">
+              {isAr ? 'يعرض التقرير جميع سجلات السيناريو التجريبي بصرف النظر عن البرنامج أو التبويب المختار. المؤشرات من حالة الجلسة نفسها وليست نتائج مؤسسية.' : 'This report includes every record in the fixed sample dataset, independent of the selected programme or tab. Indicators reflect this session, not institutional results.'}
+            </p>}
 
             {/* Filter Scope & Audit Context Card */}
             <div className="bg-sadu-sand/40 border border-sadu-gold/60 rounded-md p-4 grid sm:grid-cols-3 gap-3 text-xs">
@@ -168,17 +173,17 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
                   {isAr ? 'نطاق مساحة العمل' : 'Workspace Domain'}
                 </span>
                 <span className="font-bold text-sadu-charcoal capitalize">
-                  {metadata.workspaceType} Console
+                  {isBaseline ? (isAr ? 'عمليات تجريبية' : 'Sample operations') : `${metadata.workspaceType} Console`}
                 </span>
               </div>
 
               <div>
                 <span className="text-sadu-muted block text-[10px] font-bold uppercase tracking-wider">
-                  {isAr ? 'تصفية الحالة النشطة' : 'Active Status Filter'}
+                  {isBaseline ? (isAr ? 'نطاق السجلات' : 'Record scope') : (isAr ? 'تصفية الحالة النشطة' : 'Active Status Filter')}
                 </span>
                 <span className="font-bold text-sadu-brick capitalize flex items-center gap-1">
                   <Filter className="w-3 h-3" />
-                  {metadata.statusFilter}
+                  {isBaseline ? (isAr ? 'جميع سجلات السيناريو' : 'All scenario records') : metadata.statusFilter}
                 </span>
               </div>
 
@@ -187,7 +192,7 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
                   {isAr ? 'إجمالي السجلات المطابقة' : 'Records In Audit Scope'}
                 </span>
                 <span className="font-bold text-sadu-charcoal font-mono">
-                  {records.length} {isAr ? 'بنداً موثقاً' : 'Audited Items'}
+                  {i18n.formatNumber(records.length)} {isBaseline ? (isAr ? 'سجلات تجريبية' : 'sample records') : (isAr ? 'بنداً موثقاً' : 'Audited Items')}
                 </span>
               </div>
             </div>
@@ -196,7 +201,7 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
             <div>
               <h3 className="text-xs font-bold text-sadu-ink uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
                 <ShieldCheck className="w-3.5 h-3.5 text-sadu-brick" />
-                <span>{isAr ? 'ملخص مؤشرات الأداء الحالية (KPIs)' : 'Current KPI Executive Benchmarks'}</span>
+                <span>{isBaseline ? (isAr ? 'مؤشرات تجريبية لهذه الجلسة' : 'Session sample indicators') : (isAr ? 'ملخص مؤشرات الأداء الحالية (KPIs)' : 'Current KPI Executive Benchmarks')}</span>
               </h3>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
@@ -222,7 +227,7 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
             <div>
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-xs font-bold text-sadu-ink uppercase tracking-wider">
-                  {isAr ? 'بيانات السجلات المندرجة ضمن نطاق التصفية' : 'Itemized Scope Records (Current Filtered View)'}
+                  {isBaseline ? (isAr ? 'جميع السجلات التجريبية (غير مفلترة)' : 'All sample records (unfiltered)') : (isAr ? 'بيانات السجلات المندرجة ضمن نطاق التصفية' : 'Itemized Scope Records (Current Filtered View)')}
                 </h3>
                 <span className="text-[11px] text-sadu-muted font-mono">
                   {records.length} {isAr ? 'سجل' : 'Items'}
@@ -237,7 +242,7 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
                       <th className="py-2 px-3">{isAr ? 'الفئة' : 'Category'}</th>
                       <th className="py-2 px-3">{isAr ? 'عنوان البند / المطلب' : 'Item / Requirement'}</th>
                       <th className="py-2 px-3">{isAr ? 'المسؤول / الفنان' : 'Assignee / Artist'}</th>
-                      <th className="py-2 px-3">{isAr ? 'الموعد' : 'Due / Milestone'}</th>
+                      <th className="py-2 px-3">{isBaseline ? (isAr ? 'الأبعاد' : 'Dimensions') : (isAr ? 'الموعد' : 'Due / Milestone')}</th>
                       <th className="py-2 px-3">{isAr ? 'الحالة' : 'Status'}</th>
                     </tr>
                   </thead>
@@ -249,7 +254,7 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
                           <td className="py-2 px-3 capitalize font-medium">{r.category || '-'}</td>
                           <td className="py-2 px-3 font-bold text-sadu-charcoal max-w-xs break-words">{r.title}</td>
                           <td className="py-2 px-3 text-sadu-muted">{r.assigneeOrArtist || '-'}</td>
-                          <td className="py-2 px-3 font-mono text-[11px]">{r.dueDateOrProgress || '-'}</td>
+                          <td className="py-2 px-3 font-mono text-[11px]"><bdi>{(isBaseline ? r.dimensions : r.dueDateOrProgress) || '—'}</bdi></td>
                           <td className="py-2 px-3">
                             <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold uppercase ${
                               r.status.toLowerCase().includes('critical') || r.status.toLowerCase().includes('escalated')
@@ -266,7 +271,7 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
                     ) : (
                       <tr>
                         <td colSpan={6} className="py-6 text-center text-sadu-muted">
-                          {isAr ? 'لا توجد سجلات مطابقة للتصفية الحالية' : 'No records match the current filter criteria.'}
+                          {isBaseline ? (isAr ? 'لا توجد سجلات تجريبية.' : 'No sample records.') : (isAr ? 'لا توجد سجلات مطابقة للتصفية الحالية' : 'No records match the current filter criteria.')}
                         </td>
                       </tr>
                     )}
@@ -277,7 +282,7 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
 
             {/* Institutional Signatures & Legal Footer */}
             <div className="border-t border-sadu-gold/60 pt-6 mt-8 space-y-4">
-              <div className="grid grid-cols-3 gap-4 text-center">
+              {!isBaseline && <div className="grid grid-cols-3 gap-4 text-center">
                 <div className="border-t border-dashed border-sadu-muted/60 pt-2">
                   <span className="text-[11px] font-bold block text-sadu-charcoal">
                     {isAr ? 'منسق الشؤون الفنية' : 'Curatorial Coordinator'}
@@ -304,7 +309,7 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
                     {isAr ? 'مراجعة أرشيفية مقترحة' : 'Proposed records review'}
                   </span>
                 </div>
-              </div>
+              </div>}
 
               <div className="text-[10px] text-sadu-muted text-center pt-2 font-mono">
                 {isAr

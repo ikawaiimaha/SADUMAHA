@@ -39,7 +39,7 @@ export const ScopeContractsView: React.FC<ScopeContractsViewProps> = (props) => 
               <div>
                 <div className="flex items-center gap-2 text-xs font-bold text-sadu-brick uppercase tracking-wider mb-1">
                   <Lock className="w-4 h-4" />
-                  <span>{isAr ? 'حلقة التوثيق القانوني والنطاق المعتمد' : 'Immutable Scope & Contractual Authority'}</span>
+                  <span>{isAr ? "نطاق تجريبي ومراجعة عقد" : "Sample Scope & Contract Review"}</span>
                 </div>
                 <h1 className="text-2xl sm:text-3xl font-editorial font-bold text-sadu-charcoal">
                   {isAr ? 'النطاق الفني المعتمد والعقد النظامي' : 'Approved Scope & Legal Contract Register'}
@@ -63,7 +63,7 @@ export const ScopeContractsView: React.FC<ScopeContractsViewProps> = (props) => 
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-sadu-brick shrink-0" />
                 <span className="font-bold text-sadu-brick text-sm">
-                  {isAr ? 'البنود التعاقدية الملزمة (عقد المعرض الشخصي - إدارة الشؤون الثقافية):' : 'Mandatory Contractual Terms (Solo Exhibition Contract — Cultural Affairs):'}
+                  {isAr ? "بنود عقد توضيحية · لم تُوثق قابلية التطبيق أو التفويض:" : "Illustrative contract terms · applicability and delegation unverified:"}
                 </span>
               </div>
               <p className="text-sadu-charcoal font-medium">
@@ -149,7 +149,7 @@ export const ScopeContractsView: React.FC<ScopeContractsViewProps> = (props) => 
                   partyAr: 'إدارة الشؤون الثقافية والفنان يوسف نبهان',
                   step: 5, total: 5, percent: 100, statusLevel: 'completed' as const,
                   labelEn: 'Executed & Locked', labelAr: 'عقد نافذ وموثق',
-                  nextEn: 'Permanent record locked into institutional archive.', nextAr: 'العقد محصن في الأرشيف الدائم لدائرة الثقافة.',
+                  nextEn: "Read-only sample; no durable institutional archive.", nextAr: "مثال للقراءة فقط؛ لا أرشيف مؤسسي دائم.",
                 },
                 {
                   id: 'SCB-ANX-01',

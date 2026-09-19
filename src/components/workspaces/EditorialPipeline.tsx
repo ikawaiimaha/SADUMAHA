@@ -301,8 +301,8 @@ export const EditorialPipeline: React.FC = () => {
             </h2>
             <p className="text-xs sm:text-sm text-sadu-muted leading-relaxed">
               {isAr
-                ? 'القاعدة المؤسسية الملزمة لبينالي الشارقة للخط: اعتماد وتدقيق النص العربي الأم أولاً (عبر الترجمة إذا كان أجنبياً أو التدقيق إذا كان عربياً)، ولا يُفتح مسار الترجمة الإنجليزية إلا بعد الإغلاق النهائي للنص العربي.'
-                : 'Mandatory Sharjah Biennial Institutional Rule: Secure and lock the Arabic master text first (via translation if foreign, or proofreading if Arabic). The English translation gate opens ONLY after the Arabic master is finalized.'}
+                ? "سيناريو تحريري مقترح: تُستكمل مراجعة النص العربي قبل مراجعة الإنجليزية. هذا الترتيب افتراض تصميمي وليس قاعدة مؤسسية موثقة."
+                : "Proposed editorial scenario: complete the Arabic text review before the English review. This ordering is a design assumption, not a verified institutional rule."}
             </p>
           </div>
 

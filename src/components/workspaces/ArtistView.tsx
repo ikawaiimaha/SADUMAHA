@@ -305,7 +305,7 @@ export const ArtistView: React.FC<ArtistViewProps> = (props) => {
             </div>
             <div className="text-end">
               <span className="font-mono font-bold text-sadu-sage text-sm">{isAr ? `${formatCurrency(5040, 'USD')}` : '$5,040 USD'}</span>
-              <span className="text-[10px] text-sadu-sage block font-semibold">✓ {isAr ? 'تم الصرف' : 'Disbursed'}</span>
+              <span className="text-[10px] text-sadu-sage block font-semibold">✓ {isAr ? "مدفوع · محاكاة" : "Paid · simulated"}</span>
             </div>
           </div>
 

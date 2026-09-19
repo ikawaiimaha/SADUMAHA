@@ -71,7 +71,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
       case 'ARTIST':
         return { en: 'Artist Studio', ar: 'استوديو الفنان' };
       case 'ARCHIVE':
-        return { en: 'Permanent Archive', ar: 'الأرشيف الدائم' };
+        return { en: "Sample archive", ar: 'أرشيف تجريبي' };
       default:
         return { en: 'Role Overview', ar: 'نظرة عامة على الدور' };
     }
@@ -143,8 +143,8 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
     { 
       id: 'communications', 
       icon: MessageSquare, 
-      labelEn: 'Official Messages', 
-      labelAr: 'المراسلات الرسمية الموثقة',
+      labelEn: 'Sample messages',
+      labelAr: 'رسائل تجريبية',
       tagEn: 'Audit',
       tagAr: 'توثيق',
       descriptionEn: 'Audit-logged direct correspondence between artists and leads',
@@ -154,11 +154,11 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
       id: 'archive', 
       icon: Archive, 
       labelEn: 'Archive & Closeout', 
-      labelAr: 'الأرشيف والإغلاق الدائم',
-      tagEn: 'Permanent',
-      tagAr: 'دائم',
-      descriptionEn: 'Permanent institutional repository, seal certificates, and audit trails',
-      descriptionAr: 'المستودع المؤسسي الدائم وشهادات الإغلاق وسجلات التدقيق'
+      labelAr: 'أرشيف وإغلاق تجريبيان',
+      tagEn: "Sample",
+      tagAr: "تجريبي",
+      descriptionEn: "Session-only sample documents and closeout states; no certificates",
+      descriptionAr: "مستندات وحالات إغلاق تجريبية في الجلسة فقط؛ دون شهادات"
     },
   ];
 

@@ -27,6 +27,8 @@ import { CommandPalette } from './components/CommandPalette';
 import { NewContractModal } from './components/NewContractModal';
 import { MobileNavDrawer } from './components/MobileNavDrawer';
 import { InstitutionalBreadcrumb } from './components/InstitutionalBreadcrumb';
+import { LegacyScenarioNotice } from './components/LegacyScenarioNotice';
+import { isFinanceScenario } from './data/legacyScenario';
 import { WorkspaceNavBar } from './components/WorkspaceNavBar';
 
 // Workspace Views
@@ -180,6 +182,10 @@ function SADUApp() {
   }
 
   const roleProfile = ROLE_PROFILES[currentRole];
+  const financeScopeLocked = isFinanceScenario(currentRole, activeTab);
+  const selectLegacyProgramme = (programme: ExhibitionProgramme) => {
+    if (!financeScopeLocked) setSelectedProgramme(programme);
+  };
 
   if (selectedProgramme?.id === DEMO_PROGRAMME_ID) {
     return <><DemoNotice /><LivingRecordWorkspace /></>;
@@ -195,7 +201,8 @@ function SADUApp() {
         selectedProgramme={selectedProgramme}
         density={density}
         onRoleChange={handleRoleChangeFromNav}
-        onProgrammeChange={setSelectedProgramme}
+        onProgrammeChange={selectLegacyProgramme}
+        scopeLocked={financeScopeLocked}
         onToggleLanguage={toggleLang}
         onToggleDensity={toggleDensity}
         onOpenStory={() => setExperienceMode('story')}
@@ -215,12 +222,14 @@ function SADUApp() {
 
       {/* High-Resolution Institutional Breadcrumb & Context Trail */}
       <InstitutionalBreadcrumb
+        scopeLocked={financeScopeLocked}
         onOpenRoleOnboarding={() => setShowRoleOnboarding(true)}
         onOpenSearch={() => setShowCommandPalette(true)}
       />
 
       {/* Demonstration workspace; navigation guards are not production authorization. */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 transition-all duration-200">
+        <LegacyScenarioNotice />
         {/* Render Primary Role Workspace when on 'overview' tab */}
         {activeTab === 'overview' && (() => {
           switch (currentRole) {
@@ -266,8 +275,9 @@ function SADUApp() {
           switch (currentRole) {
             case 'TECHNICAL_MUSEUM':
             case 'TECHNICAL':
-            case 'VENUE_ADMIN':
             case 'SAF_TECHNICIAN':
+              return <OperationsView initialSubTab="technical" />;
+            case 'VENUE_ADMIN':
             case 'SMA_VENUE_ADMIN':
               return <TechnicalMuseumDashboard />;
             case 'PR_PROTOCOL':
@@ -309,7 +319,8 @@ function SADUApp() {
         selectedProgramme={selectedProgramme}
         onNavigateTab={setActiveTab}
         onSelectRole={handleRoleChangeFromNav}
-        onSelectProgramme={setSelectedProgramme}
+        onSelectProgramme={selectLegacyProgramme}
+        scopeLocked={financeScopeLocked}
         onOpenStory={() => setExperienceMode('story')}
         onOpenPresenter={() => setShowPresenterDrawer(true)}
         onToggleLanguage={toggleLang}
@@ -336,7 +347,8 @@ function SADUApp() {
         activeTab={activeTab}
         onNavigateTab={setActiveTab}
         onSelectRole={handleRoleChangeFromNav}
-        onSelectProgramme={setSelectedProgramme}
+        onSelectProgramme={selectLegacyProgramme}
+        scopeLocked={financeScopeLocked}
         onOpenSearch={() => setShowCommandPalette(true)}
         onOpenStory={() => setExperienceMode('story')}
         onOpenPresenter={() => setShowPresenterDrawer(true)}

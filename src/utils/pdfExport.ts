@@ -1,6 +1,7 @@
 import { jsPDF } from 'jspdf';
 
 export interface ReportFilterMetadata {
+  scopeMode?: 'unfiltered-sample';
   programmeName: string;
   categoryFilter: string;
   statusFilter: string;
@@ -351,5 +352,7 @@ export const downloadInstitutionalPdfReport = (
 
 // Built-in PDF fonts cannot safely render Arabic or mixed-script content.
 export function requiresBrowserPrint(...values: unknown[]): boolean {
+  // Keep the baseline notice and dedicated dimensions column in the rendered export.
+  if (values.some(value => typeof value === 'object' && value !== null && 'scopeMode' in value && value.scopeMode === 'unfiltered-sample')) return true;
   return /[^\x00-\x7F]/.test(JSON.stringify(values));
 }

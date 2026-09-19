@@ -37,6 +37,7 @@ export interface CommandPaletteProps {
   lang: Language;
   currentRole: RoleKey;
   selectedProgramme: ExhibitionProgramme;
+  scopeLocked?: boolean;
   onNavigateTab: (tab: WorkspaceTab) => void;
   onSelectRole: (role: RoleKey) => void;
   onSelectProgramme: (programme: ExhibitionProgramme) => void;
@@ -69,6 +70,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   lang,
   currentRole,
   selectedProgramme,
+  scopeLocked = false,
   onNavigateTab,
   onSelectRole,
   onSelectProgramme,
@@ -382,7 +384,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       // ==========================================
       // Exhibition Programmes
       // ==========================================
-      ...PROGRAMMES.map(prog => ({
+      ...(scopeLocked ? [] : PROGRAMMES).map(prog => ({
         id: `prog-${prog.id}`,
         category: 'programmes' as const,
         title: isAr ? `المعرض: ${prog.titleAr}` : `Programme: ${prog.titleEn}`,
@@ -459,6 +461,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     return items;
   }, [
     dict,
+    scopeLocked,
     isAr,
     currentLang,
     onNavigateTab, 

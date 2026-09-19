@@ -468,7 +468,7 @@ export const LeadershipView: React.FC<LeadershipViewProps> = (props) => {
                               nextActionEn={
                                 prog.criticalRisks > 0
                                   ? `${prog.criticalRisks} critical exception requires Directorate sign-off.`
-                                  : 'Statutory milestone commitments proceeding on schedule.'
+                                  : "Sample milestone status; no current institutional report supplied."
                               }
                               nextActionAr={
                                 prog.criticalRisks > 0
@@ -561,7 +561,7 @@ export const LeadershipView: React.FC<LeadershipViewProps> = (props) => {
                           <span className="text-sadu-charcoal font-medium truncate block">{isAr ? prog.venueAr : prog.venueEn}</span>
                         </div>
                         <div className="col-span-2 py-1">
-                          <span className="text-[10px] text-sadu-muted block mb-1">{isAr ? 'الجاهزية والتقدم التعاقدي' : 'Readiness & Statutory Progress'}</span>
+                          <span className="text-[10px] text-sadu-muted block mb-1">{isAr ? "جاهزية وتقدم تجريبيان" : "Sample readiness and progress"}</span>
                           <StatusProgressIndicator
                             id={`prog-status-mobile-${prog.id}`}
                             type="contract"
@@ -680,8 +680,8 @@ export const LeadershipView: React.FC<LeadershipViewProps> = (props) => {
               </h3>
               <p className="text-xs text-sadu-charcoal leading-relaxed mt-2">
                 {isAr
-                  ? 'لا يكتفي النظام باحتساب القرارات كأرقام مجردة، بل يشترط ربط كل اعتماد بنسخة النطاق المعتمد، ومحضر التحكيم الموقع، وعقد المشاركة المعتمد من سعادة مدير إدارة الشؤون الثقافية.'
-                  : 'SADU guarantees that every institutional approval connects to an attributable decision record, frozen Approved Scope revision, and signed contractual authority. Zero reliance on unrecorded verbal consents.'}
+                  ? "تصميم مقترح: ربط كل قرار بأدلته وصلاحيته المنطبقة. لا يتحقق هذا المثال من التفويضات أو التوقيعات أو الاعتمادات المؤسسية الفعلية."
+                  : "Proposed design: connect each decision to its evidence and applicable authority. This sample does not verify delegations, signatures or real institutional approvals."}
               </p>
               <div className="mt-4 pt-3 border-t border-sadu-gold/50 flex items-center justify-between">
                 <span className="text-[11px] text-sadu-sage font-semibold">

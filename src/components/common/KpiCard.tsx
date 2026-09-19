@@ -62,6 +62,7 @@ export const KpiCard: React.FC<KpiCardProps> = (props) => {
         )}
       </div>
       {props.subtitle && <span className="text-[10px] text-sadu-muted mt-2">{props.subtitle}</span>}
+      <span className="text-[10px] text-sadu-muted mt-1">{isAr ? 'بيانات سيناريو تجريبي' : 'Sample scenario data'}</span>
       {props.filterLabel && <span className="text-[10px] text-sadu-brick mt-1">{props.isActive ? props.filterActiveText : props.filterLabel}</span>}
     </Tag>
   );

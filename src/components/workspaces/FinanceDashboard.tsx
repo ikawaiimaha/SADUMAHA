@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useI18n } from '../../context/I18nContext';
 import { ProcurementBiddingGate } from './ProcurementBiddingGate';
+import { FINANCE_SCENARIO_ID } from '../../data/legacyScenario';
 import { 
   Building2, 
   DollarSign, 
@@ -22,49 +23,55 @@ export const FinanceDashboard: React.FC = () => {
   const [milestones, setMilestones] = useState([
     {
       id: 'MS-01',
-      artistEn: 'Youssef Nabhan',
-      artistAr: 'يوسف نبهان',
-      contractRef: 'SHJ-SCB-2026-CTR-088',
+      artistEn: 'Sample Artist A',
+      artistAr: 'فنان تجريبي أ',
+      contractRef: 'DEMO-FINANCE-01-A',
       totalHonorariumAed: 45000,
       advancePaidAed: 13500, // 30%
       advanceStatus: 'paid' as 'paid' | 'pending',
       advanceDate: '2026-08-14',
       finalDueAed: 31500,    // 70%
       finalStatus: 'gated_opening' as 'gated_opening' | 'eligible' | 'released',
-      finalGateEn: 'Gated strictly by VIP Opening Ceremony Verification',
-      finalGateAr: 'مشروط حصراً بإثبات الافتتاح الرسمي للبينالي',
+      finalGateEn: "Scenario prerequisite: sample opening evidence",
+      finalGateAr: "متطلب السيناريو: دليل افتتاح تجريبي",
     },
     {
       id: 'MS-02',
-      artistEn: 'Mounir Fatmi (Guest of Honor)',
-      artistAr: 'منير فاطمي (فنان الشرف)',
-      contractRef: 'SHJ-SCB-2026-CTR-092',
+      artistEn: 'Sample Artist B',
+      artistAr: 'فنان تجريبي ب',
+      contractRef: 'DEMO-FINANCE-01-B',
       totalHonorariumAed: 110000,
       advancePaidAed: 33000, // 30%
       advanceStatus: 'paid' as 'paid' | 'pending',
       advanceDate: '2026-08-20',
       finalDueAed: 77000,    // 70%
       finalStatus: 'gated_opening' as 'gated_opening' | 'eligible' | 'released',
-      finalGateEn: 'Gated strictly by VIP Opening Ceremony Verification',
-      finalGateAr: 'مشروط حصراً بإثبات الافتتاح الرسمي للبينالي',
+      finalGateEn: "Scenario prerequisite: sample opening evidence",
+      finalGateAr: "متطلب السيناريو: دليل افتتاح تجريبي",
     }
   ]);
 
-  // Decryption Key Vault for Artist Bank Details
-  const [decryptedArtistId, setDecryptedArtistId] = useState<string | null>(null);
+  // Visibility toggle for fictional payment details; no encryption
+  const [visibleSampleId, setVisibleSampleId] = useState<string | null>(null);
 
   return (
     <div className="space-y-6">
+      <aside role="note" className="rounded-lg border border-sadu-gold bg-sadu-ink p-4 text-white" data-testid="finance-scenario-lock">
+        <strong>{isAr ? 'مثال مالي ثابت · اختيار البرنامج معطل' : 'Fixed finance sample · programme selection disabled'}</strong>
+        <p className="mt-1 text-sm"><bdi>{FINANCE_SCENARIO_ID}</bdi> · {isAr
+          ? 'يعرض هذا السيناريو عقدين افتراضيين فقط. لا تتبع سجلاته البرنامج المحدد في المساحات الأخرى. الدفعات والتواريخ محاكاة، ونسب ٣٠/٧٠ افتراض تجريبي وليست سياسة مؤسسية.'
+          : 'This scenario contains two fictional contracts only. Its records do not belong to the programme selected elsewhere. Payments and dates are simulated; the 30/70 split is a scenario assumption, not institutional policy.'}</p>
+      </aside>
       {/* Header */}
       <div className="bg-sadu-linen border border-sadu-gold rounded-lg p-6 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-xs font-bold text-sadu-brick uppercase tracking-wider mb-1">
               <DollarSign className="w-4 h-4" />
-              <span>{isAr ? 'بوابة الامتثال والرقابة المالية (The Compliance Gate)' : 'Finance Compliance & Procurement Gate'}</span>
+              <span>{isAr ? 'مثال مالي ومشتريات' : 'Finance & procurement sample'}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-editorial font-bold text-sadu-charcoal">
-              {isAr ? 'مكتب الشؤون المالية والرقابة على المشتريات' : 'Finance & Procurement Executive Desk'}
+              {isAr ? 'مكتب الشؤون المالية والرقابة على المشتريات' : 'Finance & Procurement Sample Desk'}
             </h1>
             <p className="text-xs sm:text-sm text-sadu-muted mt-1">
               {isAr
@@ -82,7 +89,7 @@ export const FinanceDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Part 1: Statutory Procurement Bidding Gate (3 Bids Mandate) */}
+      {/* Part 1: Sample three-quote procurement scenario */}
       <div className="bg-white border border-sadu-gold rounded-lg p-6 shadow-xs space-y-4">
         <div className="flex items-center justify-between border-b border-sadu-gold/50 pb-3">
           <div className="flex items-center gap-2">
@@ -105,11 +112,11 @@ export const FinanceDashboard: React.FC = () => {
           <div className="flex items-center gap-2">
             <CreditCard className="w-5 h-5 text-sadu-brick" />
             <h2 className="text-lg font-editorial font-bold text-sadu-charcoal">
-              {isAr ? 'جدول صرف دفعات العقود النظامية (30% مواد / 70% افتتاح المعرض)' : 'Contract Milestones & Honoraria Disbursement'}
+              {isAr ? "مراحل عقد تجريبية · دون دفع" : "Sample contract milestones · no payments"}
             </h2>
           </div>
           <span className="text-xs text-sadu-muted">
-            {isAr ? 'ربط آلي مع بوابات التشغيل' : 'Automated gate linkage'}
+            {isAr ? "افتراضات سيناريو ثابتة" : "Fixed scenario assumptions"}
           </span>
         </div>
 
@@ -141,7 +148,7 @@ export const FinanceDashboard: React.FC = () => {
                     </span>
                     <span className="text-emerald-700 font-bold flex items-center gap-1">
                       <CheckCircle2 className="w-3.5 h-3.5" />
-                      {isAr ? 'صُرفت' : 'Disbursed'}
+                      {isAr ? "مدفوع · محاكاة" : "Paid · simulated"}
                     </span>
                   </div>
                   <div className="text-sm font-mono font-bold text-sadu-charcoal">
@@ -176,7 +183,7 @@ export const FinanceDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Part 3: Secure Banking Vault (Role Isolated Decryption) */}
+      {/* Part 3: Sample payment profile; no access security */}
       <div className="bg-white border border-sadu-gold rounded-lg p-6 shadow-xs space-y-4">
         <div className="flex items-center justify-between border-b border-sadu-gold/50 pb-3">
           <div className="flex items-center gap-2">
@@ -186,7 +193,7 @@ export const FinanceDashboard: React.FC = () => {
             </h2>
           </div>
           <span className="text-xs font-mono px-2 py-0.5 rounded bg-amber-100 text-amber-900 font-bold">
-            DEMO — NO ACCESS SECURITY
+            {isAr ? 'تجريبي · دون حماية وصول' : 'DEMO — NO ACCESS SECURITY'}
           </span>
         </div>
 
@@ -200,34 +207,34 @@ export const FinanceDashboard: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <span className="text-xs font-bold text-sadu-charcoal block">
-                {isAr ? 'الحساب المصرفي المعتمد للفنان: يوسف نبهان' : 'Beneficiary Account: Youssef Nabhan'}
+                {isAr ? 'حساب مستفيد تجريبي: فنان تجريبي أ' : 'Beneficiary Account: Sample Artist A'}
               </span>
               <span className="text-[11px] text-sadu-muted font-mono">
-                BANK: Sharjah Islamic Bank (SIB)
+                {isAr ? 'مصرف تجريبي · غير متصل' : 'Sample bank · not connected'}
               </span>
             </div>
 
             <button
-              onClick={() => setDecryptedArtistId(decryptedArtistId ? null : 'yn')}
+              onClick={() => setVisibleSampleId(visibleSampleId ? null : 'yn')}
               className="px-3 py-1.5 rounded bg-sadu-sand hover:bg-sadu-sand-dark border border-sadu-gold text-xs font-bold text-sadu-charcoal flex items-center gap-1.5 cursor-pointer transition-colors"
             >
-              {decryptedArtistId ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-              <span>{decryptedArtistId ? (isAr ? 'إخفاء الحساب' : 'Conceal IBAN') : (isAr ? 'إظهار المثال' : 'Show sample')}</span>
+              {visibleSampleId ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+              <span>{visibleSampleId ? (isAr ? "إخفاء المثال" : "Hide sample") : (isAr ? 'إظهار المثال' : 'Show sample')}</span>
             </button>
           </div>
 
           <div className="p-3 bg-white rounded border border-sadu-gold font-mono text-xs">
-            {decryptedArtistId ? (
+            {visibleSampleId ? (
               <div className="space-y-1 animate-in fade-in">
                 <div className="text-sadu-brick font-bold">IBAN: SAMPLE-NOT-A-BANK-ACCOUNT</div>
-                <div className="text-sadu-muted text-[11px]">SWIFT / BIC: SIBKAEADXXX · BENEFICIARY: YOUSSEF NABHAN</div>
+                <div className="text-sadu-muted text-[11px]">SWIFT / BIC: SAMPLE-ONLY · BENEFICIARY: SAMPLE ARTIST A</div>
                 <div className="text-emerald-700 text-[10px] font-sans font-semibold pt-1">
                   {isAr ? 'مثال فقط؛ لم يُتحقق من حساب مصرفي.' : 'Sample only; no bank account has been verified.'}
                 </div>
               </div>
             ) : (
               <div className="text-sadu-muted">
-                SAMPLE HIDDEN — NO ENCRYPTION
+                {isAr ? 'المثال مخفي · دون تشفير' : 'SAMPLE HIDDEN — NO ENCRYPTION'}
               </div>
             )}
           </div>

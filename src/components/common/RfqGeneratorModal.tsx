@@ -34,7 +34,7 @@ export const RfqGeneratorModal: React.FC<RfqGeneratorModalProps> = ({
   const isAr = lang === 'ar';
 
   const [selectedScope, setSelectedScope] = useState<'bronze_plinth' | 'catalogue_print' | 'fine_art_freight'>('bronze_plinth');
-  const [rfqNumber] = useState('RFQ-SHJ-DOC-2026-0419');
+  const [rfqNumber] = useState('DEMO-RFQ-0419');
   const [copied, setCopied] = useState(false);
   useEffect(() => {
     if (isOpen) setSelectedScope(defaultPackageCategory === 'shipping' ? 'fine_art_freight' : defaultPackageCategory === 'printing' ? 'catalogue_print' : 'bronze_plinth');
@@ -50,8 +50,8 @@ export const RfqGeneratorModal: React.FC<RfqGeneratorModalProps> = ({
 
   const handleCopyNotice = () => {
     const text = isAr 
-      ? 'هذا طلب عروض أسعار رسمي صادر عن دائرة الثقافة بحكومة الشارقة. العروض التجارية الخطية المقدمة عبر بوابة "سدو" الرسمية هي وحدها المعتمدة قانونياً، ولا يُعتد إطلاقاً بأي تقديرات أو اتفاقيات شفهية.'
-      : 'This is an official Request for Quotation from the Sharjah Department of Culture. Only written commercial proposals submitted via the SADU portal will be legally evaluated. Verbal estimates are not accepted.';
+      ? 'طلب عروض أسعار تجريبي — لم يُصدر أو يُرسل. لا تنشئ المعاينة أمراً أو توقيعاً أو التزاماً مالياً. يلزم التحقق من سياسة المشتريات والتفويض المنطبقين قبل الاستخدام الفعلي.'
+      : 'Sample RFQ — not issued or transmitted. This preview creates no order, signature or financial commitment. Applicable procurement policy and delegation require verification before real use.';
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
@@ -69,10 +69,10 @@ export const RfqGeneratorModal: React.FC<RfqGeneratorModalProps> = ({
             <FileText className="w-5 h-5 text-sadu-brick" />
             <div>
               <h2 className="font-editorial text-base font-bold text-sadu-charcoal">
-                {isAr ? 'مولّد طلبات عروض الأسعار الرسمية (RFQ)' : 'Official RFQ Document Generator'}
+                {isAr ? 'معاينة طلب عروض أسعار تجريبي' : 'Sample RFQ preview'}
               </h2>
               <span className="text-[11px] text-sadu-muted font-mono">
-                {isAr ? 'بوابة المشتريات والمناقصات الحكومية · دائرة المالية المركزية' : 'Government Procurement Gate · Sharjah Central Finance Department'}
+                {isAr ? 'سيناريو مشتريات افتراضي · لم يُصدر' : 'Fictional procurement scenario · not issued'}
               </span>
             </div>
           </div>
@@ -159,7 +159,7 @@ export const RfqGeneratorModal: React.FC<RfqGeneratorModalProps> = ({
                 {rfqNumber}
               </div>
               <div className="text-[11px] text-sadu-muted">
-                {isAr ? 'تاريخ الإصدار: 17 سبتمبر 2026' : 'Date of Issue: 17 September 2026'}
+                {isAr ? 'تاريخ تجريبي: 17 سبتمبر 2026' : 'Sample date: 17 September 2026'}
               </div>
               <div className="text-[11px] text-sadu-muted font-mono">
                 {isAr ? 'مرجعية النطاق: v1.2 (المصادق عليه)' : 'Scope Reference: Approved Scope v1.2'}
@@ -170,29 +170,29 @@ export const RfqGeneratorModal: React.FC<RfqGeneratorModalProps> = ({
           {/* Document Title */}
           <div className="text-center py-2 bg-sadu-sand/40 border border-sadu-gold/60 rounded">
             <h2 className="text-base sm:text-lg font-editorial font-bold text-sadu-charcoal uppercase tracking-wider">
-              {isAr ? 'طلب رسمي لتقديم عروض الأسعار (RFQ)' : 'Official Request for Quotation (RFQ)'}
+              {isAr ? 'طلب عروض أسعار تجريبي (RFQ)' : 'Sample Request for Quotation (RFQ)'}
             </h2>
             <span className="text-xs font-sans text-sadu-muted block mt-0.5">
-              {isAr ? 'وفقاً لأحكام قانون المشتريات الصادر عن دائرة المالية المركزية بحكومة الشارقة' : 'Under the Mandated Procurement Regulations of the Sharjah Central Finance Department'}
+              {isAr ? "موجز مشتريات تجريبي · يلزم التحقق من السياسة والصلاحية المنطبقتين" : "Sample procurement brief · applicable policy and authority require validation"}
             </span>
           </div>
 
-          {/* STRICT MANDATED INSTITUTIONAL ZERO-TOLERANCE NOTICE */}
+          {/* Sample notice retained in print */}
           <div className="p-4 rounded-md border-2 border-sadu-brick bg-rose-50/70 text-sadu-brick font-sans text-xs space-y-2">
             <div className="flex items-start gap-2.5">
               <ShieldAlert className="w-5 h-5 text-sadu-brick shrink-0 mt-0.5" />
               <div className="space-y-1">
                 <span className="font-bold uppercase tracking-wide block text-[11px]">
-                  {isAr ? 'إشعار قانوني إلزامي — حظر التفاوض أو الاتفاق الشفهي' : 'MANDATORY STATUTORY NOTICE — ZERO TOLERANCE FOR VERBAL DEALS'}
+                  {isAr ? "ملاحظة سيناريو · لا يُنشأ أمر أو التزام" : "SCENARIO NOTE — NO ORDER OR COMMITMENT IS CREATED"}
                 </span>
                 <p className="leading-relaxed font-medium">
                   {isAr
-                    ? 'هذا طلب عروض أسعار رسمي صادر عن دائرة الثقافة بحكومة الشارقة. العروض التجارية الخطية المقدمة عبر بوابة "سدو" الرسمية هي وحدها المعتمدة قانونياً، ولا يُعتد إطلاقاً بأي تقديرات أو اتفاقيات شفهية.'
-                    : 'This is an official Request for Quotation from the Sharjah Department of Culture. Only written commercial proposals submitted via the SADU portal will be legally evaluated. Verbal estimates are not accepted.'}
+                    ? 'طلب عروض أسعار تجريبي — لم يُصدر أو يُرسل. لا تنشئ المعاينة أمراً أو توقيعاً أو التزاماً مالياً. يلزم التحقق من سياسة المشتريات والتفويض المنطبقين قبل الاستخدام الفعلي.'
+                    : 'Sample RFQ — not issued or transmitted. This preview creates no order, signature or financial commitment. Applicable procurement policy and delegation require verification before real use.'}
                 </p>
                 <div className="pt-1 flex items-center justify-between flex-wrap gap-2 text-[11px]">
                   <span className="text-sadu-charcoal font-semibold">
-                    {isAr ? 'القاعدة المالية: يُمنع بدء أي عمل تصنيع أو طباعة قبل صدور أمر شراء محلي (LPO) مرقم من المالية.' : 'Golden Rule: No vendor is authorized to start work until Finance issues an official numbered LPO.'}
+                    {isAr ? 'افتراض سيناريو: مراجعة الأمر والصلاحية المفوضة المنطبقين قبل الإذن بالعمل.' : 'Scenario assumption: review the applicable order and delegated authority before authorizing work.'}
                   </span>
                   <button
                     type="button"
@@ -314,44 +314,44 @@ export const RfqGeneratorModal: React.FC<RfqGeneratorModalProps> = ({
             )}
           </div>
 
-          {/* Statutory Bidding Rules (Sharjah Finance Department) */}
+          {/* Illustrative procurement checks */}
           <div className="p-4 bg-sadu-sand/30 rounded border border-sadu-gold/50 font-sans text-xs space-y-2.5">
             <h4 className="font-bold text-sadu-charcoal text-xs flex items-center gap-2">
               <Scale className="w-4 h-4 text-sadu-ink" />
-              <span>{isAr ? 'شروط وإجراءات التنافس وفق معايير دائرة المالية المركزية:' : 'Statutory Tendering Conditions (Sharjah Central Finance Department):'}</span>
+              <span>{isAr ? "فحوص سيناريو مقترحة · ليست سياسة شراء موثقة:" : "Proposed scenario checks · not verified procurement policy:"}</span>
             </h4>
             <ol className="list-decimal list-inside space-y-1.5 text-sadu-charcoal text-[11px]">
               <li>
-                <strong>{isAr ? 'التسجيل الحكومي المسبق:' : 'Active Supplier Registration:'}</strong> {isAr ? 'يجب أن يكون المورد مسجلاً ومعتمداً بسجل الموردين المالي لدى دائرة المالية المركزية بإمارة الشارقة وذا رخصة تجارية سارية.' : 'Bidders must possess an active commercial registration certificate issued by the Sharjah Central Finance Department.'}
+                <strong>{isAr ? 'التسجيل الحكومي المسبق:' : 'Active Supplier Registration:'}</strong> {isAr ? "فحص تجريبي: تتطلب أدلة تسجيل المورد مراجعة وفق السياسة المنطبقة." : "Sample check: supplier registration evidence requires review under the applicable policy."}
               </li>
               <li>
-                <strong>{isAr ? 'قاعدة العروض الثلاثة التنافسية:' : 'Three-Bid Competitive Rule:'}</strong> {isAr ? 'تخضع العملية لتقييم أعمى بمقارنة 3 عروض خطية منفصلة كحد أدنى لضمان تكافؤ الفرص وعدالة الأسعار.' : 'A minimum of three independent written bids must be submitted and evaluated by the Committee.'}
+                <strong>{isAr ? 'مثال مقارنة ثلاثة عروض:' : 'Three-quotation sample:'}</strong> {isAr ? "يقارن هذا المثال ثلاثة عروض تجريبية. يلزم تأكيد الحدود والمراجعين الفعليين." : "This example compares three sample quotations. Actual thresholds and reviewers require confirmation."}
               </li>
               <li>
-                <strong>{isAr ? 'فصل التقييم الفني عن المالي:' : 'Bifurcated Technical & Financial Vetting:'}</strong> {isAr ? 'يتم التدقيق الفني واستيفاء متطلبات الجودة من الفريق الهندسي قبل مراجعة العروض المالية.' : 'Technical capability and compliance are graded prior to opening sealed financial bids.'}
+                <strong>{isAr ? 'فصل التقييم الفني عن المالي:' : 'Bifurcated Technical & Financial Vetting:'}</strong> {isAr ? "تسلسل مقترح: مراجعة الملاءمة الفنية بصورة مستقلة عن التكلفة." : "Proposed sequence: review technical suitability separately from cost."}
               </li>
               <li>
-                <strong>{isAr ? 'حظر العمل دون أمر شراء (LPO):' : 'Strict LPO Pre-condition:'}</strong> {isAr ? 'لن يتم صرف أي مستحقات أو سداد أي فواتير دون أمر شراء محلي رسمي مرقم صادر من السيدة مريم الخاجة (الإدارة المالية).' : 'No work may commence, and no invoice will be honored, without an authorized Local Purchase Order (LPO) issued by Finance.'}
+                <strong>{isAr ? 'مراجعة أمر الشراء:' : 'Order review:'}</strong> {isAr ? "لا تنشئ هذه المعاينة أمر شراء فعلياً أو التزاماً بالميزانية أو دفعاً." : "No actual order, budget commitment or payment is created by this preview."}
               </li>
             </ol>
           </div>
 
-          {/* Official Sign-off and Seal Placeholder */}
+          {/* Sample reviewer placeholders */}
           <div className="pt-6 border-t border-sadu-charcoal/40 grid grid-cols-2 sm:grid-cols-3 gap-6 font-sans text-xs">
             <div>
-              <span className="text-[10px] text-sadu-muted block uppercase">{isAr ? 'جهة الإصدار المعتمدة' : 'Issuing Authority'}</span>
+              <span className="text-[10px] text-sadu-muted block uppercase">{isAr ? "مسؤولية مقترحة · تجريبي" : "Proposed responsibility · sample"}</span>
               <span className="font-bold text-sadu-charcoal block mt-1">{INSTITUTIONAL_INFO.directorateEn}</span>
               <span className="text-[11px] text-sadu-muted">{INSTITUTIONAL_INFO.departmentEn}</span>
             </div>
             <div>
               <span className="text-[10px] text-sadu-muted block uppercase">{isAr ? 'التدقيق الفني الهندسي' : 'Technical Lead Sign-off'}</span>
-              <span className="font-bold text-sadu-charcoal block mt-1">Eng. Tariq Mansour</span>
-              <span className="text-[11px] text-emerald-700 font-semibold">✓ Scope Verified (v1.2)</span>
+              <span className="font-bold text-sadu-charcoal block mt-1">{isAr ? 'مراجع فني تجريبي' : 'Sample technical reviewer'}</span>
+              <span className="text-[11px] text-emerald-700 font-semibold">{isAr ? 'فحص نطاق تجريبي (v1.2)' : 'Sample scope check (v1.2)'}</span>
             </div>
             <div className="col-span-2 sm:col-span-1">
               <span className="text-[10px] text-sadu-muted block uppercase">{isAr ? 'مكتب التدقيق المالي' : 'Finance Review'}</span>
-              <span className="font-bold text-sadu-charcoal block mt-1">Maryam Al-Khaja</span>
-              <span className="text-[11px] text-sadu-brick font-semibold">● Bids Required (Min 3)</span>
+              <span className="font-bold text-sadu-charcoal block mt-1">{isAr ? 'مراجع مالي تجريبي' : 'Sample finance reviewer'}</span>
+              <span className="text-[11px] text-sadu-brick font-semibold">{isAr ? 'مثال مقارنة ثلاثة عروض' : 'Three-quotation sample'}</span>
             </div>
           </div>
         </div>

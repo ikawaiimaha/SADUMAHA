@@ -2,10 +2,18 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import {defineConfig} from 'vite';
+import {retiredPortraitMiddleware} from './config/retiredPortraits';
 
 export default defineConfig(() => {
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [
+      react(), tailwindcss(),
+      {
+        name: 'retired-portrait-responses',
+        configureServer(server) { server.middlewares.use(retiredPortraitMiddleware); },
+        configurePreviewServer(server) { server.middlewares.use(retiredPortraitMiddleware); },
+      },
+    ],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),

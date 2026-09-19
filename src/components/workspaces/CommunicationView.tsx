@@ -29,8 +29,8 @@ export const INSTITUTIONAL_TEMPLATES: InstitutionalTemplate[] = [
     id: 'tpl-01',
     labelEn: 'Permission Request for Artwork Modification',
     labelAr: 'طلب تصريح بتعديل العمل الفني',
-    contentEn: 'Subject: Approval Request for Proposed Artwork Treatment\n\nDear Directorate Team,\n\nWe hereby submit an official request to approve a minor conservation and structural adjustment for the proposed artwork. The proposed treatment adheres strictly to archival conservation standards and will not alter the approved conceptual narrative of the Biennial.',
-    contentAr: 'الموضوع: طلب اعتماد مقترح المعالجة الفنية للعمل\n\nسعادة إدارة الشؤون الثقافية المحترمين،\n\nنتقدم بطلب رسمي لاعتماد تعديل إنشائي وترميمي طفيف على العمل الفني المقترح، مع الالتزام التام بمعايير الحفظ المتحفي ودون المساس بالرؤية الفكرية المعتمدة للبينالي.',
+    contentEn: "Sample draft — not sent.\n\nPlease review the proposed artwork treatment and supporting conservation assessment. The responsible team and applicable decision authority must be confirmed before work proceeds.",
+    contentAr: "مسودة تجريبية — لم تُرسل.\n\nيرجى مراجعة معالجة العمل الفني المقترحة وتقييم الحفظ الداعم. يلزم تحديد الفريق المسؤول والصلاحية المنطبقة قبل التنفيذ.",
   },
   {
     id: 'tpl-02',
@@ -43,8 +43,8 @@ export const INSTITUTIONAL_TEMPLATES: InstitutionalTemplate[] = [
     id: 'tpl-03',
     labelEn: 'Approval Request for Fabrication',
     labelAr: 'طلب اعتماد التصنيع والإنتاج',
-    contentEn: 'Subject: Approval Required Before Production\n\nDear Curatorial Committee,\n\nPlease review and approve the finalized foundry fabrication specifications and material samples for the site-specific commission. In accordance with Directorate governance, production will commence only upon your formal written sign-off.',
-    contentAr: 'الموضوع: طلب اعتماد مسبق للبدء في التصنيع والإنتاج\n\nالسادة أعضاء لجنة الاختيار والتقييم المحترمين،\n\nنرجو التكرم بمراجعة واعتماد المخطط التنفيذي وعينات المواد للتكليف الفني المكاني، علماً بأن الإنتاج في المسكب لن يبدأ إلا بعد استلام الموافقة الخطية الرسمية منكم.',
+    contentEn: "Sample draft — not sent.\n\nPlease review the proposed fabrication specifications and material samples. Confirm the applicable approval route and authorized scope before production.",
+    contentAr: "مسودة تجريبية — لم تُرسل.\n\nيرجى مراجعة مواصفات التصنيع وعينات المواد المقترحة. يلزم تأكيد مسار الاعتماد والنطاق المصرح به قبل الإنتاج.",
   },
   {
     id: 'tpl-04',
@@ -64,22 +64,22 @@ export const INSTITUTIONAL_TEMPLATES: InstitutionalTemplate[] = [
     id: 'tpl-06',
     labelEn: 'External Transport Request',
     labelAr: 'طلب دعم النقل والترحيل الخارجي',
-    contentEn: 'Subject: Request for Transportation Support\n\nDear Logistics Partner,\n\nWe request scheduled climate-controlled air/sea freight routing and customs clearance escort for participating artworks under Sharjah Department of Culture wall-to-wall institutional transit insurance.',
-    contentAr: 'الموضوع: طلب خدمات النقل والشحن الدولي المراقب\n\nالسادة شركاء النقل واللوجستيات المحترمين،\n\nنطلب جدولة الشحن الجوي/البحري المبرد والمحمي مناخياً مع مرافقة التخليص الجمركي للأعمال الفنية المعتمدة والمشمولة بالتأمين الشامل لدائرة الثقافة.',
+    contentEn: "Sample draft — not sent.\n\nPlease propose transport and customs arrangements for the listed artworks. Insurance coverage, exclusions and responsibility must be checked against the relevant policy and agreement.",
+    contentAr: "مسودة تجريبية — لم تُرسل.\n\nيرجى اقتراح ترتيبات نقل الأعمال الفنية والتخليص الجمركي. يلزم التحقق من التغطية التأمينية والاستثناءات والمسؤوليات وفق الوثيقة والاتفاق المنطبقين.",
   },
   {
     id: 'tpl-07',
     labelEn: 'Equipment Request to External Partner',
     labelAr: 'طلب استعارة أجهزة وتجهيزات تقنية',
-    contentEn: 'Subject: Request for Equipment Support\n\nDear Partner Institution,\n\nUnder our institutional cultural cooperation protocol, we request the reservation of high-lumen 4K laser projection hardware and specialized acoustic directional speakers for the upcoming Calligraphy Biennial installation.',
-    contentAr: 'الموضوع: طلب إعارة تجهيزات ومعدات تقنية متقدمة\n\nالأخوة في المؤسسة الشريكة المحترمين،\n\nاستناداً إلى بروتوكول التعاون الثقافي المشترك، نلتمس حجز أجهزة إسقاط ليزرية بدقة 4K وسماعات صوتية موجهة للتجهيز الفني المشارك في بينالي الشارقة للخط.',
+    contentEn: "Sample draft — not sent.\n\nPlease advise on availability and proposed loan terms for the required projection and audio equipment. Any institutional agreement and authorization remain subject to confirmation.",
+    contentAr: "مسودة تجريبية — لم تُرسل.\n\nيرجى الإفادة بتوفر أجهزة العرض والصوت المطلوبة وشروط إعارتها المقترحة. يلزم تأكيد أي اتفاق مؤسسي أو صلاحية ذات صلة.",
   },
   {
     id: 'tpl-08',
     labelEn: 'Written Confirmation Requested',
     labelAr: 'طلب تأكيد خطي رسمي (بديل نموذج الموافقة)',
-    contentEn: 'Subject: Written Confirmation Requested - Replacement for Consent Form\n\nDear Artist,\n\nIn accordance with Sharjah Directorate guidelines, please provide your formal written acknowledgement affirming that all artworks will be shipped unframed and without glass, and acknowledging the Department\'s 10-day intake condition inspection window.',
-    contentAr: 'الموضوع: طلب تأكيد خطي رسمي (بديل نموذج الموافقة)\n\nالأستاذ الفنان المحترم،\n\nوفقاً للائحة إدارة الشؤون الثقافية، نرجو موافاتنا بتأكيد خطي رسمي يفيد بالتزامكم بشحن كافة الأعمال بدون براويز أو زجاج، والموافقة على مهلة فحص الحالة (10 أيام) من تاريخ الاستلام.',
+    contentEn: "Sample draft — not sent.\n\nPlease confirm the packing and condition-inspection arrangements applicable to this artwork. Use the approved agreement to establish any framing requirements and inspection period; this template sets no universal policy.",
+    contentAr: "مسودة تجريبية — لم تُرسل.\n\nيرجى تأكيد ترتيبات التعبئة وفحص الحالة المنطبقة على العمل. تُحدد متطلبات الإطار ومدة الفحص من الاتفاق المعتمد؛ لا يقرر هذا النموذج سياسة عامة.",
   },
 ];
 
@@ -109,7 +109,7 @@ export const CommunicationView: React.FC<CommunicationViewProps> = (props) => {
 
     const tpl = INSTITUTIONAL_TEMPLATES.find(t => t.id === selectedId);
     if (tpl) {
-      setDraftContent(isAr ? tpl.contentAr : tpl.contentEn);
+      setDraftContent((isAr ? 'مسودة تجريبية · لم تُرسل\n\n' : 'Sample draft · not transmitted\n\n') + (isAr ? tpl.contentAr : tpl.contentEn));
     }
     // Reset selector back to default
     e.target.value = '';
@@ -140,8 +140,8 @@ export const CommunicationView: React.FC<CommunicationViewProps> = (props) => {
   const handleConvertMessageToTask = (msgId: string) => {
     setTaskLinkedToast(
       isAr 
-        ? 'تم تحويل إفادة المراسلة بنجاح إلى بند انتباه ومهمة متابعة في غرفة التحكم'
-        : 'Message clarification successfully converted into linked attention task in Control Room'
+        ? "معاينة متابعة تجريبية فقط؛ لم تُنشأ مهمة في مساحة أخرى."
+        : "Sample follow-up preview only; no task was created in another workspace."
     );
     setTimeout(() => setTaskLinkedToast(null), 4000);
   };
@@ -165,15 +165,15 @@ export const CommunicationView: React.FC<CommunicationViewProps> = (props) => {
           <div>
             <div className="flex items-center gap-2 text-xs font-bold text-sadu-brick uppercase tracking-wider mb-1">
               <MessageSquare className="w-4 h-4" />
-              <span>{isAr ? 'بوابة المراسلات المؤسسية المعتمدة (Communication Gateway V2)' : 'Official Institutional Communication Gateway V2'}</span>
+              <span>{isAr ? "مساحة رسائل تجريبية · لا إرسال فعلي" : "Sample message workspace · not transmitted"}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-editorial font-bold text-sadu-charcoal">
-              {isAr ? 'قناة المراسلات الرسمية: يوسف نبهان ↔ سلمى السويدي' : 'Official Thread: Youssef Nabhan ↔ Salma Al-Suwaidi'}
+              {isAr ? "محادثة تجريبية بين فنان ومنسق" : "Sample artist–coordinator conversation"}
             </h1>
             <p className="text-xs sm:text-sm text-sadu-muted mt-1">
               {isAr
-                ? 'القناة المعتمدة حصراً للتواصل بين المنسق والفنان · تحفظ في ملف الإغلاق الأرشيفي الدائم للمعرض'
-                : 'The only authoritative institutional channel between Coordinator & Artist · Retained in permanent exhibition dossier.'}
+                ? "مسودات ورسائل تجريبية داخل هذا المتصفح فقط. لا تُرسل ولا تُحفظ في سجل مؤسسي دائم."
+                : "Draft/sample messages in this browser only. Nothing is transmitted or stored in a durable institutional record."}
             </p>
           </div>
 
@@ -190,8 +190,8 @@ export const CommunicationView: React.FC<CommunicationViewProps> = (props) => {
             {isAr ? 'قانون الحوكمة (الأدلة مقابل سلطة القرار):' : 'Governance Principle (Evidence vs Decision Authority):'}
           </span>
           {isAr
-            ? 'تُعتبر كافة الرسائل والمرفقات المتبادلة "أدلة تواصلية موثقة". الرسالة لا تُنشئ بمفردها تعديلاً على النطاق المعتمد ولا تعتمد صرف مبالغ مالية، بل يتم تحويلها إلى طلب تعديل نطاق رسمي يتطلب توقيع مدير إدارة الشؤون الثقافية.'
-            : 'All correspondence represents "Attributable Communication Evidence". A message alone cannot silently alter Approved Scope or authorize disbursement; it must be converted into a formal change record requiring designated institutional sign-off.'}
+            ? "لا تغير الرسالة التجريبية نطاقاً معتمداً ولا تفوض دفعاً. يتطلب أي تغيير فعلي أدلته ومراجعته المفوضة؛ ولا تُستنتج صلاحية توقيع لشخص بعينه."
+            : "A sample message does not change approved scope or authorize payment. Any real change would require its own evidence and applicable delegated review; no named signatory is inferred."}
         </div>
       </div>
 
@@ -203,7 +203,7 @@ export const CommunicationView: React.FC<CommunicationViewProps> = (props) => {
           </span>
           <span className="flex items-center gap-1">
             <Lock className="w-3.5 h-3.5 text-sadu-sage" />
-            {isAr ? 'أرشيف مراسلات مشفر ومحمي' : 'Encrypted Institutional Record'}
+            {isAr ? "مثال في الجلسة · دون تشفير" : "Session sample · no encryption"}
           </span>
         </div>
 
@@ -295,7 +295,7 @@ export const CommunicationView: React.FC<CommunicationViewProps> = (props) => {
                   className="rounded text-sadu-brick focus:ring-0"
                 />
                 <Paperclip className="w-3.5 h-3.5" />
-                <span>{isAr ? 'إرفاق وثيقة هندسية / فنية (PDF)' : 'Attach Verified Document (PDF)'}</span>
+                <span>{isAr ? "إضافة تسمية مرفق تجريبي (دون رفع)" : "Include sample attachment label (no upload)"}</span>
               </label>
             </div>
           </div>
@@ -306,8 +306,8 @@ export const CommunicationView: React.FC<CommunicationViewProps> = (props) => {
             rows={3}
             placeholder={
               isAr
-                ? 'اكتب رسالتك الرسمية هنا... (تُحفظ تلقائياً في السجل وتُوثق بالساعة والتاريخ)'
-                : 'Write official message... (Recorded permanently with timestamp & immutable attribution)'
+                ? "اكتب رسالة تجريبية (لا تُرسل؛ مؤقتة في هذه المعاينة)"
+                : "Write a sample message (not transmitted; temporary in this view)"
             }
             className="w-full p-3 text-xs sm:text-sm bg-sadu-linen border border-sadu-gold rounded-md focus:border-sadu-brick focus:outline-hidden text-sadu-charcoal"
           />
@@ -325,7 +325,7 @@ export const CommunicationView: React.FC<CommunicationViewProps> = (props) => {
               disabled={!draftContent.trim()}
               className="px-5 py-2 text-xs font-bold text-white bg-sadu-brick hover:bg-sadu-brick-dark disabled:opacity-40 rounded-md transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
             >
-              <span>{isAr ? 'إرسال وتوثيق' : 'Send & Record'}</span>
+              <span>{isAr ? "إضافة رسالة تجريبية · لا إرسال" : "Add sample message · not sent"}</span>
               <Send className="w-3.5 h-3.5 rtl:rotate-180" />
             </button>
           </div>

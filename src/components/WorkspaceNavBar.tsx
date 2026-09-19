@@ -65,7 +65,7 @@ export const WorkspaceNavBar: React.FC<WorkspaceNavBarProps> = (props) => {
       case 'ARTIST':
         return { en: 'Artist Studio', ar: 'استوديو الفنان' };
       case 'ARCHIVE':
-        return { en: 'Permanent Archive', ar: 'الأرشيف الدائم' };
+        return { en: "Sample archive", ar: 'أرشيف تجريبي' };
       default:
         return { en: 'Perspective Desk', ar: 'مكتب المنظور' };
     }
@@ -111,14 +111,14 @@ export const WorkspaceNavBar: React.FC<WorkspaceNavBarProps> = (props) => {
     { 
       id: 'communications' as WorkspaceTab, 
       icon: MessageSquare, 
-      labelEn: 'Official Messages', 
-      labelAr: 'المراسلات الرسمية' 
+      labelEn: 'Sample messages',
+      labelAr: 'رسائل تجريبية'
     },
     { 
       id: 'archive' as WorkspaceTab, 
       icon: ArchiveIcon, 
-      labelEn: 'Sovereign Archive', 
-      labelAr: 'الأرشيف السيادي' 
+      labelEn: "Sample archive",
+      labelAr: "أرشيف تجريبي"
     },
   ];
 

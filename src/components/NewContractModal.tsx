@@ -318,7 +318,7 @@ export const NewContractModal: React.FC<NewContractModalProps> = ({
                   </div>
                 </div>
 
-                {/* Statutory Checkboxes */}
+                {/* Scenario checkboxes */}
                 <div className="pt-2 space-y-2 border-t border-sadu-gold/40">
                   <label className="flex items-start gap-2 cursor-pointer">
                     <input

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Language, RoleKey, WorkspaceTab, ExhibitionProgramme } from '../types';
 import { ROLE_PROFILES, PROGRAMMES } from '../data/mockData';
+import { FINANCE_SCENARIO_ID, FINANCE_SCENARIO_LABEL } from '../data/legacyScenario';
 import { 
   X, 
   LayoutDashboard, 
@@ -26,6 +27,7 @@ interface MobileNavDrawerProps {
   lang: Language;
   currentRole: RoleKey;
   selectedProgramme: ExhibitionProgramme;
+  scopeLocked?: boolean;
   activeTab: WorkspaceTab;
   onNavigateTab: (tab: WorkspaceTab) => void;
   onSelectRole: (role: RoleKey) => void;
@@ -43,6 +45,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
   lang,
   currentRole,
   selectedProgramme,
+  scopeLocked = false,
   activeTab,
   onNavigateTab,
   onSelectRole,
@@ -64,8 +67,8 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
     { id: 'approved-scope' as WorkspaceTab, icon: Lock, labelEn: 'Approved Scope (v1.2)', labelAr: 'النطاق المعتمد والمواصفات', tag: 'Frozen' },
     { id: 'contracts' as WorkspaceTab, icon: FileSignature, labelEn: 'Contracts & Legal', labelAr: 'العقود النظامية والتواقيع', tag: 'Legal' },
     { id: 'operations' as WorkspaceTab, icon: Wrench, labelEn: 'Specialist Operations', labelAr: 'العمليات التخصصية والميدان', tag: 'Gates' },
-    { id: 'communications' as WorkspaceTab, icon: MessageSquare, labelEn: 'Official Messages', labelAr: 'المراسلات الرسمية الموثقة', tag: 'Log' },
-    { id: 'archive' as WorkspaceTab, icon: Archive, labelEn: 'Archive & Closeout', labelAr: 'الأرشيف والإغلاق الدائم', tag: 'Seal' },
+    { id: 'communications' as WorkspaceTab, icon: MessageSquare, labelEn: 'Sample messages', labelAr: 'رسائل تجريبية', tag: 'Log' },
+    { id: 'archive' as WorkspaceTab, icon: Archive, labelEn: 'Sample archive & closeout', labelAr: 'أرشيف وإغلاق تجريبيان', tag: 'Sample' },
   ];
 
   const permittedViews = profile?.permittedViews || ['overview'];
@@ -124,14 +127,16 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
               {isAr ? 'المعرض النشط:' : 'Active Programme:'}
             </span>
             <select
-              value={selectedProgramme.id}
+              value={scopeLocked ? FINANCE_SCENARIO_ID : selectedProgramme.id}
+              disabled={scopeLocked}
+              aria-label={isAr ? 'نطاق البرنامج' : 'Programme scope'}
               onChange={(e) => {
                 const found = PROGRAMMES.find(p => p.id === e.target.value);
                 if (found) onSelectProgramme(found);
               }}
               className="w-full text-xs font-semibold p-2 bg-sadu-linen border border-sadu-gold rounded-md text-sadu-charcoal focus:border-sadu-brick focus:outline-hidden"
             >
-              {PROGRAMMES.map(p => (
+              {scopeLocked ? <option value={FINANCE_SCENARIO_ID}>{FINANCE_SCENARIO_LABEL[isAr ? 'ar' : 'en']}</option> : PROGRAMMES.map(p => (
                 <option key={p.id} value={p.id}>
                   {isAr ? p.titleAr : p.titleEn}
                 </option>

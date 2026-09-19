@@ -68,7 +68,7 @@ export const CONTRACT_WORKFLOW_STAGES: WorkflowStage[] = [
   { id: 'c2', nameEn: 'Direct Rights Legal Audit', nameAr: 'التدقيق القانوني وحقوق الاستبعاد', status: 'completed', signeeEn: 'Legal Counsel' },
   { id: 'c3', nameEn: 'Artist Digital Signature', nameAr: 'التوقيع الرقمي للفنان', status: 'completed', signeeEn: 'Participating Artist' },
   { id: 'c4', nameEn: 'Directorate Countersignature', nameAr: 'توقيع إدارة الشؤون الثقافية', status: 'in_progress', signeeEn: 'Director of Cultural Affairs' },
-  { id: 'c5', nameEn: 'Permanent Register Executed', nameAr: 'قيد العقد النهائي بسجل العقود', status: 'pending', signeeEn: 'Institutional Archive' },
+  { id: 'c5', nameEn: "Sample register entry", nameAr: "قيد سجل تجريبي", status: 'pending', signeeEn: 'Institutional Archive' },
 ];
 
 export const COMMITTEE_WORKFLOW_STAGES: WorkflowStage[] = [

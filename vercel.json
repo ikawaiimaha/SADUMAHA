@@ -1,7 +1,13 @@
 {
-  "rewrites": [
-    { "source": "/join", "destination": "/index.html" },
-    { "source": "/artist/register", "destination": "/index.html" },
-    { "source": "/roster", "destination": "/index.html" }
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "routes": [
+    {
+      "src": "/(sultan|owais|qaseer)_portrait\\.jpg$",
+      "status": 404,
+      "dest": "/404.html",
+      "headers": { "Cache-Control": "no-store" }
+    },
+    { "handle": "filesystem" },
+    { "src": "/(join|artist/register|roster)/?$", "dest": "/index.html" }
   ]
 }

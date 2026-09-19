@@ -5,6 +5,7 @@ import { useI18n } from '../context/I18nContext';
 import { useWorkspace } from '../context/WorkspaceContext';
 import { NotificationsPopover } from './NotificationsPopover';
 import { RosterNavLink } from './RosterNavLink';
+import { FINANCE_SCENARIO_LABEL } from '../data/legacyScenario';
 import { 
   Globe, 
   ChevronDown, 
@@ -19,6 +20,7 @@ import {
 } from 'lucide-react';
 
 export interface HeaderNavProps {
+  scopeLocked?: boolean;
   lang?: Language;
   currentRole?: RoleKey;
   selectedProgramme?: ExhibitionProgramme;
@@ -91,7 +93,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = (props) => {
 
         <div className="flex items-center gap-3">
           <span className="text-amber-200/90 font-medium hidden md:inline text-[10px] whitespace-nowrap">
-            {isAr ? 'بيئة المعاينة والتصميم المؤسسي المعتمدة' : 'Official Demonstration & Architecture Preview'}
+            {isAr ? "عرض افتراضي · مسارات عمل مقترحة" : "Fictional demonstration · proposed workflows"}
           </span>
           <button
             onClick={onOpenPresenter}
@@ -131,12 +133,12 @@ export const HeaderNav: React.FC<HeaderNavProps> = (props) => {
           </div>
 
           <div className="relative hidden sm:block ms-2">
-            <button onClick={() => setProgrammeDropdownOpen(!programmeDropdownOpen)} className="flex items-center gap-1.5 px-3 h-9 text-xs font-medium bg-sadu-sand hover:bg-sadu-sand-dark border border-sadu-gold rounded-md transition-colors cursor-pointer text-sadu-charcoal shrink-0">
+            <button disabled={props.scopeLocked} onClick={() => setProgrammeDropdownOpen(!programmeDropdownOpen)} className="flex items-center gap-1.5 px-3 h-9 text-xs font-medium bg-sadu-sand hover:bg-sadu-sand-dark border border-sadu-gold rounded-md transition-colors disabled:cursor-default text-sadu-charcoal shrink-0">
               <span className="text-sadu-brick font-bold whitespace-nowrap">{isAr ? 'المعرض:' : 'Scope:'}</span>
-              <span className="max-w-[150px] md:max-w-[210px] truncate font-semibold">{isAr ? selectedProgramme.titleAr : selectedProgramme.titleEn}</span>
+              <span className="max-w-[150px] md:max-w-[210px] truncate font-semibold">{props.scopeLocked ? FINANCE_SCENARIO_LABEL[isAr ? 'ar' : 'en'] : isAr ? selectedProgramme.titleAr : selectedProgramme.titleEn}</span>
               <ChevronDown className="w-3.5 h-3.5 text-sadu-muted shrink-0" />
             </button>
-            {programmeDropdownOpen && (
+            {programmeDropdownOpen && !props.scopeLocked && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setProgrammeDropdownOpen(false)} />
                 <div className="absolute top-full mt-1.5 w-72 bg-sadu-linen border-2 border-sadu-gold rounded-lg shadow-lg z-50 p-2 text-xs">

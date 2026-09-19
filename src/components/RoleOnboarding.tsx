@@ -36,7 +36,7 @@ export const RoleOnboarding: React.FC<RoleOnboardingProps> = ({
 
         <div className="flex items-center gap-2 text-xs font-bold text-sadu-brick uppercase tracking-wider mb-1">
           <ShieldCheck className="w-4 h-4" />
-          <span>{isAr ? 'بطاقة الدور المؤسسي والحوكمة' : 'Institutional Role & Access Governance'}</span>
+          <span>{isAr ? 'دور تجريبي · حدود التنقل' : 'Sample role · navigation boundaries'}</span>
         </div>
 
         <h2 className="text-2xl font-editorial font-bold text-sadu-charcoal">
@@ -50,7 +50,7 @@ export const RoleOnboarding: React.FC<RoleOnboardingProps> = ({
           {/* Scope Card */}
           <div className="p-3.5 bg-sadu-sand rounded-md border border-sadu-gold">
             <span className="font-semibold text-xs text-sadu-brick block uppercase tracking-wider mb-1">
-              {isAr ? 'نطاق الصلاحية والبيانات المسموحة:' : 'Permitted Scope & Boundary:'}
+              {isAr ? 'نطاق مقترح · ليس تفويضاً:' : 'Proposed scope · not authorization:'}
             </span>
             <p className="text-sadu-charcoal leading-relaxed">
               {isAr ? profile?.scopeAr : profile?.scopeEn}
@@ -83,13 +83,13 @@ export const RoleOnboarding: React.FC<RoleOnboardingProps> = ({
 
             <p className="text-xs text-sadu-muted mb-3">
               {(role === 'COORDINATOR' || role === 'SDC_COORDINATOR') && (isAr ? 'التحقق من سجل الانتباه الفني لمعرض "خطوط من حبر" وتوجيه متابعة للفريق الهندسي.' : 'Acknowledge Technical load alert for "Lines of Ink" and route follow-up to engineering.')}
-              {(role === 'LEADERSHIP' || role === 'DIRECTORATE') && (isAr ? 'مراجعة رادار الاستثناءات ومؤشرات انتشار المهرجانات العالمية.' : 'Review executive exception radar and monitor global festival deployment.')}
+              {(role === 'LEADERSHIP' || role === 'DIRECTORATE') && (isAr ? 'مراجعة تقارير المديرين المؤرخة ومخاطر الجداول وتصعيدات البرامج.' : 'Review dated manager reports, schedule risks and portfolio escalations.')}
               {role === 'COMMITTEE' && (isAr ? 'الاطلاع على ملف مقترح الفنان يوسف نبهان وتقييم المسار الفني.' : 'Inspect Youssef Nabhan’s reading dossier and evaluate the designated cultural track.')}
               {role === 'ARTIST' && (isAr ? 'مراجعة النطاق الفني المعتمد وإرسال مخطط صفائح التثبيت إلى المنسق.' : 'Inspect approved scope items and acknowledge mounting bracket submission.')}
               {(role === 'TECHNICAL' || role === 'SAF_TECHNICIAN') && (isAr ? 'إنشاء المخطط التنفيذي للعمل البرونزي وإرساله لهيئة المتاحف.' : 'Generate execution blueprint for the bronze artwork and route to SMA.')}
               {(role === 'VENUE_ADMIN' || role === 'SMA_VENUE_ADMIN' || role === 'TECHNICAL_MUSEUM') && (isAr ? 'اعتماد المخططات الهندسية وإصدار تصاريح التثبيت بمتحف الشارقة للفنون.' : 'Approve engineering blueprints and issue installation permits for Sharjah Art Museum.')}
-              {role === 'FINANCE' && (isAr ? 'إصدار أمر الشراء (LPO) وتوثيق استدراج العروض التنافسية الثلاثة.' : 'Issue LPO and verify completion of the mandatory 3-bid procurement rule.')}
-              {(role === 'PR_VISA' || role === 'PR_PROTOCOL') && (isAr ? 'توليد رمز التحقق الأمني لتأشيرة السفر واستيفاء البنود السبعة.' : 'Generate secure travel clearance token and fulfill the 7-point PR checklist.')}
+              {role === 'FINANCE' && (isAr ? "راجع سيناريو مشتريات من ثلاثة عروض. لا يُصدر أمر شراء فعلي." : "Review a three-quote procurement scenario. No purchase order is issued.")}
+              {(role === 'PR_VISA' || role === 'PR_PROTOCOL') && (isAr ? "استعرض مرجع السفر التجريبي والقائمة المقترحة من سبعة بنود." : "Explore the sample travel reference and proposed seven-point checklist.")}
               {role === 'EDITORIAL' && (isAr ? 'اعتماد وتجميد النصوص العربية والإنجليزية الخاصة بكتالوج المعرض.' : 'Proof and lock bilingual texts for the official exhibition catalogue.')}
               {role === 'LOGISTICS' && (isAr ? 'مراسلة الفنانين لتنسيق الشحن وإصدار طلبات عروض الأسعار (RFQ).' : 'Coordinate shipping with artists and issue formal Freight RFQs.')}
               {role === 'ARCHIVE' && (isAr ? 'تدقيق محضر الإغلاق النهائي والتحقق من سلامة البصمة الرقمية للوثائق.' : 'Audit final closure manifest and verify zero unresolved return items.')}
@@ -121,7 +121,7 @@ export const RoleOnboarding: React.FC<RoleOnboardingProps> = ({
             onClick={onDismiss}
             className="w-full sm:w-auto px-6 py-2.5 text-xs font-bold text-white bg-sadu-ink hover:bg-sadu-ink-dark rounded-md transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
           >
-            <span>{isAr ? 'دخول المنصة التشغيلية' : 'Enter Live Workspace'}</span>
+            <span>{isAr ? "دخول مساحة العمل التجريبية" : "Enter sample workspace"}</span>
             <ArrowRight className="w-4 h-4 rtl:rotate-180" />
           </button>
         </div>

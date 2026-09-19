@@ -32,7 +32,7 @@ export const PrProtocolDashboard: React.FC = () => {
   const checkedCount = Object.values(checklist).filter(Boolean).length;
   const isFullyCleared = checkedCount === 7;
 
-  // Encrypted Passport & Visa Token Generation State
+  // Sample travel-reference preview state
   const [isTokenGenerated, setIsTokenGenerated] = useState(false);
   const [travelClearanceToken, setTravelClearanceToken] = useState('SHJ-VISA-SEC-99214-TOK');
   const [showPassportVault, setShowPassportVault] = useState(false);
@@ -51,7 +51,7 @@ export const PrProtocolDashboard: React.FC = () => {
       return;
     }
     setIsTokenGenerated(true);
-    setToastMessage(isAr ? 'تم إنشاء رمز التخليص الأمني وتصريح السفر بنجاح' : 'Encrypted Travel Clearance Token successfully issued.');
+    setToastMessage(isAr ? "أُنشئ مرجع سفر تجريبي. لم يحدث تخليص أو إرسال." : "Sample travel reference created. No clearance or transmission occurred.");
     setTimeout(() => setToastMessage(null), 4000);
   };
 
@@ -78,8 +78,8 @@ export const PrProtocolDashboard: React.FC = () => {
             </h1>
             <p className="text-xs sm:text-sm text-sadu-muted mt-1">
               {isAr
-                ? 'إدارة الضيوف، التحقق الإلزامي من 7 متطلبات بروتوكولية، وإصدار رموز السفر المشفرة دون كشف وثائق الجوازات لبقية الأقسام.'
-                : 'VIP guest handling, 7-point institutional checklist, encrypted travel tokens, and production hold enforcement.'}
+                ? "تنسيق ضيوف تجريبي وقائمة مقترحة من سبعة بنود ومراجع سفر محاكاة؛ لا توجد خدمة تأشيرات أو تخليص متصلة."
+                : "Sample guest handling, a proposed seven-point checklist and simulated travel references; no visa or clearance service is connected."}
             </p>
           </div>
 
@@ -118,7 +118,7 @@ export const PrProtocolDashboard: React.FC = () => {
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-5 h-5 text-sadu-brick" />
               <h2 className="text-base font-editorial font-bold text-sadu-charcoal">
-                {isAr ? 'قائمة التحقق البروتوكولية (7 بنود إلزامية)' : 'The 7-Point Clearance Checklist'}
+                {isAr ? "قائمة السيناريو · سبعة بنود تجريبية" : "Scenario checklist · seven sample items"}
               </h2>
             </div>
             <span className="text-xs font-mono font-bold text-sadu-brick">
@@ -162,13 +162,13 @@ export const PrProtocolDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Visa Automation Hub & Encrypted Vault */}
+        {/* Simulated travel workspace */}
         <div className="bg-white border border-sadu-gold rounded-lg p-6 shadow-xs space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Plane className="w-5 h-5 text-sadu-brick" />
               <h2 className="text-base font-editorial font-bold text-sadu-charcoal">
-                {isAr ? 'منصة التأشيرات ورموز السفر المشفرة' : 'Visa Automation Hub & Encrypted Vault'}
+                {isAr ? "معاينة مرجع سفر تجريبي · دون تشفير" : "Sample travel reference preview · no encryption"}
               </h2>
             </div>
             <span className="text-xs px-2 py-0.5 rounded bg-sadu-sand text-sadu-charcoal font-mono">
@@ -192,7 +192,7 @@ export const PrProtocolDashboard: React.FC = () => {
                   className="text-xs font-bold text-sadu-brick hover:underline flex items-center gap-1 cursor-pointer"
                 >
                   <Lock className="w-3 h-3" />
-                  <span>{showPassportVault ? (isAr ? 'إخفاء المعاينة' : 'Hide Vault') : (isAr ? 'معاينة مشفرة' : 'View Decrypted')}</span>
+                  <span>{showPassportVault ? (isAr ? "إخفاء المثال" : "Hide sample") : (isAr ? "عرض المثال" : "View sample")}</span>
                 </button>
               </div>
 
@@ -230,7 +230,7 @@ export const PrProtocolDashboard: React.FC = () => {
                 className="w-full py-2 bg-sadu-brick hover:bg-sadu-brick-dark text-white rounded-md text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <Key className="w-4 h-4" />
-                <span>{isTokenGenerated ? (isAr ? 'تحديث رمز التخليص المشفر' : 'Refresh Travel Token') : (isAr ? 'إصدار رمز السفر المشفر (Token)' : 'Issue Encrypted Travel Token')}</span>
+                <span>{isTokenGenerated ? (isAr ? "تحديث المرجع التجريبي" : "Refresh sample reference") : (isAr ? "إنشاء مرجع سفر تجريبي" : "Create sample travel reference")}</span>
               </button>
             </div>
           </div>

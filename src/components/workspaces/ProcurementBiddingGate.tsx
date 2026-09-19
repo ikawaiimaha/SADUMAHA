@@ -18,25 +18,25 @@ export const ProcurementBiddingGate: React.FC<{ lang?: 'en' | 'ar' }> = ({ lang 
   const [lpoStatus, setLpoStatus] = useState<'locked' | 'issued'>('locked');
   const [selectedBid, setSelectedBid] = useState<string | null>(null);
 
-  // Simulated vendor bids based on government requirements
+  // Fictional bids using scenario assumptions
   const bids = [
     {
       id: 'BID-01',
-      vendor: isAr ? 'مطبعة الشارقة المعتمدة' : 'Sharjah Official Press',
+      vendor: isAr ? 'مورد تجريبي أ' : 'Sample supplier A',
       isRegistered: true,
       amount: '45,000',
       technicalStatus: 'approved',
     },
     {
       id: 'BID-02',
-      vendor: isAr ? 'المدار للطباعة والنشر' : 'Al Madar Graphics',
+      vendor: isAr ? 'مورد تجريبي ب' : 'Sample supplier B',
       isRegistered: true,
       amount: '48,500',
       technicalStatus: 'approved',
     },
     {
       id: 'BID-03',
-      vendor: isAr ? 'مطابع الخليج' : 'Gulf Printworks',
+      vendor: isAr ? 'مورد تجريبي ج' : 'Sample supplier C',
       isRegistered: false,
       amount: '42,000',
       technicalStatus: 'rejected', // Rejected by technical due to paper quality
@@ -69,8 +69,8 @@ export const ProcurementBiddingGate: React.FC<{ lang?: 'en' | 'ar' }> = ({ lang 
           </span>
           <p className="text-xs text-rose-800 leading-relaxed">
             {isAr 
-              ? 'يُحظر قطعياً إصدار أي أمر شراء محلي (LPO) أو تكليف أي مورد بالعمل بناءً على اتفاق شفهي. يجب توليد طلب عرض سعر (RFQ) رسمي مستمد من النطاق المعتمد (v1.2)، وتوفير ٣ عروض أسعار تنافسية من موردين معتمدين قبل الترسية.' 
-              : 'Verbal commitments are strictly prohibited. No Local Purchase Order (LPO) may be issued without an official RFQ derived from the Frozen Scope (v1.2) and a minimum of 3 competitive bids from registered suppliers.'}
+              ? 'يفترض هذا السيناريو الافتراضي ثلاثة عروض مسجلة ومراجعة فنية قبل محاكاة الأمر. لم تُتحقق الحدود والاستثناءات وصلاحية الاعتماد الفعلية. لا يُنشأ أمر أو التزام.'
+              : 'This fictional scenario assumes three registered quotations and a technical review before a simulated order. Actual thresholds, exceptions and approval authority are unverified. No order or commitment is created.'}
           </p>
         </div>
       </div>
@@ -80,13 +80,13 @@ export const ProcurementBiddingGate: React.FC<{ lang?: 'en' | 'ar' }> = ({ lang 
         <div className={`p-5 rounded-lg border-2 transition-all ${rfqStatus === 'generated' ? 'bg-sadu-sage-light/30 border-sadu-sage/50' : 'bg-sadu-linen border-sadu-gold'}`}>
           <div className="flex items-center gap-2 mb-3">
             <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${rfqStatus === 'generated' ? 'bg-sadu-sage text-white' : 'bg-sadu-ink text-white'}`}>1</div>
-            <h3 className="font-bold text-sadu-charcoal text-sm">{isAr ? 'طلب عرض السعر (RFQ)' : 'Official RFQ Generation'}</h3>
+            <h3 className="font-bold text-sadu-charcoal text-sm">{isAr ? 'حالة طلب عرض سعر تجريبي' : 'Sample RFQ state'}</h3>
           </div>
           
           <p className="text-xs text-sadu-muted mb-4 leading-relaxed">
             {isAr 
-              ? 'سحب المواصفات الهندسية والمقاسات مباشرة من سجل النطاق المعتمد (v1.2) لضمان دقة التسعير ومنع التلاعب.' 
-              : 'Pull exact dimensions, materials, and quantities directly from Approved Scope (v1.2) to prevent specification tampering.'}
+              ? "تستخدم المعاينة مواصفات تجريبية ثابتة. لا تسترجع نطاقاً موثقاً ولا تحمي من التلاعب."
+              : "This preview uses fixed sample specifications. It does not retrieve a verified scope or protect against tampering."}
           </p>
 
           {rfqStatus === 'idle' ? (
@@ -95,15 +95,15 @@ export const ProcurementBiddingGate: React.FC<{ lang?: 'en' | 'ar' }> = ({ lang 
               className="w-full py-2.5 px-4 bg-sadu-ink text-white text-xs font-bold rounded-md hover:bg-sadu-ink-dark transition-colors flex items-center justify-center gap-2 shadow-xs cursor-pointer"
             >
               <FileText className="w-4 h-4" />
-              <span>{isAr ? 'توليد وثيقة عرض السعر الرسمية' : 'Generate Official RFQ'}</span>
+              <span>{isAr ? 'محاكاة إعداد طلب عرض السعر' : 'Simulate RFQ preparation'}</span>
             </button>
           ) : (
             <div className="p-3 bg-white rounded border border-sadu-sage/40 flex items-center justify-between text-xs">
               <span className="font-bold text-sadu-sage flex items-center gap-1.5">
                 <CheckCircle2 className="w-4 h-4" />
-                <span>{isAr ? 'تم توليد الوثيقة' : 'RFQ Generated'}</span>
+                <span>{isAr ? 'تمت محاكاة الحالة · لم يُنشأ مستند' : 'RFQ state simulated · no document created'}</span>
               </span>
-              <span className="font-mono text-sadu-muted">RFQ-2026-089</span>
+              <span className="font-mono text-sadu-muted">DEMO-RFQ-089</span>
             </div>
           )}
         </div>
@@ -116,7 +116,7 @@ export const ProcurementBiddingGate: React.FC<{ lang?: 'en' | 'ar' }> = ({ lang 
               <h3 className="font-bold text-sadu-charcoal text-sm">{isAr ? 'عروض الأسعار والترسية المبدئية' : 'Competitive Bids & Technical Award'}</h3>
             </div>
             <span className="text-[10px] font-bold text-sadu-brick bg-sadu-sand px-2 py-0.5 rounded border border-sadu-gold">
-              {isAr ? 'مطلوب ٣ عروض كحد أدنى' : 'Min. 3 Bids Required'}
+              {isAr ? 'السيناريو: ٣ عروض مسجلة' : 'Scenario: 3 registered quotations'}
             </span>
           </div>
 
@@ -173,7 +173,7 @@ export const ProcurementBiddingGate: React.FC<{ lang?: 'en' | 'ar' }> = ({ lang 
           </div>
           <div>
             <h3 className={`font-editorial font-bold text-lg ${lpoStatus === 'issued' ? 'text-sadu-ink' : 'text-sadu-charcoal'}`}>
-              {isAr ? 'الاعتماد المالي وإصدار أمر الشراء (LPO)' : 'Financial Sign-off & LPO Generation'}
+              {isAr ? "مراجعة أمر تجريبي · دون التزام" : "Sample order review · no commitment"}
             </h3>
             <p className="text-xs text-sadu-muted mt-1 max-w-lg">
               {lpoStatus === 'issued' 
@@ -195,12 +195,12 @@ export const ProcurementBiddingGate: React.FC<{ lang?: 'en' | 'ar' }> = ({ lang 
           {lpoStatus === 'issued' ? (
             <>
               <CheckCircle2 className="w-4 h-4" />
-              <span>{isAr ? 'LPO-2026-992 صادر' : 'LPO Issued (LPO-2026-992)'}</span>
+              <span>{isAr ? "أمر تجريبي · DEMO-LPO-992" : "Sample order · DEMO-LPO-992"}</span>
             </>
           ) : (
             <>
               <ShieldCheck className="w-4 h-4" />
-              <span>{isAr ? 'اعتماد وإصدار LPO' : 'Authorize & Generate LPO'}</span>
+              <span>{isAr ? "محاكاة إنشاء أمر شراء" : "Simulate order generation"}</span>
             </>
           )}
         </button>

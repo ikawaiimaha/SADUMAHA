@@ -3,6 +3,7 @@ import { Language, RoleKey, WorkspaceTab, ExhibitionProgramme } from '../types';
 import { ROLE_PROFILES, PROGRAMMES } from '../data/mockData';
 import { useI18n } from '../context/I18nContext';
 import { useWorkspace } from '../context/WorkspaceContext';
+import { FINANCE_SCENARIO_LABEL } from '../data/legacyScenario';
 import { 
   ChevronRight, 
   ChevronLeft, 
@@ -15,6 +16,7 @@ import {
 } from 'lucide-react';
 
 interface InstitutionalBreadcrumbProps {
+  scopeLocked?: boolean;
   lang?: Language;
   currentRole?: RoleKey;
   selectedProgramme?: ExhibitionProgramme;
@@ -46,8 +48,8 @@ export const InstitutionalBreadcrumb: React.FC<InstitutionalBreadcrumbProps> = (
     'approved-scope': { en: 'Approved Scope Register (v1.2)', ar: 'سجل النطاق المعتمد (v1.2)' },
     contracts: { en: 'Bilateral Contracts & Legal Sign-off', ar: 'العقود الثنائية والاعتماد' },
     operations: { en: 'Specialist Operations & Engineering Gates', ar: 'العمليات التخصصية والهندسية' },
-    communications: { en: 'Attributable Official Messages', ar: 'المراسلات الرسمية الموثقة' },
-    archive: { en: 'Sovereign Archive & Closeout Manifest', ar: 'الأرشيف السيادي والإغلاق' },
+    communications: { en: "Sample messages · not sent", ar: 'رسائل تجريبية · لا إرسال' },
+    archive: { en: "Sample archive & closeout", ar: 'أرشيف وإغلاق تجريبيان' },
   };
 
   return (
@@ -62,7 +64,7 @@ export const InstitutionalBreadcrumb: React.FC<InstitutionalBreadcrumbProps> = (
 
           {/* Programme Context */}
           <span className="text-sadu-ink font-bold truncate max-w-[200px] sm:max-w-xs">
-            {isAr ? selectedProgramme.titleAr : selectedProgramme.titleEn}
+            {props.scopeLocked ? FINANCE_SCENARIO_LABEL[isAr ? 'ar' : 'en'] : isAr ? selectedProgramme.titleAr : selectedProgramme.titleEn}
           </span>
           <ChevronIcon className="w-3.5 h-3.5 text-sadu-gold" />
 
@@ -75,9 +77,9 @@ export const InstitutionalBreadcrumb: React.FC<InstitutionalBreadcrumbProps> = (
         {/* Right: Active Role Context & Quick Jump */}
         <div className="flex items-center gap-3 self-end md:self-auto flex-wrap text-[11px]">
           {/* Programme Health Status */}
-          <div className="hidden lg:flex items-center gap-2 bg-sadu-linen px-2.5 py-1 rounded-md border border-sadu-gold/80">
+          {!props.scopeLocked && <div className="hidden lg:flex items-center gap-2 bg-sadu-linen px-2.5 py-1 rounded-md border border-sadu-gold/80">
             <span className="text-sadu-muted">
-              {isAr ? 'جاهزية البوابات:' : 'Gates Ready:'}
+              {isAr ? 'بوابات تجريبية:' : 'Sample gates:'}
             </span>
             <span className="font-mono font-bold text-sadu-ink">
               {selectedProgramme.gatesReady}/{selectedProgramme.gatesTotal}
@@ -91,7 +93,7 @@ export const InstitutionalBreadcrumb: React.FC<InstitutionalBreadcrumbProps> = (
             <span className="font-mono text-sadu-sage font-semibold text-[10px]">
               {selectedProgramme.progressPercent}%
             </span>
-          </div>
+          </div>}
 
           {/* Role Boundary Pill */}
           <div className="flex items-center gap-1.5 bg-sadu-linen px-2.5 py-1 rounded-md border border-sadu-gold">

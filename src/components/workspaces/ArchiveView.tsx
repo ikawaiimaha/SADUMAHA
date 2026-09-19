@@ -42,7 +42,7 @@ export const ArchiveView: React.FC<ArchiveViewProps> = (props) => {
       titleAr: 'سجل ترشيح الفنان وملف المشاركة المعتمد v1.0', 
       status: 'verified', 
       authority: isAr ? 'استوديو الفنان والمنسق' : 'Curator & Artist Studio',
-      checksum: 'SHA-256: 7b2a...e901'
+      checksum: 'SAMPLE REF: 7b2a...e901'
     },
     { 
       code: 'DOC-02', 
@@ -50,7 +50,7 @@ export const ArchiveView: React.FC<ArchiveViewProps> = (props) => {
       titleAr: 'محضر اعتماد لجنة تحكيم الخط ومدير الشؤون الثقافية', 
       status: 'verified', 
       authority: isAr ? 'لجنة التحكيم والشؤون الثقافية' : 'Jury & Cultural Affairs',
-      checksum: 'SHA-256: 8f1c...3a44'
+      checksum: 'SAMPLE REF: 8f1c...3a44'
     },
     { 
       code: 'DOC-03', 
@@ -58,7 +58,7 @@ export const ArchiveView: React.FC<ArchiveViewProps> = (props) => {
       titleAr: 'النطاق الفني المعتمد والمجمد v1.2', 
       status: 'verified', 
       authority: isAr ? 'دائرة الثقافة بالشارقة' : 'Directorate of Cultural Affairs',
-      checksum: 'SHA-256: 4c3d...9e12'
+      checksum: 'SAMPLE REF: 4c3d...9e12'
     },
     { 
       code: 'DOC-04', 
@@ -66,7 +66,7 @@ export const ArchiveView: React.FC<ArchiveViewProps> = (props) => {
       titleAr: 'عقد المعرض الشخصي الثنائي المعتمد رسمياً', 
       status: 'verified', 
       authority: isAr ? 'الشؤون القانونية والإدارة التنفيذية' : 'Legal & Executive Desk',
-      checksum: 'SHA-256: 1a9b...7f88'
+      checksum: 'SAMPLE REF: 1a9b...7f88'
     },
     { 
       code: 'DOC-05', 
@@ -74,7 +74,7 @@ export const ArchiveView: React.FC<ArchiveViewProps> = (props) => {
       titleAr: 'دليل إرشادات التركيب ومطابقة حمولة الأرضيات', 
       status: 'verified', 
       authority: isAr ? 'المكتب الفني وهندسة المتحف' : 'Technical Desk & Engineering',
-      checksum: 'SHA-256: 5e6a...0b21'
+      checksum: 'SAMPLE REF: 5e6a...0b21'
     },
     { 
       code: 'DOC-06', 
@@ -82,7 +82,7 @@ export const ArchiveView: React.FC<ArchiveViewProps> = (props) => {
       titleAr: 'محضر المعاينة الجمركية وفحص استلام الحالة', 
       status: 'verified', 
       authority: isAr ? 'مكتب الترميم وصيانة المقتنيات' : 'Chief Conservator',
-      checksum: 'SHA-256: 3d7c...6e54'
+      checksum: 'SAMPLE REF: 3d7c...6e54'
     },
     { 
       code: 'DOC-07', 
@@ -90,7 +90,7 @@ export const ArchiveView: React.FC<ArchiveViewProps> = (props) => {
       titleAr: 'سجل تسوية دفعات التكليف (30% مقدمة / 70% ختامية)', 
       status: 'verified', 
       authority: isAr ? 'قسم الحسابات المالية' : 'Accounts & Treasury Lead',
-      checksum: 'SHA-256: 9b2d...4a11'
+      checksum: 'SAMPLE REF: 9b2d...4a11'
     },
     { 
       code: 'DOC-08', 
@@ -98,15 +98,15 @@ export const ArchiveView: React.FC<ArchiveViewProps> = (props) => {
       titleAr: 'محضر إعادة التغليف بالصناديق الأصلية وفحص المغادرة', 
       status: 'verified', 
       authority: isAr ? 'إدارة المعارض واللوجستيات' : 'Exhibition & Logistics Desk',
-      checksum: 'SHA-256: 6a8f...1c90'
+      checksum: 'SAMPLE REF: 6a8f...1c90'
     },
     { 
       code: 'DOC-09', 
-      titleEn: 'Signed Return Freight Manifest (Mandatory Closeout)', 
-      titleAr: 'محضر بوليصة الشحن وإرجاع الأعمال الفنية الموقع (إلزامي)', 
+      titleEn: "Sample return receipt · scenario prerequisite",
+      titleAr: "إيصال إرجاع تجريبي · متطلب للسيناريو",
       status: returnManifestSigned ? 'verified' : 'pending', 
       authority: isAr ? 'شركة الشحن وتوقيع استلام الفنان' : 'Carrier & Artist Receipt Signature',
-      checksum: returnManifestSigned ? 'SHA-256: e4f7...9a23' : (isAr ? 'معلق على التوقيع' : 'Pending Signature')
+      checksum: returnManifestSigned ? 'SAMPLE REF: e4f7...9a23' : (isAr ? "الفحص التجريبي معلق" : "Sample check pending")
     },
   ];
 
@@ -122,15 +122,15 @@ export const ArchiveView: React.FC<ArchiveViewProps> = (props) => {
           <div>
             <div className="flex items-center gap-2 text-xs font-bold text-sadu-brick uppercase tracking-wider mb-1">
               <Archive className="w-4 h-4" />
-              <span>{isAr ? 'الذاكرة المؤسسية والأرشيف السيادي' : 'Institutional Memory & Sovereign Archive'}</span>
+              <span>{isAr ? "الذاكرة المؤسسية · أرشيف تجريبي" : "Institutional memory · sample archive"}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-editorial font-bold text-sadu-charcoal">
-              {isAr ? 'محضر الإغلاق الأرشيفي الدائم' : 'Permanent Dossier Closeout & Manifest Register'}
+              {isAr ? "إغلاق ملف وقائمة مستندات للتجربة" : "Sample dossier closeout and document list"}
             </h1>
             <p className="text-xs sm:text-sm text-sadu-muted mt-1">
               {isAr
-                ? 'حفظ السجلات الثقافية بروابط مشفرة تمنع التلاعب وتتيح الاسترجاع المستقبلي للأبحاث والمعارض القادمة'
-                : 'Preserving cultural knowledge with tamper-evident cryptographic provenance for future scholarship.'}
+                ? "محاكاة إغلاق داخل المتصفح فقط. لا تخزين دائم أو تحقق تشفيري أو تصديق مؤسسي."
+                : "Browser-only closeout simulation. No durable storage, cryptographic verification or institutional certification is performed."}
             </p>
           </div>
 
@@ -141,7 +141,7 @@ export const ArchiveView: React.FC<ArchiveViewProps> = (props) => {
                 : 'bg-amber-50 text-sadu-brick border border-amber-300'
             }`}>
               <Lock className="w-4 h-4" />
-              <span>{archiveSealed ? (isAr ? 'الأرشيف مغلق ومختوم' : 'Archive Sealed (Immutable)') : (isAr ? 'جاهز للختم الأرشيفي' : 'Ready for Closeout')}</span>
+              <span>{archiveSealed ? (isAr ? "مثال للقراءة فقط في هذه المعاينة" : "Read-only sample in this view") : (isAr ? "الإغلاق التجريبي معلق" : "Sample closeout pending")}</span>
             </span>
           </div>
         </div>
@@ -152,12 +152,12 @@ export const ArchiveView: React.FC<ArchiveViewProps> = (props) => {
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <div>
             <h2 className="text-lg font-editorial font-bold text-sadu-charcoal">
-              {isAr ? 'قائمة وثائق الإغلاق الإلزامية (Manifest Verification)' : 'Mandatory Dossier Manifest Verification'}
+              {isAr ? "قائمة مستندات تجريبية" : "Sample document checklist"}
             </h2>
             <p className="text-xs text-sadu-muted">
               {isAr 
-                ? `${formatRatio(verifiedCount, totalCount)} وثائق تم التحقق من سلامة بصمتها الرقمية` 
-                : `${verifiedCount} of ${totalCount} Attributable Records Verified with Checksums`}
+                ? `${formatRatio(verifiedCount, totalCount)} مستندات مفحوصة في المحاكاة؛ دون تحقق تشفيري`
+                : `${verifiedCount} of ${totalCount} documents checked in this sample; no checksum verification`}
             </p>
           </div>
 
@@ -176,9 +176,9 @@ export const ArchiveView: React.FC<ArchiveViewProps> = (props) => {
             <thead>
               <tr className="bg-sadu-ink text-white">
                 <th className="p-3 font-semibold">{isAr ? 'الرمز والمسمى' : 'Document Code & Title'}</th>
-                <th className="p-3 font-semibold">{isAr ? 'جهة الاعتماد' : 'Issuing Authority'}</th>
+                <th className="p-3 font-semibold">{isAr ? "مسؤولية مقترحة · تجريبي" : "Proposed responsibility · sample"}</th>
                 <th className="p-3 font-semibold">{isAr ? 'حالة التدقيق' : 'Verification'}</th>
-                <th className="p-3 font-semibold text-center">{isAr ? 'فحص النزاهة' : 'Integrity'}</th>
+                <th className="p-3 font-semibold text-center">{isAr ? "مرجع تجريبي" : "Sample reference"}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-sadu-gold/40">
@@ -211,12 +211,12 @@ export const ArchiveView: React.FC<ArchiveViewProps> = (props) => {
                     {item.status === 'verified' ? (
                       <span className="text-sadu-sage font-semibold flex items-center gap-1">
                         <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span>{isAr ? 'مطابق وموثق' : 'Verified'}</span>
+                        <span>{isAr ? "تم الفحص · محاكاة" : "Checked · simulated"}</span>
                       </span>
                     ) : (
                       <span className="text-amber-800 font-semibold flex items-center gap-1">
                         <Clock className="w-3.5 h-3.5" />
-                        <span>{isAr ? 'معلق على توقيع الإرجاع' : 'Pending Return Signature'}</span>
+                        <span>{isAr ? "فحص الإرجاع التجريبي معلق" : "Sample return check pending"}</span>
                       </span>
                     )}
                   </td>
@@ -252,12 +252,12 @@ export const ArchiveView: React.FC<ArchiveViewProps> = (props) => {
                   {item.status === 'verified' ? (
                     <span className="text-sadu-sage text-xs font-semibold flex items-center gap-1 bg-sadu-sand/60 px-2 py-0.5 rounded">
                       <CheckCircle2 className="w-3 h-3" />
-                      {isAr ? 'مطابق وموثق' : 'Verified'}
+                      {isAr ? "تم الفحص · محاكاة" : "Checked · simulated"}
                     </span>
                   ) : (
                     <span className="text-amber-800 text-xs font-semibold flex items-center gap-1 bg-amber-100 px-2 py-0.5 rounded">
                       <Clock className="w-3 h-3" />
-                      {isAr ? 'معلق على التوقيع' : 'Pending Signature'}
+                      {isAr ? "الفحص التجريبي معلق" : "Sample check pending"}
                     </span>
                   )}
                 </div>
@@ -298,13 +298,13 @@ export const ArchiveView: React.FC<ArchiveViewProps> = (props) => {
                       ? 'bg-sadu-sage text-white'
                       : 'bg-sadu-brick text-white'
                   }`}>
-                    {isAr ? 'وثيقة إغلاق إلزامية' : 'Mandatory Blocker'}
+                    {isAr ? "متطلب للسيناريو" : "Scenario prerequisite"}
                   </span>
                 </div>
                 <p className="text-sadu-charcoal text-[11px] leading-relaxed mt-1">
                   {isAr
-                    ? 'نظراً لأن جميع الأعمال الفنية في بينالي الشارقة للخط تُشحن عائدة إلى الفنانين بعد اختتام المعرض، يُشترط الحصول على بوليصة الشحن ومحضر استلام الفنان الموقع قبل السماح بالختم الأرشيفي الدائم.'
-                    : 'Because all artworks are shipped back to the artists after the Biennial, the Signed Return Freight Manifest is the mandatory final required document before the archive can be permanently sealed.'}
+                    ? "يفترض هذا المثال إرجاع إعارة. يتبع الإغلاق الفعلي متطلبات الإرجاع أو النقل أو الاحتفاظ أو التصرف المعتمدة لكل عنصر؛ ولا تُعاد شحنة كل عمل بالضرورة."
+                    : "This sample assumes a returned loan. Real closeout must follow each item’s approved return, transfer, retention or disposition requirements; not all artworks are shipped back."}
                 </p>
                 <div className="mt-1 text-[11px] font-mono text-sadu-muted flex flex-wrap gap-x-4 gap-y-1">
                   <span>AWB: <strong>SHJ-EXP-2026-9082</strong></span>
@@ -317,7 +317,7 @@ export const ArchiveView: React.FC<ArchiveViewProps> = (props) => {
             <div className="shrink-0 self-end sm:self-center">
               <button
                 type="button"
-                onClick={() => setReturnManifestSigned(!returnManifestSigned)}
+                disabled={archiveSealed} onClick={() => setReturnManifestSigned(!returnManifestSigned)}
                 className={`px-3.5 py-2 rounded-md font-bold text-xs transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer ${
                   returnManifestSigned
                     ? 'bg-sadu-linen text-sadu-charcoal border border-sadu-gold hover:bg-sadu-sand'
@@ -327,8 +327,8 @@ export const ArchiveView: React.FC<ArchiveViewProps> = (props) => {
                 <CheckCircle2 className="w-4 h-4" />
                 <span>
                   {returnManifestSigned 
-                    ? (isAr ? 'إلغاء التوقيع (إعادة الفحص)' : 'Revoke Signature (Re-audit)') 
-                    : (isAr ? 'توقيع واعتماد محضر الشحن والإرجاع' : 'Sign & Verify Return Freight Manifest')}
+                    ? (isAr ? "إعادة فحص الإيصال التجريبي" : "Reset sample receipt check")
+                    : (isAr ? "تسجيل فحص الإيصال التجريبي" : "Mark sample receipt checked")}
                 </span>
               </button>
             </div>
@@ -343,15 +343,15 @@ export const ArchiveView: React.FC<ArchiveViewProps> = (props) => {
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>
                   {isAr
-                    ? 'الختم الأرشيفي مقفل: يجب توقيع محضر بوليصة شحن الإرجاع أعلاه لاستيفاء كافة شروط الإغلاق الدائم.'
-                    : 'Archive sealing locked: Mandatory Signed Return Freight Manifest must be validated before permanent closure.'}
+                    ? "الإغلاق التجريبي متوقف: سجل فحص إيصال السيناريو أولاً. لا يُطبق توقيع فعلي."
+                    : "Sample closeout blocked: mark the scenario receipt checked first. No real signature is applied."}
                 </span>
               </span>
             ) : (
               <span>
                 {isAr
-                  ? 'عند ختم الملف الأرشيفي، يتم تجميد كافة السجلات كنسخة للقراءة فقط، وتوليد شهادة حفظ دائمة لدائرة الثقافة بالشارقة.'
-                  : 'Sealing locks the exhibition dossier into a permanent immutable read-only record for institutional perpetuity.'}
+                  ? "يجعل هذا الإجراء المثال للقراءة فقط في المعاينة الحالية. قد تعيد المغادرة أو إعادة التحميل ضبطه؛ لا يُنشأ أرشيف دائم أو شهادة."
+                  : "This action makes the sample read-only in this mounted view. Reloading or leaving the view can reset it; no durable archive or certificate is created."}
               </span>
             )}
           </div>
@@ -366,13 +366,13 @@ export const ArchiveView: React.FC<ArchiveViewProps> = (props) => {
                   ? 'bg-sadu-gold/40 text-sadu-muted border border-sadu-gold/60 cursor-not-allowed opacity-70'
                   : 'bg-sadu-ink text-white hover:bg-sadu-ink-dark cursor-pointer active:scale-98'
             }`}
-            title={!returnManifestSigned ? (isAr ? 'يجب توقيع محضر الشحن أولاً' : 'Return freight manifest signature required') : ''}
+            title={!returnManifestSigned ? (isAr ? "يلزم فحص الإيصال التجريبي" : "Sample receipt check required") : ''}
           >
             <Lock className="w-4 h-4" />
             <span>
               {archiveSealed 
-                ? (isAr ? '✓ تم الختم الأرشيفي بنجاح' : '✓ Archive Locked & Certified') 
-                : (isAr ? 'اعتماد الإغلاق الأرشيفي الدائم' : 'Seal Permanent Archive Dossier')}
+                ? (isAr ? "✓ أصبح المثال للقراءة فقط" : "✓ Sample marked read-only")
+                : (isAr ? "جعل المثال للقراءة فقط" : "Make sample read-only")}
             </span>
           </button>
         </div>
