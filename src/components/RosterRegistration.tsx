@@ -21,9 +21,9 @@ function RegistrationReview() {
   const t = (en: string, ar: string) => isAr ? ar : en;
   return <div className="roster-review">
     <h3>{t('Legal name · sample only', 'الاسم القانوني · تجريبي فقط')}</h3>
-    <div className="intake-pair"><p dir="ltr">{profile.legalNameEn || '—'}</p><p dir="rtl">{profile.legalNameAr || '—'}</p></div>
+    <div className="intake-pair"><p lang="en" dir="ltr">{profile.legalNameEn || '—'}</p><p lang="ar" dir="rtl">{profile.legalNameAr || '—'}</p></div>
     <h3>{t('Catalogue name', 'الاسم في الكتالوج')}</h3>
-    <div className="intake-pair"><p dir="ltr">{profile.nameEn || '—'}</p><p dir="rtl">{profile.nameAr || '—'}</p></div>
+    <div className="intake-pair"><p lang="en" dir="ltr">{profile.nameEn || '—'}</p><p lang="ar" dir="rtl">{profile.nameAr || '—'}</p></div>
     {profile.translationHelp && <p>{t('Translation support requested.', 'طُلبت مساعدة الترجمة.')}</p>}
     <p className="intake-prewrap">{profile.bio}</p>
     <h3>{t('Contact and representation', 'التواصل والتمثيل')}</h3>
@@ -33,12 +33,12 @@ function RegistrationReview() {
     <p>{profile.contactName} <bdi>{profile.contactEmail}</bdi></p>
     <h3>{t('Attached documents', 'المستندات المرفقة')}</h3>
     <ul>{assets.filter(a => a.slot === 'cv' || a.slot === 'portfolio').map(a => <li key={a.id}><bdi>{a.name}</bdi> · {a.slot === 'cv' ? t('CV', 'السيرة الذاتية') : t('Portfolio', 'ملف الأعمال')}</li>)}</ul>
-    {!assets.some(a => a.slot === 'cv' || a.slot === 'portfolio') && <p>{t('No optional PDFs attached.', 'لم تُرفق ملفات PDF الاختيارية.')}</p>}
+    {!assets.some(a => a.slot === 'cv' || a.slot === 'portfolio') && <p>{t('No optional PDFs attached.', 'لم تُرفق أي ملفات PDF اختيارية.')}</p>}
   </div>;
 }
 
 function RegistrationForm({ onProposal }: { onProposal: () => void }) {
-  const { isAr } = useI18n(); const t = (en: string, ar: string) => isAr ? ar : en;
+  const { isAr, formatNumber } = useI18n(); const t = (en: string, ar: string) => isAr ? ar : en;
   const { form, registerRoster, roster, submissions } = useArtistIntake(); const { navigate } = useNavigation();
   const [step, setStep] = useState(0); const [issues, setIssues] = useState<IntakeIssue[]>([]);
   const [confirmed, setConfirmed] = useState(false); const [receipt, setReceipt] = useState(false);
@@ -61,7 +61,7 @@ function RegistrationForm({ onProposal }: { onProposal: () => void }) {
   </section>;
   return <>
     <IntakeDraftBackup visible/>
-    <nav className="intake-steps roster-steps" aria-label={t('Roster registration steps', 'خطوات التسجيل في سجل الفنانين')}>{stages.map((label, index) => <button key={index} aria-current={step === index ? 'step' : undefined} onClick={() => advance(index)}><b>{index + 1}</b>{label}</button>)}</nav>
+    <nav className="intake-steps roster-steps" aria-label={t('Roster registration steps', 'خطوات التسجيل في سجل الفنانين')}>{stages.map((label, index) => <button key={index} aria-current={step === index ? 'step' : undefined} onClick={() => advance(index)}><b>{formatNumber(index + 1)}</b>{label}</button>)}</nav>
     <section className="lr-panel intake-card">
       <h2 ref={heading} tabIndex={-1}>{stages[step]}</h2>
       {!!issues.length && <div className="intake-errors" role="alert" tabIndex={-1} ref={errors}><strong>{t('Your draft is still here. Check these fields:', 'مسودتك ما زالت هنا. تحقق من الحقول التالية:')}</strong><ul>{issues.map(issue => <li key={issue.path + issue.en}><button onClick={() => {
@@ -76,7 +76,7 @@ function RegistrationForm({ onProposal }: { onProposal: () => void }) {
           <div className="intake-pair"><Field name="profile.legalNameEn" en="Legal name · English" ar="الاسم القانوني · الإنجليزية" dir="ltr"/><Field name="profile.legalNameAr" en="Legal name · Arabic" ar="الاسم القانوني · العربية" dir="rtl"/></div>
           <h3 className="roster-section-title">{t('Name for catalogues and wall labels', 'الاسم للكتالوجات وبطاقات العرض')}</h3>
           <div className="intake-pair"><Field name="profile.nameEn" en="Catalogue name · English" ar="الاسم في الكتالوج · الإنجليزية" dir="ltr"/><Field name="profile.nameAr" en="Catalogue name · Arabic" ar="الاسم في الكتالوج · العربية" dir="rtl"/></div>
-          <label className="lr-checkbox"><input type="checkbox" {...form.register('profile.translationHelp')}/>{t('I need help preparing the other language.', 'أحتاج إلى مساعدة لإعداد اللغة الأخرى.')}</label>
+          <label className="lr-checkbox"><input type="checkbox" {...form.register('profile.translationHelp')}/>{t('I need help preparing the other language.', 'أحتاج إلى مساعدة في إعداد النص باللغة الأخرى.')}</label>
           <Field name="profile.bio" en="Short biography (optional)" ar="نبذة قصيرة (اختياري)" multiline maxLength={2000}/>
           <div className="intake-pair"><Field name="profile.country" en="Studio country (optional)" ar="دولة الاستوديو (اختياري)"/><Field name="profile.city" en="Studio city (optional)" ar="مدينة الاستوديو (اختياري)"/></div>
           <Field name="profile.email" en="Sample contact email" ar="بريد التواصل التجريبي" dir="ltr" type="email"/>

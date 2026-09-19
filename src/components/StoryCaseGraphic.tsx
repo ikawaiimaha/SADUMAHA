@@ -4,7 +4,7 @@ import { useLivingRecord } from '../context/LivingRecordContext';
 import { CASE_ID, selectLivingRecord } from '../data/livingRecord';
 
 export function StoryCaseGraphic({ chapter }: { chapter: number }) {
-  const { isAr, formatNumber } = useI18n();
+  const { isAr, formatNumber, formatPercent } = useI18n();
   const { state } = useLivingRecord();
   const metrics = selectLivingRecord(state);
   const t = (en: string, ar: string) => isAr ? ar : en;
@@ -13,7 +13,7 @@ export function StoryCaseGraphic({ chapter }: { chapter: number }) {
     <strong>{chapter === 7 ? t('SDC internal operations', 'العمليات الداخلية لدائرة الثقافة') : t('Mounir Fatmi · Crate 4', 'منير فاطمي · الصندوق ٤')}</strong><bdi>{chapter === 7 ? `${CASE_ID} · DEMO-PUB-01` : CASE_ID}</bdi>
     {chapter === 7 ? <div className="story-case-metrics">
       <div><strong>{metrics.custodyReady ? t('Clear', 'مكتمل') : t('Pending', 'معلق')}</strong><span>{t('Sample delivery', 'التسليم التجريبي')}</span></div>
-      <div><strong>{formatNumber(metrics.evidencePercent)}%</strong><span>{t('Evidence present', 'اكتمال الأدلة')}</span></div>
+      <div><strong>{formatPercent(metrics.evidencePercent)}</strong><span>{t('Evidence present', 'اكتمال الأدلة')}</span></div>
       <div><strong>{formatNumber(metrics.executiveQueue)}</strong><span>{t('Executive reviews', 'مراجعات تنفيذية')}</span></div>
     </div> : <ol className="story-case-flow">
       {[

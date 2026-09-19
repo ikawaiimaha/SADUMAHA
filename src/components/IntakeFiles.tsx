@@ -4,13 +4,13 @@ import { useI18n } from '../context/I18nContext';
 import { IntakeAsset } from '../data/artistIntake';
 
 export function IntakeFiles({ slot, disabled = false }: { slot: IntakeAsset['slot']; disabled?: boolean }) {
-  const { assets, addAsset, removeAsset } = useArtistIntake(); const { isAr } = useI18n();
+  const { assets, addAsset, removeAsset } = useArtistIntake(); const { isAr, formatNumber } = useI18n();
   const t = (en: string, ar: string) => isAr ? ar : en; const [error, setError] = useState(''); const [busy, setBusy] = useState(false); const [drag, setDrag] = useState(false);
   const busyRef = useRef(false); const selected = assets.filter(a => a.slot === slot); const pdfOnly = slot === 'cv' || slot === 'portfolio'; const limit = pdfOnly ? 1 : 5;
   const choose = async (files: File[]) => {
     if (disabled || busyRef.current) return; busyRef.current = true; setBusy(true); setError('');
     try {
-      if (selected.length + files.length > limit || files.length === 0) throw new Error(t(`Choose at most ${limit} file(s) for this section.`, `اختر ${limit} ملفاً كحد أقصى لهذا القسم.`));
+      if (selected.length + files.length > limit || files.length === 0) throw new Error(t(`Choose at most ${limit} file(s) for this section.`, `الحد الأقصى لعدد الملفات في هذا القسم: ${formatNumber(limit)}.`));
       if (selected.reduce((sum, a) => sum + a.size, 0) + files.reduce((sum, f) => sum + f.size, 0) > 40 * 1024 * 1024) throw new Error(t('Keep this section under 40 MB.', 'اجعل حجم هذا القسم أقل من ٤٠ ميغابايت.'));
       // Validate the entire batch before adding it. Picker filters alone do not validate files.
       for (const file of files) {
@@ -27,11 +27,11 @@ export function IntakeFiles({ slot, disabled = false }: { slot: IntakeAsset['slo
   return <div className="intake-files">
     <label className={`intake-drop ${drag ? 'is-dragging' : ''}`} onDragOver={e => { e.preventDefault(); setDrag(true); }} onDragLeave={() => setDrag(false)} onDrop={e => { e.preventDefault(); setDrag(false); void choose(Array.from(e.dataTransfer.files)); }}>
       <strong>{slot === 'cv' ? t('Optional institutional CV · PDF', 'سيرة ذاتية اختيارية للسجل · PDF') : slot === 'portfolio' ? t('Optional general portfolio · PDF', 'ملف أعمال عام اختياري · PDF') : t('Optional concept images or documents', 'صور الفكرة أو مستنداتها الاختيارية')}</strong>
-      <span>{t(`Drop files here or choose files. Up to ${limit}; 10 MB each.`, `أسقط الملفات هنا أو اخترها. الحد ${limit} ملفات؛ ١٠ ميغابايت لكل ملف.`)}</span>
+      <span>{t(`Drop files here or choose files. Up to ${limit}; 10 MB each.`, `اسحب الملفات إلى هنا أو اخترها. الحد الأقصى لعدد الملفات: ${formatNumber(limit)}؛ والحجم: ١٠ ميغابايت لكل ملف.`)}</span>
       <input aria-label={slot === 'cv' ? t('Choose sample CV', 'اختيار سيرة تجريبية') : slot === 'portfolio' ? t('Choose sample portfolio PDF', 'اختيار ملف أعمال تجريبي PDF') : t('Choose proposal files', 'اختيار ملفات المقترح')} type="file" disabled={disabled || busy} multiple={!pdfOnly} accept={pdfOnly ? 'application/pdf' : 'application/pdf,image/jpeg,image/png'} onChange={e => { void choose(Array.from(e.target.files ?? [])); e.target.value = ''; }}/>
     </label>
     <p className="lr-small">{t('Local preview only; files are not uploaded or recovered after reload. Original filenames are retained. A portfolio link or written description can be used instead.', 'معاينة محلية فقط؛ لا تُرفع الملفات ولا تُستعاد بعد تحديث الصفحة. تُحفظ أسماؤها الأصلية. يمكن استخدام رابط أعمال أو وصف كتابي بدلاً منها.')}</p>
     {busy && <p role="status">{t('Checking file format…', 'جارٍ فحص صيغة الملف…')}</p>}{error && <p role="alert" className="lr-issue">{error}</p>}
-    <ul>{selected.map(file => <li key={file.id}><span><bdi>{file.name}</bdi> · {(file.size / 1024 / 1024).toFixed(1)} MB</span><button type="button" onClick={() => removeAsset(file.id)} aria-label={t('Remove ', 'إزالة ') + file.name}>{t('Remove from draft', 'إزالة من المسودة')}</button></li>)}</ul>
+    <ul>{selected.map(file => <li key={file.id}><span><bdi>{file.name}</bdi> · {formatNumber(file.size / 1024 / 1024, { maximumFractionDigits: 1 })} {t('MB', 'ميغابايت')}</span><button type="button" onClick={() => removeAsset(file.id)} aria-label={t('Remove ', 'إزالة ') + file.name}>{t('Remove from draft', 'إزالة من المسودة')}</button></li>)}</ul>
   </div>;
 }

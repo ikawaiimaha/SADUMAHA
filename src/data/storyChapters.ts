@@ -20,7 +20,7 @@ export const storyChapters = [
     subtitleEn: 'Accountability and Decisions', subtitleAr: 'المساءلة والقرارات',
     leadershipRank: 'chairman' as const,
     contentEn: 'The Chairman’s proposed brief focuses on SDC: readiness across directorates, publication cycles, and executive review. It connects internal delivery reports to the decisions requiring attention, with evidence and the applicable authority route.',
-    contentAr: 'يركز موجز رئيس الدائرة المقترح على جاهزية إدارات دائرة الثقافة ودورات النشر والمراجعة التنفيذية. ويربط تقارير الإنجاز الداخلية بالقرارات التي تتطلب المتابعة وأدلتها ومسار الصلاحية المنطبق.',
+    contentAr: 'يركز موجز رئيس الدائرة المقترح على جاهزية إدارات دائرة الثقافة ودورات النشر والمراجعة التنفيذية. ويربط تقارير الإنجاز الداخلية بالقرارات التي تتطلب المتابعة، والأدلة الداعمة لها، ومسار التفويض الخاص بكل قرار.',
     highlightBoxEn: 'Executive review is visible. Approval still requires a documented delegation.',
     highlightBoxAr: 'المراجعة التنفيذية واضحة، ويظل الاعتماد مرهوناً بتفويض موثق.'
   },
@@ -31,7 +31,7 @@ export const storyChapters = [
     subtitleEn: 'Cultural Programmes, Delivery and Oversight', subtitleAr: 'البرامج الثقافية والإنجاز والمتابعة',
     leadershipRank: 'director' as const,
     contentEn: 'Across awards, cultural programmes, and publishing, the Director follows manager reports, milestones, and escalated risks. The proposed overview distinguishes programme references from reported delivery.',
-    contentAr: 'تجمع النظرة المقترحة الجوائز والبرامج الثقافية والنشر. ويتابع مدير الإدارة تقارير المديرين والمراحل والمخاطر المصعّدة، مع التمييز بين مراجع البرامج المنشورة وتقارير الإنجاز.',
+    contentAr: 'يجمع العرض المقترح الجوائز والبرامج الثقافية والنشر. ويتابع مدير الإدارة تقارير المديرين ومراحل الإنجاز والمخاطر المحالة إليه، مع التمييز بين المراجع المنشورة عن البرامج وتقارير تنفيذها.',
     highlightBoxEn: 'Managers own day-to-day delivery and handovers. The Director oversees outcomes, schedules, and cross-department priorities.',
     highlightBoxAr: 'يتولى المديرون التنفيذ اليومي والتسليم. ويتابع مدير الإدارة النتائج والجداول والأولويات بين الأقسام.'
   },
@@ -58,7 +58,7 @@ export const storyChapters = [
   },
   {
     id: 'handover', icon: GitBranch, titleEn: 'Review First. Confirm Deliberately.', titleAr: 'المراجعة أولاً ثم التأكيد الصريح',
-    subtitleEn: 'A two-step acknowledgement preserves the reviewed version.', subtitleAr: 'تأكيد من خطوتين يحفظ مرجع الإصدار المراجع.',
+    subtitleEn: 'A two-step acknowledgement preserves the reviewed version.', subtitleAr: 'تأكيد من خطوتين يحفظ مرجع الإصدار الذي خضع للمراجعة.',
     contentEn: 'In the manager workspace, Review Handover opens the asset dossier and condition evidence. An explicit acknowledgement is required before confirmation. The demo records the sample manager, time, and report version, then makes that handover read-only.',
     contentAr: 'في مساحة المدير، تفتح مراجعة التسليم ملف الأصل وأدلة حالته. ويلزم إقرار صريح قبل التأكيد. يسجل النموذج المدير التجريبي والوقت وإصدار التقرير، ثم يصبح التسليم للقراءة فقط.',
     highlightBoxEn: 'This is a demonstration acknowledgement, not a digital signature or legal custody instrument.', highlightBoxAr: 'هذا تأكيد تجريبي، وليس توقيعاً رقمياً أو سند حيازة قانونية.'
@@ -67,14 +67,14 @@ export const storyChapters = [
     id: 'roll-up', icon: Award, titleEn: 'Operational Evidence, Executive Clarity', titleAr: 'أدلة تشغيلية ورؤية تنفيذية واضحة',
     subtitleEn: 'Management by exception, calculated from the shared record.', subtitleAr: 'متابعة الاستثناءات انطلاقاً من السجل المشترك.',
     contentEn: 'A manager’s completed handover clears its exhibition delivery risk. In the publishing example, a proof reaches executive review only after manager checks and a proposed routing reference. Each result updates the Chairman’s SDC brief.',
-    contentAr: 'يزيل التسليم الذي يكمله المدير مخاطر تنفيذ المعرض المرتبطة به. وفي مثال النشر، تصل البروفة للمراجعة التنفيذية بعد تحققات المدير ومرجع الإحالة المقترح فقط. وتحدّث النتائج موجز رئيس الدائرة.',
+    contentAr: 'يزيل التسليم الذي يكمله المدير مخاطر تنفيذ المعرض المرتبطة به. وفي مثال النشر، لا تصل بروفة الطباعة إلى المراجعة التنفيذية إلا بعد استكمال مراجعات المدير وتسجيل مرجع الإحالة المقترح. وتنعكس النتائج على موجز رئيس الدائرة.',
     highlightBoxEn: 'Operational readiness remains separate from opening, payment, and signing authorization.', highlightBoxAr: 'تبقى الجاهزية التشغيلية منفصلة عن إذن الافتتاح والدفع والتوقيع.'
   },
   {
     id: 'explore-next', icon: Users, titleEn: 'Follow the Record Across Roles', titleAr: 'تابع السجل عبر الأدوار',
     subtitleEn: 'Oversight follows outcomes. Managers and teams deliver the work.', subtitleAr: 'تتابع القيادة النتائج، وينفذ المديرون والفرق العمل.',
     contentEn: 'Follow an exhibition handover or a print proof from its assigned team to the appropriate review. Artist intake offers a separate path: one profile, a proposal for each programme, and coordinator feedback before any selection decision.',
-    contentAr: 'تابع تسليم المعرض أو بروفة الطباعة من الفريق المكلف إلى المراجعة المناسبة. ويوفر تقديم الفنان مساراً مستقلاً: ملف واحد ومقترح لكل برنامج وملاحظات المنسق قبل أي قرار اختيار.',
+    contentAr: 'تابع تسليم المعرض أو بروفة الطباعة من الفريق المكلف إلى المراجعة المناسبة. ويوفر مسار تقديم الفنان طلبه خطوات مستقلة: ملف واحد ومقترح لكل برنامج وملاحظات المنسق قبل أي قرار اختيار.',
     highlightBoxEn: 'Connected sample roles include leadership, delivery, publishing, coordination, and finance. All decisions remain demonstrations.', highlightBoxAr: 'تشمل الأدوار التجريبية المترابطة القيادة والتنفيذ والنشر والتنسيق والمالية. وتبقى جميع القرارات توضيحية.'
   }
 ];

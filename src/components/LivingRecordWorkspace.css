@@ -63,8 +63,8 @@
 .lr-confirmed { display:flex; flex-wrap:wrap; align-items:center; gap:6px; font-size:12px; padding:12px; margin-top:15px; border-radius:5px; }
 .lr-confirmed svg { width:16px; height:16px; }
 .lr-form,.lr-actions { display:flex; flex-wrap:wrap; gap:16px; align-items:end; margin-top:16px; }
-.lr-form label { display:flex; flex-direction:column; gap:6px; font-size:13px; }
-.lr-form input:not([type=checkbox]),.lr-form select { padding:9px 12px; border:1px solid #c9b8a4; border-radius:4px; min-height:44px; background:white; max-width:100%; }
+.lr-form label { display:flex; flex-direction:column; gap:6px; font-size:13px; min-width:0; max-width:100%; }
+.lr-form input:not([type=checkbox]),.lr-form select { padding:9px 12px; border:1px solid #c9b8a4; border-radius:4px; min-height:44px; background:white; min-width:0; max-width:100%; }
 .living-record .lr-checkbox { display:flex; flex-direction:row; gap:10px; align-items:start; font-size:13px; max-width:450px; }
 .lr-checkbox input { width:18px; height:18px; margin-top:3px; flex-shrink:0; accent-color:var(--lr-burgundy); }
 .lr-exceptions { display:grid; grid-template-columns:1fr 1fr; gap:24px; }

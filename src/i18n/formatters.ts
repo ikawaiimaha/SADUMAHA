@@ -1,8 +1,8 @@
 import { Language } from '../types';
 
 /**
- * Standardized institutional formatting functions for SADU
- * Consistent with Sharjah Department of Culture administrative decree standards
+ * Display formatting functions for the SADU demonstration.
+ * Numeral choices are design conventions, not a statement of official standards.
  * Supporting both Western Arabic (1, 2, 3...) and Eastern Arabic (١، ٢، ٣...)
  * numerals based on the current lang setting.
  */
@@ -187,7 +187,7 @@ export function formatCurrency(
 }
 
 /**
- * Format date in official institutional style with localized numerals:
+ * Format a date for the demonstration with localized numerals:
  * e.g. "12 September 2026" / "١٢ سبتمبر ٢٠٢٦"
  */
 export function formatDate(dateInput: string | Date, lang?: Language): string {

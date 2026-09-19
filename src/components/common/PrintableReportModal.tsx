@@ -46,6 +46,14 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
 
   const [refCode] = React.useState(() => `DEMO-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`);
   const isBaseline = metadata.scopeMode === 'unfiltered-sample';
+  const arabicLabels: Record<string, string> = {
+    coordinator: 'التنسيق', leadership: 'القيادة', operations: 'العمليات',
+    all: 'جميع الحالات', 'at-risk': 'معرض للمخاطر', completed: 'مكتمل', committed: 'التزامات مسجلة',
+    planning: 'التخطيط', production: 'الإنتاج', installed: 'اكتمل التركيب', concluded: 'اختُتم',
+    pending: 'معلق', resolved: 'عولج', escalated: 'محال إلى مستوى أعلى',
+    pristine: 'سليم', discrepancy_reported: 'اختلاف مسجل',
+  };
+  const displayLabel = (value: string) => isAr ? (arabicLabels[value] ?? value) : value;
   const baselineTitle = isAr ? 'تقرير العمليات الشامل (غير مفلتر)' : 'Global Operations Report (Unfiltered)';
   const needsPrint = isAr || requiresBrowserPrint(metadata, metrics, records);
   if (!isOpen) return null;
@@ -61,7 +69,7 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
     window.print();
   };
 
-  const currentDateStr = new Date().toLocaleDateString(isAr ? 'ar-SA' : 'en-US', {
+  const currentDateStr = new Date().toLocaleDateString(isAr ? 'ar-AE-u-ca-gregory-nu-arab' : 'en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -78,7 +86,7 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
         className="bg-sadu-linen border border-sadu-gold rounded-xl shadow-2xl w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden text-sadu-charcoal animate-in fade-in zoom-in-95 duration-150"
       >
         {/* Modal Action Header (Excluded from Print) */}
-        <div className="px-5 py-3.5 bg-sadu-sand border-b border-sadu-gold/60 flex items-center justify-between gap-3 shrink-0 print:hidden">
+        <div className="px-5 py-3.5 bg-sadu-sand border-b border-sadu-gold/60 flex flex-wrap items-center justify-between gap-3 shrink-0 print:hidden">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-md bg-sadu-ink text-white flex items-center justify-center shadow-xs">
               <FileDown className="w-4 h-4 text-sadu-gold" />
@@ -88,12 +96,12 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
                 {isBaseline ? baselineTitle : (isAr ? 'تقرير المؤشرات المؤسسي القابل للطباعة والتحميل' : 'Institutional KPI Audit Report & Print Document')}
               </h2>
               <p className="text-[11px] text-sadu-muted">
-                {isBaseline ? (isAr ? 'بيانات تجريبية ثابتة النطاق؛ حالات مؤقتة' : 'Fixed sample dataset; temporary session states') : (isAr ? `تقرير تجريبي غير معتمد (${records.length} سجلاً وفق التصفية الحالية)` : `Unapproved sample report (${records.length} records matching current filter)`)}
+                {isBaseline ? (isAr ? 'بيانات تجريبية ثابتة النطاق؛ حالات مؤقتة' : 'Fixed sample dataset; temporary session states') : (isAr ? `تقرير تجريبي غير معتمد — عدد السجلات وفق التصفية الحالية: ${i18n.formatNumber(records.length)}` : `Unapproved sample report (${records.length} records matching current filter)`)}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {downloadSuccess && (
               <span className="hidden sm:inline-flex items-center gap-1 text-xs font-semibold text-sadu-sage bg-sadu-sage-light px-2.5 py-1 rounded">
                 <Check className="w-3.5 h-3.5" />
@@ -104,7 +112,7 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
             <button
               onClick={handleDownloadPdf}
               className="px-3.5 py-2 text-xs font-bold rounded-md bg-sadu-brick text-white hover:bg-sadu-brick-dark transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
-              title="Download institutional vector PDF"
+              title={isAr ? 'طباعة التقرير أو حفظه بصيغة PDF' : 'Download or print report'}
             >
               <FileDown className="w-4 h-4" />
               <span>{needsPrint ? (isAr ? 'طباعة أو حفظ PDF' : 'Print / Save PDF') : 'Download PDF'}</span>
@@ -113,7 +121,7 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
             <button
               onClick={handleBrowserPrint}
               className="px-3 py-2 text-xs font-bold rounded-md bg-sadu-ink text-white hover:bg-sadu-ink-dark transition-colors flex items-center gap-1.5 cursor-pointer"
-              title="Print document or save using browser dialog"
+              title={isAr ? 'طباعة المستند أو حفظه من نافذة المتصفح' : 'Print document or save using browser dialog'}
             >
               <Printer className="w-4 h-4 text-sadu-gold" />
               <span>{isAr ? 'طباعة المستند' : 'Print View'}</span>
@@ -173,7 +181,7 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
                   {isAr ? 'نطاق مساحة العمل' : 'Workspace Domain'}
                 </span>
                 <span className="font-bold text-sadu-charcoal capitalize">
-                  {isBaseline ? (isAr ? 'عمليات تجريبية' : 'Sample operations') : `${metadata.workspaceType} Console`}
+                  {isBaseline ? (isAr ? 'عمليات تجريبية' : 'Sample operations') : (isAr ? `مساحة ${displayLabel(metadata.workspaceType)}` : `${metadata.workspaceType} Console`)}
                 </span>
               </div>
 
@@ -183,7 +191,7 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
                 </span>
                 <span className="font-bold text-sadu-brick capitalize flex items-center gap-1">
                   <Filter className="w-3 h-3" />
-                  {isBaseline ? (isAr ? 'جميع سجلات السيناريو' : 'All scenario records') : metadata.statusFilter}
+                  {isBaseline ? (isAr ? 'جميع سجلات السيناريو' : 'All scenario records') : displayLabel(metadata.statusFilter)}
                 </span>
               </div>
 
@@ -192,7 +200,7 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
                   {isAr ? 'إجمالي السجلات المطابقة' : 'Records In Audit Scope'}
                 </span>
                 <span className="font-bold text-sadu-charcoal font-mono">
-                  {i18n.formatNumber(records.length)} {isBaseline ? (isAr ? 'سجلات تجريبية' : 'sample records') : (isAr ? 'بنداً موثقاً' : 'Audited Items')}
+                  {isAr ? `عدد السجلات${isBaseline ? ' التجريبية' : ''}: ${i18n.formatNumber(records.length)}` : `${records.length} ${isBaseline ? 'sample records' : 'sample items'}`}
                 </span>
               </div>
             </div>
@@ -230,11 +238,11 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
                   {isBaseline ? (isAr ? 'جميع السجلات التجريبية (غير مفلترة)' : 'All sample records (unfiltered)') : (isAr ? 'بيانات السجلات المندرجة ضمن نطاق التصفية' : 'Itemized Scope Records (Current Filtered View)')}
                 </h3>
                 <span className="text-[11px] text-sadu-muted font-mono">
-                  {records.length} {isAr ? 'سجل' : 'Items'}
+                  {isAr ? `عدد السجلات: ${i18n.formatNumber(records.length)}` : `${records.length} items`}
                 </span>
               </div>
 
-              <div className="border border-sadu-gold/60 rounded-md overflow-hidden text-xs">
+              <div className="border border-sadu-gold/60 rounded-md overflow-x-auto text-xs">
                 <table className="w-full text-start border-collapse">
                   <thead>
                     <tr className="bg-sadu-sand text-[11px] font-bold text-sadu-charcoal border-b border-sadu-gold/60">
@@ -263,7 +271,7 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
                                 ? 'bg-sadu-sage-light text-sadu-ink border border-sadu-sage/50'
                                 : 'bg-sadu-sand text-sadu-charcoal border border-sadu-gold/50'
                             }`}>
-                              {r.status}
+                              {displayLabel(r.status)}
                             </span>
                           </td>
                         </tr>

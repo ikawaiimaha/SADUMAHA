@@ -369,7 +369,7 @@ export const OperationsView: React.FC<OperationsViewProps> = (props) => {
                   </div>
                 </div>
                 <span className="text-[10px] font-mono font-bold">
-                  {Object.values(prFlags).filter(Boolean).length}/7
+                  {formatRatio(Object.values(prFlags).filter(Boolean).length, 7)}
                 </span>
               </div>
 

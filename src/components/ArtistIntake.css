@@ -15,6 +15,7 @@
 .intake-steps b { font-variant-numeric:tabular-nums; color:#8b3a1f; }
 .intake-steps button[aria-current] { border-color:#652f3c; background:#652f3c; color:#fff; }
 .intake-steps button[aria-current] b { color:#fff; }
+.living-record .intake-steps button[aria-current]:hover { background:#502330; color:#fff; }
 .intake-form-body { border:0; padding:0; margin:0; min-width:0; }
 .intake-form-body:disabled { opacity:.7; }
 .intake-pair,.intake-budget { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
@@ -27,10 +28,10 @@
 .intake-radio { display:flex; flex-wrap:wrap; gap:20px; padding:0; border:0; margin:20px 0; }
 .intake-radio legend { margin-bottom:12px; font-weight:600; }
 .intake-radio label { display:flex; gap:8px; align-items:center; }
-.intake-drop { display:grid; gap:12px; border:2px dashed #b9aa96; padding:24px; cursor:pointer; margin:20px 0 8px; }
+.intake-drop { display:grid; min-width:0; gap:12px; border:2px dashed #b9aa96; padding:24px; cursor:pointer; margin:20px 0 8px; }
 .intake-drop.is-dragging { background:#f3e7c9; border-color:#8b3a1f; }
 .intake-drop span { font-size:13px; }
-.intake-drop input { max-width:100%; font-size:14px; }
+.intake-drop input { min-width:0; width:100%; max-width:100%; font-size:14px; }
 .intake-files ul { list-style:none; padding:0; }
 .intake-files li { display:flex; justify-content:space-between; align-items:center; gap:16px; padding:10px 0; border-bottom:1px solid #e8ded0; }
 .intake-files li span { overflow-wrap:anywhere; }

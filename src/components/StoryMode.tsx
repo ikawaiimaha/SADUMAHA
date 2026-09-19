@@ -206,7 +206,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
                     { role: 'DIRECTORATE' as RoleKey, labelEn: 'Start with the Chairman’s brief', labelAr: 'ابدأ بموجز رئيس الدائرة' },
                     { role: 'DIRECTORATE' as RoleKey, view: 'DIRECTORATE' as const, labelEn: 'Directorate · Department oversight', labelAr: 'الإدارة · متابعة الأقسام' },
                     { role: 'DIRECTORATE' as RoleKey, view: 'MANAGER' as const, labelEn: 'Exhibition manager · Delivery', labelAr: 'مدير المعارض · التنفيذ' },
-                    { role: 'SDC_COORDINATOR' as RoleKey, labelEn: 'SDC Coordinator', labelAr: 'منسق عام المهرجانات (SDC)' },
+                    { role: 'SDC_COORDINATOR' as RoleKey, labelEn: 'SDC Coordinator', labelAr: 'منسق دائرة الثقافة' },
                     { role: 'COMMITTEE' as RoleKey, labelEn: 'Curatorial Jury', labelAr: 'لجنة الاختيار والتحكيم' },
                     { role: 'EDITORIAL' as RoleKey, labelEn: 'Publishing manager · Proof review', labelAr: 'مدير النشر · مراجعة البروفة' },
                     { role: 'SAF_TECHNICIAN' as RoleKey, labelEn: 'Technical Production', labelAr: 'فريق الإنتاج الفني' },
@@ -214,7 +214,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
                     { role: 'PR_PROTOCOL' as RoleKey, labelEn: 'PR & Diplomacy', labelAr: 'المراسم والبروتوكول' },
                     { role: 'FINANCE' as RoleKey, labelEn: 'Finance & LPOs', labelAr: 'المالية والمشتريات' },
                     { role: 'LOGISTICS' as RoleKey, labelEn: 'Fine Art Logistics', labelAr: 'الشحن واللوجستيات' },
-                    { role: 'ARTIST' as RoleKey, labelEn: 'Artist intake', labelAr: 'تقديم الفنان' },
+                    { role: 'ARTIST' as RoleKey, labelEn: 'Artist intake', labelAr: 'طلبات الفنانين' },
                   ].map((item) => (
                     <button
                       key={item.view ?? item.labelEn}
