@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
-    "test:demo": "node --import tsx --test tests/livingRecord.test.ts tests/artistIntake.test.ts tests/intakeWorkflow.test.ts",
+    "test:demo": "node --import tsx --test tests/livingRecord.test.ts tests/artistIntake.test.ts tests/intakeWorkflow.test.ts tests/bilingualTimeline.test.tsx",
     "test:e2e": "playwright test",
     "test:guards": "node --import tsx --test tests/demoBoundaries.test.ts"
   },

@@ -206,7 +206,12 @@
 @media (min-width: 768px) and (max-height: 800px) {
   .story-card { padding:20px; }
   .story-heading { min-height:80px; margin-bottom:12px; }
-  .story-card--portrait { padding:20px; gap:12px 24px; }
+  .story-card--portrait { padding:20px; gap:10px 24px; }
+  .story-card--portrait .story-heading { min-height:0; padding-block-end:8px; }
+  .story-card--lead .aegov-quote { padding-block:6px; }
+  .story-card--lead .aegov-quote>p { font-size:20px; line-height:1.45; }
+  .story-card--lead .quote-footer,
+  .story-card--lead .executive-quote__context { margin-block-start:8px; }
   .story-figure { gap:12px; }
   .story-caption { padding-block:8px; }
 }

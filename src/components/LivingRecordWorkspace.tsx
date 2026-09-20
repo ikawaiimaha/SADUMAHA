@@ -1,4 +1,5 @@
 import { ProposalDeliveries, ProposalSelection } from './ProposalDelivery';
+import { BilingualTimeline } from './common/BilingualTimeline';
 import { ClaimProvenance } from './ClaimProvenance';
 import { PortraitHierarchy } from './PortraitHierarchy';
 import React, { useEffect, useRef, useState } from 'react';
@@ -178,17 +179,7 @@ export function LivingRecordWorkspace() {
         <details className="lr-panel lr-log"><summary>{t('Session activity log', 'سجل نشاط الجلسة')} · {formatNumber(state.events.length)}</summary>
           <p className="lr-small">{t('Sample roles and browser timestamps, shown in UAE time. Refreshing or resetting clears this history. It is not an authenticated, permanent, or tamper-protected audit record.', 'أدوار تجريبية وتوقيت المتصفح، معروض بتوقيت الإمارات. يُمسح السجل عند تحديث الصفحة أو إعادة التجربة. ليس سجل تدقيق موثّقاً أو دائماً أو محمياً من التعديل.')}</p>
           <div className="lr-actions"><button disabled={!state.events.length} onClick={exportSessionLog}>{t('Download session log (JSON)', 'تنزيل سجل الجلسة (JSON)')}</button></div>
-          {state.events.length > 0 && <p className="lr-small lr-log-scroll-hint">{t('Scroll the table sideways to view all four columns.', 'مرّر الجدول أفقياً لعرض الأعمدة الأربعة.')}</p>}
-          {state.events.length ? <div className="lr-table-wrap" role="region" aria-label={t('Session activity table', 'جدول نشاط الجلسة')} tabIndex={0}><table className="lr-log-table">
-            <caption>{t('Recorded demo transitions; navigation and rejected actions are not logged.', 'انتقالات الحالة التجريبية المسجلة؛ لا يُسجل التنقل أو الإجراءات المرفوضة.')}</caption>
-            <thead><tr><th scope="col">{t('Event / time', 'الحدث / الوقت')}</th><th scope="col">{t('Action', 'الإجراء')}</th><th scope="col">{t('Sample role', 'الدور التجريبي')}</th><th scope="col">{t('Record / version reference', 'مرجع السجل / الإصدار')}</th></tr></thead>
-            <tbody>{state.events.map(event => <tr key={event.id}>
-              <th scope="row"><bdi>{event.id}</bdi><time dateTime={event.at}>{time(event.at)}</time></th>
-              <td>{eventLabels[event.kind][isAr ? 1 : 0]}<bdi>{event.kind}</bdi></td>
-              <td>{roleLabel(event.actor)}<bdi>DEMO-{event.actor}</bdi></td>
-              <td><bdi>{event.reference}</bdi></td>
-            </tr>)}</tbody>
-          </table></div> : <p>{t('No actions recorded in this session.', 'لم تُسجل إجراءات في هذه الجلسة.')}</p>}
+          <BilingualTimeline record={state} isArabic={isAr} eventLabel={event => eventLabels[event.kind][isAr ? 1 : 0]} roleLabel={roleLabel} formatTime={time}/>
         </details>
       </>}
       {actor === 'COORDINATOR' ? <section className="lr-panel"><h2>{t('Publishing handover · sample', 'تسليم النشر · تجريبي')}</h2><PublishingCase actor={actor}/></section> : null}

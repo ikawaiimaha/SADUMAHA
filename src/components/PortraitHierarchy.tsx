@@ -1,4 +1,5 @@
 import { useState, type CSSProperties } from 'react';
+import { UserRound } from 'lucide-react';
 import { hasPortraitEvidence, leadershipPeople, leadershipPortraits, portraitScale, type LeadershipRank } from '../data/leadershipMedia';
 import './PortraitHierarchy.css';
 import { ClaimProvenance } from './ClaimProvenance';
@@ -13,7 +14,11 @@ export function PortraitHierarchy({ rank, isAr, compact = false }: { rank: Leade
     <div className="portrait-hierarchy__frame">
       {available ? <img src={asset.src} alt={name} onError={() => setFailedSource(asset.src)} />
         : <div className="portrait-hierarchy__pending" role="img" aria-label={`${name} — ${isAr ? 'بانتظار صورة معتمدة' : 'Approved portrait pending'}`}>
-          <span>{isAr ? 'بانتظار صورة معتمدة' : 'Approved portrait pending'}</span>
+            <UserRound className="portrait-hierarchy__symbol" aria-hidden="true" strokeWidth={1.25}/>
+            <div className="portrait-hierarchy__label">
+              <span className="portrait-hierarchy__eyebrow">{isAr ? 'معاينة العرض' : 'Presentation preview'}</span>
+              <span>{isAr ? 'بانتظار صورة معتمدة' : 'Approved portrait pending'}</span>
+            </div>
         </div>}
     </div>
   </div>;
