@@ -86,13 +86,13 @@ export const RoleOnboarding: React.FC<RoleOnboardingProps> = ({
               {(role === 'LEADERSHIP' || role === 'DIRECTORATE') && (isAr ? 'مراجعة تقارير المديرين المؤرخة ومخاطر الجداول وتصعيدات البرامج.' : 'Review dated manager reports, schedule risks and portfolio escalations.')}
               {role === 'COMMITTEE' && (isAr ? 'الاطلاع على ملف مقترح الفنان يوسف نبهان وتقييم المسار الفني.' : 'Inspect Youssef Nabhan’s reading dossier and evaluate the designated cultural track.')}
               {role === 'ARTIST' && (isAr ? 'مراجعة النطاق الفني المعتمد وإرسال مخطط صفائح التثبيت إلى المنسق.' : 'Inspect approved scope items and acknowledge mounting bracket submission.')}
-              {(role === 'TECHNICAL' || role === 'SAF_TECHNICIAN') && (isAr ? 'إنشاء المخطط التنفيذي للعمل البرونزي وإرساله لهيئة المتاحف.' : 'Generate execution blueprint for the bronze artwork and route to SMA.')}
-              {(role === 'VENUE_ADMIN' || role === 'SMA_VENUE_ADMIN' || role === 'TECHNICAL_MUSEUM') && (isAr ? 'اعتماد المخططات الهندسية وإصدار تصاريح التثبيت بمتحف الشارقة للفنون.' : 'Approve engineering blueprints and issue installation permits for Sharjah Art Museum.')}
+              {(role === 'TECHNICAL' || role === 'SAF_TECHNICIAN') && (isAr ? 'مراجعة مخطط تجريبي؛ لا إرسال إلى جهة خارجية ولا اعتماد هندسياً.' : 'Review a sample blueprint; no external transmission or engineering approval.')}
+              {(role === 'VENUE_ADMIN' || role === 'SMA_VENUE_ADMIN' || role === 'TECHNICAL_MUSEUM') && (isAr ? 'تسجيل مراجعة موقع تجريبية محلياً؛ لا إصدار لتصريح أو اعتماد هندسي.' : 'Record a local sample venue review; no permit or engineering certification is issued.')}
               {role === 'FINANCE' && (isAr ? "راجع سيناريو مشتريات من ثلاثة عروض. لا يُصدر أمر شراء فعلي." : "Review a three-quote procurement scenario. No purchase order is issued.")}
               {(role === 'PR_VISA' || role === 'PR_PROTOCOL') && (isAr ? "استعرض مرجع السفر التجريبي والقائمة المقترحة من سبعة بنود." : "Explore the sample travel reference and proposed seven-point checklist.")}
-              {role === 'EDITORIAL' && (isAr ? 'اعتماد وتجميد النصوص العربية والإنجليزية الخاصة بكتالوج المعرض.' : 'Proof and lock bilingual texts for the official exhibition catalogue.')}
-              {role === 'LOGISTICS' && (isAr ? 'مراسلة الفنانين لتنسيق الشحن وإصدار طلبات عروض الأسعار (RFQ).' : 'Coordinate shipping with artists and issue formal Freight RFQs.')}
-              {role === 'ARCHIVE' && (isAr ? 'تدقيق محضر الإغلاق النهائي والتحقق من سلامة البصمة الرقمية للوثائق.' : 'Audit final closure manifest and verify zero unresolved return items.')}
+              {role === 'EDITORIAL' && (isAr ? 'مراجعة نصوص تجريبية باللغتين. تسجّل مساحة العمل مراجعة للجلسة، ولا تصدر اعتماداً للطباعة.' : 'Review bilingual sample text. The workspace records a session check, not printing authorization.')}
+              {role === 'LOGISTICS' && (isAr ? 'معاينة مراسلات وعروض نقل تجريبية؛ لا إصدار أو إرسال.' : 'Preview sample shipping correspondence and RFQs; nothing is issued or sent.')}
+              {role === 'ARCHIVE' && (isAr ? 'مراجعة بيان إغلاق تجريبي؛ لا فحص سلامة رقمية أو أرشفة دائمة.' : 'Review a sample closure manifest; no integrity check or durable archive.')}
             </p>
 
             <button

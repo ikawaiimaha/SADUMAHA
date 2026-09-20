@@ -364,7 +364,7 @@ export const OperationsView: React.FC<OperationsViewProps> = (props) => {
                       {isAr ? '1. حارس المراسم (PR Gate)' : '1. PR & Protocol Gate'}
                     </span>
                     <span className="text-[10px] text-sadu-muted block">
-                      {isPrProtocolReady ? (isAr ? 'معتمد وموثق' : 'Fully Cleared') : (isAr ? 'مانع تصنيع نشط' : 'Locking Fabrication')}
+                      {isPrProtocolReady ? (isAr ? 'اكتملت القائمة التجريبية' : 'Sample checklist complete') : (isAr ? 'مانع تصنيع نشط' : 'Locking Fabrication')}
                     </span>
                   </div>
                 </div>
@@ -484,7 +484,7 @@ export const OperationsView: React.FC<OperationsViewProps> = (props) => {
               <div className="flex items-center gap-3">
                 <div className="text-end">
                   <span className="text-[10px] text-sadu-muted block uppercase font-bold">
-                    {isAr ? 'الدرجة التشغيلية المعتمدة' : 'Effective Operational Score'}
+                    {isAr ? 'الدرجة التشغيلية التجريبية' : 'Sample operational score'}
                   </span>
                   <div className="flex items-baseline gap-1">
                     <span className={`text-2xl font-bold font-editorial ${anyRedFlagActive ? 'text-rose-600' : 'text-sadu-ink'}`}>
@@ -529,10 +529,10 @@ export const OperationsView: React.FC<OperationsViewProps> = (props) => {
                   />
                   <div>
                     <span className="font-bold block">
-                      {isAr ? 'تضخم مالي غير مبرر (+25%)' : 'Unverified Budget Inflation'}
+                      {isAr ? 'استثناء موازنة تجريبي' : 'Sample budget exception'}
                     </span>
                     <span className="text-[11px] text-sadu-muted leading-tight block mt-0.5">
-                      {isAr ? 'الميزانية المقدمة تتجاوز الأسعار المعيارية دون عروض أسعار موثقة' : 'Production cost exceeds benchmark by >25% without market quotes'}
+                      {isAr ? 'حد افتراضي: تجاوز المعيار التجريبي بأكثر من 25%؛ ليس سياسة مؤسسية' : 'Fictional threshold: cost exceeds sample benchmark by >25%; not institutional policy'}
                     </span>
                   </div>
                 </label>
@@ -823,7 +823,7 @@ export const OperationsView: React.FC<OperationsViewProps> = (props) => {
                   <span className="font-mono text-sadu-sage">
                     {isAr ? `القياس الميداني: ${formatNumber(48)} لوكس (مثالي)` : 'Telemetry: 48 Lux (Optimal)'}
                   </span>
-                  <span className="text-sadu-sage font-semibold">✓ Verified</span>
+                  <span className="text-sadu-sage font-semibold">{isAr ? '✓ فُحص مثال' : '✓ Sample checked'}</span>
                 </div>
               </div>
             </div>
@@ -850,7 +850,7 @@ export const OperationsView: React.FC<OperationsViewProps> = (props) => {
                     statusLevel={fabricationLpoIssued ? 'in_progress' : 'pending_lpo'}
                     label={
                       fabricationLpoIssued
-                        ? (isAr ? `مرخص للتنفيذ (أمر شراء رقم ${fabricationPackage?.lpoNumber})` : `Authorized (LPO #${fabricationPackage?.lpoNumber})`)
+                        ? (isAr ? `أمر شراء تجريبي ${fabricationPackage?.lpoNumber}` : `Sample LPO #${fabricationPackage?.lpoNumber}`)
                         : (isAr ? 'بانتظار أمر الشراء (LPO مقفل)' : 'Pending LPO (Operation Locked)')
                     }
                   />
@@ -929,7 +929,7 @@ export const OperationsView: React.FC<OperationsViewProps> = (props) => {
                     <div className="p-3 bg-rose-100 border-2 border-sadu-brick rounded-md text-sadu-brick text-xs space-y-1">
                       <div className="flex items-center gap-2 font-bold">
                         <AlertTriangle className="w-4 h-4 text-sadu-brick" />
-                        <span>{isAr ? 'مخالفة مالية جسيمة: رصد التزام شفهي دون أمر شراء رسمي (Shadow Commitment)' : 'CRITICAL FINANCIAL BREACH: SHADOW COMMITMENT DETECTED'}</span>
+                        <span>{isAr ? 'استثناء محاكى: بدء عمل قبل أمر شراء تجريبي' : 'SIMULATED EXCEPTION: work reported before sample LPO'}</span>
                       </div>
                       <p className="text-sadu-charcoal text-[11px] leading-relaxed">
                         {isAr
@@ -1042,8 +1042,8 @@ export const OperationsView: React.FC<OperationsViewProps> = (props) => {
 
               <p className="text-sadu-charcoal text-[11px] leading-relaxed">
                 {isAr
-                  ? 'تم استدراج 3 عروض أسعار تنافسية وترسية العقد على شركة "هازنكامب للخدمات اللوجستية الفنية" المسجلة لدى دائرة المالية المركزية بمبلغ 28,400 درهم إماراتي، مع اشتراط الصناديق المناخية القياسية ISPM-15 وأجهزة التسجيل الحراري.'
-                  : 'Three competitive tenders evaluated. Awarded to registered vendor Hasenkamp Fine Art Logistics UAE at AED 28,400 under strict climate datalogging criteria.'}
+                  ? 'مقارنة افتراضية لثلاثة عروض. اختير مورد نقل تجريبي بمبلغ 28,400 درهم؛ لم تُوثق ترسية أو تسجيل مورد.'
+                  : 'Fictional comparison of three quotes. Sample transport provider selected at AED 28,400; no tender award or supplier registration verified.'}
               </p>
             </div>
           </div>
@@ -1083,8 +1083,8 @@ export const OperationsView: React.FC<OperationsViewProps> = (props) => {
                   <ShieldCheck className="w-4 h-4" />
                   <span>
                     {isPrProtocolReady 
-                      ? (isAr ? '✓ تم منح الاعتماد البروتوكولي' : '✓ PR Clearance Granted') 
-                      : (isAr ? 'منح الاعتماد البروتوكولي المباشر' : 'Grant Immediate Clearance')}
+                      ? (isAr ? '✓ سُجلت قائمة تجريبية' : '✓ Sample checklist recorded')
+                      : (isAr ? 'تسجيل قائمة تجريبية' : 'Record sample checklist')}
                   </span>
                 </button>
               </div>
@@ -1149,7 +1149,7 @@ export const OperationsView: React.FC<OperationsViewProps> = (props) => {
                   }}
                   className="text-[11px] font-bold text-sadu-brick hover:underline cursor-pointer"
                 >
-                  {isAr ? 'تحديد الكل كمستوفى' : 'Mark All as Verified'}
+                  {isAr ? 'تحديد جميع البنود التجريبية' : 'Check all sample items'}
                 </button>
               </div>
 
@@ -1164,10 +1164,10 @@ export const OperationsView: React.FC<OperationsViewProps> = (props) => {
                   />
                   <div>
                     <span className="font-bold text-sadu-charcoal block">
-                      {isAr ? '1. مطابقة الاسم الرسمي لشهادة التقدير' : '1. Certificate Name Verified'}
+                      {isAr ? '1. فحص اسم العرض التجريبي' : '1. Sample display name checked'}
                     </span>
                     <span className="text-[11px] text-sadu-muted block mt-0.5">
-                      {isAr ? 'مطابقة الاسم الثلاثي بالعربية والإنجليزية مع الجواز' : 'Exact spelling matched with official passport'}
+                      {isAr ? 'فحص تهجئة تجريبي فقط؛ لم تُوثق وثيقة هوية' : 'Sample spelling check only; no identity document verified'}
                     </span>
                   </div>
                 </label>
@@ -1275,7 +1275,7 @@ export const OperationsView: React.FC<OperationsViewProps> = (props) => {
                       {isAr ? '7. قائمة ضيوف حفل الافتتاح الرسمي (VIP Guest List)' : '7. Opening Night VIP Guest List'}
                     </span>
                     <span className="text-[11px] text-sadu-muted block mt-0.5">
-                      {isAr ? 'تسليم أسماء الضيوف والمرافقين المخصص لهم مقاعد في حفل الافتتاح الرسمي برعاية سمو الحاكم' : 'Submitted names for ministerial opening seating chart under patronage of H.H. Ruler of Sharjah'}
+                      {isAr ? 'تخطيط قائمة ضيوف تجريبية؛ لا ادعاء برعاية أو حضور رسمي' : 'Sample guest-list planning; no patronage or official attendance asserted'}
                     </span>
                   </div>
                 </label>
@@ -1369,8 +1369,8 @@ export const OperationsView: React.FC<OperationsViewProps> = (props) => {
                     </div>
                     <p className="text-sadu-charcoal text-[11px] leading-relaxed">
                       {isAr
-                        ? 'تُصرف تلقائياً بمجرد توقيع العقد الثنائي الرسمي بين الفنان وإدارة الشؤون الثقافية لشراء المواد التأسيسية وأدوات الخط.'
-                        : 'Unlocked automatically when the Bilateral Contract is officially executed. Intended for raw material acquisition and archival preparation.'}
+                        ? 'مرحلة دفعة مقدمة تجريبية. سبب الاستحقاق والنسبة افتراضان تصميميان؛ لا ينشأ استحقاق أو دفع.'
+                        : 'Sample advance milestone. Its trigger and percentage are design assumptions; no entitlement or payment is created.'}
                     </p>
                   </div>
 
@@ -1418,8 +1418,8 @@ export const OperationsView: React.FC<OperationsViewProps> = (props) => {
                     </div>
                     <p className="text-sadu-charcoal text-[11px] leading-relaxed">
                       {isAr
-                        ? 'مقفلة ببوابة أمان: لا تُصرف إلا بعد الافتتاح الرسمي للبينالي أمام الجمهور بمتحف الشارقة للفنون وصدور محضر تدشين المعرض.'
-                        : 'Gated and unlocked strictly when the exhibition officially opens to the public at Sharjah Art Museum.'}
+                        ? 'متطلب افتتاح تجريبي؛ لم يُوثق شرط دفع منطبق.'
+                        : 'Sample opening dependency; no applicable payment condition verified.'}
                     </p>
                   </div>
 
@@ -1438,8 +1438,8 @@ export const OperationsView: React.FC<OperationsViewProps> = (props) => {
                     <Clock className={`w-3.5 h-3.5 ${exhibitionOpened ? 'text-sadu-sage' : 'text-sadu-brick'}`} />
                     <span className={exhibitionOpened ? 'text-sadu-sage font-semibold' : 'text-sadu-charcoal font-medium'}>
                       {exhibitionOpened
-                        ? (isAr ? 'تم التحقق من الافتتاح الرسمي · محضر تدشين المعرض معتمد' : 'Vernissage protocol verified · Exhibition officially open to the public')
-                        : (isAr ? 'شرط الصرف: الافتتاح الرسمي بمتحف الشارقة للفنون (12 أكتوبر 2026)' : 'Condition Gate: Sharjah Art Museum Public Vernissage (12 October 2026)')}
+                        ? (isAr ? 'سُجل افتتاح تجريبي — لم تُوثق فعالية' : 'Sample opening recorded — no event verified')
+                        : (isAr ? 'شرط افتتاح تجريبي (تاريخ افتراضي: 12 أكتوبر 2026)' : 'Sample opening condition (fictional date: 12 October 2026)')}
                     </span>
                   </div>
 
@@ -1602,14 +1602,14 @@ export const OperationsView: React.FC<OperationsViewProps> = (props) => {
                           <div className="flex items-center gap-1.5">
                             <Building2 className="w-3.5 h-3.5 text-sadu-sage" />
                             <span className="text-sadu-charcoal text-[11px]">
-                              {isAr ? 'موردون مسجلون لدى دائرة المالية المركزية' : '100% Registered Suppliers'}
+                              {isAr ? 'موردون تجريبيون — التسجيل غير موثق' : 'Sample suppliers — registration unverified'}
                             </span>
                           </div>
 
                           <div className="flex items-center gap-1.5">
                             <CheckCircle2 className="w-3.5 h-3.5 text-sadu-sage" />
                             <span className="text-sadu-charcoal text-[11px]">
-                              {isAr ? 'فحص فني ومطابقة مواصفات (Blind Vetting)' : 'Technical Compliance Vetted'}
+                              {isAr ? 'فحوص فنية تجريبية' : 'Sample technical checks'}
                             </span>
                           </div>
                         </div>
@@ -1665,14 +1665,14 @@ export const OperationsView: React.FC<OperationsViewProps> = (props) => {
                                     {bid.technicalApproval && (
                                       <span className="px-2 py-0.5 rounded bg-sky-100 text-sky-800 text-[10px] font-semibold flex items-center gap-1 border border-sky-300">
                                         <CheckCircle2 className="w-3 h-3" />
-                                        <span>{isAr ? 'معتمد فنياً' : 'Technically Approved'}</span>
+                                        <span>{isAr ? 'فحص فني تجريبي' : 'Sample technical check'}</span>
                                       </span>
                                     )}
 
                                     {isLowest && (
                                       <span className="px-2 py-0.5 rounded bg-amber-200 text-amber-900 text-[10px] font-bold flex items-center gap-1 border border-amber-400">
                                         <Award className="w-3 h-3 text-amber-800" />
-                                        <span>{isAr ? 'الأقل سعراً والمطابق للمواصفات' : 'Lowest Compliant Bid'}</span>
+                                        <span>{isAr ? 'أقل عرض مستوفٍ للشروط التجريبية' : 'Lowest sample qualifying quote'}</span>
                                       </span>
                                     )}
 
@@ -1759,13 +1759,13 @@ export const OperationsView: React.FC<OperationsViewProps> = (props) => {
                               <ShieldCheck className="w-4 h-4 text-sadu-sage" />
                               <span className="font-bold">
                                 {isAr
-                                  ? `أمر الشراء نافذ ومسجل رسمياً: ${pkg.lpoNumber} (تاريخ الصرف: ${pkg.lpoIssueDate})`
-                                  : `Sample LPO recorded: ${pkg.lpoNumber} (Issued: ${pkg.lpoIssueDate})`}
+                                  ? `سُجل أمر شراء تجريبي: ${pkg.lpoNumber} (تاريخ تجريبي: ${pkg.lpoIssueDate})`
+                                  : `Sample LPO recorded: ${pkg.lpoNumber} (Sample date: ${pkg.lpoIssueDate})`}
                               </span>
                             </div>
 
                             <span className="px-3 py-1 rounded bg-sadu-sage/20 border border-sadu-sage text-sadu-ink font-mono font-bold text-[11px]">
-                              {isAr ? '✓ مرخص للتنفيذ وصرف الفواتير' : '✓ Authorized for Invoicing'}
+                              {isAr ? 'مرحلة فاتورة تجريبية — دون تفويض' : 'Sample invoice stage — no authorization'}
                             </span>
                           </div>
                         )}

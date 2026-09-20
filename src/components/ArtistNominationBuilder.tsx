@@ -135,24 +135,10 @@ export const ArtistNominationBuilder: React.FC<ArtistNominationBuilderProps> = (
               {submissionId}
             </span>
             <h2 className="text-2xl sm:text-3xl font-editorial font-bold text-sadu-charcoal">
-              {isAr ? 'تم إحالة ملف الترشيح بنجاح إلى التحقق الثقافي' : 'Dossier Successfully Routed for Cultural Verification'}
+              {isAr ? 'تم إنشاء معاينة ترشيح تجريبية' : 'Sample nomination preview created'}
             </h2>
             <p className="text-sm text-sadu-charcoal leading-relaxed max-w-xl mx-auto">
-              {isAr ? (
-                <>
-                  أُحيل ملف ترشيح الفنانة <strong className="text-sadu-brick">{nameAr}</strong> مباشرة إلى{' '}
-                  <strong className="text-sadu-ink">أ. محمد إبراهيم القصير</strong> (مدير إدارة الشؤون الثقافية) و
-                  <strong className="text-sadu-ink">خبراء الخط العربي المعتمدين</strong> لبدء تدقيق النسب الفنية،
-                  الأصالة التراثية، ونصوص الشعر العربي الكلاسيكي.
-                </>
-              ) : (
-                <>
-                  The nomination dossier for <strong className="text-sadu-brick">{nameEn}</strong> has been officially
-                  routed to <strong className="text-sadu-ink">Mohammed Ibrahim Al Qaseer</strong> (Director of Cultural
-                  Affairs) and the <strong className="text-sadu-ink">Calligraphy Experts</strong> for classical script
-                  and textual verification.
-                </>
-              )}
+              {isAr ? <>تم إنشاء معاينة محلية لترشيح <strong>{nameAr}</strong>. لم يُرسل الملف إلى أي مسؤول أو لجنة.</> : <>A local nomination preview for <strong>{nameEn}</strong> was created. Nothing was sent to an official or committee.</>}
             </p>
           </div>
 
@@ -161,10 +147,10 @@ export const ArtistNominationBuilder: React.FC<ArtistNominationBuilderProps> = (
             <div className="flex items-center justify-between border-b border-sadu-gold/50 pb-2">
               <span className="font-bold text-sadu-charcoal flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4 text-sadu-sage" />
-                {isAr ? 'بيانات الإحالة الرسمية للبينالي' : 'Biennial Dispatch Receipt'}
+                {isAr ? 'مرجع محلي تجريبي — لم يُرسل' : 'Local sample reference — not dispatched'}
               </span>
               <span className="text-[11px] font-mono text-sadu-muted">
-                {isAr ? 'حالة القيد: قيد المراجعة العلمية' : 'Status: Under Scientific Review'}
+                {isAr ? 'الحالة: معاينة محلية فقط' : 'Status: local preview only'}
               </span>
             </div>
 
@@ -184,9 +170,9 @@ export const ArtistNominationBuilder: React.FC<ArtistNominationBuilderProps> = (
                 </span>
               </div>
               <div>
-                <span className="text-sadu-muted block text-[11px]">{isAr ? 'المكتب المستلم:' : 'Destination Desk:'}</span>
+                <span className="text-sadu-muted block text-[11px]">{isAr ? 'دور المراجعة المقترح:' : 'Proposed review role:'}</span>
                 <span className="font-semibold text-sadu-brick">
-                  {isAr ? 'مكتب مدير إدارة الشؤون الثقافية + لجنة خبراء الخط' : 'Director of Cultural Affairs + Calligraphy Experts'}
+                  {isAr ? 'DEMO-SPECIALIST · دور مراجعة مقترح' : 'DEMO-SPECIALIST · proposed review role'}
                 </span>
               </div>
             </div>
@@ -195,8 +181,8 @@ export const ArtistNominationBuilder: React.FC<ArtistNominationBuilderProps> = (
               <AlertCircle className="w-4 h-4 text-sadu-brick shrink-0" />
               <span>
                 {isAr
-                  ? 'ملاحظة: لا يمكن توليد العقد النظامي أو صرف الدفعة المقدمة حتى يتم التوقيع الصريح على شهادة التحقق الثقافي والنصوصي.'
-                  : 'Notice: Contract generation and advance disbursement remain locked until the Cultural & Textual Verification gate is explicitly certified.'}
+                  ? 'معاينة محلية فقط. لا تُنشئ استلاماً مؤسسياً أو مراجعة أو توقيعاً أو عقداً أو دفعة.'
+                  : 'Local preview only. No institutional receipt, review, signature, contract or payment is created.'}
               </span>
             </div>
           </div>
@@ -246,8 +232,8 @@ export const ArtistNominationBuilder: React.FC<ArtistNominationBuilderProps> = (
             </h2>
             <p className="text-xs text-sadu-muted mt-1">
               {isAr
-                ? 'استمارة الترشيح المؤسسي المعتمدة · تُحال إلى مدير إدارة الشؤون الثقافية وخبراء الخط العربي للتحقق'
-                : 'Authoritative curatorial nomination workflow · Directly routed to the Director of Cultural Affairs and Calligraphy Experts.'}
+                ? 'ترشيح فني تجريبي · معاينة محلية؛ دون إحالة خارجية'
+                : 'Sample curatorial nomination · local preview; no external routing.'}
             </p>
           </div>
 
@@ -317,8 +303,8 @@ export const ArtistNominationBuilder: React.FC<ArtistNominationBuilderProps> = (
             />
             <p className="text-[11px] text-sadu-brick font-medium mt-1">
               {isAr
-                ? 'ملاحظة: تُستخدم الجنسية حصراً لأتمتة إصدار التأشيرات والمراسم الرسمية دون تسريب بيانات الجواز.'
-                : 'Note: Used strictly for visa automation and official protocol routing.'}
+                ? 'حقل تجريبي فقط. لا توجد معالجة تأشيرات أو إحالة خارجية.'
+                : 'Sample field only. No visa processing or external routing.'}
             </p>
           </div>
 
@@ -427,7 +413,7 @@ export const ArtistNominationBuilder: React.FC<ArtistNominationBuilderProps> = (
                     {isAr ? 'السيرة الذاتية الفنية والمعارض السابقة (CV)' : 'Curatorial Curriculum Vitae (CV)'}
                   </span>
                   <span className="text-[11px] text-sadu-muted">
-                    {isAr ? 'وثيقة PDF معتمدة تثبت التجربة الخطية' : 'Verified PDF format documenting exhibitions'}
+                    {isAr ? 'ملف PDF تجريبي؛ لم يُتحقق من المحتوى أو الأصالة' : 'PDF sample; content and authenticity unchecked'}
                   </span>
                 </div>
               </div>
@@ -627,8 +613,8 @@ export const ArtistNominationBuilder: React.FC<ArtistNominationBuilderProps> = (
             {isAr ? 'المسار الإداري المباشر:' : 'Direct Institutional Routing:'}
           </span>
           {isAr
-            ? 'سيتم توجيه هذا الملف فوراً إلى مكتب أ. محمد إبراهيم القصير وخبراء الخط للتدقيق قبل أي تعاقد.'
-            : 'Routable directly to Mohammed Ibrahim Al Qaseer and Calligraphy Experts prior to contract generation.'}
+            ? 'يُنشئ معاينة محلية تجريبية فقط؛ دون إرسال أو مراجعة رسمية.'
+            : 'Creates a local sample preview only; no transmission or formal review.'}
         </div>
 
         <button

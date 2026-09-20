@@ -11,11 +11,12 @@ export const DEMO_PROGRAMME: ExhibitionProgramme = {
   budgetPlanned: 0, budgetCommitted: 0, budgetSpent: 0, currency: 'AED',
   progressPercent: 0, gatesReady: 0, gatesTotal: 3, criticalRisks: 0, unresolvedHandoffs: 1,
 };
-export type DemoActor = 'CHAIRMAN' | 'DIRECTORATE' | 'MANAGER' | 'LOGISTICS' | 'TECHNICAL' | 'COORDINATOR' | 'FINANCE' | 'PUBLISHING_MANAGER' | 'ARTIST' | 'OBSERVER';
+export type DemoActor = 'CHAIRMAN' | 'DIRECTORATE' | 'MANAGER' | 'LOGISTICS' | 'TECHNICAL' | 'COORDINATOR' | 'FINANCE' | 'PUBLISHING_MANAGER' | 'ARTIST' | 'SELECTION' | 'OBSERVER';
 export type EventKind = 'receipt' | 'receipt-issue' | 'condition' | 'handover' | 'statement-missing' | 'statement-task' | 'statement-restored' | 'finance-pack' | 'finance-escalated' | 'delivery-escalated' | 'print-proof' | 'print-routed' | 'print-decision' | 'print-dispatch';
 export interface DemoEvent { id: string; kind: EventKind; actor: DemoActor; at: string; reference: string }
 export interface ConditionEvidence { id: string; version: number; outcome: 'clear' | 'issue'; at: string; actor: DemoActor }
 export interface LivingRecord {
+  caseId: string;
   receipt: { at: string; actor: DemoActor } | null;
   receiptIssue: boolean;
   condition: ConditionEvidence | null;
@@ -28,7 +29,7 @@ export interface LivingRecord {
   publishing: PublishingRecord;
   events: DemoEvent[];
 }
-export const createLivingRecord = (): LivingRecord => ({ receipt: null, receiptIssue: false, condition: null, conditionHistory: [], acceptance: null, statementPresent: true, statementTask: false, deliveryEscalated: false, finance: 'draft', publishing: createPublishingRecord(), events: [] });
+export const createLivingRecord = (caseId = CASE_ID): LivingRecord => ({ caseId, receipt: null, receiptIssue: false, condition: null, conditionHistory: [], acceptance: null, statementPresent: true, statementTask: false, deliveryEscalated: false, finance: 'draft', publishing: createPublishingRecord(), events: [] });
 type Envelope = { actor: DemoActor; at: string };
 export type DemoAction =
   | PublishingAction
@@ -39,9 +40,9 @@ export type DemoAction =
   | { type: 'RESET' };
 
 export function livingRecordReducer(state: LivingRecord, action: DemoAction): LivingRecord {
-  if (action.type === 'RESET') return createLivingRecord();
+  if (action.type === 'RESET') return createLivingRecord(state.caseId);
   if (!Number.isFinite(Date.parse(action.at))) return state;
-  const record = (kind: EventKind, changes: Partial<LivingRecord>, reference = CASE_ID): LivingRecord => ({
+  const record = (kind: EventKind, changes: Partial<LivingRecord>, reference = state.caseId): LivingRecord => ({
     ...state, ...changes,
     events: [...state.events, { id: `DEMO-E${state.events.length + 1}`, kind, actor: action.actor, at: action.at, reference }],
   });
@@ -57,15 +58,15 @@ export function livingRecordReducer(state: LivingRecord, action: DemoAction): Li
     }
     case 'RECEIVE':
       if (action.actor !== 'LOGISTICS' || state.receipt || state.acceptance) return state;
-      if (action.crateId.trim() !== CASE_ID || !action.sealMatches) {
+      if (action.crateId.trim() !== state.caseId || !action.sealMatches) {
         return state.receiptIssue ? state : record('receipt-issue', { receiptIssue: true });
       }
       return record('receipt', { receipt: { at: action.at, actor: action.actor }, receiptIssue: false });
     case 'CONDITION': {
       if (action.actor !== 'TECHNICAL' || !state.receipt || state.receiptIssue || state.acceptance) return state;
       const version = (state.condition?.version ?? 0) + 1;
-      const condition: ConditionEvidence = { id: 'DEMO-CR-04', version, outcome: action.outcome, at: action.at, actor: action.actor };
-      return record('condition', { condition, conditionHistory: [...state.conditionHistory, condition] }, `DEMO-CR-04/v${version}`);
+      const condition: ConditionEvidence = { id: state.caseId === CASE_ID ? 'DEMO-CR-04' : `${state.caseId}-CR`, version, outcome: action.outcome, at: action.at, actor: action.actor };
+      return record('condition', { condition, conditionHistory: [...state.conditionHistory, condition] }, `${condition.id}/v${version}`);
     }
     case 'ACCEPT':
       if (action.actor !== 'MANAGER' || !state.receipt || state.receiptIssue || !state.condition || state.condition.outcome !== 'clear' || state.acceptance || !action.acknowledged || action.reportVersion !== state.condition.version) return state;

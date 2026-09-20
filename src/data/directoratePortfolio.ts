@@ -1,4 +1,5 @@
 import type { LivingRecord } from './livingRecord';
+import { claimRegister, type ClaimKey } from './claimRegister';
 
 // Proposed portfolio groups, not a formal organisation chart. Public sources establish
 // programme context; they do not establish delivery status, assignments or delegation.
@@ -14,7 +15,7 @@ export const portfolioSources = {
   calendar: 'https://sdc.gov.ae/en/media-center/news/31/8/2026/sharjah-department-of-culture-announces-annual-program-of-permanent-festivals-and-forums',
   creativity: 'https://sdc.gov.ae/en/media-center/news/5/5/2026/sharjah-award-for-arab-creativity-sets-october-31-as-final-deadline-for-submissions',
   artCriticism: 'https://sdc.gov.ae/ar/media-center/news/22/2/2026/the-sharjah-award-for-art-criticism-announces-the-theme-of-its-17th-edition',
-  poetryCriticism: 'https://sharjah24.ae/ar/Articles/2026/02/16/gh-12--',
+  poetryCriticism: claimRegister.poetryCriticism.url,
 } as const;
 
 interface PortfolioActivity {
@@ -27,6 +28,7 @@ interface PortfolioActivity {
   outputEn: string;
   outputAr: string;
   source?: keyof typeof portfolioSources;
+  provenance?: ClaimKey;
   scope: 'programme-reference' | 'department-output' | 'fictional-case';
   managerEn?: string;
   managerAr?: string;
@@ -84,7 +86,7 @@ export function selectDirectoratePortfolio(state: LivingRecord, filter: Portfoli
       managerEn: 'Exhibitions manager — sample role', managerAr: 'مدير المعارض — دور تجريبي',
       due: '2026-09-22', forecast: deliveryReady ? 'on-track' : 'at-risk',
       escalated: state.deliveryEscalated && !deliveryReady },
-    ...programmeReferences.map(activity => ({ ...activity, forecast: 'awaiting-update' as const, escalated: false })),
+    ...programmeReferences.map(activity => ({ ...activity, provenance: activity.source, forecast: 'awaiting-update' as const, escalated: false })),
   ];
   return {
     activities,

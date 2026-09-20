@@ -38,8 +38,8 @@ export const TechnicalMuseumDashboard: React.FC = () => {
       mountingSpecs: 'Four 150mm steel discs with high-density neoprene felt dampers. Distributes 84kg load to 0.12 kg/cm².',
       mountingSpecsAr: 'أربعة أقراص فولاذية بقطر 150 ملم مع بطانات لباد نيوبرين عالي الكثافة لتوزيع الثقل (0.12 كجم/سم²).',
       avRequired: false,
-      permitIssued: false,
-      permitNumber: '',
+      sampleReviewRecorded: false,
+      sampleReviewReference: '',
     },
     {
       id: 'CLEAR-MF-02',
@@ -57,8 +57,8 @@ export const TechnicalMuseumDashboard: React.FC = () => {
       mountingSpecs: 'Ceiling bracket load rating 65kg. 8,000 ANSI lumen laser projector with 0.8:1 short-throw lens.',
       mountingSpecsAr: 'حامل سقفي بحمولة 65 كجم. جهاز عرض ليزري 8000 لومن مع عدسة إسقاط قريبة 0.8:1.',
       avRequired: true,
-      permitIssued: true,
-      permitNumber: 'SAM-PERMIT-2026-044',
+      sampleReviewRecorded: true,
+      sampleReviewReference: 'DEMO-VENUE-044',
     }
   ]);
 
@@ -83,19 +83,19 @@ export const TechnicalMuseumDashboard: React.FC = () => {
   // Direct 2-Way Venue Permit Loop State
   const [permitActionToast, setPermitActionToast] = useState<string | null>(null);
 
-  const handleIssuePermit = (id: string) => {
+  const handleSampleVenueReview = (id: string) => {
     setClearanceQueue(prev => prev.map(item => {
       if (item.id === id) {
         return {
           ...item,
           structuralStatus: 'venue_approved',
-          permitIssued: true,
-          permitNumber: `SAM-PERMIT-2026-${Math.floor(100 + Math.random() * 900)}`
+          sampleReviewRecorded: true,
+          sampleReviewReference: `DEMO-VENUE-${Math.floor(100 + Math.random() * 900)}`
         };
       }
       return item;
     }));
-    setPermitActionToast(isAr ? 'تم اعتماد المواصفات الهندسية وإصدار تصريح التركيب المتحفي بنجاح' : 'Mounting specs certified & SAM Venue Permit legally issued.');
+    setPermitActionToast(isAr ? 'سُجلت مراجعة موقع تجريبية محلياً. لم تصدر شهادة هندسية أو تصريح.' : 'Sample venue review recorded locally. No engineering certification or permit issued.');
     setTimeout(() => setPermitActionToast(null), 4000);
   };
 
@@ -118,19 +118,19 @@ export const TechnicalMuseumDashboard: React.FC = () => {
               <span>{isAr ? 'بوابة الجدوى الفنية والتخليص المتحفي (The Hard-Hat Workspace)' : 'Technical & Museum Administration Desk'}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-editorial font-bold text-sadu-charcoal">
-              {isAr ? 'مكتب مهندسي مؤسسة الشارقة للفنون وإدارة متحف الشارقة' : 'SAF Technical & SAM Venue Clearance Desk'}
+              {isAr ? 'مراجعة فنية ومراجعة موقع تجريبيتان' : 'Sample technical and venue review'}
             </h1>
             <p className="text-xs sm:text-sm text-sadu-muted mt-1">
               {isAr
-                ? 'فحص الأحمال الهيكلية، سلامة المعروضات، تقييم الجدوى من 35 نقطة، وحلقة التصاريح التفاعلية المباشرة بين الفنيين وإدارة المتحف.'
-                : 'Venue clearance queue, 35-point feasibility rubric with red-flag caps, and 2-way SAF-to-SAM venue permit loop.'}
+                ? 'مواصفات افتراضية ومقياس تجريبي من 35 نقطة. لا تقييم هندسياً أو اتصالاً خارجياً أو تصريح موقع.'
+                : 'Fictional specifications and a proposed 35-point rubric. No engineering assessment, external connection or venue permission.'}
             </p>
           </div>
 
           <div className="flex items-center gap-2">
             <span className="px-3 py-1.5 rounded-full bg-sadu-sand border border-sadu-gold text-sadu-charcoal text-xs font-bold flex items-center gap-1.5">
               <Building2 className="w-3.5 h-3.5 text-sadu-brick" />
-              <span>{isAr ? 'تصاريح SAM الحصرية' : 'SAM Venue Loop'}</span>
+              <span>{isAr ? 'مثال محلي فقط' : 'Local sample only'}</span>
             </span>
           </div>
         </div>
@@ -142,11 +142,11 @@ export const TechnicalMuseumDashboard: React.FC = () => {
           <div className="flex items-center gap-2">
             <Layers className="w-5 h-5 text-sadu-brick" />
             <h2 className="text-lg font-editorial font-bold text-sadu-charcoal">
-              {isAr ? 'قائمة التخليص الهندسي وتصاريح المعرض (Venue Clearance Queue)' : 'Venue Clearance & Mounting Approval Queue'}
+              {isAr ? 'قائمة مراجعة موقع تجريبية' : 'Sample venue review queue'}
             </h2>
           </div>
           <span className="text-xs text-sadu-muted">
-            {isAr ? 'اعتماد متبادل ومباشر دون وسيط' : 'Direct 2-way approval pipeline'}
+            {isAr ? 'مسار مراجعة مقترح' : 'Proposed review flow'}
           </span>
         </div>
 
@@ -172,15 +172,15 @@ export const TechnicalMuseumDashboard: React.FC = () => {
                   <span className="text-xs font-mono px-2 py-1 rounded bg-sadu-sand text-sadu-charcoal font-semibold">
                     {item.weightKg} kg
                   </span>
-                  {item.permitIssued ? (
+                  {item.sampleReviewRecorded ? (
                     <span className="text-xs font-bold px-2.5 py-1 rounded bg-sadu-sage-light border border-sadu-sage text-sadu-ink flex items-center gap-1">
                       <CheckCircle2 className="w-3.5 h-3.5 text-sadu-sage" />
-                      <span>{item.permitNumber}</span>
+                      <span>{item.sampleReviewReference}</span>
                     </span>
                   ) : (
                     <span className="text-xs font-bold px-2.5 py-1 rounded bg-amber-50 border border-amber-300 text-amber-900 flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5 text-amber-700" />
-                      <span>{isAr ? 'بانتظار تصريح المتحف' : 'Pending SAM Permit'}</span>
+                      <span>{isAr ? 'بانتظار مراجعة تجريبية' : 'Sample review pending'}</span>
                     </span>
                   )}
                 </div>
@@ -188,23 +188,23 @@ export const TechnicalMuseumDashboard: React.FC = () => {
 
               {/* Mounting Specs & Venue Loop Detail */}
               <div className="p-3 bg-white rounded border border-sadu-gold/60 text-xs space-y-2">
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
                   <div>
                     <span className="font-bold text-sadu-charcoal block mb-0.5">
-                      {isAr ? 'مواصفات التثبيت الهندسية المرفوعة من فنيي SAF:' : 'Submitted SAF Mounting Specifications:'}
+                      {isAr ? 'مواصفات تثبيت افتراضية — لم تُقيّم:' : 'Fictional mounting specifications — unassessed:'}
                     </span>
                     <p className="text-sadu-muted">
                       {isAr ? item.mountingSpecsAr : item.mountingSpecs}
                     </p>
                   </div>
 
-                  {!item.permitIssued && (
+                  {!item.sampleReviewRecorded && (
                     <button
-                      onClick={() => handleIssuePermit(item.id)}
+                      onClick={() => handleSampleVenueReview(item.id)}
                       className="px-3.5 py-2 rounded bg-sadu-brick hover:bg-sadu-brick-dark text-white text-xs font-bold shrink-0 shadow-xs flex items-center gap-1.5 cursor-pointer transition-colors"
                     >
                       <FileCheck className="w-3.5 h-3.5" />
-                      <span>{isAr ? 'اعتماد وإصدار تصريح SAM' : 'Sign Off & Issue SAM Permit'}</span>
+                      <span>{isAr ? 'تسجيل مراجعة موقع تجريبية' : 'Record sample venue review'}</span>
                     </button>
                   )}
                 </div>
@@ -220,12 +220,12 @@ export const TechnicalMuseumDashboard: React.FC = () => {
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-sadu-brick" />
             <h2 className="text-lg font-editorial font-bold text-sadu-charcoal">
-              {isAr ? 'مصفوفة التقييم التشغيلي والميداني (35 نقطة)' : 'Gate 2: 35-Point Operational Feasibility Rubric'}
+              {isAr ? 'مقياس جدوى تجريبي (35 نقطة)' : 'Proposed 35-point feasibility rubric'}
             </h2>
           </div>
           <div className="text-end">
             <span className="text-[10px] text-sadu-muted uppercase block">
-              {isAr ? 'الدرجة التشغيلية المعتمدة' : 'Effective Feasibility Score'}
+              {isAr ? 'الدرجة التشغيلية التجريبية' : 'Sample feasibility score'}
             </span>
             <span className={`text-xl font-bold font-mono ${isRedFlagActive ? 'text-rose-700' : 'text-sadu-ink'}`}>
               {finalOperationalScore} / 35 Pts
@@ -267,7 +267,7 @@ export const TechnicalMuseumDashboard: React.FC = () => {
               className="w-full accent-sadu-brick cursor-pointer"
             />
             <span className="text-[10px] text-sadu-muted block">
-              {isAr ? 'مطابقة معايير ISPM-15 والتخليص الجمركي المباشر' : 'ISPM-15 crate telemetry, climate logs, customs ready'}
+              {isAr ? 'مراجعة مقترحة للتعبئة والمناخ والجمارك' : 'Proposed packing, climate and customs review'}
             </span>
           </div>
 
@@ -294,7 +294,7 @@ export const TechnicalMuseumDashboard: React.FC = () => {
         <div className="p-4 rounded bg-rose-50/70 border border-rose-200 space-y-2">
           <div className="flex items-center gap-2 text-xs font-bold text-rose-800">
             <AlertTriangle className="w-4 h-4 text-rose-700" />
-            <span>{isAr ? 'قائمة المحاذير التشغيلية الحمراء (تحدد السقف الأقصى بـ 15 نقطة فوراً)' : 'Operational Red Flags (Caps Score at 15 Max)'}</span>
+            <span>{isAr ? 'قاعدة تقييم تجريبية (سقف 15 نقطة؛ ليست اعتماد سلامة)' : 'Sample scoring rule (15-point cap; not safety approval)'}</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">

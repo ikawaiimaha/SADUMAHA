@@ -72,13 +72,13 @@ export const CommitteeView: React.FC<CommitteeViewProps> = (props) => {
     curatorialScores.strategicValue +
     curatorialScores.trackSpecificThree;
 
-  const [expertScriptVerified, setExpertScriptVerified] = useState(true);
-  const [directorPoetryVerified, setDirectorPoetryVerified] = useState(false);
+  const [sampleScriptReviewed, setSampleScriptReviewed] = useState(false);
+  const [samplePoetryReviewed, setSamplePoetryReviewed] = useState(false);
 
-  const isTextualVerificationComplete = expertScriptVerified && directorPoetryVerified;
+  const isTextualVerificationComplete = sampleScriptReviewed && samplePoetryReviewed;
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+            <div className="space-y-6 animate-in fade-in duration-300">
       <div className="bg-sadu-linen border border-sadu-gold rounded-lg p-6 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -122,10 +122,10 @@ export const CommitteeView: React.FC<CommitteeViewProps> = (props) => {
               totalSteps={5}
               progressPercent={isTextualVerificationComplete ? 85 : 60}
               statusLevel={isTextualVerificationComplete ? "in_progress" : "at_risk"}
-              labelEn={isTextualVerificationComplete ? "Textual Verification Cleared" : "Blocked: Textual Verification Pending"}
-              labelAr={isTextualVerificationComplete ? "تم اعتماد التحقق النصوصي" : "محظور: بانتظار التحقق النصوصي الإلزامي"}
-              nextActionEn="MANDATORY BLOCKER: Cultural & Textual Verification by Mohammed Ibrahim Al Qaseer and Calligraphy Experts required before bilateral contract generation."
-              nextActionAr="شرط إلزامي مانع: التحقق الثقافي والنصوصي من محمد إبراهيم القصير وخبراء الخط العربي مطلوب قبل توليد العقد النظامي."
+              labelEn={isTextualVerificationComplete ? "Sample reviews recorded" : "Sample review pending"}
+              labelAr={isTextualVerificationComplete ? "سُجلت مراجعات تجريبية" : "بانتظار مراجعة تجريبية"}
+              nextActionEn="Local sample reviews only; no signature, contract or payment authority."
+              nextActionAr="مراجعات محلية تجريبية فقط؛ دون صلاحية توقيع أو تعاقد أو دفع."
               variant="compact"
               interactive={true}
             />
@@ -198,7 +198,7 @@ export const CommitteeView: React.FC<CommitteeViewProps> = (props) => {
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-sm text-amber-900">
-                        {isAr ? 'تنبيه تدقيق: مشاركة سابقة في دورات بينالي الشارقة للخط' : 'Audit Notice: Prior Sharjah Calligraphy Biennial Participation'}
+                        {isAr ? 'تاريخ مشاركة تجريبي' : 'Sample participation history'}
                       </span>
                       <span className="px-2 py-0.5 rounded bg-amber-200 text-amber-900 font-mono font-bold text-[10px]">
                         {isAr ? 'الدورة التاسعة / العاشرة' : '9th / 10th Edition'}
@@ -206,8 +206,8 @@ export const CommitteeView: React.FC<CommitteeViewProps> = (props) => {
                     </div>
                     <p className="text-amber-900/90 leading-relaxed">
                       {isAr
-                        ? 'تنبيه للجنة التحكيم: سبق للفنان المشاركة في دورات سابقة للبينالي. وفقاً للائحة المعايير المؤسسية، يُشترط تقديم مقترح يحمل "جدة بصرية ومفاهيمية جذرية" (Radical Novelty) لضمان عدم تكرار النمط أو الأسلوب المعتمد سابقاً.'
-                        : 'Juror Guidance: This artist participated in previous biennial editions. Per institutional standards, evaluation must strictly scrutinize whether the new proposal offers radical visual/conceptual evolution rather than reiterating past repertoire.'}
+                        ? 'تاريخ مشاركة افتراضي للمقارنة فقط. معايير الجدة وأوزان التقييم 65/35 خيارات تجريبية، وليست لائحة مؤسسية موثقة.'
+                        : 'Fictional participation history for comparison only. Novelty criteria and the 65/35 scoring weights are demonstration choices, not verified institutional rules.'}
                     </p>
                   </div>
                 </div>
@@ -252,7 +252,7 @@ export const CommitteeView: React.FC<CommitteeViewProps> = (props) => {
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="px-2 py-0.5 rounded bg-sadu-brick text-white font-mono font-bold text-xs">
-                        {isAr ? 'البوابة 1 (65 نقطة)' : 'Gate 1 (65 Pts)'}
+                        {isAr ? 'مقياس تجريبي (65 نقطة)' : 'Sample rubric (65 Pts)'}
                       </span>
                       <h3 className="text-base font-editorial font-bold text-sadu-charcoal">
                         {isAr ? 'استمارة التقييم الفني والمفاهيمي المحكمة' : 'Curatorial & Artistic Merit Evaluation'}
@@ -386,7 +386,7 @@ export const CommitteeView: React.FC<CommitteeViewProps> = (props) => {
               </div>
 
               <div className="space-y-3">
-                <h3 className="text-sm font-bold text-sadu-charcoal">{isAr ? 'ملاحظات وتوقيعات السادة المحكمين:' : 'Recorded Juror Deliberations & Signatures:'}</h3>
+                <h3 className="text-sm font-bold text-sadu-charcoal">{isAr ? 'تعليقات مراجعين تجريبية مُعدّة مسبقاً — دون توقيعات:' : 'Seeded sample reviewer comments — no signatures:'}</h3>
                 {sub.reviewerNotes.map((note, idx) => (
                   <div key={idx} className="p-4 bg-sadu-paper rounded-md border border-sadu-gold">
                     <div className="flex items-center justify-between mb-1.5">
@@ -406,6 +406,12 @@ export const CommitteeView: React.FC<CommitteeViewProps> = (props) => {
 
           {activeTab === 'verification' && (
             <div className="space-y-6">
+              <p className="text-xs text-sadu-muted leading-relaxed">
+                {isAr ? 'مراجع نسبة النصوص فقط؛ ليست تحقيقاً للنقوش أو اعتماداً مؤسسياً. فُحصت في 20 سبتمبر 2026: ' : 'Text attribution references only; no inscription authentication or institutional approval. Checked 20 September 2026: '}
+                <a className="underline" href="https://usul.ai/ar/t/diwan-86/153" target="_blank" rel="noreferrer">{isAr ? 'ديوان أبي فراس، ص 153' : 'Abu Firas Diwan, p. 153'}</a>
+                {' · '}
+                <a className="underline" href="https://www.hindawi.org/books/79072819/5.2/" target="_blank" rel="noreferrer">{isAr ? 'هنداوي، دراسة أدبية تورد بيت المتنبي' : 'Hindawi literary discussion reproducing the Al-Mutanabbi verse'}</a>
+              </p>
               <div className={`p-4 rounded-lg border text-xs leading-relaxed flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
                 isTextualVerificationComplete
                   ? 'bg-sadu-sage-light border-sadu-sage text-sadu-ink'
@@ -420,13 +426,13 @@ export const CommitteeView: React.FC<CommitteeViewProps> = (props) => {
                   <div>
                     <span className="font-bold text-sm block mb-1">
                       {isTextualVerificationComplete
-                        ? (isAr ? '✓ تم اجتياز بوابة التحقق الثقافي والنصوصي بنجاح' : '✓ Cultural & Textual Verification Certified')
-                        : (isAr ? 'بوابة الحوكمة المانعة: التحقق الثقافي والنصوصي شرط إلزامي قبل التعاقد' : 'Mandatory Blocker: Cultural & Textual Verification Gate Active')}
+                        ? (isAr ? '✓ سُجلت مراجعات تخصصية تجريبية' : '✓ Sample specialist reviews recorded')
+                        : (isAr ? 'بانتظار مراجعة تخصصية تجريبية' : 'Sample specialist review pending')}
                     </span>
                     <p className="text-xs">
                       {isAr
-                        ? 'وفقاً للائحة بينالي الشارقة للخط، يُحظر توليد العقود النظامية أو صرف الدفعة المقدمة (30%) إلا بعد التحقق الصريح من أصالة الخط العربي الكلاسيكي وضبط نصوص الشعر العربي من قبل سعادة أ. محمد إبراهيم القصير وخبراء الخط.'
-                        : 'Under Sharjah Calligraphy Biennial governance, bilateral contract generation and the 30% advance payment remain strictly locked until classical Arabic scripts and poetry transcriptions are certified by Calligraphy Experts and the Director of Cultural Affairs, Mohammed Ibrahim Al Qaseer.'}
+                        ? 'مراجعة تخصصية تجريبية بأدوار افتراضية. لا تنشئ توقيعاً أو تعاقداً أو دفعة مالية؛ يلزم إثبات التفويض والسياسة قبل أي استخدام فعلي.'
+                        : 'Sample specialist review by fictional roles. This creates no signature, contract or payment; applicable authority and policy remain unverified.'}
                     </p>
                   </div>
                 </div>
@@ -438,8 +444,8 @@ export const CommitteeView: React.FC<CommitteeViewProps> = (props) => {
                       : 'bg-sadu-brick text-white border-sadu-brick'
                   }`}>
                     {isTextualVerificationComplete
-                      ? (isAr ? 'العقد متاح للتوليد' : 'Contract Unlocked')
-                      : (isAr ? 'العقد محظور نظامياً' : 'Contract Blocked')}
+                      ? (isAr ? 'اكتملت المراجعات التجريبية' : 'Sample reviews complete')
+                      : (isAr ? 'مراجعات تجريبية معلقة' : 'Sample reviews pending')}
                   </span>
                 </div>
               </div>
@@ -469,13 +475,13 @@ export const CommitteeView: React.FC<CommitteeViewProps> = (props) => {
                     </div>
                     <div className="p-3 bg-sadu-linen rounded border border-sadu-gold/50 space-y-1">
                       <span className="text-[10px] font-bold text-sadu-muted uppercase block">
-                        {isAr ? 'النص الشعري المعتمد المنقوش:' : 'Transcribed Classical Poetry:'}
+                        {isAr ? 'نقل شعري تجريبي — غير محقق:' : 'Sample classical transcription — not authenticated:'}
                       </span>
                       <p className="font-editorial text-sm font-semibold text-sadu-charcoal text-center py-1">
                         "مُعَلِّلَتي بالوَصلِ وَالمَوتُ دونَهُ · إِذا مِتُّ ظَمآناً فَلا نَزَلَ القَطرُ"
                       </p>
                       <span className="text-[10px] text-sadu-muted block text-center">
-                        {isAr ? 'أبو فراس الحمداني · بحر الطويل (تدقيق الوزن اللغوي سليم)' : 'Abu Firas Al-Hamadani · Classical Bahr Al-Tawil (Prosody Confirmed)'}
+                        {isAr ? 'أبو فراس الحمداني · نقل تجريبي؛ بانتظار مراجعة تخصصية' : 'Abu Firas Al-Hamadani · sample transcription; specialist review pending'}
                       </span>
                     </div>
                   </div>
@@ -494,13 +500,13 @@ export const CommitteeView: React.FC<CommitteeViewProps> = (props) => {
                     </div>
                     <div className="p-3 bg-sadu-linen rounded border border-sadu-gold/50 space-y-1">
                       <span className="text-[10px] font-bold text-sadu-muted uppercase block">
-                        {isAr ? 'النص الشعري المعتمد المنقوش:' : 'Transcribed Classical Poetry:'}
+                        {isAr ? 'نقل شعري تجريبي — غير محقق:' : 'Sample classical transcription — not authenticated:'}
                       </span>
                       <p className="font-editorial text-sm font-semibold text-sadu-charcoal text-center py-1">
                         "أَنا الَّذي نَظَرَ الأَعمى إِلى أَدَبي · وَأَسمَعَت كَلِماتي مَن بِهِ صَمَمُ"
                       </p>
                       <span className="text-[10px] text-sadu-muted block text-center">
-                        {isAr ? 'أبو الطيب المتنبي · ديوان المتنبي (تحقيق معتمد)' : 'Al-Mutanabbi · Authentic Diwan Verified'}
+                        {isAr ? 'أبو الطيب المتنبي · نقل تجريبي؛ بانتظار مراجعة تخصصية' : 'Al-Mutanabbi · sample transcription; specialist review pending'}
                       </span>
                     </div>
                   </div>
@@ -518,38 +524,38 @@ export const CommitteeView: React.FC<CommitteeViewProps> = (props) => {
                 </div>
 
                 <div className="grid sm:grid-cols-2 gap-4">
-                  <div className={`p-4 rounded-lg border transition-all text-xs space-y-3 ${expertScriptVerified ? 'bg-sadu-sand/80 border-sadu-gold' : 'bg-white border-dashed border-sadu-gold'}`}>
+                  <div className={`p-4 rounded-lg border transition-all text-xs space-y-3 ${sampleScriptReviewed ? 'bg-sadu-sand/80 border-sadu-gold' : 'bg-white border-dashed border-sadu-gold'}`}>
                     <div className="flex items-start justify-between">
                       <div>
-                        <span className="font-bold text-sadu-charcoal block text-sm">{isAr ? 'لجنة خبراء الخط العربي' : 'Calligraphy Experts Panel'}</span>
-                        <span className="text-[11px] text-sadu-muted">{isAr ? 'تدقيق ميزان النقطة والنسب الشريفة' : 'Script Lineage & Proportion Verification'}</span>
+                        <span className="font-bold text-sadu-charcoal block text-sm">{isAr ? 'DEMO-SCRIPT · مراجع تجريبي' : 'DEMO-SCRIPT · sample reviewer'}</span>
+                        <span className="text-[11px] text-sadu-muted">{isAr ? 'مراجعة خطية مقترحة' : 'Proposed script review'}</span>
                       </div>
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${expertScriptVerified ? 'bg-sadu-sage-light text-sadu-ink border border-sadu-sage' : 'bg-amber-100 text-amber-900 border border-amber-300'}`}>
-                        {expertScriptVerified ? (isAr ? '✓ تم التدقيق الفني' : '✓ Certified') : (isAr ? 'قيد المراجعة' : 'Pending')}
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${sampleScriptReviewed ? 'bg-sadu-sage-light text-sadu-ink border border-sadu-sage' : 'bg-amber-100 text-amber-900 border border-amber-300'}`}>
+                        {sampleScriptReviewed ? (isAr ? '✓ سُجلت مراجعة تجريبية' : '✓ Sample review recorded') : (isAr ? 'قيد المراجعة' : 'Pending')}
                       </span>
                     </div>
                     <div className="pt-2 border-t border-sadu-gold/50 flex items-center justify-between">
-                      <span className="text-[10px] font-mono text-sadu-muted">{expertScriptVerified ? 'EXP-REV-SCB-914' : (isAr ? 'بانتظار التوقيع' : 'Awaiting Sign-off')}</span>
-                      <button type="button" onClick={() => setExpertScriptVerified(!expertScriptVerified)} className={`px-3 py-1.5 rounded text-xs font-bold transition-colors cursor-pointer ${expertScriptVerified ? 'bg-sadu-sand text-sadu-ink border border-sadu-gold hover:bg-sadu-sand-dark' : 'bg-sadu-brick text-white hover:bg-sadu-brick-dark'}`}>
-                        {expertScriptVerified ? (isAr ? 'إلغاء الاعتماد' : 'Revoke Sign-off') : (isAr ? 'توقيع اعتماد خبراء الخط' : 'Sign-off Verification')}
+                      <span className="text-[10px] font-mono text-sadu-muted">{sampleScriptReviewed ? 'DEMO-SCRIPT-REVIEW' : (isAr ? 'بانتظار مراجعة تجريبية' : 'Awaiting sample review')}</span>
+                      <button type="button" onClick={() => setSampleScriptReviewed(!sampleScriptReviewed)} className={`px-3 py-1.5 rounded text-xs font-bold transition-colors cursor-pointer ${sampleScriptReviewed ? 'bg-sadu-sand text-sadu-ink border border-sadu-gold hover:bg-sadu-sand-dark' : 'bg-sadu-brick text-white hover:bg-sadu-brick-dark'}`}>
+                        {sampleScriptReviewed ? (isAr ? 'إعادة ضبط المراجعة التجريبية' : 'Reset sample review') : (isAr ? 'تسجيل مراجعة خطية تجريبية' : 'Record sample script review')}
                       </button>
                     </div>
                   </div>
 
-                  <div className={`p-4 rounded-lg border transition-all text-xs space-y-3 ${directorPoetryVerified ? 'bg-sadu-sand/80 border-sadu-gold' : 'bg-amber-50/40 border-dashed border-amber-300'}`}>
+                  <div className={`p-4 rounded-lg border transition-all text-xs space-y-3 ${samplePoetryReviewed ? 'bg-sadu-sand/80 border-sadu-gold' : 'bg-amber-50/40 border-dashed border-amber-300'}`}>
                     <div className="flex items-start justify-between">
                       <div>
-                        <span className="font-bold text-sadu-charcoal block text-sm">{isAr ? 'أ. محمد إبراهيم القصير' : 'Mohammed Ibrahim Al Qaseer'}</span>
-                        <span className="text-[11px] text-sadu-brick font-semibold">{isAr ? 'مدير إدارة الشؤون الثقافية' : 'Director of Cultural Affairs'}</span>
+                        <span className="font-bold text-sadu-charcoal block text-sm">{isAr ? 'DEMO-SPECIALIST · مراجع تجريبي' : 'DEMO-SPECIALIST · sample reviewer'}</span>
+                        <span className="text-[11px] text-sadu-brick font-semibold">{isAr ? 'دور تخصصي مقترح' : 'Proposed specialist role'}</span>
                       </div>
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${directorPoetryVerified ? 'bg-sadu-sage-light text-sadu-ink border border-sadu-sage' : 'bg-amber-100 text-amber-900 border border-amber-300'}`}>
-                        {directorPoetryVerified ? (isAr ? '✓ توقيع رسمي معتمد' : '✓ Signed by Director') : (isAr ? 'مطلوب التوقيع الصريح' : 'Signature Required')}
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${samplePoetryReviewed ? 'bg-sadu-sage-light text-sadu-ink border border-sadu-sage' : 'bg-amber-100 text-amber-900 border border-amber-300'}`}>
+                        {samplePoetryReviewed ? (isAr ? '✓ سُجلت مراجعة تجريبية' : '✓ Sample review recorded') : (isAr ? 'بانتظار مراجعة تجريبية' : 'Sample review pending')}
                       </span>
                     </div>
                     <div className="pt-2 border-t border-sadu-gold/50 flex items-center justify-between">
-                      <span className="text-[10px] font-mono text-sadu-muted">{directorPoetryVerified ? 'DIR-MIAQ-AUTH-2026' : (isAr ? 'مانع تعاقد نشط' : 'Contract Lock Active')}</span>
-                      <button type="button" onClick={() => setDirectorPoetryVerified(!directorPoetryVerified)} className={`px-3 py-1.5 rounded text-xs font-bold transition-colors cursor-pointer ${directorPoetryVerified ? 'bg-sadu-sand text-sadu-ink border border-sadu-gold hover:bg-sadu-sand-dark' : 'bg-sadu-ink text-white hover:bg-sadu-ink-dark shadow-xs'}`}>
-                        {directorPoetryVerified ? (isAr ? 'سحب الاعتماد' : 'Revoke Signature') : (isAr ? 'توقيع أ. محمد إبراهيم القصير' : 'Sign as Mohammed Ibrahim Al Qaseer')}
+                      <span className="text-[10px] font-mono text-sadu-muted">{samplePoetryReviewed ? 'DEMO-SPECIALIST-REVIEW' : (isAr ? 'لا إجراء تعاقدي' : 'No contract action')}</span>
+                      <button type="button" onClick={() => setSamplePoetryReviewed(!samplePoetryReviewed)} className={`px-3 py-1.5 rounded text-xs font-bold transition-colors cursor-pointer ${samplePoetryReviewed ? 'bg-sadu-sand text-sadu-ink border border-sadu-gold hover:bg-sadu-sand-dark' : 'bg-sadu-ink text-white hover:bg-sadu-ink-dark shadow-xs'}`}>
+                        {samplePoetryReviewed ? (isAr ? 'إعادة ضبط المراجعة التجريبية' : 'Reset sample review') : (isAr ? 'تسجيل مراجعة تخصصية تجريبية' : 'Record sample specialist review')}
                       </button>
                     </div>
                   </div>
@@ -561,12 +567,12 @@ export const CommitteeView: React.FC<CommitteeViewProps> = (props) => {
                   {isTextualVerificationComplete ? (
                     <span className="text-sadu-sage font-semibold flex items-center gap-1">
                       <CheckCircle2 className="w-4 h-4" />
-                      {isAr ? 'تم استيفاء كافة اشتراطات التحقق بنجاح' : 'All cultural verification criteria fully satisfied.'}
+                      {isAr ? 'سُجلت مراجعات تجريبية؛ لا اعتماد مؤسسياً.' : 'Sample reviews recorded; no institutional certification.'}
                     </span>
                   ) : (
                     <span className="text-sadu-brick flex items-center gap-1">
                       <AlertTriangle className="w-4 h-4" />
-                      {isAr ? 'توليد العقد النظامي محظور حتى التوقيع' : 'Contract generation blocked until Director signs.'}
+                      {isAr ? 'مراجعة تخصصية تجريبية معلقة؛ لا توقيع أو دفع.' : 'Sample specialist review pending; no signature or payment.'}
                     </span>
                   )}
                 </div>
@@ -583,7 +589,7 @@ export const CommitteeView: React.FC<CommitteeViewProps> = (props) => {
                   <span>
                     {isTextualVerificationComplete
                       ? (isAr ? 'الانتقال لتوليد العقد الثنائي ←' : 'Proceed to Bilateral Contract Generation →')
-                      : (isAr ? 'العقد محظور (يتطلب التحقق)' : 'Contract Blocked (Verification Required)')}
+                      : (isAr ? 'العقد محظور (يتطلب التحقق)' : 'Sample reviews pending (Verification Required)')}
                   </span>
                 </button>
               </div>
@@ -686,17 +692,17 @@ export const CommitteeView: React.FC<CommitteeViewProps> = (props) => {
             <div className="space-y-4">
               <div className="p-3.5 bg-sadu-paper rounded-md border-s-4 border-sadu-brick text-xs">
                 <span className="font-bold text-sadu-brick block mb-1">
-                  {isAr ? 'شروط اعتماد اللجنة الملزمة (تُلحق بنسخة النطاق المعتمد v1.2):' : 'Binding Committee Conditions (Attached to Approved Scope Revision v1.2):'}
+                  {isAr ? 'شروط مراجعة تجريبية مقترحة (غير ملزمة):' : 'Proposed sample review conditions (not binding):'}
                 </span>
                 {isAr 
-                  ? 'لا يُعتبر النطاق سارياً إلا بعد استيفاء هذه الشروط من الفريق الفني والمنسق المختص.'
-                  : 'Approved Scope remains conditional until technical verification and bilingual poetry texts are cleared.'}
+                  ? 'لا تثبت هذه المتطلبات التجريبية التزامات تعاقدية أو مؤسسية.'
+                  : 'These sample dependencies do not establish contractual or institutional requirements.'}
               </div>
 
               <div className="space-y-3">
                 {sub.conditionsEn.map((condEn, idx) => {
                   const conditionConfigs = [
-                    { step: 5, total: 5, percent: 100, statusLevel: 'completed' as const, labelEn: 'Condition Cleared', labelAr: 'مستوفى بالكامل', nextEn: 'Structural floor load signed off.', nextAr: 'معتمد رسمياً من مهندس الموقع.' },
+                    { step: 5, total: 5, percent: 100, statusLevel: 'completed' as const, labelEn: 'Sample condition checked', labelAr: 'فُحص شرط تجريبي', nextEn: 'Sample condition marked complete; no engineering approval.', nextAr: 'أُكمل شرط تجريبي؛ دون اعتماد هندسي.' },
                     { step: 3, total: 4, percent: 75, statusLevel: 'in_progress' as const, labelEn: 'In Juror Proofing', labelAr: 'قيد التدقيق اللغوي', nextEn: 'Review of verse translations underway.', nextAr: 'تدقيق ترجمات الأبيات جارٍ.' },
                     { step: 2, total: 4, percent: 50, statusLevel: 'in_progress' as const, labelEn: 'Reconciliation Active', labelAr: 'تسوية الملاحظة جارية', nextEn: 'Conservator oxidation audit report required.', nextAr: 'يتطلب تقرير مختبر الترميم.' },
                   ];

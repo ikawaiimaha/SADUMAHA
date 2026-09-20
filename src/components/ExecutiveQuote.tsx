@@ -1,4 +1,5 @@
 import { leadershipPeople } from '../data/leadershipMedia';
+import { ClaimProvenance } from './ClaimProvenance';
 import './ExecutiveQuote.css';
 
 const sourceEn = 'https://sharjah24.ae/en/Articles/2025/12/16/kmr15';
@@ -19,5 +20,6 @@ export function ExecutiveQuote({ isAr }: { isAr: boolean }) {
       </footer>
     </blockquote>
     <p className="executive-quote__context">{isAr ? 'مقتطف عن التراث في سياق إدراج الفاية على قائمة التراث العالمي؛ وليس تأييداً لمنصة سدو.' : 'Heritage remarks at the Faya World Heritage inscription ceremony; not an endorsement of SADU.'}</p>
+    <ClaimProvenance sourceKey={isAr ? 'quoteAr' : 'quoteEn'} isAr={isAr}/>
   </div>;
 }

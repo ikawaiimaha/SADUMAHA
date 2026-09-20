@@ -1,4 +1,5 @@
 import React from 'react';
+import { calculateGatePercentage } from '../utils/metrics';
 import { Language, RoleKey, WorkspaceTab, ExhibitionProgramme } from '../types';
 import { ROLE_PROFILES, PROGRAMMES } from '../data/mockData';
 import { useI18n } from '../context/I18nContext';
@@ -87,11 +88,11 @@ export const InstitutionalBreadcrumb: React.FC<InstitutionalBreadcrumbProps> = (
             <div className="w-12 h-1.5 bg-sadu-gold/40 rounded-full overflow-hidden">
               <div 
                 className="h-full bg-sadu-sage" 
-                style={{ width: `${selectedProgramme.progressPercent}%` }}
+                style={{ width: `${calculateGatePercentage(selectedProgramme.gatesReady, selectedProgramme.gatesTotal)}%` }}
               />
             </div>
             <span className="font-mono text-sadu-sage font-semibold text-[10px]">
-              {selectedProgramme.progressPercent}%
+              {calculateGatePercentage(selectedProgramme.gatesReady, selectedProgramme.gatesTotal)}%
             </span>
           </div>}
 

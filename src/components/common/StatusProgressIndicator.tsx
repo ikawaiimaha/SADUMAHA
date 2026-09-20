@@ -65,18 +65,18 @@ export interface StatusProgressIndicatorProps {
 // Predefined institutional workflow presets
 export const CONTRACT_WORKFLOW_STAGES: WorkflowStage[] = [
   { id: 'c1', nameEn: 'Draft Schedule Form 1(B)', nameAr: 'مسودة ملحق جدول الأعمال', status: 'completed', signeeEn: 'Coordinator' },
-  { id: 'c2', nameEn: 'Direct Rights Legal Audit', nameAr: 'التدقيق القانوني وحقوق الاستبعاد', status: 'completed', signeeEn: 'Legal Counsel' },
-  { id: 'c3', nameEn: 'Artist Digital Signature', nameAr: 'التوقيع الرقمي للفنان', status: 'completed', signeeEn: 'Participating Artist' },
-  { id: 'c4', nameEn: 'Directorate Countersignature', nameAr: 'توقيع إدارة الشؤون الثقافية', status: 'in_progress', signeeEn: 'Director of Cultural Affairs' },
+  { id: 'c2', nameEn: 'Sample clause review', nameAr: 'مراجعة بنود تجريبية', status: 'completed', signeeEn: 'DEMO-LEGAL' },
+  { id: 'c3', nameEn: 'Proposed artist review', nameAr: 'مراجعة فنان مقترحة', status: 'completed', signeeEn: 'DEMO-ARTIST' },
+  { id: 'c4', nameEn: 'Proposed delegated review', nameAr: 'مراجعة مفوضة مقترحة', status: 'in_progress', signeeEn: 'DEMO-REVIEWER' },
   { id: 'c5', nameEn: "Sample register entry", nameAr: "قيد سجل تجريبي", status: 'pending', signeeEn: 'Institutional Archive' },
 ];
 
 export const COMMITTEE_WORKFLOW_STAGES: WorkflowStage[] = [
   { id: 'm1', nameEn: 'Curatorial Dossier Intake', nameAr: 'استلام وتدقيق ملف الترشح', status: 'completed', signeeEn: 'Biennial Secretariat' },
-  { id: 'm2', nameEn: 'Zero Conflict Declaration', nameAr: 'إقرار النزاهة وحظر تعارض المصالح', status: 'completed', signeeEn: 'Jury Panel' },
+  { id: 'm2', nameEn: 'Sample conflict disclosure', nameAr: 'إفصاح تعارض مصالح تجريبي', status: 'completed', signeeEn: 'Jury Panel' },
   { id: 'm3', nameEn: 'Artistic Deliberation & Scoring', nameAr: 'جلسة المداولة ورصد الدرجات', status: 'completed', signeeEn: 'Chief Juror' },
   { id: 'm4', nameEn: 'Conditional Approval Annex', nameAr: 'ملحق شروط الاعتماد الفنية', status: 'in_progress', signeeEn: 'Curatorial Committee' },
-  { id: 'm5', nameEn: 'Ratified to Approved Scope v1.2', nameAr: 'المصادقة والتثبيت في النطاق v1.2', status: 'pending', signeeEn: 'Directorate Leadership' },
+  { id: 'm5', nameEn: 'Sample scope v1.2', nameAr: 'نطاق تجريبي v1.2', status: 'pending', signeeEn: 'DEMO-REVIEWER' },
 ];
 
 export const StatusProgressIndicator: React.FC<StatusProgressIndicatorProps> = ({
@@ -208,11 +208,11 @@ export const StatusProgressIndicator: React.FC<StatusProgressIndicatorProps> = (
   const defaultLabel = resolvedStatus === 'pending_lpo'
     ? (isAr ? 'بانتظار أمر الشراء المحلي (LPO مقفل)' : 'Pending LPO (Locked)')
     : type === 'contract'
-    ? (resolvedStatus === 'completed' ? (isAr ? 'عقد نافذ وموثق' : 'Contract Executed') :
-       resolvedStatus === 'in_progress' ? (isAr ? 'قيد التوقيع الثنائي' : 'Bilateral Signing') :
+    ? (resolvedStatus === 'completed' ? (isAr ? 'اكتملت مرحلة العقد التجريبية' : 'Sample contract stage complete') :
+       resolvedStatus === 'in_progress' ? (isAr ? 'مراجعة عقد تجريبية' : 'Sample contract review') :
        resolvedStatus === 'at_risk' ? (isAr ? 'تباين تعاقدي' : 'Contract Variance') :
        (isAr ? 'مسودة العقد' : 'Contract Draft'))
-    : (resolvedStatus === 'completed' ? (isAr ? 'معتمد ومثبت بالنطاق' : 'Ratified in Scope') :
+    : (resolvedStatus === 'completed' ? (isAr ? 'تمت مراجعة النطاق التجريبي' : 'Sample scope reviewed') :
        resolvedStatus === 'in_progress' ? (isAr ? 'مداولة وتحكيم' : 'Jury Deliberation') :
        resolvedStatus === 'at_risk' ? (isAr ? 'شروط غير مستوفاة' : 'Conditions Unmet') :
        (isAr ? 'بانتظار التحكيم' : 'Pending Review'));
@@ -401,7 +401,7 @@ export const StatusProgressIndicator: React.FC<StatusProgressIndicatorProps> = (
             <div>
               <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-sadu-brick">
                 {type === 'contract' ? <FileSignature className="w-3 h-3" /> : <Scale className="w-3 h-3" />}
-                <span>{type === 'contract' ? (isAr ? 'سلسلة تدقيق العقد' : 'Contract Audit Trail') : (isAr ? 'مسار اعتماد اللجنة' : 'Committee Ratification')}</span>
+                <span>{type === 'contract' ? (isAr ? 'مراحل عقد تجريبية' : 'Sample contract stages') : (isAr ? 'مراحل لجنة تجريبية' : 'Sample committee stages')}</span>
               </div>
               <h4 className="font-bold text-sadu-charcoal text-sm mt-0.5">
                 {localizeDigits(activeLabel)}
@@ -489,7 +489,7 @@ export const StatusProgressIndicator: React.FC<StatusProgressIndicatorProps> = (
           <div className="pt-2 border-t border-sadu-gold/50 flex items-center justify-between text-[11px]">
             <span className="text-sadu-muted flex items-center gap-1">
               <ShieldCheck className="w-3 h-3 text-sadu-sage" />
-              <span>{isAr ? 'مزامنة فورية مشفرة' : 'Live Sync Validated'}</span>
+              <span>{isAr ? 'مثال محلي — ليس سجل توقيع' : 'Local sample — not a signing ledger'}</span>
             </span>
 
             <div className="flex items-center gap-1.5">

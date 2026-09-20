@@ -51,8 +51,8 @@ export const GalleryLabelPrintView: React.FC<GalleryLabelPrintViewProps> = ({
             </div>
             <p className="text-xs text-sadu-muted mt-0.5">
               {isAr
-                ? 'مقاس قياسي للمتحف: 15 سم × 10 سم · ثنائي اللغة بنظام الخطوط المعتمد لدائرة الثقافة'
-                : 'Standard Museum Spec: 15cm × 10cm · Formatted for direct PDF printing & plotter cutting'}
+                ? 'تخطيط تجريبي: 15 سم × 10 سم · الأبعاد والخطوط خيارات تصميم؛ اعتماد النموذج المؤسسي غير موثق'
+                : 'Sample layout: 15cm × 10cm · dimensions and typography are design choices; institutional template approval unverified'}
             </p>
           </div>
         </div>
@@ -90,7 +90,7 @@ export const GalleryLabelPrintView: React.FC<GalleryLabelPrintViewProps> = ({
           </span>
         </div>
         <span className="font-mono text-[11px] text-sadu-muted hidden sm:inline">
-          Sharjah Art Museum Specs
+          SADU sample layout
         </span>
       </div>
 
@@ -114,6 +114,7 @@ export const GalleryLabelPrintView: React.FC<GalleryLabelPrintViewProps> = ({
                 className="w-[15cm] h-[10cm] max-w-full p-6 bg-white border border-gray-300 rounded-sm shadow-md print:shadow-none print:border-gray-400 page-break-inside-avoid relative flex flex-col justify-between box-border overflow-hidden select-text text-gray-900"
                 style={{ breakInside: 'avoid' }}
               >
+                <p className="text-[9px] font-sans text-gray-600">{isAr ? 'عينة غير معتمدة · الأبعاد والخطوط خيارات تصميم تجريبية' : 'UNAPPROVED SAMPLE · dimensions and typography are design choices'}</p>
                 {/* Crop & Registration Marks for Plotter/Printer (Corner Guides) */}
                 <span className="absolute top-1 start-1 w-2 h-2 border-t border-s border-gray-400 opacity-60 print:opacity-100 pointer-events-none" />
                 <span className="absolute top-1 end-1 w-2 h-2 border-t border-e border-gray-400 opacity-60 print:opacity-100 pointer-events-none" />

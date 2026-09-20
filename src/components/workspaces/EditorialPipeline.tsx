@@ -80,40 +80,40 @@ const INITIAL_ASSETS: TextAsset[] = [
     artistAr: 'يوسف نبهان',
     isTakreem: true,
     sourceLang: 'ar',
-    sourceLangLabelEn: 'Arabic Original (Artist Hand)',
-    sourceLangLabelAr: 'الأصل بخط الفنان (عربي)',
+    sourceLangLabelEn: 'Authored SADU sample',
+    sourceLangLabelAr: 'نص تجريبي من إعداد سدو',
     stage: 'english_translation',
     statusTagEn: 'In English Translation',
     statusTagAr: 'قيد الترجمة الإنجليزية',
     statusColor: 'info',
     wordCount: 340,
-    publicationTargetEn: 'Official Biennial Monograph (Plates Cat. p. 78)',
-    publicationTargetAr: 'المونوغراف الرسمي للبينالي (صفحة لوحات 78)',
+    publicationTargetEn: 'Sample catalogue page',
+    publicationTargetAr: 'صفحة كتالوج تجريبية',
     arabicMasterLocked: true,
-    arabicAssignedToEn: 'Dr. Ahmad Al-Qassimi (Classical Script Scholar)',
-    arabicAssignedToAr: 'د. أحمد القاسمي (مستشار النصوص الكلاسيكية)',
-    englishAssignedToEn: 'Dr. Christopher Vance (Curatorial Literary Translator)',
-    englishAssignedToAr: 'د. كريستوفر فانس (مترجم الأدب التراثي)',
-    arabicText: '«أَعَزُّ مَكَانٍ في الدُّنَى سَرْجُ سَابِحٍ ... وَخَيْرُ جَلِيسٍ في الزَّمَانِ كِتَابُ»\n«رَمَى الدَّهْرُ سَهْماً فَاخْتَرَقَ السَّمَاءَ ... وَخَطَّ المَدَى بِالبَيَانِ المُهَابِ»',
-    englishText: '"The noblest place in this world is the saddle of a swift steed, and the finest companion in all time is a book. Destined time loosed an arrow that cleft the sky, etching the expanse with solemn, majestic eloquence."',
-    editorialNotesEn: 'Master Arabic vocalization and diacritical signs authenticated against original Al-Mutanabbi manuscripts in the Sharjah Cultural Directorate Archives. English metric cadence in final curatorial review.',
-    editorialNotesAr: 'تم ضبط علامات الإعراب والتشكيل القرآني/الكلاسيكي بدقة ومطابقتها مع مخطوطات ديوان المتنبي في دار المخطوطات بالشارقة. الوزن الشعري المترجم قيد المراجعة الأدبية النهائية.',
+    arabicAssignedToEn: 'DEMO-AR · sample editor',
+    arabicAssignedToAr: 'DEMO-AR · محرر تجريبي',
+    englishAssignedToEn: 'DEMO-EN · sample editor',
+    englishAssignedToAr: 'DEMO-EN · محرر تجريبي',
+    arabicText: 'نص تجريبي من إعداد سدو لعرض مراحل التحرير. ليس اقتباساً تاريخياً أو بياناً معتمداً لفنان.',
+    englishText: 'Authored SADU sample for demonstrating editorial stages. Not a historical quotation or an approved artist statement.',
+    editorialNotesEn: 'Authored sample text for workflow testing, not a historical quotation. No manuscript comparison, institutional review or publication permission established.',
+    editorialNotesAr: 'نص تجريبي مؤلف لاختبار المسار، وليس اقتباساً تاريخياً. لم تُثبت مقابلة مخطوطة أو مراجعة مؤسسية أو صلاحية نشر.',
     lastUpdated: '12 Sep 2026',
   },
   {
     id: 'txt-02',
     code: 'TXT-2026-BIO-02',
-    titleEn: 'Artist Monograph & Official Biography',
-    titleAr: 'السيرة الذاتية الرسمية ومونوغراف الفنان',
+    titleEn: 'Sample artist biography',
+    titleAr: 'سيرة فنان تجريبية',
     assetType: 'bio',
     assetTypeEn: 'Curatorial Biography',
-    assetTypeAr: 'سيرة متحفية معتمدة',
+    assetTypeAr: 'سيرة فنان تجريبية',
     artistEn: 'Youssef Nabhan',
     artistAr: 'يوسف نبهان',
     isTakreem: true,
     sourceLang: 'non_ar',
-    sourceLangLabelEn: 'French / English (Paris Studio Intake)',
-    sourceLangLabelAr: 'أصل فرنسي/إنجليزي (استوديو باريس)',
+    sourceLangLabelEn: 'Fictional biography sample',
+    sourceLangLabelAr: 'سيرة افتراضية تجريبية',
     stage: 'arabic_finalization',
     statusTagEn: 'Pending Arabic Proofread',
     statusTagAr: 'قيد التدقيق اللغوي العربي',
@@ -122,15 +122,15 @@ const INITIAL_ASSETS: TextAsset[] = [
     publicationTargetEn: 'Biennial Masters Directory & Guidebook',
     publicationTargetAr: 'دليل رواد الخط والكتالوج العام للبينالي',
     arabicMasterLocked: false,
-    arabicAssignedToEn: 'Ustadh Mona Al-Balooshi (Senior Arabic Editor)',
-    arabicAssignedToAr: 'أ. منى البلوشي (كبير المحررين اللغويين)',
-    englishAssignedToEn: 'Pending Arabic Master Sign-off (Locked)',
-    englishAssignedToAr: 'معلق لحين اعتماد النص العربي (مقفل)',
-    sourceTextExcerptEn: 'Youssef Nabhan (b. 1968) is widely celebrated for reinventing the architectural cadence of Ottoman Thuluth and geometric Kufic script...',
-    arabicText: '«يوسف نبهان (مواليد 1968)، خطاط ونحات معاصر، يُعد من أبرز المجددين الذين أعادوا صياغة الفراغ المعماري لحرف الثلث العثماني والكوفي الهندسي. تجمع أعماله بين الصرامة الأكاديمية للتراكيب الخطية والجرأة التشكيلية المعاصرة...»',
-    englishText: '[English Translation Locked: Under Sharjah Cultural Protocol, the Arabic text must be ratified by the Senior Editor before the catalogue English version is generated.]',
-    editorialNotesEn: 'Strict Institutional Gate: Source was non-Arabic, so it was translated to Arabic first. Currently under Senior Arabic proofreading for terminology alignment (e.g., using official Sharjah Calligraphy terminology). English is locked.',
-    editorialNotesAr: 'بوابة إلزامية صارمة: النص المصدر كان أجنبياً، فتمت ترجمته إلى العربية أولاً، وهو الآن قيد التدقيق اللغوي لتوحيد المصطلحات (مثل: مصطلحات خط الثلث الجلي ومحاور التراكيب). النسخة الإنجليزية مقفلة آلياً.',
+    arabicAssignedToEn: 'DEMO-AR · sample editor',
+    arabicAssignedToAr: 'DEMO-AR · محرر تجريبي',
+    englishAssignedToEn: 'Sample Arabic review pending',
+    englishAssignedToAr: 'بانتظار مراجعة عربية تجريبية',
+    sourceTextExcerptEn: 'Fictional artist biography for testing the layout; no personal history is asserted.',
+    arabicText: 'سيرة افتراضية لاختبار عرض بيانات الفنان. ليست سجلاً موثقاً لشخص حقيقي.',
+    englishText: '[Sample English editing stage: available after the sample Arabic review. This sequence is a design choice, not verified policy.]',
+    editorialNotesEn: 'Arabic-first sequencing is a proposed demonstration choice. No institutional editorial policy or real reviewer assignment established.',
+    editorialNotesAr: 'تقديم العربية في التسلسل خيار تجريبي مقترح. لم تُثبت سياسة تحرير مؤسسية أو تكليف مراجع فعلي.',
     lastUpdated: '14 Sep 2026',
   },
   {
@@ -145,24 +145,24 @@ const INITIAL_ASSETS: TextAsset[] = [
     artistAr: 'يوسف نبهان',
     isTakreem: true,
     sourceLang: 'ar',
-    sourceLangLabelEn: 'Arabic Original (Artist Statement)',
-    sourceLangLabelAr: 'الأصل العربي (بيان الفنان)',
+    sourceLangLabelEn: 'Authored concept sample',
+    sourceLangLabelAr: 'بيان مفاهيمي تجريبي مؤلف',
     stage: 'catalogue_ready',
-    statusTagEn: 'Catalogue Ready',
-    statusTagAr: 'جاهز للكتالوج',
+    statusTagEn: 'Sample layout ready',
+    statusTagAr: 'جاهز للتخطيط التجريبي',
     statusColor: 'success',
     wordCount: 420,
     publicationTargetEn: 'Museum Central Atrium Wall Plaque & Vol. 1 Catalogue',
     publicationTargetAr: 'اللوحة الجدارية بالبهو الرئيسي وكتالوج المجلد الأول',
     arabicMasterLocked: true,
-    arabicAssignedToEn: 'Sharjah Directorate Curatorial Committee (Approved)',
-    arabicAssignedToAr: 'لجنة التقييم والتحكيم الفني بدائرة الثقافة (معتمد)',
-    englishAssignedToEn: 'Publication Desk — Print Proof Certified',
-    englishAssignedToAr: 'مكتب النشر — مسودة الطباعة معتمدة',
-    arabicText: '«يمثل "أفق كوفي" محاورة فراغية ملحمية بين كثافة خام البرونز المصقول ورشاقة السطر الكوفي الهندسي، محولاً الصمت المعماري لبهو المتحف إلى ترنيمة بصرية تحتفي بجذور الحرف ومداه المستقبلي.»',
-    englishText: '"\'Kufic Horizon\' embodies an epic spatial dialogue between the enduring weight of patinated bronze and the austere elegance of geometric Kufic script, transforming the architectural quietude of the museum atrium into a visual hymn."',
-    editorialNotesEn: 'Certified Complete: Both Arabic master and curated English translation have passed editorial scrutiny, tone matching, and typographic proofing for offset print.',
-    editorialNotesAr: 'مكتمل ومعتمد: اجتاز النصان العربي الأم والمترجم الإنجليزي كافة مراحل التدقيق والتحرير ومطابقة التخطيط الطباعي للنشر الرسمي.',
+    arabicAssignedToEn: 'DEMO-AR · sample editor',
+    arabicAssignedToAr: 'DEMO-AR · محرر تجريبي',
+    englishAssignedToEn: 'DEMO-EN · sample editor',
+    englishAssignedToAr: 'DEMO-EN · محرر تجريبي',
+    arabicText: 'بيان مفاهيمي افتراضي لعمل تجريبي، أُعد لاختبار التحرير الثنائي.',
+    englishText: 'Fictional concept statement for a sample artwork, prepared to test bilingual editing.',
+    editorialNotesEn: 'Seeded sample completion only. No bilingual review or permission to publish established.',
+    editorialNotesAr: 'حالة اكتمال تجريبية مُعدّة مسبقاً. لم تُثبت مراجعة ثنائية اللغة أو صلاحية نشر.',
     lastUpdated: '15 Sep 2026',
   }
 ];
@@ -218,16 +218,16 @@ export const EditorialPipeline: React.FC = () => {
       stepNumber: 3,
       titleEn: 'English Translation Gate',
       titleAr: 'الترجمة الإنجليزية المقيدة',
-      subtitleEn: 'Triggered ONLY after Arabic master sign-off',
-      subtitleAr: 'مشروطة حصرياً باعتماد النص العربي الأم',
+      subtitleEn: 'Follows the sample Arabic review',
+      subtitleAr: 'تلي المراجعة العربية التجريبية',
     },
     {
       id: 'catalogue_ready',
       stepNumber: 4,
-      titleEn: 'Catalogue Ready',
-      titleAr: 'جاهز للنشر والكتالوج',
-      subtitleEn: 'Print layout verified & typography proofed',
-      subtitleAr: 'معتمد للمطبعة وللشاشات الجدارية التوثيقية',
+      titleEn: 'Sample layout ready',
+      titleAr: 'جاهز للتخطيط التجريبي',
+      subtitleEn: 'Sample layout stage; publication not authorized',
+      subtitleAr: 'مرحلة تخطيط تجريبية؛ لا تفويض بالنشر',
     }
   ];
 
@@ -244,24 +244,24 @@ export const EditorialPipeline: React.FC = () => {
           statusTagEn: 'In English Translation',
           statusTagAr: 'قيد الترجمة الإنجليزية',
           statusColor: 'info',
-          englishAssignedToEn: 'Dr. Christopher Vance (Curatorial Literary Translator)',
-          englishAssignedToAr: 'د. كريستوفر فانس (مترجم الأدب التراثي)',
+          englishAssignedToEn: 'DEMO-EN · sample editor',
+          englishAssignedToAr: 'DEMO-EN · محرر تجريبي',
           englishText: item.englishText.startsWith('[English Translation Locked')
             ? '"Youssef Nabhan (b. 1968) is a master calligrapher and sculptor recognized as one of the seminal innovators redefining the architectural space of Ottoman Thuluth and geometric Kufic scripts..."'
             : item.englishText,
-          editorialNotesEn: 'Arabic Master Text certified and signed off by Senior Editor. English translation gate unlocked and in progress.',
-          editorialNotesAr: 'تم اعتماد وتثبيت النص العربي الأم من كبير المحررين. تم فتح بوابة الترجمة الإنجليزية وهي قيد التنفيذ حالياً.',
+          editorialNotesEn: 'Sample Arabic review recorded locally. The next demonstration stage is English editing; no certification is issued.',
+          editorialNotesAr: 'سُجلت مراجعة عربية تجريبية محلياً. تليها مرحلة تحرير إنجليزية تجريبية؛ لا تصدر شهادة.',
           lastUpdated: 'Just now'
         };
       } else if (item.stage === 'english_translation') {
         return {
           ...item,
           stage: 'catalogue_ready',
-          statusTagEn: 'Catalogue Ready',
-          statusTagAr: 'جاهز للكتالوج',
+          statusTagEn: 'Sample layout ready',
+          statusTagAr: 'جاهز للتخطيط التجريبي',
           statusColor: 'success',
-          editorialNotesEn: 'Bilingual text verified, synchronized, and approved for catalogue publication.',
-          editorialNotesAr: 'تمت مطابقة وتدقيق النصين العربي والإنجليزي واعتمادهما للطباعة الرسمية.',
+          editorialNotesEn: 'Sample bilingual review recorded locally. This does not approve publication.',
+          editorialNotesAr: 'سُجلت مراجعة ثنائية اللغة تجريبية محلياً. لا تمنح اعتماداً للنشر.',
           lastUpdated: 'Just now'
         };
       }
@@ -291,12 +291,12 @@ export const EditorialPipeline: React.FC = () => {
           <div className="space-y-1 max-w-3xl">
             <div className="flex items-center gap-2 text-xs font-bold text-sadu-brick uppercase tracking-wider">
               <BookOpen className="w-4 h-4 text-sadu-ochre" />
-              <span>{isAr ? 'دائرة الثقافة بحكومة الشارقة — بروتوكول التحرير والترجمة الرسمي' : 'Sharjah Directorate of Cultural Affairs — Official Editorial & Translation Pipeline'}</span>
+              <span>{isAr ? 'سدو — مسار تحرير مقترح' : 'SADU — proposed editorial workflow'}</span>
             </div>
             <h2 className="text-xl sm:text-2xl font-editorial font-bold text-sadu-charcoal flex items-center gap-2 flex-wrap">
               <span>{isAr ? 'مسار اعتماد النصوص ونشر الكتالوج المؤسسي' : 'Institutional Editorial & Translation Workflow'}</span>
               <span className="text-xs font-mono font-normal px-2 py-0.5 rounded bg-[#FFF9EE] text-[#8C601E] border border-sadu-ochre">
-                {isAr ? 'الأصل العربي هو الحاكم' : 'Arabic-First Master Rule'}
+                {isAr ? 'تسلسل مقترح يبدأ بالعربية' : 'Proposed Arabic-first sequence'}
               </span>
             </h2>
             <p className="text-xs sm:text-sm text-sadu-muted leading-relaxed">
@@ -336,12 +336,12 @@ export const EditorialPipeline: React.FC = () => {
 
             <div className="p-3 bg-sadu-linen rounded border-2 border-sadu-ochre text-xs space-y-1 relative">
               <div className="flex items-center justify-between text-[#8C601E] font-bold">
-                <span>{isAr ? 'المرحلة 2: اعتماد النص العربي' : 'Step 2: Arabic Finalization'}</span>
+                <span>{isAr ? 'المرحلة 2: تسجيل مراجعة عربية تجريبية' : 'Step 2: Arabic Finalization'}</span>
                 <span className="font-mono text-[10px] bg-[#FFF9EE] text-[#8C601E] px-1.5 py-0.5 rounded border border-sadu-ochre">02</span>
               </div>
               <p className="text-[11px] text-sadu-charcoal font-medium leading-relaxed">
                 {isAr
-                  ? 'إذا كان النص أجنبياً -> يُترجم للعربية أولاً. إذا كان عربياً -> يذهب مباشرة للمحرر اللغوي المعتمد للتدقيق والتثبيت.'
+                  ? 'في هذا المثال يُعد النص العربي ثم يُراجع؛ لم يُثبت تكليف محرر مؤسسي.'
                   : 'If non-Arabic -> routes to Translator for Arabic. If already Arabic -> routes directly to Senior Proofreader.'}
               </p>
             </div>
@@ -353,8 +353,8 @@ export const EditorialPipeline: React.FC = () => {
               </div>
               <p className="text-[11px] text-sadu-muted leading-relaxed">
                 {isAr
-                  ? 'لا تبدأ الترجمة الإنجليزية إطلاقاً إلا بعد تثبيت النص العربي الأم وإقفاله كمرجع رسمي للكتالوج.'
-                  : 'English translation begins ONLY after Arabic master sign-off to prevent catalogue translation discrepancies.'}
+                  ? 'في هذا المثال تلي المراجعة الإنجليزية المراجعة العربية؛ لا يُثبت ذلك ترتيباً مؤسسياً ملزماً.'
+                  : 'In this example, English editing follows the sample Arabic review; this does not establish institutional policy.'}
               </p>
             </div>
           </div>
@@ -375,7 +375,7 @@ export const EditorialPipeline: React.FC = () => {
             }`}
           >
             <BookOpen className="w-3.5 h-3.5" />
-            <span>{isAr ? 'شروحات الدليل والكتالوج (نموذج منير فاطمي)' : 'Exhibition Catalogue Proofing (Mounir Fatmi Blueprint)'}</span>
+            <span>{isAr ? 'تدقيق كتالوج معرض تجريبي' : 'Sample exhibition catalogue proofing'}</span>
             <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-white/20 font-mono">
               {formatNumber(catalogueItems.length)}
             </span>
@@ -400,7 +400,7 @@ export const EditorialPipeline: React.FC = () => {
         </div>
 
         <span className="text-[11px] text-sadu-muted italic">
-          {isAr ? 'استناداً إلى وثيقة «شروحات الدليل (2).docx» المعتمدة من إدارة الشؤون الثقافية' : 'Aligned with official Directorate Catalogue Specification Blueprint'}
+          {isAr ? 'تخطيط كتالوج تجريبي؛ لم يُثبت النموذج المنطبق أو إصداره أو اعتماده.' : 'Sample catalogue layout; applicable template, edition and approval not established.'}
         </span>
       </div>
 
@@ -478,7 +478,7 @@ export const EditorialPipeline: React.FC = () => {
                             className="w-full py-1.5 px-3 rounded bg-sadu-brick hover:bg-sadu-brick-dark text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-xs"
                           >
                             <CheckCircle2 className="w-3.5 h-3.5 text-sadu-gold" />
-                            <span>{isAr ? 'اعتماد النص العربي' : 'Approve Arabic Master'}</span>
+                            <span>{isAr ? 'تسجيل مراجعة عربية تجريبية' : 'Record sample Arabic review'}</span>
                           </button>
                         </div>
                       </div>
@@ -563,7 +563,7 @@ export const EditorialPipeline: React.FC = () => {
 
                         <div className="p-2 bg-sadu-sand/60 rounded border border-sadu-gold/40 text-[10px] text-sadu-sage font-medium flex items-center gap-1.5">
                           <CheckCircle2 className="w-3.5 h-3.5 text-sadu-sage" />
-                          <span>{isAr ? 'النص العربي مدقق ومقفل رسمياً' : 'Arabic master ratified & locked'}</span>
+                          <span>{isAr ? 'سُجلت مراجعة عربية تجريبية' : 'Sample Arabic review recorded'}</span>
                         </div>
 
                         <div className="pt-2 border-t border-sadu-gold/50 flex justify-end">
@@ -583,7 +583,7 @@ export const EditorialPipeline: React.FC = () => {
               </div>
             </div>
 
-            {/* Column 3: Catalogue Ready (جاهز للطباعة) */}
+            {/* Column 3: Sample layout ready (جاهز للطباعة) */}
             <div className="bg-sadu-sand border border-sadu-gold rounded-lg p-4 flex flex-col justify-between shadow-2xs min-h-[460px]">
               <div>
                 <div className="pb-3 border-b border-sadu-gold/60 flex items-center justify-between">
@@ -592,7 +592,7 @@ export const EditorialPipeline: React.FC = () => {
                       03 · PRINT READY
                     </span>
                     <h3 className="font-editorial text-base font-bold text-sadu-charcoal mt-1">
-                      {isAr ? 'جاهز للطباعة' : 'Catalogue Ready'}
+                      {isAr ? 'جاهز للطباعة' : 'Sample layout ready'}
                     </h3>
                     <p className="text-[11px] text-sadu-muted">
                       {isAr ? 'بيانات ثنائية اللغة مقفلة لمصمم الكتالوج' : 'Fully bilingual items locked for designer'}
@@ -663,7 +663,7 @@ export const EditorialPipeline: React.FC = () => {
                         <div className="pt-2 border-t border-sadu-gold/50 flex items-center justify-between">
                           <span className="px-2.5 py-1 rounded bg-sadu-sage/20 border border-sadu-sage text-sadu-ink text-xs font-bold flex items-center gap-1.5">
                             <ShieldCheck className="w-3.5 h-3.5 text-sadu-sage" />
-                            <span>{isAr ? 'موثق للطباعة' : 'Verified for Print'}</span>
+                            <span>{isAr ? 'معاينة طباعة تجريبية' : 'Sample print preview'}</span>
                           </span>
                           <Lock className="w-3.5 h-3.5 text-sadu-muted" />
                         </div>
@@ -818,7 +818,7 @@ export const EditorialPipeline: React.FC = () => {
                               }`}>
                                 {asset.arabicMasterLocked ? <Lock className="w-2.5 h-2.5" /> : <Unlock className="w-2.5 h-2.5" />}
                                 {asset.arabicMasterLocked
-                                  ? (isAr ? 'معتمد ومقفل' : 'Certified & Locked')
+                                  ? (isAr ? 'سُجلت مراجعة تجريبية' : 'Sample review recorded')
                                   : (isAr ? 'قيد التحرير' : 'In Editorial Review')}
                               </span>
                             </div>
@@ -842,7 +842,7 @@ export const EditorialPipeline: React.FC = () => {
                 {col.id === 'source_intake' && (isAr ? 'نقطة انطلاق تدفق النصوص من المشاركين' : 'Starting point for participating artist texts')}
                 {col.id === 'arabic_finalization' && (isAr ? 'تحرير وتدقيق الأصل العربي هو الأساس' : 'Arabic master must be locked before English begins')}
                 {col.id === 'english_translation' && (isAr ? 'الترجمة الأدبية مقيدة بسلامة النص العربي' : 'Literary translation strictly bound to master Arabic')}
-                {col.id === 'catalogue_ready' && (isAr ? 'مطابق لمواصفات الطباعة والنشر بدائرة الثقافة' : 'Certified for institutional print & digital catalogue')}
+                {col.id === 'catalogue_ready' && (isAr ? 'تخطيط تجريبي فقط؛ لا تفويض بالنشر' : 'Sample layout only; publication not authorized')}
               </div>
             </div>
           );
@@ -892,7 +892,7 @@ export const EditorialPipeline: React.FC = () => {
                   className="px-4 py-2 bg-[#8C601E] hover:bg-[#724D18] text-white text-xs font-bold rounded shadow-xs flex items-center gap-2 cursor-pointer transition-colors active:scale-98"
                 >
                   <Lock className="w-3.5 h-3.5" />
-                  <span>{isAr ? 'اعتماد وإقفال النص العربي -> فتح الترجمة الإنجليزية' : 'Certify Arabic Master -> Unlock English Translation'}</span>
+                  <span>{isAr ? 'تسجيل مراجعة عربية تجريبية ← تحرير الإنجليزية' : 'Record sample Arabic review → English editing'}</span>
                 </button>
               )}
 
@@ -903,14 +903,14 @@ export const EditorialPipeline: React.FC = () => {
                   className="px-4 py-2 bg-sadu-ink hover:bg-sadu-ink-dark text-white text-xs font-bold rounded shadow-xs flex items-center gap-2 cursor-pointer transition-colors active:scale-98"
                 >
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>{isAr ? 'اعتماد الترجمة ونقلها للكتالوج (جاهز للطباعة)' : 'Certify English & Send to Catalogue (Print Ready)'}</span>
+                  <span>{isAr ? 'تسجيل مراجعة إنجليزية تجريبية ← معاينة التخطيط' : 'Record sample English review → Layout preview'}</span>
                 </button>
               )}
 
               {selectedAsset.stage === 'catalogue_ready' && (
                 <span className="px-3.5 py-1.5 bg-sadu-sage/20 text-sadu-ink border border-sadu-sage rounded text-xs font-bold flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 text-sadu-sage" />
-                  <span>{isAr ? 'معتمد للنشر النهائي والمطبعة' : 'Certified for Offset Print'}</span>
+                  <span>{isAr ? 'اكتمل التخطيط التجريبي' : 'Sample layout complete'}</span>
                 </span>
               )}
             </div>
@@ -923,12 +923,12 @@ export const EditorialPipeline: React.FC = () => {
               <div className="flex items-center justify-between pb-2 border-b border-sadu-gold/50">
                 <div className="flex items-center gap-1.5">
                   <span className="font-bold text-xs text-sadu-charcoal">
-                    {isAr ? 'النص العربي الأم (المرجع الأساسي)' : 'Master Arabic Text (Record of Authority)'}
+                    {isAr ? 'النص العربي التجريبي' : 'Arabic sample text'}
                   </span>
                   {selectedAsset.arabicMasterLocked ? (
                     <span className="px-1.5 py-0.5 rounded bg-sadu-sage/20 text-sadu-ink text-[10px] font-bold flex items-center gap-1">
                       <Lock className="w-2.5 h-2.5" />
-                      {isAr ? 'مقفل ومعتمد' : 'Locked & Certified'}
+                      {isAr ? 'سُجلت مراجعة تجريبية' : 'Sample review recorded'}
                     </span>
                   ) : (
                     <span className="px-1.5 py-0.5 rounded bg-amber-100 text-[#8C601E] text-[10px] font-bold flex items-center gap-1">
@@ -960,7 +960,7 @@ export const EditorialPipeline: React.FC = () => {
               <div className="flex items-center justify-between pb-2 border-b border-sadu-gold/50">
                 <div className="flex items-center gap-1.5">
                   <span className="font-bold text-xs text-sadu-charcoal">
-                    {isAr ? 'الترجمة الإنجليزية للكتالوج' : 'Official Catalogue English Translation'}
+                    {isAr ? 'الترجمة الإنجليزية للكتالوج' : 'Sample English text'}
                   </span>
                   {selectedAsset.stage === 'arabic_finalization' ? (
                     <span className="px-1.5 py-0.5 rounded bg-amber-100 text-[#8C601E] text-[10px] font-bold flex items-center gap-1">
@@ -970,7 +970,7 @@ export const EditorialPipeline: React.FC = () => {
                   ) : selectedAsset.stage === 'catalogue_ready' ? (
                     <span className="px-1.5 py-0.5 rounded bg-sadu-sage/20 text-sadu-ink text-[10px] font-bold flex items-center gap-1">
                       <CheckCircle2 className="w-2.5 h-2.5" />
-                      {isAr ? 'معتمد' : 'Certified'}
+                      {isAr ? 'سُجلت مراجعة تجريبية' : 'Sample review recorded'}
                     </span>
                   ) : (
                     <span className="px-1.5 py-0.5 rounded bg-sky-100 text-sky-800 text-[10px] font-bold flex items-center gap-1">
@@ -1001,7 +1001,7 @@ export const EditorialPipeline: React.FC = () => {
           {/* Institutional Audit Notes & Provenance */}
           <div className="p-3.5 bg-sadu-sand rounded-md border border-sadu-gold text-xs space-y-1">
             <span className="font-bold text-sadu-ink block">
-              {isAr ? 'سجل التدقيق اللغوي والامتثال المؤسسي:' : 'Institutional Editorial Audit & Compliance Notes:'}
+              {isAr ? 'ملاحظات تحريرية تجريبية:' : 'Sample editorial notes:'}
             </span>
             <p className="text-sadu-charcoal leading-relaxed text-[11px]">
               {isAr ? selectedAsset.editorialNotesAr : selectedAsset.editorialNotesEn}

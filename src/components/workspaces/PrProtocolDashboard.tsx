@@ -88,7 +88,7 @@ export const PrProtocolDashboard: React.FC = () => {
               isFullyCleared ? 'bg-sadu-sage-light border border-sadu-sage text-sadu-ink' : 'bg-amber-100 border border-amber-300 text-amber-900'
             }`}>
               <ShieldCheck className="w-3.5 h-3.5" />
-              <span>{isFullyCleared ? (isAr ? 'جاهزية كاملة (7/7)' : '7/7 Cleared') : (isAr ? `قيد التدقيق (${formatNumber(checkedCount)}/7)` : `${checkedCount}/7 Verified`)}</span>
+              <span>{isFullyCleared ? (isAr ? 'فُحصت البنود التجريبية (7/7)' : '7/7 sample items checked') : (isAr ? `قيد التدقيق (${formatNumber(checkedCount)}/7)` : `${checkedCount}/7 sample items checked`)}</span>
             </span>
           </div>
         </div>
@@ -104,8 +104,8 @@ export const PrProtocolDashboard: React.FC = () => {
             </h4>
             <p className="text-xs text-rose-800 leading-relaxed">
               {isAr
-                ? 'طبقاً لقواعد الحوكمة المؤسسية للبينالي، يُمنع إصدار أي أمر شراء (LPO) أو بدء التصنيع الخارجي للأعمال حتى تستوفي إدارة المراسم كافة البنود السبعة (الصورة الرسمية وقائمة كبار الشخصيات معلقة).'
-                : 'Under Biennale governance policy, no outsourced fabrication LPO can be generated until all 7 institutional checklist requirements are verified.'}
+                ? 'توضح سبعة بنود تجريبية تسلسلاً مقترحاً للمراجعة. لا تُثبت سياسة مشتريات أو إذناً بالتصنيع.'
+                : 'Seven sample checklist items demonstrate a possible review sequence. They do not establish procurement policy or permission to fabricate.'}
             </p>
           </div>
         </div>
@@ -128,11 +128,11 @@ export const PrProtocolDashboard: React.FC = () => {
 
           <div className="space-y-2.5">
             {[
-              { key: 'certificateNameVerified', labelEn: '1. Official Name on Certificate & Catalog Verified', labelAr: '1. الاسم الرسمي المعتمد لشهادة التكريم والكتالوج' },
-              { key: 'exhibitionTitleLocked', labelEn: '2. Arabic & English Artwork Titles Locked', labelAr: '2. العناوين الفنية الثنائية معتمدة ومجمدة' },
-              { key: 'bioApproved', labelEn: '3. Institutional Biography Proofed & Approved', labelAr: '3. السيرة الذاتية الرسمية مدققة ومعتمدة' },
+              { key: 'certificateNameVerified', labelEn: '1. Sample display name checked', labelAr: '1. فحص اسم العرض التجريبي' },
+              { key: 'exhibitionTitleLocked', labelEn: '2. Sample bilingual titles checked', labelAr: '2. فحص العناوين الثنائية التجريبية' },
+              { key: 'bioApproved', labelEn: '3. Sample biography reviewed', labelAr: '3. مراجعة السيرة التجريبية' },
               { key: 'portraitReceived', labelEn: '4. High-Res Official Artist Portrait Received', labelAr: '4. الصورة الشخصية الرسمية عالية الدقة مستلمة' },
-              { key: 'nationalityConfirmed', labelEn: '5. Legal Nationality & Residence Status Confirmed', labelAr: '5. الجنسية القانونية ومقر الإقامة مؤكدان' },
+              { key: 'nationalityConfirmed', labelEn: '5. Sample nationality and residence fields present', labelAr: '5. وجود حقول الجنسية والإقامة التجريبية' },
               { key: 'socialMediaLogged', labelEn: '6. Official Handles & Public Tagging Protocol Logged', labelAr: '6. حسابات التواصل المعتمدة وبروتوكول النشر' },
               { key: 'guestListSubmitted', labelEn: '7. Opening Ceremony VIP Guest List Submitted', labelAr: '7. قائمة كبار الشخصيات المدعوين لحفل الافتتاح' },
             ].map(item => {
@@ -202,7 +202,7 @@ export const PrProtocolDashboard: React.FC = () => {
                   <div>SURNAME: NABHAN · GIVEN_NAMES: YOUSSEF</div>
                   <div>SECURITY_HASH: SHA-256 (3c81a...99b2)</div>
                   <div className="text-emerald-700 font-sans font-bold pt-1">
-                    {isAr ? '✓ فحص أمني مؤكد — مطابقة بيانات الدخول' : '✓ Security Check Passed — Identity Verified'}
+                    {isAr ? 'فُحصت حقول تجريبية — لم تُوثق الهوية' : 'Sample fields checked — identity not verified'}
                   </div>
                 </div>
               )}

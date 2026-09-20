@@ -212,7 +212,7 @@ export const RfqGeneratorModal: React.FC<RfqGeneratorModalProps> = ({
             <div className="flex items-center gap-2 border-b border-sadu-gold pb-1 font-sans">
               <Layers className="w-4 h-4 text-sadu-brick" />
               <h3 className="font-bold text-sm text-sadu-charcoal uppercase tracking-wider">
-                {isAr ? 'المواصفات الفنية المعتمدة من النطاق المثبت (v1.2)' : 'Technical Specifications Bound to Approved Scope (v1.2)'}
+                {isAr ? 'مواصفات توضيحية غير معتمدة (v1.2)' : 'Illustrative specifications — unapproved (v1.2)'}
               </h3>
             </div>
 
@@ -250,7 +250,7 @@ export const RfqGeneratorModal: React.FC<RfqGeneratorModalProps> = ({
                       <strong>{isAr ? 'طوق الحماية والأمان:' : 'Modular Security Barrier:'}</strong> {isAr ? 'حاجز حماية دائري من الفولاذ المقاوم للصدأ المطفي بقطر 150 سم (نصف قطر 75 سم) مع مثبتات غير نافذة للأرضية.' : 'Circular architectural stainless steel barrier ring at 75cm radius, matte satin finish, non-invasive floor fasteners.'}
                     </li>
                     <li>
-                      <strong>{isAr ? 'الحد الأقصى للضغط الإنشائي المسموح:' : 'Allowable Structural Floor Pressure:'}</strong> {isAr ? 'يجب ألا يتجاوز الضغط الموضعي 0.12 كجم/سم²، ومصادق عليه من مهندس استشاري معتمد.' : 'Floor load pressure must not exceed 0.12 kg/cm² certified by licensed structural engineer.'}
+                      <strong>{isAr ? 'الحد الأقصى للضغط الإنشائي المسموح:' : 'Allowable Structural Floor Pressure:'}</strong> {isAr ? 'قيمة افتراضية: 0.12 كجم/سم². تتطلب تقييماً هندسياً خاصاً بالعمل؛ لم تُثبت حمولة آمنة.' : 'Example value: 0.12 kg/cm². Requires asset-specific engineering assessment; no safe load established.'}
                     </li>
                   </ul>
                 </div>
@@ -284,7 +284,7 @@ export const RfqGeneratorModal: React.FC<RfqGeneratorModalProps> = ({
                     <li>{isAr ? 'الغلاف الخارجي: قماش كتان هولندي طبيعي بلون السدو الرملي مع بصمة ذهبية حرارية (Hot Foil Stamping).' : 'Cover: Dutch natural linen cloth (Sadu Sand hue) with custom gold hot-foil debossing.'}</li>
                     <li>{isAr ? 'الورق الداخلي: ورق آرت غير لامع مطفأ خالي من الأحماض 170 جم/م² (FSC Certified Acid-free).' : 'Inside Pages: 170 gsm FSC-certified acid-free matte art paper with spot UV varnish on color plates.'}</li>
                     <li>{isAr ? 'التجليد: خياطة حريرية كاملة مع كعب مقوس وشريط قماشي فاخر.' : 'Binding: Thread-sewn casebound with round spine and dual silk bookmark ribbons.'}</li>
-                    <li>{isAr ? 'بروفة لونية معتمدة: إلزامية قبل بدء السحب الشامل، بمصادقة المنسق الفني وفريق التحرير.' : 'Mandatory Wet Proof Sign-off: Must be officially inspected and signed off by Editorial Lead prior to press run.'}</li>
+                    <li>{isAr ? 'خطوة تجريبية مقترحة: مراجعة بروفة طباعة. لم يُوثق المعتمد المختص أو تفويض النشر.' : 'Proposed sample step: review a print proof. Applicable approver and publishing permission remain unverified.'}</li>
                   </ul>
                 </div>
               </div>
@@ -357,14 +357,14 @@ export const RfqGeneratorModal: React.FC<RfqGeneratorModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="bg-sadu-linen px-6 py-3 border-t border-sadu-gold/40 flex items-center justify-between text-xs font-sans text-sadu-muted print:hidden">
+        <div className="bg-sadu-linen px-6 py-3 border-t border-sadu-gold/40 flex items-center justify-between text-xs font-sans text-sadu-muted">
           <span className="font-mono text-[11px]">
-            {isAr ? 'النظام المؤسسي: سدو · وثيقة شراء موثقة رقمياً' : 'SADU System · Authenticated Government Procurement Record'}
+            {isAr ? 'سدو · عينة غير معتمدة — لم تُصدر أو تُرسل' : 'SADU · UNAPPROVED SAMPLE — not issued or transmitted'}
           </span>
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-1.5 rounded bg-sadu-ink text-white hover:bg-sadu-charcoal text-xs font-semibold cursor-pointer"
+            className="print:hidden px-4 py-1.5 rounded bg-sadu-ink text-white hover:bg-sadu-charcoal text-xs font-semibold cursor-pointer"
           >
             {isAr ? 'إغلاق المعاينة' : 'Close Document'}
           </button>

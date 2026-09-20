@@ -1,0 +1,7 @@
+.claim-provenance { margin-block-start:8px; font-size:12px; font-weight:400; line-height:1.65; color:#534941; min-inline-size:0; overflow-wrap:anywhere; }
+.claim-provenance summary { cursor:pointer; padding-block:8px; color:#2f4a5b; text-decoration:underline; text-underline-offset:3px; }
+.claim-provenance summary:focus-visible { outline:2px solid #2f4a5b; outline-offset:2px; }
+.claim-provenance>div { padding:10px; border-inline-start:2px solid #b29a70; background:#f7f1e6; }
+.claim-provenance p { margin-block:6px; font-size:12px !important; line-height:1.65 !important; }
+.claim-provenance a { text-decoration:underline; }
+@media print { .claim-provenance>div { display:block; } }

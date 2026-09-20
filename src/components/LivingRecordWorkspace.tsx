@@ -1,3 +1,5 @@
+import { ProposalDeliveries, ProposalSelection } from './ProposalDelivery';
+import { ClaimProvenance } from './ClaimProvenance';
 import { PortraitHierarchy } from './PortraitHierarchy';
 import React, { useEffect, useRef, useState } from 'react';
 import { ArrowRight, Check, LoaderCircle, LockKeyhole, RotateCcw, X } from 'lucide-react';
@@ -26,6 +28,7 @@ const roles: { actor: DemoActor; role: RoleKey; en: string; ar: string }[] = [
   { actor: 'COORDINATOR', role: 'SDC_COORDINATOR', en: 'Coordination', ar: 'التنسيق' },
   { actor: 'FINANCE', role: 'FINANCE', en: 'Finance', ar: 'المالية' },
   { actor: 'PUBLISHING_MANAGER', role: 'EDITORIAL', en: 'Publishing manager', ar: 'مدير النشر' },
+  { actor: 'SELECTION', role: 'COMMITTEE', en: 'Selection simulation', ar: 'محاكاة الاختيار' },
   { actor: 'ARTIST', role: 'ARTIST', en: 'Artist intake', ar: 'تقديم الفنان' },
 ];
 const eventLabels: Record<DemoEvent['kind'], [string, string]> = {
@@ -61,7 +64,7 @@ export function LivingRecordWorkspace() {
   const t = (en: string, ar: string) => isAr ? ar : en;
   const actor: DemoActor = currentRole === 'DIRECTORATE' || currentRole === 'LEADERSHIP' ? leadershipView
     : currentRole === 'LOGISTICS' ? 'LOGISTICS' : ['SAF_TECHNICIAN', 'TECHNICAL', 'TECHNICAL_MUSEUM'].includes(currentRole) ? 'TECHNICAL'
-    : ['SDC_COORDINATOR', 'COORDINATOR'].includes(currentRole) ? 'COORDINATOR' : currentRole === 'FINANCE' ? 'FINANCE' : currentRole === 'EDITORIAL' ? 'PUBLISHING_MANAGER' : currentRole === 'ARTIST' ? 'ARTIST' : 'OBSERVER';
+    : ['SDC_COORDINATOR', 'COORDINATOR'].includes(currentRole) ? 'COORDINATOR' : currentRole === 'FINANCE' ? 'FINANCE' : currentRole === 'EDITORIAL' ? 'PUBLISHING_MANAGER' : currentRole === 'ARTIST' ? 'ARTIST' : currentRole === 'COMMITTEE' ? 'SELECTION' : 'OBSERVER';
   const metrics = selectLivingRecord(state);
   const evidenceReport = modal === 'handover' ? state.conditionHistory.find(report => report.version === reviewVersion) : state.condition;
   const roleLabel = (role: DemoActor | null) => role ? (isAr ? roles.find(item => item.actor === role)?.ar : roles.find(item => item.actor === role)?.en) ?? t('Observer', 'مراقب') : t('Handover complete', 'اكتمل التسليم');
@@ -128,7 +131,7 @@ export function LivingRecordWorkspace() {
       <nav aria-label={t('Global navigation', 'التنقل العام')}><RosterNavLink/><button onClick={() => setExperienceMode('story')}>{t('Presentation', 'العرض التقديمي')}</button><button onClick={toggleLang}>{isAr ? 'English' : 'العربية'}</button></nav>
     </header>
     <main className="lr-main">
-      <div className="lr-context">{actor === 'ARTIST' ? <span>{t('ARTIST INTAKE · FICTIONAL PROGRAMMES', 'تقديم الفنان · برامج افتراضية')}</span> : actor === 'CHAIRMAN' ? <span>{t('SDC INTERNAL OPERATIONS · PROPOSED VIEW', 'العمليات الداخلية لدائرة الثقافة · عرض مقترح')}</span> : actor === 'PUBLISHING_MANAGER' ? <span>{t('SDC PUBLISHING · FICTIONAL ISSUE', 'النشر في دائرة الثقافة · عدد افتراضي')}</span> : actor === 'DIRECTORATE' ? <span>{t('CULTURAL PORTFOLIO · PROPOSED VIEW', 'محفظة البرامج الثقافية · عرض مقترح')}</span> : <><span>{t('FICTIONAL CASE · SESSION ONLY', 'حالة افتراضية · لهذه الجلسة فقط')}</span><bdi>{CASE_ID}</bdi><span>{t('Mounir Fatmi — demonstration scenario', 'منير فاطمي — سيناريو توضيحي')}</span></>}</div>
+      <div className="lr-context">{actor === 'ARTIST' ? <span>{t('ARTIST INTAKE · FICTIONAL PROGRAMMES', 'تقديم الفنان · برامج افتراضية')}</span> : actor === 'CHAIRMAN' ? <span>{t('SDC INTERNAL OPERATIONS · PROPOSED VIEW', 'العمليات الداخلية لدائرة الثقافة · عرض مقترح')}</span> : actor === 'PUBLISHING_MANAGER' ? <span>{t('SDC PUBLISHING · FICTIONAL ISSUE', 'النشر في دائرة الثقافة · عدد افتراضي')}</span> : actor === 'DIRECTORATE' ? <span>{t('CULTURAL PORTFOLIO · PROPOSED VIEW', 'محفظة البرامج الثقافية · عرض مقترح')}</span> : <span>{t('FICTIONAL WORKFLOWS · SESSION ONLY', 'مسارات افتراضية · لهذه الجلسة فقط')}</span>}</div>
       <nav className="lr-roles" aria-label={t('Demonstration roles', 'الأدوار التجريبية')}>
         {roles.map(role => <button key={role.actor} aria-pressed={actor === role.actor} onClick={() => go(role.actor)}>{isAr ? role.ar : role.en}</button>)}
       </nav>
@@ -137,14 +140,16 @@ export function LivingRecordWorkspace() {
         <div><p className="lr-eyebrow">{t('SHARJAH DEPARTMENT OF CULTURE', 'دائرة الثقافة في الشارقة')}</p>
           <h1>{actor === 'CHAIRMAN' ? t('His Excellency Abdullah bin Mohammed Al Owais', 'سعادة عبد الله بن محمد العويس') : actor === 'DIRECTORATE' ? t('Mr. Mohammed Ibrahim Al Qaseer', 'الأستاذ محمد إبراهيم القصير') : roleLabel(actor)}</h1>
           <p className="lr-subtitle">{actor === 'CHAIRMAN' ? t('Chairman of the Department of Culture · SDC internal oversight', 'رئيس دائرة الثقافة · متابعة العمليات الداخلية') : actor === 'DIRECTORATE' ? t('Director of Cultural Affairs · Cultural portfolio oversight', 'مدير إدارة الشؤون الثقافية · متابعة البرامج الثقافية') : actor === 'MANAGER' ? t('Assigned delivery management · sample role', 'إدارة التنفيذ المكلفة · دور تجريبي') : t('One record. A clear next action.', 'سجل واحد وخطوة تالية واضحة.')}</p>
+          {leadership && <ClaimProvenance sourceKey={actor === 'CHAIRMAN' ? 'calendar' : 'creativity'} isAr={isAr}/>}
           <p className="lr-small">{leadership ? t('Proposed workspace; actions are attributed to sample roles, never to the named officials.', 'مساحة عمل مقترحة؛ تُنسب الإجراءات إلى أدوار تجريبية، ولا تُنسب إلى المسؤولين المذكورين.') : t('Sample evidence only. Nothing is uploaded or sent outside this browser session.', 'أدلة تجريبية فقط. لا يُرفع أو يُرسل أي شيء خارج جلسة المتصفح هذه.')}</p>
         </div>
       </header>
 
       <IntakeDraftBackup visible={actor === 'ARTIST'}/>
       {actor === 'COORDINATOR' && <><section className="lr-panel"><h2>{t('Artist roster and programme planning', 'سجل الفنانين وتخطيط البرامج')}</h2><p>{t('Reuse pre-registered fictional profiles when creating a new sample programme.', 'أعد استخدام الملفات الوهمية المسجلة مسبقاً عند إنشاء برنامج تجريبي جديد.')}</p><button onClick={() => navigate('/roster')}>{t('Open demo roster & programme setup', 'فتح السجل التجريبي وإعداد البرامج')}</button></section><ArtistIntakeQueue/></>}
-      {actor === 'ARTIST' ? <ArtistIntake onCoordinator={() => go('COORDINATOR')}/> : actor === 'CHAIRMAN' ? <ChairmanBrief onDirectorate={() => go('DIRECTORATE')} onPublishing={() => go('PUBLISHING_MANAGER')} onFinance={() => setModal('finance')}/> : actor === 'DIRECTORATE' ? <DirectorateOversight/> : actor === 'PUBLISHING_MANAGER' ? <section className="lr-panel"><h2>{t('Studies and Publishing · sample pipeline', 'الدراسات والنشر · مسار تجريبي')}</h2><PublishingCase actor={actor}/></section> : <>
-        <section className="lr-panel lr-ledger"><div className="lr-section-title"><h2>{t('Delivery and handover', 'التنفيذ والتسليم')}</h2><span className="lr-status">{t('One shared case', 'حالة مشتركة واحدة')}</span></div>
+      {['LOGISTICS', 'TECHNICAL', 'MANAGER', 'CHAIRMAN', 'DIRECTORATE'].includes(actor) && <ProposalDeliveries actor={actor}/>}
+      {actor === 'SELECTION' ? <ProposalSelection/> : actor === 'ARTIST' ? <ArtistIntake onCoordinator={() => go('COORDINATOR')}/> : actor === 'CHAIRMAN' ? <ChairmanBrief onDirectorate={() => go('DIRECTORATE')} onPublishing={() => go('PUBLISHING_MANAGER')} onFinance={() => setModal('finance')}/> : actor === 'DIRECTORATE' ? <DirectorateOversight/> : actor === 'PUBLISHING_MANAGER' ? <section className="lr-panel"><h2>{t('Studies and Publishing · sample pipeline', 'الدراسات والنشر · مسار تجريبي')}</h2><PublishingCase actor={actor}/></section> : <>
+        <section className="lr-panel lr-ledger"><div className="lr-section-title"><h2>{t('Prepared case · delivery and handover', 'الحالة المعدّة · التنفيذ والتسليم')}</h2><span className="lr-status">{t('One shared case', 'حالة مشتركة واحدة')}</span></div>
           <ol className="lr-steps" aria-label={t('Custody sequence', 'تسلسل التسليم')}>
             {[[t('Arrival', 'الوصول'), Boolean(state.receipt)], [t('Condition evidence', 'أدلة الحالة'), Boolean(state.condition)], [t('Handover review', 'مراجعة التسليم'), Boolean(state.acceptance)]].map(([label, done], index) => <li key={index} className={done ? 'is-clear' : ''}><span>{done ? <Check aria-label={t('Recorded', 'مسجل')}/> : formatNumber(index + 1)}</span>{label}{index < 2 && <ArrowRight className="lr-direction" aria-hidden="true"/>}</li>)}
           </ol>
@@ -196,7 +201,7 @@ export function LivingRecordWorkspace() {
       <div className="lr-dialog-top"><p className="lr-eyebrow">{t('DEMONSTRATION DOSSIER', 'ملف تجريبي')}</p><button autoFocus onClick={closeDossier} aria-label={t('Close dossier', 'إغلاق الملف')}><X/></button></div>
       <h2 id="lr-dialog-title">{modal === 'signature-preview' ? t('Proposed UAE PASS journey', 'مسار الهوية الرقمية المقترح') : modal === 'reset' ? t('Reset this demonstration?', 'إعادة هذه التجربة؟') : modal === 'finance' ? t('Finance exception · review pack', 'استثناء مالي · ملف مراجعة') : modal === 'report' ? t('Sample condition report', 'تقرير حالة تجريبي') : t('Review Handover', 'مراجعة التسليم')}</h2>
       {modal === 'signature-preview' ? <SignatureJourneyPreview isAr={isAr} onBack={() => setModal('handover')}/>
-      : modal === 'reset' ? <><p>{t('This clears only the fictional actions recorded in this session.', 'يؤدي ذلك إلى مسح الإجراءات الافتراضية المسجلة في هذه الجلسة فقط.')}</p><div className="lr-actions"><button onClick={() => setModal(null)}>{t('Cancel', 'إلغاء')}</button><button className="lr-primary" onClick={() => { dispatch({ type: 'RESET' }); setCrateId(''); setSealMatches(false); setAcknowledged(false); setConditionOutcome('clear'); go('CHAIRMAN'); }}>{t('Reset fictional case', 'إعادة الحالة الافتراضية')}</button></div></>
+      : modal === 'reset' ? <><p>{t('This resets the prepared delivery and publishing cases only. Proposal-linked deliveries and intake records remain in the session.', 'يعيد هذا الحالات المعدة للتنفيذ والنشر فقط. تبقى التسليمات المرتبطة بالمقترحات وسجلات التقديم في الجلسة.')}</p><div className="lr-actions"><button onClick={() => setModal(null)}>{t('Cancel', 'إلغاء')}</button><button className="lr-primary" onClick={() => { dispatch({ type: 'RESET' }); setCrateId(''); setSealMatches(false); setAcknowledged(false); setConditionOutcome('clear'); go('CHAIRMAN'); }}>{t('Reset fictional case', 'إعادة الحالة الافتراضية')}</button></div></>
       : modal === 'finance' ? <><p><bdi>DEMO-FIN-01 / v1</bdi></p><ul><li>{t('Scope: exhibition support package (sample)', 'النطاق: خدمات دعم المعرض (تجريبي)')}</li><li>{t('Budget comparison: exception identified (sample)', 'مقارنة الميزانية: استثناء محدد (تجريبي)')}</li><li>{t('Contract review reference: DEMO-LEGAL-01', 'مرجع مراجعة العقد: DEMO-LEGAL-01')}</li><li>{t('Delegated signatory and threshold: not established', 'صاحب تفويض التوقيع والحد المالي: غير محددين')}</li></ul><p className="lr-issue">{t('Review queue only. Signature and expenditure authorization are unavailable in this mockup.', 'قائمة مراجعة فقط. التوقيع وإجازة الإنفاق غير متاحين في النموذج.')}</p>{actor === 'MANAGER' && state.finance === 'submitted' && <button className="lr-primary" onClick={() => { dispatch({ type: 'ESCALATE_FINANCE', ...envelope() }); setModal(null); }}>{t('Record review & escalate sample', 'تسجيل المراجعة ورفع الملف التجريبي')}</button>}</>
       : <><p><strong>{t('Mounir Fatmi · Crate 4', 'منير فاطمي · الصندوق ٤')}</strong> · <bdi>{CASE_ID}</bdi></p>
         <div className="lr-dossier-evidence"><h3>{t('Evidence record · demo', 'سجل الأدلة · تجريبي')}</h3>

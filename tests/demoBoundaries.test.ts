@@ -98,3 +98,20 @@ test('legacy Operations cannot reintroduce withdrawn policy and certification cl
     assert.equal(source.includes(claim), false, claim);
   }
 });
+
+test('withdrawn institutional attestations cannot return in legacy actions or exported copy', () => {
+  const checks: Record<string, string[]> = {
+    'workspaces/CommitteeView.tsx': ['Sign as Mohammed', 'DIR-MIAQ-AUTH', 'توقيع رسمي معتمد', 'Under Sharjah Calligraphy Biennial governance'],
+    'workspaces/TechnicalMuseumDashboard.tsx': ['legally issued', 'SAM-PERMIT-', 'اعتماد وإصدار تصريح'],
+    'workspaces/CommunicationView.tsx': ['Checksum Verified', 'SHA-256'],
+    'workspaces/PrProtocolDashboard.tsx': ['Security Check Passed', 'Identity Verified', 'Under Biennale governance policy'],
+    'workspaces/EditorialPipeline.tsx': ['authenticated against original', 'دار المخطوطات بالشارقة', 'رَمَى الدَّهْرُ', 'شروحات الدليل (2).docx'],
+    'common/RfqGeneratorModal.tsx': ['Authenticated Government Procurement Record', 'وثيقة شراء موثقة رقمياً'],
+    'common/GalleryLabelPrintView.tsx': ['Standard Museum Spec', 'الخطوط المعتمد لدائرة الثقافة'],
+    'workspaces/OperationsView.tsx': ['Authorized for Invoicing', 'أمر الشراء نافذ ومسجل رسمياً', '100% Registered Suppliers'],
+  };
+  for (const [file, claims] of Object.entries(checks)) {
+    const text = readFileSync(new URL(`../src/components/${file}`, import.meta.url), 'utf8');
+    for (const claim of claims) assert(!text.includes(claim), `${file}: ${claim}`);
+  }
+});

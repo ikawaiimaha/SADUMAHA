@@ -4,7 +4,11 @@ import { PROGRAMMES, ROLE_PROFILES } from '../data/mockData';
 import { DEMO_PROGRAMME } from '../data/livingRecord';
 import { readPreference, writePreference } from '../utils/preferences';
 
+import { recordEditorialCheck, type EditorialCheck } from '../data/editorialSamples';
+
 interface WorkspaceContextType {
+  editorialChecks: Record<string, EditorialCheck>;
+  checkEditorial: (id: string) => void;
   currentRole: RoleKey;
   setCurrentRole: (role: RoleKey) => void;
   switchRole: (role: RoleKey) => void;
@@ -55,6 +59,9 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
+  const [editorialChecks, setEditorialChecks] = useState<Record<string, EditorialCheck>>({});
+  const checkEditorial = (id: string) => setEditorialChecks(previous => recordEditorialCheck(previous, selectedProgramme.id, id, currentRole, new Date().toISOString()));
+
   const switchRole = (role: RoleKey) => {
     setCurrentRoleState(role);
     setActiveTabState(firstTab(role));
@@ -76,7 +83,7 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
 
   return (
     <WorkspaceContext.Provider value={{
-      currentRole, setCurrentRole, switchRole, selectedProgramme, setSelectedProgramme,
+      editorialChecks, checkEditorial, currentRole, setCurrentRole, switchRole, selectedProgramme, setSelectedProgramme,
       activeTab, setActiveTab, navigateTab, density, toggleDensity, experienceMode,
       setExperienceMode, isPresenterOpen, setIsPresenterOpen, isCommandPaletteOpen,
       setIsCommandPaletteOpen, isMobileNavOpen, setIsMobileNavOpen,

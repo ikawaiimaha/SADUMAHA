@@ -42,19 +42,19 @@ export const ScopeContractsView: React.FC<ScopeContractsViewProps> = (props) => 
                   <span>{isAr ? "نطاق تجريبي ومراجعة عقد" : "Sample Scope & Contract Review"}</span>
                 </div>
                 <h1 className="text-2xl sm:text-3xl font-editorial font-bold text-sadu-charcoal">
-                  {isAr ? 'النطاق الفني المعتمد والعقد النظامي' : 'Approved Scope & Legal Contract Register'}
+                  {isAr ? 'سجل النطاق والعقد التجريبي' : 'Sample Scope & Contract Register'}
                 </h1>
                 <p className="text-xs sm:text-sm text-sadu-muted mt-1">
                   {isAr
-                    ? 'المرجع القانوني الوحيد لملحقات العقود، بيانات الشحن، والكتالوج الرسمي للمعرض'
-                    : 'The authoritative single source of truth for contract annexes, freight manifests, and catalogue publishing.'}
+                    ? 'مسودات سيناريو افتراضي؛ لم يُوثق اتفاق نافذ أو تفويض مؤسسي.'
+                    : 'Fictional scenario drafts; no executed agreement or institutional authority verified.'}
                 </p>
               </div>
 
               <div className="flex items-center gap-2">
                 <span className="px-3 py-1.5 rounded bg-sadu-sage-light border border-sadu-sage text-xs font-bold text-sadu-ink flex items-center gap-1">
                   <CheckCircle2 className="w-4 h-4 text-sadu-sage" />
-                  <span>{isAr ? 'عقد نافذ وموثق (Executed)' : 'Contract Executed (v1.2)'}</span>
+                  <span>{isAr ? 'مسودة تجريبية (v1.2)' : 'Sample Draft (v1.2)'}</span>
                 </span>
               </div>
             </div>
@@ -68,8 +68,8 @@ export const ScopeContractsView: React.FC<ScopeContractsViewProps> = (props) => 
               </div>
               <p className="text-sadu-charcoal font-medium">
                 {isAr
-                  ? 'تنص المادة الرابعة من عقد المعرض الشخصي على: "يحق لإدارة الشؤون الثقافية استبعاد أي عمل فني لا يطابق النموذج والصورة والبيانات المعتمدة". كما تحكم السياسات التالية النطاق المعتمد بصورة قطعية:'
-                  : 'Section 4 of the Contract explicitly reserves the Directorate’s right to exclude any artwork that does not strictly match the approved schedule. The following policies govern the Approved Scope:'}
+                  ? 'تتطلب بنود السيناريو مراجعة الاتفاق المنطبق. تتناول المادة الرابعة في العقد المصدر التزامات الطرف الأول، ولا تُثبت قاعدة الاستبعاد التي عُرضت سابقاً هنا.'
+                  : 'Scenario terms require review against the applicable agreement. The source contract’s section 4 concerns first-party obligations; it does not establish the exclusion rule previously shown here.'}
               </p>
             </div>
           </div>
@@ -77,7 +77,7 @@ export const ScopeContractsView: React.FC<ScopeContractsViewProps> = (props) => 
           <div className="bg-sadu-linen border border-sadu-gold rounded-lg p-6 shadow-xs">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-editorial font-bold text-sadu-charcoal">
-                {isAr ? 'سجل نسخ النطاق المعتمد (Approved Scope Revisions)' : 'Approved Scope Revision Ledger'}
+                {isAr ? 'نسخ النطاق التجريبي' : 'Sample scope revisions'}
               </h2>
             </div>
 
@@ -86,7 +86,7 @@ export const ScopeContractsView: React.FC<ScopeContractsViewProps> = (props) => 
                 <div>
                   <span className="font-bold text-sadu-charcoal text-sm">ApprovedScope_Revision_v1.2_LinesOfInk.json</span>
                   <span className="text-sadu-muted block text-[11px] mt-0.5">
-                    {isAr ? `المعتمد بواسطة: إدارة الشؤون الثقافية · ${localizeDigits('14 أغسطس 2026')}` : 'Approved by Directorate of Cultural Affairs · 14 Aug 2026'}
+                    {isAr ? 'DEMO-SCOPE · نسخة تجريبية؛ الاعتماد المؤسسي غير موثق' : 'DEMO-SCOPE · sample revision; institutional approval unverified'}
                   </span>
                 </div>
               </div>
@@ -131,7 +131,7 @@ export const ScopeContractsView: React.FC<ScopeContractsViewProps> = (props) => 
               <div>
                 <div className="flex items-center gap-2 text-xs font-bold text-sadu-brick uppercase tracking-wider mb-0.5">
                   <FileSignature className="w-4 h-4" />
-                  <span>{isAr ? 'سجل العقود والملاحق القانونية المعتمدة' : 'Bilateral Contract & Annex Execution Register'}</span>
+                  <span>{isAr ? 'سجل العقود والملاحق التجريبية' : 'Sample contract and annex register'}</span>
                 </div>
                 <h2 className="text-lg font-editorial font-bold text-sadu-charcoal">
                   {isAr ? 'العقود الثنائية والبنود التشغيلية' : 'Legal Agreements & Real-Time Contract Rows'}
@@ -145,21 +145,21 @@ export const ScopeContractsView: React.FC<ScopeContractsViewProps> = (props) => 
                   id: 'SCB-CTR-2026-088',
                   titleEn: 'Solo Exhibition Master Participation Agreement',
                   titleAr: 'عقد المشاركة الفنية الرئيسي بالمعرض الشخصي',
-                  partyEn: 'Directorate of Cultural Affairs & Youssef Nabhan',
-                  partyAr: 'إدارة الشؤون الثقافية والفنان يوسف نبهان',
+                  partyEn: 'Sample institution & sample artist',
+                  partyAr: 'مؤسسة افتراضية وفنان تجريبي',
                   step: 5, total: 5, percent: 100, statusLevel: 'completed' as const,
-                  labelEn: 'Executed & Locked', labelAr: 'عقد نافذ وموثق',
+                  labelEn: 'Sample draft — no execution', labelAr: 'مسودة تجريبية — غير نافذة',
                   nextEn: "Read-only sample; no durable institutional archive.", nextAr: "مثال للقراءة فقط؛ لا أرشيف مؤسسي دائم.",
                 },
                 {
                   id: 'SCB-ANX-01',
-                  titleEn: 'Form 1(B): Approved Artwork Schedule & Image Specifications',
-                  titleAr: 'ملحق رقم 1 (ب): جدول الأعمال الفنية والمواصفات المعتمدة',
+                  titleEn: 'Form 1(B): Sample Artwork Schedule & Image Specifications',
+                  titleAr: 'ملحق رقم 1 (ب): جدول الأعمال الفنية والمواصفات التجريبية',
                   partyEn: 'Curatorial Committee & Artist',
                   partyAr: 'لجنة التحكيم والاختيار والفنان',
                   step: 5, total: 5, percent: 100, statusLevel: 'completed' as const,
-                  labelEn: 'Annex Approved', labelAr: 'الملحق معتمد نهائياً',
-                  nextEn: 'Referenced in Section 4 of Solo Exhibition Contract.', nextAr: 'مربوط بالمادة الرابعة لحق الاستبعاد القانوني.',
+                  labelEn: 'Sample annex — unapproved', labelAr: 'ملحق تجريبي غير معتمد',
+                  nextEn: 'No applicable clause or delegation verified.', nextAr: 'لم يُوثق بند منطبق أو تفويض.',
                 }
               ].map((contract) => (
                 // FIXED: Added min-h-[96px] to the row to prevent jumping

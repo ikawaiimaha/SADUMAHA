@@ -5,6 +5,7 @@ import { selectLivingRecord } from '../data/livingRecord';
 import { PublishingCase, printStages } from './PublishingCase';
 import { selectReadinessOutlook } from '../data/readinessOutlook';
 import { IntegrationReadiness } from './IntegrationReadiness';
+import { ClaimProvenance } from './ClaimProvenance';
 
 interface Props { onDirectorate: () => void; onPublishing: () => void; onFinance: () => void }
 export function ChairmanBrief({ onDirectorate, onPublishing, onFinance }: Props) {
@@ -38,7 +39,7 @@ export function ChairmanBrief({ onDirectorate, onPublishing, onFinance }: Props)
         </li>)}</ul>
         <p className="lr-small">{t('Examples identify SDC programmes. Only the separate fictional cases have connected status; clearing one delivery does not clear an entire festival or directorate.', 'تحدد الأمثلة برامج الدائرة. ترتبط الحالة بالتجارب الافتراضية المستقلة فقط؛ ولا يعني اكتمال تسليم واحد جاهزية المهرجان أو الإدارة بأكملها.')}</p>
         <p className="lr-small" data-testid="evidence-health">{formatNumber(caseMetrics.evidencePercent)}{isAr ? '٪' : '%'} · {t('Five required case records; presence is not compliance or opening authorization.', 'خمسة سجلات مطلوبة للحالة؛ وجودها ليس إثبات امتثال أو إذناً بالافتتاح.')}</p>
-        <a className="lr-source-link" href={SDC_STRUCTURE_SOURCE} target="_blank" rel="noreferrer">{t('SDC department reference', 'مرجع إدارات الدائرة')}</a>
+        <ClaimProvenance sourceKey="department" isAr={isAr}/>
         </details>
         <button className="lr-link" onClick={onDirectorate}>{t('View Cultural Affairs oversight', 'عرض متابعة الشؤون الثقافية')}</button>
       </section>
@@ -47,7 +48,7 @@ export function ChairmanBrief({ onDirectorate, onPublishing, onFinance }: Props)
         <h2>{t('Institutional publishing', 'النشر المؤسسي')}</h2>
         <p className="lr-small">{t('Seven monthly titles. Current issue dates and stages await a publishing report.', 'سبعة عناوين شهرية. ننتظر تقرير النشر لتحديد مواعيد الأعداد الحالية ومراحل إعدادها.')}</p>
         <ul className="lr-magazine-grid">{brief.magazineCycles.map(magazine => <li key={magazine.id}><strong>{t(magazine.en, magazine.ar)}</strong><span>{t('Awaiting report', 'بانتظار التقرير')}</span></li>)}</ul>
-        <a className="lr-source-link" href={SDC_MAGAZINES_SOURCE} target="_blank" rel="noreferrer">{t('Official magazine catalogue', 'دليل المجلات الرسمي')}</a>
+        <ClaimProvenance sourceKey="magazines" isAr={isAr}/>
         <div className="lr-print-summary"><h3>{t('Connected publishing example', 'مثال النشر المترابط')}</h3><p className="lr-small">{t('Fictional cultural bulletin · separate from the seven titles', 'نشرة ثقافية افتراضية · مستقلة عن العناوين السبعة')}</p><span className="lr-status" data-testid="chairman-publishing-stage">{printStages[brief.publishing.stage][isAr ? 1 : 0]}</span></div>
         <button className="lr-link" onClick={onPublishing}>{t('Open sample publishing pipeline', 'فتح مسار النشر التجريبي')}</button>
       </section>

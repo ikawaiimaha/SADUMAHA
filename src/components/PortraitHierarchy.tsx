@@ -1,6 +1,7 @@
 import { useState, type CSSProperties } from 'react';
 import { hasPortraitEvidence, leadershipPeople, leadershipPortraits, portraitScale, type LeadershipRank } from '../data/leadershipMedia';
 import './PortraitHierarchy.css';
+import { ClaimProvenance } from './ClaimProvenance';
 
 export function PortraitHierarchy({ rank, isAr, compact = false }: { rank: LeadershipRank; isAr: boolean; compact?: boolean }) {
   const [failedSource, setFailedSource] = useState<string | null>(null);
@@ -20,7 +21,9 @@ export function PortraitHierarchy({ rank, isAr, compact = false }: { rank: Leade
 
 export function PortraitCredit({ rank, isAr }: { rank: LeadershipRank; isAr: boolean }) {
   const asset = leadershipPortraits[rank];
-  return hasPortraitEvidence(asset)
+  return <>{hasPortraitEvidence(asset)
     ? <a href={asset.sourceUrl} target="_blank" rel="noreferrer">{asset.credit}</a>
-    : <span>{isAr ? 'ستضاف الصورة بعد توثيق المصدر والإذن باستخدامها في العرض.' : 'Portrait awaiting a documented source and permission for this presentation.'}</span>;
+    : <span>{isAr ? 'ستضاف الصورة بعد توثيق المصدر والإذن باستخدامها في العرض.' : 'Portrait awaiting a documented source and permission for this presentation.'}</span>}
+    <ClaimProvenance sourceKey={rank === 'ruler' ? 'department' : rank === 'chairman' ? 'calendar' : 'creativity'} isAr={isAr}/>
+  </>;
 }

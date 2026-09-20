@@ -240,7 +240,7 @@ export const CommunicationView: React.FC<CommunicationViewProps> = (props) => {
                       <span>{msg.attachmentName}</span>
                     </div>
                     <span className="text-[10px] text-sadu-sage font-semibold">
-                      ✓ {isAr ? 'فحص النزاهة مطابق (SHA-256)' : 'Checksum Verified'}
+                      ✓ {isAr ? 'مرجع مرفق تجريبي — لم تُفحص السلامة الرقمية' : 'Sample attachment reference — integrity not checked'}
                     </span>
                   </div>
                 )}
@@ -275,7 +275,7 @@ export const CommunicationView: React.FC<CommunicationViewProps> = (props) => {
                 defaultValue=""
                 onChange={handleTemplateSelect}
                 className="text-xs bg-sadu-sand border border-sadu-gold text-sadu-charcoal focus:border-sadu-brick rounded-md px-2.5 py-1 cursor-pointer outline-hidden transition-colors"
-                title={isAr ? 'إدراج نموذج مراسلة رسمي معتمد' : 'Insert approved institutional correspondence template'}
+                title={isAr ? 'إدراج نموذج مراسلة تجريبي' : 'Insert sample correspondence template'}
               >
                 <option value="" disabled>
                   {isAr ? 'إدراج نموذج سريع...' : 'Quick Insert Template...'}

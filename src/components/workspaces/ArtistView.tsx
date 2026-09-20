@@ -201,8 +201,8 @@ export const ArtistView: React.FC<ArtistViewProps> = (props) => {
               {isAr ? 'تنبيه الربط المؤسسي المباشر:' : 'Direct Routing Notice:'}
             </strong>
             {isAr
-              ? 'تُحال هذه الإرشادات والمخططات مباشرة وبشكل آلي إلى المكتب الفني وفريق هندسة التركيبات بمتحف الشارقة للفنون لمطابقة حمولة الأرضيات وإعداد منصات العرض المعتمدة.'
-              : 'Institutional Note: These instructions will be routed directly to the Technical Desk and installation engineering team at Sharjah Art Museum for floor load certification and mounting prep.'}
+              ? 'إرشادات تجريبية فقط؛ لا إرسال إلى متحف أو فريق فني ولا اعتماد هندسياً.'
+              : 'Sample instructions only; no transmission to a museum or technical team and no engineering certification.'}
           </p>
         </div>
 
@@ -234,7 +234,7 @@ export const ArtistView: React.FC<ArtistViewProps> = (props) => {
               <button
                 type="button"
                 className="text-sadu-brick hover:text-sadu-brick-dark font-semibold text-[11px] underline flex items-center gap-1 cursor-pointer"
-                onClick={() => alert(isAr ? 'جارٍ تنزيل دليل إرشادات التركيب المعتمد...' : 'Downloading registered Handling & Installation PDF...')}
+                onClick={() => alert(isAr ? 'مرجع ملف تجريبي فقط؛ لا يتوفر ملف PDF للتنزيل.' : 'Sample file reference only; no PDF is available to download.')}
               >
                 <Download className="w-3 h-3" />
                 <span>{isAr ? 'تحميل' : 'Download'}</span>
@@ -282,8 +282,8 @@ export const ArtistView: React.FC<ArtistViewProps> = (props) => {
             </h2>
             <p className="text-xs text-sadu-muted">
               {isAr
-                ? `المكافأة الإجمالية المعتمدة: ${formatCurrency(16800, 'USD')} (${formatCurrency(61700, 'AED')}) عبر الحساب المصرفي المعتمد`
-                : 'Total Approved Commission: $16,800 USD (AED 61,700) disbursed via verified institutional IBAN'}
+                ? `مكافأة تجريبية: ${formatCurrency(16800, 'USD')} (${formatCurrency(61700, 'AED')}). لا تحقق مصرفياً أو دفعاً`
+                : 'Sample commission: $16,800 USD (AED 61,700). No bank verification or payment.'}
             </p>
           </div>
 
@@ -317,8 +317,8 @@ export const ArtistView: React.FC<ArtistViewProps> = (props) => {
               </span>
               <span className="text-[11px] text-sadu-brick">
                 {isAr 
-                  ? 'مقفلة ببوابة أمان: تستحق وتُصرف عند الافتتاح الرسمي للبينالي بمتحف الشارقة للفنون' 
-                  : 'Gated and unlocked strictly when the exhibition officially opens to the public at Sharjah Art Museum.'}
+                  ? 'متطلب افتتاح تجريبي؛ لم يُوثق شرط دفع منطبق'
+                  : 'Sample opening dependency; no applicable payment condition verified.'}
               </span>
             </div>
             <div className="text-end">

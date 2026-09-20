@@ -41,7 +41,7 @@ function RegistrationForm({ onProposal }: { onProposal: () => void }) {
   const { isAr, formatNumber } = useI18n(); const t = (en: string, ar: string) => isAr ? ar : en;
   const { form, registerRoster, roster, submissions } = useArtistIntake(); const { navigate } = useNavigation();
   const [step, setStep] = useState(0); const [issues, setIssues] = useState<IntakeIssue[]>([]);
-  const [confirmed, setConfirmed] = useState(false); const [receipt, setReceipt] = useState(false);
+  const [confirmed, setConfirmed] = useState(false); const [editing, setEditing] = useState(false);
   const heading = useRef<HTMLHeadingElement>(null); const errors = useRef<HTMLDivElement>(null);
   const stages = [t('Names and contact', 'الأسماء والتواصل'), t('Representation and documents', 'التمثيل والمستندات'), t('Review registration', 'مراجعة التسجيل')];
   const registered = roster.find(entry => entry.id === ARTIST_ID);
@@ -49,14 +49,14 @@ function RegistrationForm({ onProposal }: { onProposal: () => void }) {
   const submit = () => {
     const next = validateRegistration(form.getValues().profile); setIssues(next);
     if (next.length) { window.setTimeout(() => errors.current?.focus(), 0); return; }
-    if (confirmed && registerRoster()) { setReceipt(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    if (confirmed && registerRoster()) { setEditing(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }
   };
-  if (receipt && registered) return <section className="lr-panel intake-receipt" role="status">
+  if (registered && !editing) return <section className="lr-panel intake-receipt" role="status">
     <p className="lr-eyebrow">{t('ROSTER REGISTRATION · SAMPLE RECEIPT', 'التسجيل في السجل · إيصال تجريبي')}</p>
-    <h2>{t('Profile received. Coordinator review is next.', 'استُلم الملف. الخطوة التالية مراجعة المنسق.')}</h2>
+    <h2>{registered.status === 'verified-sample' ? t('Sample profile review recorded.', 'سُجلت مراجعة الملف التجريبي.') : t('Profile received. Coordinator review is next.', 'استُلم الملف. الخطوة التالية مراجعة المنسق.')}</h2>
     <p><bdi>{registered.id}</bdi> · {new Date(registered.registeredAt).toLocaleString(isAr ? 'ar-AE' : 'en-GB')}</p>
-    <p>{t('Your profile is now in the session roster as “Awaiting review”. Registering does not apply to an exhibition or confirm selection.', 'أصبح ملفك في سجل الجلسة بحالة «بانتظار المراجعة». التسجيل لا يمثل تقديماً لمعرض أو تأكيداً للاختيار.')}</p>
-    <div className="lr-actions"><button className="lr-primary" onClick={onProposal}>{t('Explore sample programme proposals', 'استكشاف مقترحات البرامج التجريبية')}</button><button onClick={() => navigate('/roster')}>{t('View demo roster', 'عرض السجل التجريبي')}</button><button onClick={() => { setReceipt(false); advance(0); }}>{t('Edit sample profile', 'تعديل الملف التجريبي')}</button></div>
+    <p>{isAr ? registered.evidenceLabel.ar : registered.evidenceLabel.en}</p>
+    <div className="lr-actions"><button className="lr-primary" onClick={onProposal}>{t('Explore sample programme proposals', 'استكشاف مقترحات البرامج التجريبية')}</button><button onClick={() => navigate('/roster')}>{t('View demo roster', 'عرض السجل التجريبي')}</button><button onClick={() => { form.setValue('profile', structuredClone(registered.profile)); setEditing(true); advance(0); }}>{t('Edit sample profile', 'تعديل الملف التجريبي')}</button></div>
     <p className="lr-small">{t('This receipt and registration last only in this browser session. Optional device backup preserves selected draft text, not registration status or files.', 'يستمر الإيصال والتسجيل في جلسة المتصفح هذه فقط. يحفظ النسخ الاختياري على الجهاز نصوصاً محددة من المسودة، ولا يحفظ حالة التسجيل أو الملفات.')}</p>
   </section>;
   return <>
@@ -103,7 +103,7 @@ export function RosterRegistration({ rosterView = false }: { rosterView?: boolea
     <main className="lr-main artist-intake roster-main">
       <div className="intake-intro"><div><p className="lr-eyebrow">{t('INSTITUTIONAL ROSTER · FICTIONAL DEMONSTRATION', 'سجل الفنانين المؤسسي · عرض افتراضي')}</p><h1>{title}</h1><p>{rosterView ? t('Start a sample programme with existing profiles. Artist identities remain linked across programme drafts.', 'ابدأ برنامجاً تجريبياً بملفات موجودة. تبقى هويات الفنانين مرتبطة عبر مسودات البرامج.') : t('Introduce your practice once. Keep your profile ready for future invitations, with a separate proposal for each programme.', 'عرّف بممارستك الفنية مرة واحدة. جهّز ملفك للدعوات المستقبلية، مع مقترح مستقل لكل برنامج.')}</p></div><bdi>{rosterView ? 'DEMO ROSTER' : ARTIST_ID}</bdi></div>
       <div className="roster-switch"><button className="lr-link" onClick={() => navigate(rosterView ? '/join' : '/roster')}>{rosterView ? t('Back to artist registration', 'العودة إلى تسجيل الفنان') : t('Demo roster & programme setup', 'السجل التجريبي وإعداد البرامج')}</button><span className="lr-small">{t('Session data · no real registration or invitations', 'بيانات الجلسة · لا تسجيل أو دعوات فعلية')}</span></div>
-      {rosterView ? <ProgrammeRoster/> : <RegistrationForm onProposal={openProposals}/>}
+      {rosterView ? <ProgrammeRoster onProposal={openProposals}/> : <RegistrationForm onProposal={openProposals}/>}
     </main>
   </div>;
 }

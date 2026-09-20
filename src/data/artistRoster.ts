@@ -5,6 +5,7 @@ export interface RosterEntry {
   profile: ArtistProfile;
   status: 'verified-sample' | 'pending-review';
   registeredAt: string;
+  reviewedAt?: string; reviewedBy?: string;
   evidenceLabel: { en: string; ar: string };
   assets: IntakeAsset[];
 }
@@ -39,6 +40,10 @@ export function registerProfile(roster: RosterEntry[], profile: ArtistProfile, a
     assets: assets.filter(a => a.slot === 'cv' || a.slot === 'portfolio').map(a => ({ ...a })),
   };
   return [...roster.filter(item => item.id !== entry.id), entry];
+}
+export function reviewRoster(roster: RosterEntry[], id: string, actor: string, at: string): RosterEntry[] {
+  if (actor !== 'COORDINATOR' || !Number.isFinite(Date.parse(at))) return roster;
+  return roster.map(entry => entry.id === id && entry.status === 'pending-review' ? { ...entry, status: 'verified-sample', reviewedAt: at, reviewedBy: 'DEMO-COORDINATOR', evidenceLabel: { en: 'Sample coordinator check; no identity verification or selection authority.', ar: 'مراجعة منسق تجريبية؛ لا تحقق فعلي من الهوية ولا صلاحية اختيار.' } } : entry);
 }
 export function createRosterProgramme(roster: RosterEntry[], input: Omit<RosterProgramme, 'artistIds'> & { artistIds: string[] }): RosterProgramme | null {
   const artistIds = [...new Set(input.artistIds)];

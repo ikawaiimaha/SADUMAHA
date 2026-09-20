@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useI18n } from '../context/I18nContext';
 import { useLivingRecord } from '../context/LivingRecordContext';
-import { portfolioSources, selectDirectoratePortfolio, type PortfolioFilter } from '../data/directoratePortfolio';
+import { selectDirectoratePortfolio, type PortfolioFilter } from '../data/directoratePortfolio';
+import { ClaimProvenance } from './ClaimProvenance';
 
 export function DirectorateOversight() {
   const { isAr, formatNumber } = useI18n();
@@ -28,12 +29,11 @@ export function DirectorateOversight() {
         <caption className="sr-only">{t('Programme references, proposed outputs, manager reports and dates. Reference entries have no live status.', 'مراجع البرامج والمخرجات المقترحة وتقارير المديرين والمواعيد. لا تتوفر حالة فعلية للمراجع المنشورة.')}</caption>
         <thead><tr>{[t('Activity / programme', 'النشاط / البرنامج'), t('Output to monitor', 'المخرج المطلوب متابعته'), t('Manager report / next date', 'تقرير المدير / الموعد التالي'), t('Delivery forecast', 'توقع التنفيذ')].map(label => <th key={label} scope="col">{label}</th>)}</tr></thead>
         <tbody>{portfolio.visibleActivities.map(activity => {
-          const source = activity.source ? portfolioSources[activity.source] : undefined;
           const awaiting = activity.forecast === 'awaiting-update';
           return <tr key={activity.id} data-activity-id={activity.id}>
             <th scope="row"><strong>{t(activity.activityEn, activity.activityAr)}</strong>
               {activity.contextEn && activity.contextAr ? <span className="lr-small lr-cell-note">{t(activity.contextEn, activity.contextAr)}</span> : null}
-              {source ? <a className="lr-source-link" href={source} target="_blank" rel="noreferrer">{activity.scope === 'department-output' ? t('Department-level source', 'مصدر على مستوى الدائرة') : t('Programme source', 'مصدر البرنامج')}</a> : <span className="lr-small lr-cell-note">{t('Fictional case · session only', 'حالة افتراضية · الجلسة الحالية فقط')}</span>}
+              {activity.provenance ? <ClaimProvenance sourceKey={activity.provenance} isAr={isAr}/> : <span className="lr-small lr-cell-note">{t('Fictional case · session only', 'حالة افتراضية · الجلسة الحالية فقط')}</span>}
             </th>
             <td>{t(activity.outputEn, activity.outputAr)}<span className="lr-small lr-cell-note">{t('Proposed reporting field', 'حقل متابعة مقترح')}</span></td>
             <td>{activity.managerEn && activity.managerAr ? t(activity.managerEn, activity.managerAr) : t('Manager assignment unconfirmed', 'لم يُؤكد تكليف المدير')}<span className="lr-small lr-cell-note">{activity.due ? <>{t('Demo milestone: ', 'موعد تجريبي: ')}<time dateTime={activity.due}>{date(activity.due)}</time></> : t('Next milestone and date: awaiting report', 'المرحلة التالية وموعدها: بانتظار التقرير')}</span></td>
