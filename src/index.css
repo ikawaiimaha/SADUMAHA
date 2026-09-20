@@ -498,14 +498,14 @@ html[lang="ar"] input[type="radio"] {
 
 /* Institutional Printable Report Styles */
 @media print {
-  /* Print the active report only, expanding every modal ancestor across pages. */
-  body:has([data-report-overlay]) *:not(:has([data-report-overlay])):not([data-report-overlay]):not([data-report-overlay] *) {
+  /* Every export portal is a direct child of body; application state stays mounted. */
+  body:has([data-print-root]) > :not([data-print-root]) {
     display: none !important;
   }
-  body:has([data-report-overlay]) #root,
-  body:has([data-report-overlay]) #root > div,
-  body:has([data-report-overlay]) main,
-  body:has([data-report-overlay]) main > div,
+  html, body { height: auto !important; overflow: visible !important; }
+  [data-print-root],
+  [data-print-root] > *,
+  #rfq-generator-modal > div,
   [data-report-overlay],
   [data-report-overlay] > div,
   [data-report-overlay] > div > div {
@@ -523,7 +523,24 @@ html[lang="ar"] input[type="radio"] {
     box-shadow: none !important;
     backdrop-filter: none !important;
   }
-  [data-report-overlay] .print\:hidden { display: none !important; }
+  [data-print-root] .print\:hidden { display: none !important; }
+  [data-print-root] .truncate {
+    white-space: normal !important;
+    text-overflow: clip !important;
+    overflow: visible !important;
+    overflow-wrap: anywhere;
+  }
+  .gallery-label-grid { display: block !important; }
+  .gallery-label {
+    width: 15cm !important;
+    min-width: 15cm !important;
+    max-width: 15cm !important;
+    min-height: 10cm;
+    margin: 0 auto 6mm;
+    break-inside: avoid;
+    overflow-wrap: anywhere;
+  }
+  .gallery-label:last-child { margin-bottom: 0; }
   body {
     background-color: #FFFFFF !important;
     color: #1C1C1E !important;

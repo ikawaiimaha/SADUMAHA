@@ -8,6 +8,7 @@ import { ARTIST_ID, sampleIntakeDraft, type IntakeDraft, type IntakeIssue } from
 import { DEMO_PROGRAMME } from '../data/livingRecord';
 import { validateRegistration } from '../data/artistRoster';
 import { Field, RepresentationFields } from './ArtistIntake';
+import { IntakeFieldIssuesProvider } from './IntakeFieldIssues';
 import { IntakeFiles } from './IntakeFiles';
 import { IntakeDraftBackup } from './IntakeDraftBackup';
 import { RosterNavLink } from './RosterNavLink';
@@ -68,7 +69,7 @@ function RegistrationForm({ onProposal }: { onProposal: () => void }) {
         setStep(/contact|organisation/.test(issue.path) ? 1 : 0); setConfirmed(false);
         window.setTimeout(() => form.setFocus(issue.path as FieldPath<IntakeDraft>), 0);
       }}>{isAr ? issue.ar : issue.en}</button></li>)}</ul></div>}
-      <form noValidate onSubmit={event => { event.preventDefault(); if (step < 2) advance(step + 1); else submit(); }}>
+      <IntakeFieldIssuesProvider value={issues}><form noValidate onSubmit={event => { event.preventDefault(); if (step < 2) advance(step + 1); else submit(); }}>
         {step === 0 && <>
           <p>{t('Use invented details for this demonstration. A legal name and a catalogue name are separate records; neither is automatically verified.', 'استخدم بيانات وهمية لهذا العرض. الاسم القانوني والاسم في الكتالوج سجلان منفصلان؛ ولا يتم التحقق من أي منهما تلقائياً.')}</p>
           <h3 className="roster-section-title">{t('Legal name · sample only', 'الاسم القانوني · تجريبي فقط')}</h3>
@@ -86,7 +87,7 @@ function RegistrationForm({ onProposal }: { onProposal: () => void }) {
         {step === 1 && <><RepresentationFields/><IntakeFiles slot="cv"/><IntakeFiles slot="portfolio"/></>}
         {step === 2 && <><RegistrationReview/><p className="intake-note">{t('This creates a sample roster profile only. Exhibition concepts, budgets and programme-specific files belong to the separate proposal stage.', 'ينشئ هذا ملفاً تجريبياً في سجل الفنانين فقط. تأتي أفكار المعارض والميزانيات والملفات الخاصة بالبرامج في مرحلة المقترح المنفصلة.')}</p><label className="lr-checkbox"><input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)}/>{t('I reviewed these fictional details and want to register this sample profile.', 'راجعت هذه البيانات الوهمية وأرغب في تسجيل هذا الملف التجريبي.')}</label></>}
         <div className="intake-navigation"><button type="button" disabled={step === 0} onClick={() => advance(step - 1)}>{t('Previous', 'السابق')}</button><button type="submit" className="lr-primary" disabled={step === 2 && !confirmed}>{step < 2 ? t('Continue', 'متابعة') : t('Register sample profile', 'تسجيل الملف التجريبي')}</button></div>
-      </form>
+      </form></IntakeFieldIssuesProvider>
     </section>
     {!registered && submissions.length === 0 && <button className="lr-link" onClick={() => { const sample = sampleIntakeDraft(); form.setValue('profile', sample.profile, { shouldDirty: true }); advance(0); }}>{t('Fill sample profile (replaces current profile text)', 'تعبئة ملف تجريبي (يحل محل نص الملف الحالي)')}</button>}
   </>;

@@ -110,7 +110,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = (props) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
         
         <div className="flex items-center gap-3 sm:gap-4 shrink-0">
-          <button onClick={onOpenMobileMenu} className="w-9 h-9 flex items-center justify-center rounded-md text-sadu-charcoal hover:bg-sadu-sand lg:hidden border border-sadu-gold cursor-pointer shrink-0">
+          <button aria-label={isAr ? 'فتح قائمة التنقل' : 'Open navigation menu'} onClick={onOpenMobileMenu} className="w-9 h-9 flex items-center justify-center rounded-md text-sadu-charcoal hover:bg-sadu-sand lg:hidden border border-sadu-gold cursor-pointer shrink-0">
             <Menu className="w-4 h-4" />
           </button>
 
@@ -154,7 +154,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = (props) => {
         </div>
 
         <div className="flex-1 max-w-xs md:max-w-sm hidden md:block">
-          <button onClick={onOpenSearch} className="w-full h-9 px-3 bg-sadu-sand/70 hover:bg-sadu-sand border border-sadu-gold rounded-md text-xs text-sadu-muted flex items-center justify-between transition-colors cursor-pointer group">
+          <button data-workspace-search onClick={onOpenSearch} className="w-full h-9 px-3 bg-sadu-sand/70 hover:bg-sadu-sand border border-sadu-gold rounded-md text-xs text-sadu-muted flex items-center justify-between transition-colors cursor-pointer group">
             <div className="flex items-center gap-2 overflow-hidden">
               <Search className="w-3.5 h-3.5 text-sadu-brick shrink-0" />
               <span className="group-hover:text-sadu-charcoal text-[11px] truncate whitespace-nowrap">{isAr ? 'بحث سريع وأوامر...' : 'Search workspaces & gates...'}</span>
@@ -165,14 +165,14 @@ export const HeaderNav: React.FC<HeaderNavProps> = (props) => {
 
         {/* Right Controls (Language Toggle removed from here) */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          <button onClick={onOpenSearch} className="w-9 h-9 flex items-center justify-center text-sadu-charcoal hover:bg-sadu-sand rounded-md border border-sadu-gold md:hidden cursor-pointer shrink-0">
+          <button data-workspace-search aria-label={isAr ? 'البحث في مساحات العمل' : 'Search workspaces'} onClick={onOpenSearch} className="w-9 h-9 flex items-center justify-center text-sadu-charcoal hover:bg-sadu-sand rounded-md border border-sadu-gold md:hidden cursor-pointer shrink-0">
             <Search className="w-3.5 h-3.5 text-sadu-brick" />
           </button>
 
           <div className="relative">
-            <button onClick={() => setNotificationsOpen(!notificationsOpen)} className="w-9 h-9 flex items-center justify-center text-xs text-sadu-charcoal hover:bg-sadu-sand rounded-md border border-sadu-gold transition-colors cursor-pointer relative shrink-0">
+            <button aria-label={isAr ? `الإشعارات: ${formatNumber(3)} غير مقروءة` : `Notifications: ${formatNumber(3)} unread`} onClick={() => setNotificationsOpen(!notificationsOpen)} className="w-9 h-9 flex items-center justify-center text-xs text-sadu-charcoal hover:bg-sadu-sand rounded-md border border-sadu-gold transition-colors cursor-pointer relative shrink-0">
               <Bell className="w-4 h-4 text-sadu-brick" />
-              <span className="absolute -top-1 -end-1 w-4 h-4 rounded-full bg-sadu-brick text-white text-[9px] font-bold flex items-center justify-center">
+              <span aria-hidden="true" className="absolute -top-1 -end-1 w-4 h-4 rounded-full bg-sadu-brick text-white text-[9px] font-bold flex items-center justify-center">
                 {formatNumber(3)}
               </span>
             </button>
@@ -180,7 +180,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = (props) => {
           </div>
 
           <div className="relative">
-            <button onClick={() => setRoleDropdownOpen(!roleDropdownOpen)} className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 h-9 text-xs font-semibold bg-sadu-ink text-white rounded-md hover:bg-sadu-ink-dark transition-colors shadow-2xs cursor-pointer shrink-0">
+            <button data-role-switcher onClick={() => setRoleDropdownOpen(!roleDropdownOpen)} className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 h-9 text-xs font-semibold bg-sadu-ink text-white rounded-md hover:bg-sadu-ink-dark transition-colors shadow-2xs cursor-pointer shrink-0">
               <UserCheck className="w-3.5 h-3.5 text-amber-200 shrink-0" />
               <span className="truncate max-w-[100px] sm:max-w-[140px]">{isAr ? profile?.nameAr : profile?.nameEn}</span>
               <ChevronDown className="w-3 h-3 shrink-0" />

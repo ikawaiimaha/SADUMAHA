@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
 import { useI18n } from '../../context/I18nContext';
 import { RfqGeneratorModal } from '../common/RfqGeneratorModal';
 import { 
@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 
 export const LogisticsDashboard: React.FC = () => {
+  const messageId = useId();
   const { isAr, formatNumber } = useI18n();
 
   // Direct Artist Messaging State (bypassing coordinator)
@@ -138,7 +139,9 @@ export const LogisticsDashboard: React.FC = () => {
 
           {/* New message input */}
           <div className="pt-2 border-t border-sadu-gold/40 flex items-center gap-2">
-            <input 
+            <label className="sr-only" htmlFor={messageId}>{isAr ? 'رسالة لوجستية تجريبية' : 'Sample logistics message'}</label>
+            <input
+              id={messageId}
               type="text"
               value={newMessageText}
               onChange={e => setNewMessageText(e.target.value)}
@@ -147,6 +150,7 @@ export const LogisticsDashboard: React.FC = () => {
               className="flex-1 text-xs p-2.5 rounded border border-sadu-gold bg-white"
             />
             <button
+              aria-label={isAr ? 'إرسال رسالة تجريبية' : 'Send sample message'}
               onClick={handleSendMessage}
               className="p-2.5 bg-sadu-brick hover:bg-sadu-brick-dark text-white rounded text-xs font-bold cursor-pointer transition-colors"
             >

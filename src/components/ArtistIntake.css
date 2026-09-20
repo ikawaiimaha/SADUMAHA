@@ -20,7 +20,9 @@
 .intake-form-body:disabled { opacity:.7; }
 .intake-pair,.intake-budget { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
 .intake-field { display:grid; gap:8px; margin:16px 0 4px; font-size:14px; font-weight:600; }
-.intake-field input,.intake-field textarea { width:100%; min-width:0; padding:12px; border:1px solid #b9aa96; border-radius:4px; background:white; font-family:inherit; font-size:16px; font-weight:400; line-height:1.6; color:#211b17; }
+.intake-field input,.intake-field textarea { width:100%; min-width:0; padding:12px; border:1px solid #897762; border-radius:4px; background:white; font-family:inherit; font-size:16px; font-weight:400; line-height:1.6; color:#211b17; }
+.intake-field .intake-field-error { margin:0; color:#8b3a1f; font-size:13px; font-weight:400; }
+.intake-field [aria-invalid="true"] { border-color:#8b3a1f; }
 .intake-field textarea { resize:vertical; min-height:110px; }
 .intake-field input:focus,.intake-field textarea:focus { outline:2px solid #2f4a5b; outline-offset:2px; }
 .intake-field small { min-height:16px; font-size:11px; font-weight:400; color:#716154; }

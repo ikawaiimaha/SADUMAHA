@@ -4,13 +4,22 @@ import { useArtistIntake } from '../context/ArtistIntakeContext';
 import { useI18n } from '../context/I18nContext';
 import { ARTIST_ID, BUDGET_CATEGORIES, budgetTotal, IntakeAsset, IntakeDraft, IntakeIssue, IntakeSubmission, findIntakeProgramme, ProgrammeId, sampleProposal, validateIntake, validWebUrl } from '../data/artistIntake';
 import { IntakeFiles } from './IntakeFiles';
+import { IntakeFieldIssuesProvider, useIntakeFieldIssue } from './IntakeFieldIssues';
 import './ArtistIntake.css';
 
 const budgets = { materials: ['Materials', 'المواد'], equipment: ['Equipment / space rental', 'تأجير التجهيزات / المساحة'], shipping: ['Transport', 'النقل'], fees: ['Artist / workshop fees', 'أتعاب الفنان / الورشة'], other: ['Other costs', 'تكاليف أخرى'] } as const;
 export function Field({ name, en, ar, dir, multiline = false, maxLength = 200, type = 'text' }: { name: FieldPath<IntakeDraft>; en: string; ar: string; dir?: 'ltr' | 'rtl'; multiline?: boolean; maxLength?: number; type?: string }) {
   const { form } = useArtistIntake(); const { isAr, formatNumber } = useI18n();
   const fieldLang = /Ar$/.test(name) ? 'ar' : /En$/.test(name) ? 'en' : undefined;
-  return <label className="intake-field" htmlFor={name}><span>{isAr ? ar : en}</span>{multiline ? <textarea id={name} dir={dir} lang={fieldLang} rows={5} maxLength={maxLength} {...form.register(name)}/> : <input id={name} dir={dir} lang={fieldLang} type={type} maxLength={maxLength} autoComplete="off" {...form.register(name)}/>}<small>{multiline ? (isAr ? `الحد الأقصى للأحرف: ${formatNumber(maxLength)}` : `Up to ${maxLength} characters`) : ''}</small></label>;
+  const issue = useIntakeFieldIssue(name);
+  const helpId = `${name}-help`; const errorId = `${name}-error`;
+  const describedBy = [multiline ? helpId : '', issue ? errorId : ''].filter(Boolean).join(' ') || undefined;
+  const accessibility = { 'aria-invalid': issue ? true : undefined, 'aria-describedby': describedBy } as const;
+  return <div className="intake-field"><label htmlFor={name}>{isAr ? ar : en}</label>
+    {multiline ? <textarea id={name} dir={dir} lang={fieldLang} rows={5} maxLength={maxLength} {...accessibility} {...form.register(name)}/> : <input id={name} dir={dir} lang={fieldLang} type={type} maxLength={maxLength} autoComplete="off" {...accessibility} {...form.register(name)}/>}
+    <small id={helpId}>{multiline ? (isAr ? `الحد الأقصى للأحرف: ${formatNumber(maxLength)}` : `Up to ${maxLength} characters`) : ''}</small>
+    {issue && <p id={errorId} className="intake-field-error">{isAr ? issue.ar : issue.en}</p>}
+  </div>;
 }
 export function RepresentationFields() {
   const { form } = useArtistIntake(); const { isAr } = useI18n(); const representation = useWatch({ control: form.control, name: 'profile.representation' });
@@ -66,7 +75,7 @@ export function ArtistIntake({ onCoordinator }: { onCoordinator: () => void }) {
     <nav className="intake-steps" aria-label={t('Intake steps', 'خطوات التقديم')}>{stages.map((label, index) => <button key={index} aria-current={step === index ? 'step' : undefined} onClick={() => advance(index)}><b>{formatNumber(index + 1)}</b>{label}</button>)}</nav>
     <section className="lr-panel intake-card"><h2 ref={heading} tabIndex={-1}>{stages[step]}</h2>
       {issues.length > 0 && <div className="intake-errors" role="alert"><strong>{t('Your draft is still here. Complete these items:', 'مسودتك ما زالت هنا. أكمل البنود التالية:')}</strong><ul>{issues.map(issue => <li key={issue.path + issue.en}><button onClick={() => { setStep(issue.path.startsWith('profile.') ? issue.path.includes('contact') || issue.path.includes('organisation') ? 1 : 0 : 2); window.setTimeout(() => form.setFocus(issue.path as FieldPath<IntakeDraft>), 0); }}>{isAr ? issue.ar : issue.en}</button></li>)}</ul></div>}
-      <form noValidate onSubmit={e => { e.preventDefault(); if (step < 3) advance(step + 1); else send(); }}>
+      <IntakeFieldIssuesProvider value={issues}><form noValidate onSubmit={e => { e.preventDefault(); if (step < 3) advance(step + 1); else send(); }}>
         <fieldset key={programmeId} disabled={locked} className="intake-form-body">
         {step === 0 && <><p>{t('Public display names can differ from a legal name. Keep the spelling and punctuation you use professionally.', 'قد تختلف أسماء العرض عن الاسم القانوني. احتفظ بالتهجئة وعلامات الترقيم التي تستخدمها مهنياً.')}</p><div className="intake-pair"><Field name="profile.nameEn" en="Display name · English" ar="اسم العرض · الإنجليزية" dir="ltr"/><Field name="profile.nameAr" en="Display name · Arabic" ar="اسم العرض · العربية" dir="rtl"/></div><label className="lr-checkbox"><input type="checkbox" {...form.register('profile.translationHelp')}/>{t('I need help preparing the other language.', 'أحتاج إلى مساعدة في إعداد النص باللغة الأخرى.')}</label><Field name="profile.bio" en="Short biography (optional)" ar="نبذة قصيرة (اختياري)" multiline maxLength={2000}/><div className="intake-pair"><Field name="profile.country" en="Studio country (optional)" ar="دولة الاستوديو (اختياري)"/><Field name="profile.city" en="Studio city (optional)" ar="مدينة الاستوديو (اختياري)"/></div><Field name="profile.email" en="Sample contact email" ar="بريد التواصل التجريبي" dir="ltr" type="email"/><Field name="profile.phone" en="Phone with country code (optional)" ar="الهاتف مع رمز الدولة (اختياري)" dir="ltr" type="tel"/><Field name="profile.website" en="Website (optional)" ar="الموقع الإلكتروني (اختياري)" dir="ltr"/><p className="intake-note">{t('Sample legal names can be entered on the separate roster page. Passport documents and payment information are not collected in this public mockup.', 'يمكن إدخال أسماء قانونية تجريبية في صفحة السجل المستقلة. لا يجمع هذا النموذج العام جوازات السفر أو بيانات الدفع.')}</p></>}
         {step === 1 && <><RepresentationFields/><IntakeFiles slot="cv" disabled={locked}/></>}
@@ -74,7 +83,7 @@ export function ArtistIntake({ onCoordinator }: { onCoordinator: () => void }) {
         </fieldset>
         {step === 3 && <>{locked && latest ? <IntakeDossier draft={latest.snapshot} programmeId={programmeId} assets={latest.assets}/> : <CurrentDossier programmeId={programmeId}/>}<p className="intake-note">{t('Submitting creates a versioned item for the coordinator’s completeness check. It does not transfer copyright or grant publicity, shipping, spending or selection authority.', 'ينشئ التقديم بنداً محدد الإصدار لمراجعة الاكتمال لدى المنسق. لا ينقل حقوق المؤلف ولا يمنح صلاحية النشر أو الشحن أو الإنفاق أو الاختيار.')}</p>{!locked && <label className="lr-checkbox"><input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)}/>{t('I reviewed this sample proposal and want to send it to the demo coordinator queue.', 'راجعت هذا المقترح التجريبي وأرغب في إرساله إلى قائمة المنسق التجريبية.')}</label>}</>}
         <div className="intake-navigation"><button type="button" disabled={step === 0} onClick={() => advance(step - 1)}>{t('Previous', 'السابق')}</button>{step < 3 ? <button className="lr-primary" type="submit">{t('Continue', 'متابعة')}</button> : <button className="lr-primary" type="submit" disabled={!confirmed || locked}>{t('Submit sample proposal', 'تقديم المقترح التجريبي')}</button>}</div>
-      </form>
+      </form></IntakeFieldIssuesProvider>
     </section>
     {!latest && <button className="lr-link" onClick={() => { form.setValue(`proposals.${programmeId}`, sampleProposal(programmeId), { shouldDirty: true }); advance(2); }}>{t('Load sample proposal (replaces this programme only)', 'تحميل مقترح تجريبي (لهذا البرنامج فقط)')}</button>}
   </div>;

@@ -91,7 +91,7 @@ export const InstitutionalBreadcrumb: React.FC<InstitutionalBreadcrumbProps> = (
                 style={{ width: `${calculateGatePercentage(selectedProgramme.gatesReady, selectedProgramme.gatesTotal)}%` }}
               />
             </div>
-            <span className="font-mono text-sadu-sage font-semibold text-[10px]">
+            <span className="font-mono text-[#526757] font-semibold text-[10px]">
               {calculateGatePercentage(selectedProgramme.gatesReady, selectedProgramme.gatesTotal)}%
             </span>
           </div>}

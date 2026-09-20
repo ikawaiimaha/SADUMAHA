@@ -1,0 +1,9 @@
+.sadu-native-modal { margin:auto; padding:0; border:0; background:transparent; color:inherit; width:calc(100% - 2rem); max-height:calc(100dvh - 2rem); overflow:auto; }
+.sadu-native-modal::backdrop { background:rgb(33 27 23 / .7); backdrop-filter:blur(2px); }
+.sadu-native-modal :focus-visible { outline:3px solid #2f6178; outline-offset:2px; }
+.sadu-native-modal [data-modal-close] { flex-shrink:0; }
+.sadu-native-modal .contract-instrument:focus-within { outline:3px solid #2f6178; outline-offset:2px; }
+@media print {
+  .sadu-native-modal[open] { position:static!important; width:100%!important; max-width:none!important; max-height:none!important; overflow:visible!important; margin:0!important; }
+  .sadu-native-modal::backdrop { background:none; }
+}

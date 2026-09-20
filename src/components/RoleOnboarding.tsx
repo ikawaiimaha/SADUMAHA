@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
+import { NativeModal } from './common/NativeModal';
 import { Language, RoleKey } from '../types';
 import { ROLE_PROFILES } from '../data/mockData';
 import { AuthoredBand } from './AuthoredBand';
@@ -17,17 +18,19 @@ export const RoleOnboarding: React.FC<RoleOnboardingProps> = ({
   onDismiss,
   onSelectAnotherRole,
 }) => {
+  const titleId = useId();
   const isAr = lang === 'ar';
   const profile = ROLE_PROFILES[role];
   const [taskCompleted, setTaskCompleted] = useState(false);
 
   return (
-    <div className="fixed inset-0 z-50 bg-sadu-charcoal/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+    <NativeModal isOpen onClose={onDismiss} labelledBy={titleId} className="max-w-2xl" returnFocusSelector="[data-role-switcher]">
       <div className="bg-sadu-linen border-2 border-sadu-gold rounded-lg max-w-2xl w-full p-6 sm:p-8 shadow-xl text-sadu-charcoal relative">
         <button
           onClick={onDismiss}
           className="absolute top-4 end-4 p-1 text-sadu-muted hover:text-sadu-charcoal hover:bg-sadu-sand/70 rounded-md transition-colors cursor-pointer"
-          title={isAr ? 'إغلاق ومتابعة' : 'Close and proceed'}
+          data-modal-close
+          aria-label={isAr ? 'إغلاق ومتابعة' : 'Close and proceed'}
         >
           <X className="w-5 h-5" />
         </button>
@@ -39,7 +42,7 @@ export const RoleOnboarding: React.FC<RoleOnboardingProps> = ({
           <span>{isAr ? 'دور تجريبي · حدود التنقل' : 'Sample role · navigation boundaries'}</span>
         </div>
 
-        <h2 className="text-2xl font-editorial font-bold text-sadu-charcoal">
+        <h2 id={titleId} className="text-2xl font-editorial font-bold text-sadu-charcoal">
           {isAr ? profile?.titleAr : profile?.titleEn}
         </h2>
         <p className="text-xs text-sadu-ink font-semibold mt-0.5">
@@ -126,6 +129,6 @@ export const RoleOnboarding: React.FC<RoleOnboardingProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </NativeModal>
   );
 };

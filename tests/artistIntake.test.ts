@@ -1,9 +1,34 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createIntakeDraft, sampleIntakeDraft, recoverableDraft, validateIntake, reviewSubmission, type IntakeSubmission } from '../src/data/artistIntake.ts';
-import { INTAKE_DRAFT_KEY, readIntakeDraft, writeIntakeDraft } from '../src/utils/intakeDraftStorage.ts';
+import { INTAKE_DRAFT_KEY, readIntakeDraft, writeIntakeDraft, parseIntakeDraftFile } from '../src/utils/intakeDraftStorage.ts';
 import { seedRoster, registerProfile, validateRegistration, createRosterProgramme } from '../src/data/artistRoster.ts';
 const at = '2026-09-19T09:00:00Z';
+test('downloaded draft files round-trip bilingual text without restoring private fields or authority', () => {
+  const draft = sampleIntakeDraft(); draft.proposals['DEMO-CALL-01'].budget.materials = 'unfinished';
+  const restored = parseIntakeDraftFile(JSON.stringify({ schema: 1, data: { ...draft, approved: true, files: ['private.pdf'] } }));
+  assert.deepEqual(restored, recoverableDraft(draft));
+  assert.equal(restored.profile.email, ''); assert.equal(restored.profile.legalNameEn, '');
+  assert.equal(restored.proposals['DEMO-CALL-01'].budget.materials, 'unfinished');
+  assert.equal('approved' in restored, false); assert.equal('files' in restored, false);
+});
+
+test('draft file import rejects malformed structures, unsafe keys, versions and excessive bytes', () => {
+  const file = (data: unknown) => JSON.stringify({ schema: 1, data });
+  for (const text of ['{', 'null', '[]', JSON.stringify({ schema: 2, data: sampleIntakeDraft() }),
+    file({ ...sampleIntakeDraft(), proposals: [] }), file({ ...sampleIntakeDraft(), programmeBriefs: [] }),
+    file({ ...sampleIntakeDraft(), profile: null }), '{"schema":1,"__proto__":{"polluted":true}}',
+    'ع'.repeat(75001)]) assert.throws(() => parseIntakeDraftFile(text));
+  const bad = sampleIntakeDraft(); bad.proposals['DEMO-CALL-01'].programmeId = 'OTHER';
+  assert.throws(() => parseIntakeDraftFile(file(bad)));
+  assert.equal(({} as Record<string, unknown>).polluted, undefined);
+});
+
+test('older exported files migrate only the known legal-name additions', () => {
+  const data = JSON.parse(JSON.stringify(sampleIntakeDraft())); delete data.profile.legalNameEn; delete data.profile.legalNameAr;
+  const restored = parseIntakeDraftFile('\uFEFF' + JSON.stringify({ schema: 1, data }));
+  assert.equal(restored.profile.nameAr, 'فنان تجريبي'); assert.equal(restored.profile.legalNameAr, '');
+});
 function memoryStorage() {
   const map = new Map<string, string>();
   return { getItem: (key: string) => map.get(key) ?? null, setItem: (key: string, value: string) => { map.set(key, value); } };

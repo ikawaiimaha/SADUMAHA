@@ -47,11 +47,20 @@ export const StoryMode: React.FC<StoryModeProps> = ({
   const { formatNumber, localizeDigits } = i18n;
   const [currentChapter, setCurrentChapter] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [announcedChapter, setAnnouncedChapter] = useState<number | null>(null);
   const cardRef = useRef<HTMLElement>(null);
 
   const chapters = storyChapters;
 
   const current = chapters[currentChapter];
+  const goToChapter = (index: number) => {
+    setIsPlaying(false);
+    setCurrentChapter(index);
+    setAnnouncedChapter(index);
+  };
+  const chapterAnnouncement = announcedChapter === null ? '' : isAr
+    ? `الفصل ${formatNumber(announcedChapter + 1)} من ${formatNumber(chapters.length)}: ${chapters[announcedChapter].titleAr}`
+    : `Chapter ${announcedChapter + 1} of ${chapters.length}: ${chapters[announcedChapter].titleEn}`;
   const isLeadChapter = current.id === 'leadership-visionary';
   const isSecondChapter = current.id === 'leadership-governance';
   const isPortraitChapter = Boolean(current.leadershipRank);
@@ -77,6 +86,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
 
   return (
     <div className="story-shell bg-sadu-sand text-sadu-charcoal">
+      <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">{chapterAnnouncement}</p>
       <header className="story-toolbar border-b border-sadu-gold bg-sadu-linen px-4 sm:px-6 py-2 shadow-xs">
         <div className="max-w-6xl mx-auto flex flex-wrap gap-2 items-center justify-between">
           <div className="flex items-center gap-3">
@@ -121,10 +131,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
             {chapters.map((chapter, idx) => (
               <button
                 key={idx}
-                onClick={() => {
-                  setCurrentChapter(idx);
-                  setIsPlaying(false);
-                }}
+                onClick={() => goToChapter(idx)}
                 className={`h-full transition-all cursor-pointer ${
                   idx === currentChapter ? 'bg-sadu-brick' : idx < currentChapter ? 'bg-sadu-ink' : 'bg-transparent hover:bg-sadu-gold'
                 }`}
@@ -236,7 +243,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
         <div className="story-controls flex items-center justify-between border-t border-sadu-gold">
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setCurrentChapter((prev) => Math.max(0, prev - 1))}
+              onClick={() => goToChapter(Math.max(0, currentChapter - 1))}
               disabled={currentChapter === 0}
               className="px-4 py-2 text-xs font-medium border border-sadu-gold rounded-md bg-sadu-linen disabled:opacity-40 hover:bg-sadu-sand/70 flex items-center gap-1 cursor-pointer"
             >
@@ -245,7 +252,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
             </button>
 
             <button
-              onClick={() => setIsPlaying(!isPlaying)}
+              onClick={() => { setAnnouncedChapter(null); setIsPlaying(!isPlaying); }}
               className="px-4 py-2 text-xs font-medium border border-sadu-gold rounded-md bg-sadu-linen hover:bg-sadu-sand/70 flex items-center gap-1.5 cursor-pointer"
             >
               {isPlaying ? (
@@ -265,7 +272,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
           <div className="flex items-center gap-2">
             {currentChapter < chapters.length - 1 ? (
               <button
-                onClick={() => setCurrentChapter((prev) => prev + 1)}
+                onClick={() => goToChapter(currentChapter + 1)}
                 className="px-5 py-2 text-xs font-semibold text-white bg-sadu-brick hover:bg-sadu-brick-dark rounded-md flex items-center gap-1.5 shadow-xs cursor-pointer"
               >
                 <span>{isAr ? 'الفصل التالي' : 'Next Chapter'}</span>

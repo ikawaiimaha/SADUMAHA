@@ -3,6 +3,7 @@ import { useWatch } from 'react-hook-form';
 import { useArtistIntake } from './ArtistIntakeContext';
 import { useDebounce } from '../hooks/useDebounce';
 import { DraftEnvelope, INTAKE_DRAFT_KEY, readIntakeDraft, writeIntakeDraft } from '../utils/intakeDraftStorage';
+import { createIntakeDraft, recoverableDraft, type IntakeDraft } from '../data/artistIntake';
 
 function useIntakeDraftBackup() {
   const { form } = useArtistIntake();
@@ -13,6 +14,15 @@ function useIntakeDraftBackup() {
   const [stored, setStored] = useState<DraftEnvelope | null>(null);
   const [status, setStatus] = useState<'session' | 'saving' | 'saved' | 'error' | 'conflict'>('session');
   const [savedAt, setSavedAt] = useState(''); const revision = useRef<string | null>(null);
+  const protectedText = useRef(JSON.stringify(createIntakeDraft()));
+  useEffect(() => {
+    const warn = (event: BeforeUnloadEvent) => {
+      if (JSON.stringify(form.getValues()) === protectedText.current) return;
+      event.preventDefault(); event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [form]);
   useEffect(() => {
     try { setStored(readIntakeDraft(localStorage)); } catch { setStatus('error'); }
     const changed = (event: StorageEvent) => {
@@ -34,6 +44,7 @@ function useIntakeDraftBackup() {
         await navigator.locks.request(INTAKE_DRAFT_KEY, () => {
           if (!active) return;
           const next = writeIntakeDraft(localStorage, form.getValues(), revision.current, crypto.randomUUID(), new Date().toISOString());
+          protectedText.current = JSON.stringify(next.data);
           revision.current = next.revision; setSavedAt(next.savedAt); setStatus('saved');
         });
       } catch (error) {
@@ -51,10 +62,15 @@ function useIntakeDraftBackup() {
   }, [enabled, values, form]);
   const restore = () => {
     if (!stored) return;
+    protectedText.current = JSON.stringify(stored.data);
     form.reset(stored.data); revision.current = stored.revision; setSavedAt(stored.savedAt); setStored(null); setEnabled(true);
   };
+  const importText = (draft: IntakeDraft) => {
+    // Import is session-only; never silently overwrite a device backup or enable saving.
+    setEnabled(false); setStatus('session'); form.reset(recoverableDraft(draft));
+  };
   const toggle = () => { setEnabled(value => !value); if (enabled) setStatus('session'); };
-  return { stored, enabled, savedAt, status: enabled && status === 'saved' && values !== settled ? 'saving' as const : status, restore, toggle };
+  return { stored, enabled, savedAt, status: enabled && status === 'saved' && values !== settled ? 'saving' as const : status, restore, toggle, importText };
 }
 const Context = createContext<ReturnType<typeof useIntakeDraftBackup> | null>(null);
 export function IntakeDraftBackupProvider({ children }: { children: ReactNode }) {

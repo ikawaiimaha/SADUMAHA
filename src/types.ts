@@ -89,6 +89,7 @@ export interface EditorialItem {
   mediumEn: string;
   mediumAr: string;
   dimensions: string;
+  dimensionsAr?: string;
   year: string;
   status: EditorialStatus;
 }

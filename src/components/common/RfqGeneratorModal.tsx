@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useId } from 'react';
+import { NativeModal } from './NativeModal';
+import { PrintWrapper, printDocument } from './PrintWrapper';
 import { useI18n } from '../../context/I18nContext';
 import { ARTWORKS, INSTITUTIONAL_INFO } from '../../data/mockData';
 import { ArtworkRecord } from '../../types';
@@ -30,6 +32,7 @@ export const RfqGeneratorModal: React.FC<RfqGeneratorModalProps> = ({
   onClose,
   defaultPackageCategory = 'fabrication'
 }) => {
+  const titleId = useId();
   const { lang, formatCurrency, formatNumber, localizeDigits } = useI18n();
   const isAr = lang === 'ar';
 
@@ -45,7 +48,7 @@ export const RfqGeneratorModal: React.FC<RfqGeneratorModalProps> = ({
   const bronzeArtwork = ARTWORKS.find(a => a.canonicalCode === 'SCB-2026-YN-02') || ARTWORKS[1];
 
   const handlePrint = () => {
-    window.print();
+    void printDocument();
   };
 
   const handleCopyNotice = () => {
@@ -58,17 +61,14 @@ export const RfqGeneratorModal: React.FC<RfqGeneratorModalProps> = ({
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-sadu-charcoal/80 backdrop-blur-xs overflow-y-auto print:p-0 print:bg-white print:static"
-      id="rfq-generator-modal"
-    >
-      <div className="relative w-full max-w-4xl bg-white border border-sadu-gold rounded-lg shadow-xl overflow-hidden my-8 print:border-none print:shadow-none print:m-0 print:max-w-none">
+    <PrintWrapper><NativeModal isOpen={isOpen} onClose={onClose} labelledBy={titleId} className="max-w-4xl" id="rfq-generator-modal">
+      <div className="relative w-full max-w-4xl bg-white border border-sadu-gold rounded-lg shadow-xl overflow-hidden print:border-none print:shadow-none print:m-0 print:max-w-none">
         {/* Top Control Bar (Hidden when printing) */}
         <div className="bg-sadu-linen px-6 py-4 border-b border-sadu-gold/50 flex items-center justify-between flex-wrap gap-3 print:hidden">
           <div className="flex items-center gap-2">
             <FileText className="w-5 h-5 text-sadu-brick" />
             <div>
-              <h2 className="font-editorial text-base font-bold text-sadu-charcoal">
+              <h2 id={titleId} className="font-editorial text-base font-bold text-sadu-charcoal">
                 {isAr ? 'معاينة طلب عروض أسعار تجريبي' : 'Sample RFQ preview'}
               </h2>
               <span className="text-[11px] text-sadu-muted font-mono">
@@ -128,6 +128,7 @@ export const RfqGeneratorModal: React.FC<RfqGeneratorModalProps> = ({
 
             <button
               type="button"
+              data-modal-close
               onClick={onClose}
               aria-label={isAr ? 'إغلاق' : 'Close'}
               className="p-1.5 text-sadu-muted hover:text-sadu-brick rounded-md hover:bg-sadu-sand transition-colors cursor-pointer"
@@ -138,7 +139,7 @@ export const RfqGeneratorModal: React.FC<RfqGeneratorModalProps> = ({
         </div>
 
         {/* Printable Formal Document Content */}
-        <div className="p-8 sm:p-10 space-y-6 text-sadu-charcoal bg-white font-serif leading-relaxed print:p-6 print:text-black">
+        <div className="p-8 sm:p-10 space-y-6 text-sadu-charcoal bg-white font-serif leading-relaxed print:p-0 print:space-y-4 print:text-black">
           <p className="font-sans font-bold text-sm border p-3">{isAr ? 'عينة توضيحية غير معتمدة — ليست دعوة رسمية لتقديم عروض أو تفويضاً بالعمل.' : 'UNAPPROVED DEMONSTRATION — not an official solicitation or authorization to work.'}</p>
           {/* Government Document Header */}
           <div className="border-b-2 border-sadu-charcoal pb-6 flex items-start justify-between flex-wrap gap-4">
@@ -337,7 +338,7 @@ export const RfqGeneratorModal: React.FC<RfqGeneratorModalProps> = ({
           </div>
 
           {/* Sample reviewer placeholders */}
-          <div className="pt-6 border-t border-sadu-charcoal/40 grid grid-cols-2 sm:grid-cols-3 gap-6 font-sans text-xs">
+          <div className="break-inside-avoid pt-6 border-t border-sadu-charcoal/40 grid grid-cols-2 sm:grid-cols-3 gap-6 font-sans text-xs">
             <div>
               <span className="text-[10px] text-sadu-muted block uppercase">{isAr ? "مسؤولية مقترحة · تجريبي" : "Proposed responsibility · sample"}</span>
               <span className="font-bold text-sadu-charcoal block mt-1">{INSTITUTIONAL_INFO.directorateEn}</span>
@@ -370,6 +371,6 @@ export const RfqGeneratorModal: React.FC<RfqGeneratorModalProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </NativeModal></PrintWrapper>
   );
 };

@@ -1,4 +1,5 @@
 import React from 'react';
+import { PrintWrapper, printDocument } from './PrintWrapper';
 import { EditorialItem, ExhibitionProgramme } from '../../types';
 import { useI18n } from '../../context/I18nContext';
 import { Printer, X, Tag, FileText, CheckCircle2 } from 'lucide-react';
@@ -20,7 +21,7 @@ export const GalleryLabelPrintView: React.FC<GalleryLabelPrintViewProps> = ({
   const readyItems = items.filter(item => item.status === 'ready_for_print');
 
   const handlePrint = () => {
-    window.print();
+    void printDocument();
   };
 
   const exhibitionTitleEn = selectedProgramme?.titleEn || '11th Sharjah Calligraphy Biennial';
@@ -29,7 +30,7 @@ export const GalleryLabelPrintView: React.FC<GalleryLabelPrintViewProps> = ({
   const venueAr = selectedProgramme?.venueAr || 'متحف الشارقة للفنون (بيت السركال)';
 
   return (
-    <div
+    <PrintWrapper><div
       id="gallery-label-print-view"
       className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex flex-col items-center overflow-y-auto p-4 sm:p-6 print:static print:bg-transparent print:p-0 print:overflow-visible print:z-auto print:block"
     >
@@ -85,8 +86,8 @@ export const GalleryLabelPrintView: React.FC<GalleryLabelPrintViewProps> = ({
           <FileText className="w-4 h-4 text-sadu-brick shrink-0" />
           <span>
             {isAr
-              ? 'تلميح الطباعة: عند فتح نافذة الطباعة، اختر "Save as PDF" أو حدد الطابعة بدقة مقياس 100% (Actual Size) دون تقليص الهوامش.'
-              : 'Print Tip: In your browser print dialog, choose "Save as PDF" or select 100% scale (Actual Size) for exact 15cm × 10cm physical dimensions.'}
+              ? 'للطباعة: اختر ورق A4 عمودياً ومقياس 100%، وأوقف رؤوس الصفحات وتذييلاتها. الأبعاد المستهدفة 15 سم × 10 سم؛ تحقق من نسخة مطبوعة قبل الإنتاج.'
+              : 'Print on A4 portrait at 100% scale with browser headers and footers off. Target size: 15cm × 10cm; check a physical proof before production.'}
           </span>
         </div>
         <span className="font-mono text-[11px] text-sadu-muted hidden sm:inline">
@@ -107,11 +108,11 @@ export const GalleryLabelPrintView: React.FC<GalleryLabelPrintViewProps> = ({
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 print:grid-cols-2 print:gap-6 print:p-0 place-items-center">
+          <div className="gallery-label-grid grid grid-cols-1 md:grid-cols-2 gap-8 print:p-0 place-items-center">
             {readyItems.map(item => (
               <div
                 key={item.id}
-                className="w-[15cm] h-[10cm] max-w-full p-6 bg-white border border-gray-300 rounded-sm shadow-md print:shadow-none print:border-gray-400 page-break-inside-avoid relative flex flex-col justify-between box-border overflow-hidden select-text text-gray-900"
+                className="gallery-label w-[15cm] min-h-[10cm] max-w-full p-6 bg-white border border-gray-300 rounded-sm shadow-md print:shadow-none print:border-gray-400 page-break-inside-avoid relative flex flex-col justify-between box-border select-text text-gray-900"
                 style={{ breakInside: 'avoid' }}
               >
                 <p className="text-[9px] font-sans text-gray-600">{isAr ? 'عينة غير معتمدة · الأبعاد والخطوط خيارات تصميم تجريبية' : 'UNAPPROVED SAMPLE · dimensions and typography are design choices'}</p>
@@ -130,7 +131,7 @@ export const GalleryLabelPrintView: React.FC<GalleryLabelPrintViewProps> = ({
                     {item.mediumAr}
                   </p>
                   <p className="text-sm text-gray-600 font-sans font-normal">
-                    {item.dimensions} · {item.year}
+                    <bdi dir={item.dimensionsAr ? 'rtl' : 'ltr'}>{item.dimensionsAr ?? item.dimensions}</bdi>{' · '}<bdi dir="ltr">{item.year}</bdi>
                   </p>
                 </div>
 
@@ -155,7 +156,7 @@ export const GalleryLabelPrintView: React.FC<GalleryLabelPrintViewProps> = ({
                   <span className="font-semibold text-gray-600 print:text-gray-700">
                     {item.artistName}
                   </span>
-                  <span className="truncate max-w-[240px]">
+                  <span className="max-w-[240px] text-end">
                     {exhibitionTitleEn} · {venueEn.split('(')[0].trim()}
                   </span>
                 </div>
@@ -164,6 +165,6 @@ export const GalleryLabelPrintView: React.FC<GalleryLabelPrintViewProps> = ({
           </div>
         )}
       </div>
-    </div>
+    </div></PrintWrapper>
   );
 };

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
+import { NativeModal } from './common/NativeModal';
 import { Language, ExhibitionProgramme } from '../types';
 import { ARTWORKS, INSTITUTIONAL_INFO } from '../data/mockData';
 import { useI18n } from '../context/I18nContext';
@@ -37,6 +38,7 @@ export const NewContractModal: React.FC<NewContractModalProps> = ({
   onContractCreated,
   onNavigateTab,
 }) => {
+  const titleId = useId();
   const i18n = useI18n();
   const currentLang = lang || i18n.lang;
   const isAr = currentLang === 'ar';
@@ -119,11 +121,9 @@ export const NewContractModal: React.FC<NewContractModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-sadu-charcoal/70 backdrop-blur-xs">
+    <NativeModal isOpen={isOpen} onClose={onClose} labelledBy={titleId} className="max-w-2xl" returnFocusSelector="[data-workspace-search]">
       <div 
         className="w-full max-w-2xl bg-sadu-linen border-2 border-sadu-gold rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-150"
-        role="dialog"
-        aria-modal="true"
       >
         {/* Header */}
         <div className="bg-sadu-sand border-b border-sadu-gold px-6 py-4 flex items-center justify-between">
@@ -140,7 +140,7 @@ export const NewContractModal: React.FC<NewContractModalProps> = ({
                   {dict.institutionalTag}
                 </span>
               </div>
-              <h2 className="text-lg font-editorial font-bold text-sadu-charcoal leading-snug">
+              <h2 id={titleId} className="text-lg font-editorial font-bold text-sadu-charcoal leading-snug">
                 {dict.modalTitle}
               </h2>
             </div>
@@ -148,6 +148,7 @@ export const NewContractModal: React.FC<NewContractModalProps> = ({
 
           <button
             onClick={onClose}
+            data-modal-close
             aria-label={common.close}
             className="p-2 rounded-md text-sadu-muted hover:text-sadu-charcoal hover:bg-sadu-linen transition-colors cursor-pointer"
           >
@@ -216,40 +217,43 @@ export const NewContractModal: React.FC<NewContractModalProps> = ({
               </div>
 
               {/* Step 1: Instrument Type Selector */}
-              <div>
-                <label className="font-bold text-sadu-charcoal block mb-2">
+              <fieldset className="min-w-0">
+                <legend className="font-bold text-sadu-charcoal block mb-2">
                   {dict.step1Title}
-                </label>
+                </legend>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {contractTypes.map((type) => (
-                    <div
+                    <label
                       key={type.id}
-                      onClick={() => setContractType(type.id)}
-                      className={`p-3 rounded-lg border text-start transition-all cursor-pointer ${
+                      className={`contract-instrument p-3 rounded-lg border text-start transition-all cursor-pointer ${
                         contractType === type.id
                           ? 'bg-sadu-sand border-sadu-brick ring-2 ring-sadu-brick/40 shadow-xs'
                           : 'bg-sadu-linen border-sadu-gold hover:border-sadu-ink/50'
                       }`}
                     >
+                      <input type="radio" className="sr-only" name={`${titleId}-instrument`} value={type.id}
+                        checked={contractType === type.id} onChange={() => setContractType(type.id)}
+                        aria-labelledby={`${titleId}-${type.id}-label`} aria-describedby={`${titleId}-${type.id}-description`}/>
                       <div className="flex items-center justify-between mb-1">
-                        <span className="font-bold text-sadu-charcoal">{type.title}</span>
+                        <span id={`${titleId}-${type.id}-label`} className="font-bold text-sadu-charcoal">{type.title}</span>
                         {contractType === type.id && <CheckCircle2 className="w-4 h-4 text-sadu-brick shrink-0" />}
                       </div>
-                      <p className="text-[11px] text-sadu-muted leading-relaxed">
+                      <p id={`${titleId}-${type.id}-description`} className="text-[11px] text-sadu-muted leading-relaxed">
                         {type.desc}
                       </p>
-                    </div>
+                    </label>
                   ))}
                 </div>
-              </div>
+              </fieldset>
 
               {/* Step 2: Participating Artist & Artwork Anchor */}
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="font-bold text-sadu-charcoal block mb-1">
+                  <label htmlFor={`${titleId}-artist`} className="font-bold text-sadu-charcoal block mb-1">
                     {dict.step2Title}
                   </label>
                   <select
+                    id={`${titleId}-artist`}
                     value={selectedArtist}
                     onChange={(e) => setSelectedArtist(e.target.value)}
                     className="w-full p-2.5 rounded-md bg-sadu-sand border border-sadu-gold text-sadu-charcoal text-xs font-semibold focus:outline-hidden focus:border-sadu-brick"
@@ -261,10 +265,11 @@ export const NewContractModal: React.FC<NewContractModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="font-bold text-sadu-charcoal block mb-1">
+                  <label htmlFor={`${titleId}-artwork`} className="font-bold text-sadu-charcoal block mb-1">
                     {dict.artworkAnchorLabel}
                   </label>
                   <select
+                    id={`${titleId}-artwork`}
                     value={selectedArtwork}
                     onChange={(e) => setSelectedArtwork(e.target.value)}
                     className="w-full p-2.5 rounded-md bg-sadu-sand border border-sadu-gold text-sadu-charcoal text-xs font-semibold focus:outline-hidden focus:border-sadu-brick"
@@ -292,10 +297,11 @@ export const NewContractModal: React.FC<NewContractModalProps> = ({
 
                 <div className="grid sm:grid-cols-2 gap-3">
                   <div>
-                    <span className="text-[11px] text-sadu-muted block mb-1">{dict.totalHonorariumLabel}</span>
+                    <label htmlFor={`${titleId}-honorarium`} className="text-[11px] text-sadu-muted block mb-1">{dict.totalHonorariumLabel}</label>
                     <div className="relative">
                       <input
                         type="text"
+                        id={`${titleId}-honorarium`}
                         value={honorariumAmount}
                         onChange={(e) => setHonorariumAmount(e.target.value)}
                         className="w-full p-2 rounded bg-sadu-linen border border-sadu-gold text-sadu-charcoal font-mono font-bold text-xs"
@@ -305,8 +311,9 @@ export const NewContractModal: React.FC<NewContractModalProps> = ({
                   </div>
 
                   <div>
-                    <span className="text-[11px] text-sadu-muted block mb-1">{dict.advanceHoldLabel}</span>
+                    <label htmlFor={`${titleId}-advance`} className="text-[11px] text-sadu-muted block mb-1">{dict.advanceHoldLabel}</label>
                     <select
+                      id={`${titleId}-advance`}
                       value={advancePercent}
                       onChange={(e) => setAdvancePercent(e.target.value)}
                       className="w-full p-2 rounded bg-sadu-linen border border-sadu-gold text-sadu-charcoal font-mono font-bold text-xs"
@@ -381,6 +388,6 @@ export const NewContractModal: React.FC<NewContractModalProps> = ({
           )}
         </div>
       </div>
-    </div>
+    </NativeModal>
   );
 };

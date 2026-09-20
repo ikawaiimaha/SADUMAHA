@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import { PrintWrapper, printDocument } from './PrintWrapper';
 import { 
   FileDown, 
   Printer, 
@@ -59,14 +60,14 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
   if (!isOpen) return null;
 
   const handleDownloadPdf = () => {
-    if (needsPrint) { window.print(); return; }
+    if (needsPrint) { void printDocument(); return; }
     downloadInstitutionalPdfReport(metadata, metrics, records);
     setDownloadSuccess(true);
     setTimeout(() => setDownloadSuccess(false), 3000);
   };
 
   const handleBrowserPrint = () => {
-    window.print();
+    void printDocument();
   };
 
   const currentDateStr = new Date().toLocaleDateString(isAr ? 'ar-AE-u-ca-gregory-nu-arab' : 'en-US', {
@@ -78,7 +79,7 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
 
 
   return (
-    <div data-report-overlay className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-sadu-ink/75 backdrop-blur-xs overflow-y-auto">
+    <PrintWrapper><div data-report-overlay className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-sadu-ink/75 backdrop-blur-xs overflow-y-auto">
       <div 
         role="dialog"
         aria-modal="true"
@@ -328,6 +329,6 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
           </div>
         </div>
       </div>
-    </div>
+    </div></PrintWrapper>
   );
 };
