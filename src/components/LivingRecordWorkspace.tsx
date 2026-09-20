@@ -3,7 +3,7 @@ import { BilingualTimeline } from './common/BilingualTimeline';
 import { ClaimProvenance } from './ClaimProvenance';
 import { PortraitHierarchy } from './PortraitHierarchy';
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowRight, Check, LoaderCircle, LockKeyhole, RotateCcw, X } from 'lucide-react';
+import { ArrowRight, Check, CircleAlert, LoaderCircle, LockKeyhole, RotateCcw, X } from 'lucide-react';
 import { useI18n } from '../context/I18nContext';
 import { useWorkspace } from '../context/WorkspaceContext';
 import { useLivingRecord } from '../context/LivingRecordContext';
@@ -152,7 +152,14 @@ export function LivingRecordWorkspace() {
       {actor === 'SELECTION' ? <ProposalSelection/> : actor === 'ARTIST' ? <ArtistIntake onCoordinator={() => go('COORDINATOR')}/> : actor === 'CHAIRMAN' ? <ChairmanBrief onDirectorate={() => go('DIRECTORATE')} onPublishing={() => go('PUBLISHING_MANAGER')} onFinance={() => setModal('finance')}/> : actor === 'DIRECTORATE' ? <DirectorateOversight/> : actor === 'PUBLISHING_MANAGER' ? <section className="lr-panel"><h2>{t('Studies and Publishing · sample pipeline', 'الدراسات والنشر · مسار تجريبي')}</h2><PublishingCase actor={actor}/></section> : <>
         <section className="lr-panel lr-ledger"><div className="lr-section-title"><h2>{t('Prepared case · delivery and handover', 'الحالة المعدّة · التنفيذ والتسليم')}</h2><span className="lr-status">{t('One shared case', 'حالة مشتركة واحدة')}</span></div>
           <ol className="lr-steps" aria-label={t('Custody sequence', 'تسلسل التسليم')}>
-            {[[t('Arrival', 'الوصول'), Boolean(state.receipt)], [t('Condition evidence', 'أدلة الحالة'), Boolean(state.condition)], [t('Handover review', 'مراجعة التسليم'), Boolean(state.acceptance)]].map(([label, done], index) => <li key={index} className={done ? 'is-clear' : ''}><span>{done ? <Check aria-label={t('Recorded', 'مسجل')}/> : formatNumber(index + 1)}</span>{label}{index < 2 && <ArrowRight className="lr-direction" aria-hidden="true"/>}</li>)}
+            {[
+              { label: t('Arrival', 'الوصول'), done: Boolean(state.receipt), exception: false },
+              { label: state.condition?.outcome === 'issue' ? t('Condition evidence · exception', 'أدلة الحالة · استثناء') : t('Condition evidence', 'أدلة الحالة'), done: Boolean(state.condition), exception: state.condition?.outcome === 'issue' },
+              { label: t('Handover review', 'مراجعة التسليم'), done: Boolean(state.acceptance), exception: false },
+            ].map(({ label, done, exception }, index) => <li key={index} className={exception ? 'is-exception' : done ? 'is-clear' : ''}>
+              <span>{exception ? <CircleAlert aria-hidden="true"/> : done ? <Check aria-label={t('Recorded', 'مسجل')}/> : formatNumber(index + 1)}</span>
+              {label}{index < 2 && <ArrowRight className="lr-direction" aria-hidden="true"/>}
+            </li>)}
           </ol>
           <div className="lr-table-wrap"><table><caption className="sr-only">{t('Asset, status, evidence, and next responsible role', 'الأصل والحالة والأدلة والدور المسؤول التالي')}</caption><thead><tr>{[t('Asset', 'الأصل'), t('Location / status', 'الموقع / الحالة'), t('Blocker / evidence', 'المعوق / الأدلة'), t('Next responsible role', 'الدور المسؤول التالي')].map(label => <th key={label} scope="col">{label}</th>)}</tr></thead>
             <tbody><tr><th scope="row">{t('Mounir Fatmi · Crate 4', 'منير فاطمي · الصندوق ٤')}<bdi>{CASE_ID}</bdi></th><td>{status}</td><td>{state.condition ? conditionLink : t('Condition report not yet recorded', 'لم يُسجل تقرير الحالة بعد')}{state.condition?.outcome === 'issue' && <p className="lr-issue">{t('Specialist review required before handover', 'تلزم مراجعة مختصة قبل التسليم')}</p>}</td><td><strong>{roleLabel(metrics.nextActor)}</strong>{actor === 'MANAGER' && !state.acceptance && <button className="lr-primary" disabled={!canReview} onClick={openReview}>{t('Review Handover', 'مراجعة التسليم')}</button>}{metrics.nextActor && metrics.nextActor !== actor && <button className="lr-link" onClick={() => go(metrics.nextActor!)}>{t('Open responsible workspace', 'فتح مساحة الدور المسؤول')}<ArrowRight/></button>}</td></tr></tbody></table></div>
