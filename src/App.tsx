@@ -30,6 +30,7 @@ import { InstitutionalBreadcrumb } from './components/InstitutionalBreadcrumb';
 import { LegacyScenarioNotice } from './components/LegacyScenarioNotice';
 import { isFinanceScenario } from './data/legacyScenario';
 import { WorkspaceNavBar } from './components/WorkspaceNavBar';
+import { AppShell } from './components/layout/AppShell';
 
 // Workspace Views
 import { LeadershipView } from './components/workspaces/LeadershipView';
@@ -192,212 +193,42 @@ function SADUApp() {
   }
 
   return (
-    <div className={`min-h-screen bg-sadu-cream text-sadu-charcoal flex flex-col font-sans selection:bg-sadu-brick selection:text-white ${density === 'compact' ? 'text-xs' : ''}`}>
+    <>
       <DemoNotice />
-      {/* Top Header Navigation */}
-      <HeaderNav
-        lang={lang}
+      <AppShell
         currentRole={currentRole}
         selectedProgramme={selectedProgramme}
+        lang={lang}
         density={density}
+        activeTab={activeTab}
+        showBackToTop={showBackToTop}
+        onToggleLanguage={toggleLang}
+        onToggleDensity={toggleDensity}
+        onOpenStory={() => setExperienceMode('story')}
+        onOpenSearch={() => setShowCommandPalette(true)}
+        onOpenPresenter={() => setShowPresenterDrawer(true)}
+        onOpenMobileMenu={() => setShowMobileMenu(true)}
         onRoleChange={handleRoleChangeFromNav}
         onProgrammeChange={selectLegacyProgramme}
-        scopeLocked={financeScopeLocked}
-        onToggleLanguage={toggleLang}
-        onToggleDensity={toggleDensity}
-        onOpenStory={() => setExperienceMode('story')}
-        onOpenPresenter={() => setShowPresenterDrawer(true)}
-        onOpenSearch={() => setShowCommandPalette(true)}
-        onOpenMobileMenu={() => setShowMobileMenu(true)}
-        onNavigateTab={setActiveTab}
-      />
-
-      {/* Signature Authored Weave Band */}
-      <AuthoredBand compact />
-
-      {/* Workspace Navigation Bar with dynamic role desk & status indicators */}
-      <WorkspaceNavBar
-        onOpenMobileMenu={() => setShowMobileMenu(true)}
-      />
-
-      {/* High-Resolution Institutional Breadcrumb & Context Trail */}
-      <InstitutionalBreadcrumb
-        scopeLocked={financeScopeLocked}
-        onOpenRoleOnboarding={() => setShowRoleOnboarding(true)}
-        onOpenSearch={() => setShowCommandPalette(true)}
-      />
-
-      {/* Demonstration workspace; navigation guards are not production authorization. */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 transition-all duration-200">
-        <LegacyScenarioNotice />
-        {/* Render Primary Role Workspace when on 'overview' tab */}
-        {activeTab === 'overview' && (() => {
-          switch (currentRole) {
-            case 'COORDINATOR':
-            case 'SDC_COORDINATOR':
-              return <CoordinatorView />;
-            case 'DIRECTORATE':
-            case 'LEADERSHIP':
-              return <DirectorateDashboard />;
-            case 'COMMITTEE':
-              return <CommitteeView />;
-            case 'TECHNICAL_MUSEUM':
-            case 'TECHNICAL':
-            case 'VENUE_ADMIN':
-            case 'SAF_TECHNICIAN':
-            case 'SMA_VENUE_ADMIN':
-              return <TechnicalMuseumDashboard />;
-            case 'PR_PROTOCOL':
-            case 'PR_VISA':
-              return <PrProtocolDashboard />;
-            case 'EDITORIAL':
-              return <EditorialDashboard />;
-            case 'FINANCE':
-              return <FinanceDashboard />;
-            case 'LOGISTICS':
-              return <LogisticsDashboard />;
-            case 'ARTIST':
-              return <ArtistView />;
-            case 'ARCHIVE':
-              return <ArchiveView />;
-            default:
-              return <CoordinatorView />;
-          }
-        })()}
-
-        {/* Tab-Specific Secondary Routes with Role-Aware Context */}
-        {activeTab === 'dossiers' && <CommitteeView />}
-        {activeTab === 'approved-scope' && <ScopeContractsView />}
-        {activeTab === 'contracts' && (
-          currentRole === 'FINANCE' ? <FinanceDashboard /> : <ScopeContractsView />
-        )}
-        {activeTab === 'operations' && (() => {
-          switch (currentRole) {
-            case 'TECHNICAL_MUSEUM':
-            case 'TECHNICAL':
-            case 'SAF_TECHNICIAN':
-              return <OperationsView initialSubTab="technical" />;
-            case 'VENUE_ADMIN':
-            case 'SMA_VENUE_ADMIN':
-              return <TechnicalMuseumDashboard />;
-            case 'PR_PROTOCOL':
-            case 'PR_VISA':
-              return <PrProtocolDashboard />;
-            case 'EDITORIAL':
-              return <EditorialDashboard />;
-            case 'FINANCE':
-              return <FinanceDashboard />;
-            case 'LOGISTICS':
-              return <LogisticsDashboard />;
-            default:
-              return <OperationsView />;
-          }
-        })()}
-        {activeTab === 'communications' && (
-          currentRole === 'LOGISTICS' ? <LogisticsDashboard /> : <CommunicationView />
-        )}
-        {activeTab === 'archive' && <ArchiveView />}
-      </main>
-
-      {/* Floating Back to Top Button */}
-      {showBackToTop && (
-        <button
-          onClick={scrollToTop}
-          className="fixed bottom-6 end-6 z-30 p-2.5 bg-sadu-brick text-white rounded-full shadow-lg hover:bg-sadu-brick-dark transition-all cursor-pointer animate-in fade-in"
-          title={isAr ? 'العودة إلى أعلى الصفحة' : 'Back to top'}
-        >
-          <ArrowUp className="w-4 h-4" />
-        </button>
-      )}
-
-      {/* Global Command Palette Dialog (⌘K) */}
-      <CommandPalette
-        isOpen={showCommandPalette}
-        onClose={() => setShowCommandPalette(false)}
-        lang={lang}
-        currentRole={currentRole}
-        selectedProgramme={selectedProgramme}
         onNavigateTab={setActiveTab}
         onSelectRole={handleRoleChangeFromNav}
-        onSelectProgramme={selectLegacyProgramme}
-        scopeLocked={financeScopeLocked}
-        onOpenStory={() => setExperienceMode('story')}
-        onOpenPresenter={() => setShowPresenterDrawer(true)}
-        onToggleLanguage={toggleLang}
-        onToggleDensity={toggleDensity}
-        onOpenNewContract={() => setShowNewContractModal(true)}
+        onSetShowRoleOnboarding={setShowRoleOnboarding}
+        onSetShowCommandPalette={setShowCommandPalette}
+        onSetShowNewContractModal={setShowNewContractModal}
+        onSetShowMobileMenu={setShowMobileMenu}
+        onSetShowPresenterDrawer={setShowPresenterDrawer}
+        onSetCurrentRole={setCurrentRole}
+        onScrollToTop={scrollToTop}
+        onSelectLegacyProgramme={selectLegacyProgramme}
+        financeScopeLocked={financeScopeLocked}
+        showRoleOnboarding={showRoleOnboarding}
+        showCommandPalette={showCommandPalette}
+        showNewContractModal={showNewContractModal}
+        showMobileMenu={showMobileMenu}
+        showPresenterDrawer={showPresenterDrawer}
       />
-
-      {/* New Bilateral Contract Request Modal (⌥N) */}
-      <NewContractModal
-        isOpen={showNewContractModal}
-        onClose={() => setShowNewContractModal(false)}
-        lang={lang}
-        selectedProgramme={selectedProgramme}
-        onNavigateTab={setActiveTab}
-      />
-
-      {/* Mobile Responsive Navigation Drawer */}
-      <MobileNavDrawer
-        isOpen={showMobileMenu}
-        onClose={() => setShowMobileMenu(false)}
-        lang={lang}
-        currentRole={currentRole}
-        selectedProgramme={selectedProgramme}
-        activeTab={activeTab}
-        onNavigateTab={setActiveTab}
-        onSelectRole={handleRoleChangeFromNav}
-        onSelectProgramme={selectLegacyProgramme}
-        scopeLocked={financeScopeLocked}
-        onOpenSearch={() => setShowCommandPalette(true)}
-        onOpenStory={() => setExperienceMode('story')}
-        onOpenPresenter={() => setShowPresenterDrawer(true)}
-        onToggleLanguage={toggleLang}
-        onToggleDensity={toggleDensity}
-      />
-
-      {/* Role Onboarding Modal */}
-      {showRoleOnboarding && (
-        <RoleOnboarding
-          role={currentRole}
-          lang={lang}
-          onDismiss={() => setShowRoleOnboarding(false)}
-          onSelectAnotherRole={setCurrentRole}
-        />
-      )}
-
-      {/* Presenter Architectural Companion Drawer */}
-      <PresenterDrawer
-        isOpen={showPresenterDrawer}
-        onClose={() => setShowPresenterDrawer(false)}
-        lang={lang}
-      />
-
-      {/* Sovereign Institutional Footer */}
-      <footer className="border-t border-sadu-gold bg-sadu-linen mt-12 py-5 px-4 sm:px-6 text-xs text-sadu-muted">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-start">
-          <div>
-            <span className="font-editorial font-bold text-sadu-brick">
-              {isAr ? 'سدو (SADU)' : 'SADU (System for Arts Data Unification)'}
-            </span>
-            <span className="mx-2">·</span>
-            <span>
-              {isAr
-                ? 'نظام توحيد بيانات الفنون — ننسج السجلات الثقافية في نسيج مؤسسي واحد.'
-                : 'Weaving cultural records into one institutional fabric.'}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <span className="text-sadu-charcoal font-semibold">
-              {isAr ? 'دائرة الثقافة — الشارقة' : 'Sharjah Department of Culture'}
-            </span>
-            <span>·</span>
-            <span>2026</span>
-          </div>
-        </div>
-      </footer>
-    </div>
+      <LegacyScenarioNotice />
+    </>
   );
 }
 

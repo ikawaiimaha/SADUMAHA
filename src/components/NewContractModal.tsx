@@ -4,6 +4,7 @@ import { Language, ExhibitionProgramme } from '../types';
 import { ARTWORKS, INSTITUTIONAL_INFO } from '../data/mockData';
 import { useI18n } from '../context/I18nContext';
 import { LOCALES } from '../i18n/locales';
+import { SignaturePanel } from './common/dashboard';
 import { 
   FileSignature, 
   X, 
@@ -352,6 +353,14 @@ export const NewContractModal: React.FC<NewContractModalProps> = ({
                   </label>
                 </div>
               </div>
+
+              <SignaturePanel
+                titleEn="Digital Authorization"
+                titleAr="التفويض الرقمي"
+                lang={currentLang}
+                onUaePass={() => undefined}
+                onGlobalEcdsa={() => undefined}
+              />
 
               {/* Submit Buttons */}
               <div className="pt-2 flex items-center justify-between flex-wrap gap-3">

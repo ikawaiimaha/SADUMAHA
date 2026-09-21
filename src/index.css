@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -33,30 +34,65 @@
     --accent-deepink: #2F4A5B;
     --accent-ochre: #B8893A;
     --state-sage: #6F8172;
+    --font-ui-sans: 'IBM Plex Sans Arabic', 'Noto Sans', 'Segoe UI', sans-serif;
+    --font-ui-rtl: 'IBM Plex Sans Arabic', 'Noto Naskh Arabic', 'Noto Sans', sans-serif;
   }
 
+  html,
   body {
-    font-family: 'Inter', 'Noto Naskh Arabic', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: var(--font-ui-sans);
     color: #211B17;
     background-color: #F7F1E6;
-  }
-
-  /* RTL / Arabic root adjustments */
-  [dir="rtl"],
-  [lang="ar"] {
-    font-family: 'Noto Naskh Arabic', 'Amiri', Tahoma, sans-serif;
-    /* Arabic cursive script requires normal letter-spacing to preserve unbroken glyph connections */
-    letter-spacing: normal;
+    line-height: 1.6;
+    letter-spacing: 0;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  body,
+  button,
+  input,
+  select,
+  textarea,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  p,
+  span,
+  bdi,
+  label,
+  li,
+  small,
+  strong,
+  em,
+  code {
+    font-family: inherit;
+    text-rendering: optimizeLegibility;
+  }
+
+  [dir="rtl"],
+  [lang="ar"],
+  html[dir="rtl"],
+  html[lang="ar"] {
+    font-family: var(--font-ui-rtl);
+    letter-spacing: 0;
   }
 
   [dir="rtl"] body,
-  [lang="ar"] body {
+  [lang="ar"] body,
+  html[dir="rtl"] body,
+  html[lang="ar"] body {
     line-height: 1.8;
   }
 
-  /* Prevent tracking/letter-spacing inheritance that breaks cursive Arabic letterforms */
   [dir="rtl"] h1,
   [dir="rtl"] h2,
   [dir="rtl"] h3,
@@ -64,6 +100,7 @@
   [dir="rtl"] h5,
   [dir="rtl"] h6,
   [dir="rtl"] p,
+  [dir="rtl"] li,
   [dir="rtl"] span,
   [dir="rtl"] blockquote,
   [dir="rtl"] label,
@@ -78,6 +115,7 @@
   [lang="ar"] h5,
   [lang="ar"] h6,
   [lang="ar"] p,
+  [lang="ar"] li,
   [lang="ar"] span,
   [lang="ar"] blockquote,
   [lang="ar"] label,
@@ -86,9 +124,10 @@
   [lang="ar"] select,
   [lang="ar"] textarea {
     letter-spacing: 0;
+    line-height: 1.75;
+    font-feature-settings: 'rlig' 1, 'calt' 1, 'kern' 1, 'tnum' 1;
   }
 
-  /* Calibrated heading line-heights for Arabic diacritics and high ascenders */
   [dir="rtl"] h1,
   [lang="ar"] h1 {
     line-height: 1.5;
@@ -105,8 +144,22 @@
   }
 
   [dir="rtl"] p,
-  [lang="ar"] p {
+  [lang="ar"] p,
+  [dir="rtl"] li,
+  [lang="ar"] li {
     line-height: 1.85;
+  }
+
+  .sadu-ui,
+  .sadu-ui * {
+    font-family: var(--font-ui-sans);
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  :where([dir="rtl"], [lang="ar"]) .sadu-ui,
+  :where([dir="rtl"], [lang="ar"]) .sadu-ui * {
+    font-family: var(--font-ui-rtl);
   }
 }
 
