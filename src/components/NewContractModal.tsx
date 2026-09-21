@@ -56,6 +56,7 @@ export const NewContractModal: React.FC<NewContractModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [generatedContractId, setGeneratedContractId] = useState('');
+  const [signatureToast, setSignatureToast] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -121,6 +122,19 @@ export const NewContractModal: React.FC<NewContractModalProps> = ({
     onNavigateTab('contracts');
   };
 
+  const showSignatureToast = (message: string) => {
+    setSignatureToast(message);
+    window.setTimeout(() => setSignatureToast(null), 3500);
+  };
+
+  const handleUaePass = () => {
+    showSignatureToast(isAr ? 'تمت محاكاة المصادقة عبر UAE PASS للتجربة' : 'UAE PASS Authentication Simulated for Demo');
+  };
+
+  const handleGlobalEcdsa = () => {
+    showSignatureToast(isAr ? 'تم بدء بوابة التوقيع الإلكتروني العالمي للتجربة' : 'Global e-Signature Gateway Initiated');
+  };
+
   return (
     <NativeModal isOpen={isOpen} onClose={onClose} labelledBy={titleId} className="max-w-2xl" returnFocusSelector="[data-workspace-search]">
       <div 
@@ -156,6 +170,17 @@ export const NewContractModal: React.FC<NewContractModalProps> = ({
             <X className="w-5 h-5" />
           </button>
         </div>
+
+        {signatureToast && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="mx-6 mt-4 flex items-center gap-2 rounded-md border border-sadu-sage bg-sadu-sage-light px-3 py-2 text-xs font-semibold text-sadu-ink"
+          >
+            <CheckCircle2 className="h-4 w-4 shrink-0 text-sadu-sage" />
+            <span>{signatureToast}</span>
+          </div>
+        )}
 
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6 text-xs">
@@ -358,8 +383,8 @@ export const NewContractModal: React.FC<NewContractModalProps> = ({
                 titleEn="Digital Authorization"
                 titleAr="التفويض الرقمي"
                 lang={currentLang}
-                onUaePass={() => undefined}
-                onGlobalEcdsa={() => undefined}
+                onUaePass={handleUaePass}
+                onGlobalEcdsa={handleGlobalEcdsa}
               />
 
               {/* Submit Buttons */}

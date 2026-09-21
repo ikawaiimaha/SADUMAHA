@@ -27,13 +27,13 @@ export const INSTITUTIONAL_INFO = {
 export const PROGRAMMES: ExhibitionProgramme[] = [
   {
     id: 'p1',
-    titleEn: 'Lines of Ink: Contemporary Diwani & Kufic Forms',
-    titleAr: 'خطوط من حبر: أشكال الديواني والكوفي المعاصر',
+    titleEn: '12th Sharjah Calligraphy Biennial',
+    titleAr: 'ملتقى الشارقة للخط — الدورة 12',
     themeEn: 'Dynamic structural calligraphy and architectural geometries',
     themeAr: 'الخط الهيكلي الديناميكي والهندسة المعمارية في فن الخط',
-    dates: '15 Oct – 30 Nov 2026',
-    venueEn: 'Sharjah Art Museum — Wings A & B',
-    venueAr: 'متحف الشارقة للفنون — الجناحان أ و ب',
+    dates: '7 October – 15 November 2026',
+    venueEn: 'Calligraphy Square — Sharjah Art Museum',
+    venueAr: 'ساحة الخط — متحف الشارقة للفنون',
     status: 'production',
     budgetPlanned: 620000,
     budgetCommitted: 540000,
