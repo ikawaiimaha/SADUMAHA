@@ -16,8 +16,8 @@ export function DirectorateDashboard(_props: DirectorateDashboardProps) {
     <section className="space-y-6 animate-in fade-in duration-300">
       <PageHeader
         eyebrow={isAr ? 'القيادة التنفيذية · لوحة المؤشرات' : 'Executive Directorate · KPI Dashboard'}
-        title={isAr ? person.nameAr : person.nameEn}
-        description={isAr ? person.titleAr : person.titleEn}
+        title={isAr ? 'إشراف الإدارة' : 'Directorate Oversight'}
+        description={isAr ? 'المحفظة التنفيذية والجاهزية التشغيلية.' : 'Executive portfolio and operational readiness.'}
         actions={
           <span className="rounded-md border border-sadu-gold bg-sadu-sand px-3 py-2 text-xs font-bold text-sadu-ink">
             {isAr ? 'نظرة إشرافية مقترحة' : 'Proposed oversight view'}
@@ -29,7 +29,7 @@ export function DirectorateDashboard(_props: DirectorateDashboardProps) {
         <KpiCard
           titleEn="Active Programs"
           titleAr="البرامج النشطة"
-          value={formatNumber(11)}
+          value={formatNumber(10)}
           trend="neutral"
           trendLabelEn="Across the portfolio"
           trendLabelAr="ضمن محفظة البرامج"
@@ -39,7 +39,7 @@ export function DirectorateDashboard(_props: DirectorateDashboardProps) {
         <KpiCard
           titleEn="Pending Approvals"
           titleAr="الاعتمادات المعلقة"
-          value={formatNumber(7)}
+          value={formatNumber(3)}
           trend="down"
           trendLabelEn="Requires review"
           trendLabelAr="تتطلب المراجعة"
@@ -50,7 +50,7 @@ export function DirectorateDashboard(_props: DirectorateDashboardProps) {
         <KpiCard
           titleEn="International Guests"
           titleAr="الضيوف الدوليين"
-          value={formatNumber(38)}
+          value={formatNumber(45)}
           trend="neutral"
           trendLabelEn="Scheduled this cycle"
           trendLabelAr="مجدولون لهذه الدورة"
@@ -60,7 +60,7 @@ export function DirectorateDashboard(_props: DirectorateDashboardProps) {
         <KpiCard
           titleEn="Budget Utilization"
           titleAr="استغلال الميزانية"
-          value="68%"
+          value="62%"
           trend="up"
           trendLabelEn="Of approved envelope"
           trendLabelAr="من الاعتماد المعتمد"
