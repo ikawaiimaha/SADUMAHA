@@ -21438,140 +21438,6 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
 };
 ````
 
-## File: src/components/PresenterDrawer.tsx
-````typescript
-import React from 'react';
-import { Language } from '../types';
-import { AuthoredBand } from './AuthoredBand';
-import { useI18n } from '../context/I18nContext';
-import { X, ShieldCheck, CheckCircle2, AlertTriangle, FileText, Info, Compass } from 'lucide-react';
-
-interface PresenterDrawerProps {
-  isOpen: boolean;
-  onClose: () => void;
-  lang: Language;
-}
-
-export const PresenterDrawer: React.FC<PresenterDrawerProps> = ({ isOpen, onClose, lang }) => {
-  const i18n = useI18n();
-  const activeLang = lang ?? i18n.lang;
-  const isAr = activeLang === 'ar';
-  const { formatNumber, localizeDigits } = i18n;
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 bg-sadu-charcoal/50 backdrop-blur-xs flex justify-end">
-      <div className="bg-sadu-linen border-s border-sadu-gold w-full max-w-xl h-full shadow-2xl overflow-y-auto p-6 sm:p-8 flex flex-col justify-between text-sadu-charcoal">
-        <div>
-          <div className="flex items-center justify-between pb-4 border-b border-sadu-gold">
-            <div className="flex items-center gap-2 text-xs font-bold text-sadu-brick uppercase tracking-wider">
-              <Compass className="w-4 h-4" />
-              <span>{isAr ? 'ملاحظات العرض والتقييم' : 'Presentation and evaluation notes'}</span>
-            </div>
-            <button
-              onClick={onClose}
-              className="p-1 rounded-md text-sadu-muted hover:bg-sadu-sand/70 hover:text-sadu-charcoal transition-colors cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          <AuthoredBand compact className="my-4" />
-
-          <h3 className="text-xl font-editorial font-bold text-sadu-charcoal mb-2">
-            {isAr ? 'مرجع التصميم المعماري والأصل المؤسسي' : 'SADU Architectural Intent & Institutional Model'}
-          </h3>
-          <p className="text-xs text-sadu-muted leading-relaxed mb-6">
-            {isAr
-              ? 'عرض سدو تجريبي لبحث مسارات عمل مقترحة. ليس نظاماً مؤسسياً معتمداً؛ يلزم التحقق من المتطلبات والصلاحيات من مصادرها الأصلية.'
-              : 'SADU demonstrates proposed workflows for review. This is not an approved institutional system; requirements and authority require verification against original sources.'}
-          </p>
-
-          <div className="space-y-4 text-xs">
-            {/* Principle 1 */}
-            <div className="p-3.5 bg-sadu-sand rounded-md border border-sadu-gold">
-              <div className="flex items-center gap-1.5 font-bold text-sadu-brick mb-1">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>{isAr ? `${formatNumber(1)}. الفصل الحاسم بين التواصل والسلطة` : '1. Communication vs Decision Authority'}</span>
-              </div>
-              <p className="text-sadu-charcoal leading-relaxed">
-                {isAr
-                  ? 'أي مراسلة داخل المنصة تُمثّل "دليلاً تواصلياً" فقط. لا يمكن لرسالة أو محادثة أن تعتمد ميزانية أو تُلزم الإدارة بعقد قانوني دون توقيع نظامي وتثبيت في النطاق المعتمد.'
-                  : 'Messages represent "Communication Evidence". No conversation can silently approve expenditure, execute a legal contract, or alter Approved Scope without attributable institutional sign-off.'}
-              </p>
-            </div>
-
-            {/* Principle 2 */}
-            <div className="p-3.5 bg-sadu-sand rounded-md border border-sadu-gold">
-              <div className="flex items-center gap-1.5 font-bold text-sadu-ink mb-1">
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>{isAr ? `${formatNumber(2)}. مبدأ الصلاحيات الدقيقة والخصوصية (M01 / M02)` : '2. Least Privilege & Privacy Protection (M01 / M02)'}</span>
-              </div>
-              <p className="text-sadu-charcoal leading-relaxed">
-                {isAr
-                  ? "توضح المعاينات التجريبية فصل المعلومات. لا يُعرض تفويض موثق أو خزنة مستندات خاصة أو خدمة سفر متصلة."
-                  : "Sample views illustrate separation of information. No verified authorization, private document vault or connected travel service is demonstrated."}
-              </p>
-            </div>
-
-            {/* Principle 3 */}
-            <div className="p-3.5 bg-sadu-sand rounded-md border border-sadu-gold">
-              <div className="flex items-center gap-1.5 font-bold text-sadu-brick mb-1">
-                <FileText className="w-3.5 h-3.5" />
-                <span>{isAr ? `${formatNumber(3)}. سلسلة نطاق وعقد تجريبية` : "3. Sample scope and contract chain"}</span>
-              </div>
-              <p className="text-sadu-charcoal leading-relaxed">
-                {isAr
-                  ? "توضح تسميات الإصدارات لقطة نطاق مقترحة. المساحات القديمة أمثلة مستقلة؛ لم يُثبت حفظ الإصدارات أو الاتساق بين السجلات."
-                  : "Version labels illustrate a proposed scope snapshot. Legacy workspaces are isolated samples; durable versioning and cross-record consistency are not established."}
-              </p>
-            </div>
-
-            {/* Principle 4 */}
-            <div className="p-3.5 bg-sadu-sand rounded-md border border-sadu-gold">
-              <div className="flex items-center gap-1.5 font-bold text-sadu-ink mb-1">
-                <Info className="w-3.5 h-3.5" />
-                <span>{isAr ? `${formatNumber(4)}. مؤشر اكتمال الأدلة M01 وبيانات التجربة` : '4. M01 Evidence Completeness KPI & Data Notice'}</span>
-              </div>
-              <p className="text-sadu-charcoal leading-relaxed">
-                {isAr
-                  ? 'حالات البرامج والأرقام والإجراءات أمثلة تجريبية. ظهور اسم حقيقي لا يثبت المشاركة أو التأييد. السجلات في المساحات القديمة مستقلة ولا تُحفظ بصورة دائمة.'
-                  : 'Programme states, figures and actions are illustrative. A real name does not establish participation or endorsement. Legacy workspace records are isolated and not durably stored.'}
-              </p>
-            </div>
-
-            {/* Persona Evaluation Highlight */}
-            <div className="p-3.5 bg-sadu-sand rounded-md border-2 border-sadu-brick">
-              <div className="flex items-center gap-1.5 font-bold text-sadu-brick mb-1">
-                <Compass className="w-3.5 h-3.5" />
-                <span>{isAr ? `${formatNumber(5)}. محاور مراجعة مقترحة` : '5. Proposed review lenses'}</span>
-              </div>
-              <p className="text-sadu-charcoal leading-relaxed">
-                {isAr
-                  ? 'ثلاثة محاور من إعداد سدو تشمل السياق الثقافي والمساءلة والإشراف على البرامج. ليست مراجعات أو تأييداً من أي مسؤول.'
-                  : "Three SADU-authored review lenses cover cultural context, accountability and portfolio oversight. They are not reviews or endorsements by officials."}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-8 pt-4 border-t border-sadu-gold flex items-center justify-between">
-          <span className="text-[11px] text-sadu-muted">
-            {isAr ? `دائرة الثقافة — الشارقة ${formatNumber(2026)}` : 'Sharjah Department of Culture 2026'}
-          </span>
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-xs font-semibold text-white bg-sadu-ink hover:bg-sadu-ink-dark rounded-md transition-colors cursor-pointer"
-          >
-            {isAr ? 'فهمت، العودة للمنصة' : 'Close Panel'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-````
-
 ## File: src/components/RosterRegistration.tsx
 ````typescript
 import { useEffect, useRef, useState } from 'react';
@@ -24806,346 +24672,6 @@ export const ArchiveView: React.FC<ArchiveViewProps> = (props) => {
 };
 ````
 
-## File: src/components/workspaces/CommunicationView.tsx
-````typescript
-import React, { useState } from 'react';
-import { Language, MessageRecord, RoleKey, WorkspaceTab } from '../../types';
-import { INITIAL_MESSAGES } from '../../data/mockData';
-import { useI18n } from '../../context/I18nContext';
-import { useWorkspace } from '../../context/WorkspaceContext';
-import { 
-  MessageSquare, 
-  Send, 
-  Paperclip, 
-  ShieldCheck, 
-  CheckCircle2, 
-  FileText, 
-  Clock, 
-  CornerDownLeft,
-  Lock,
-  PlusCircle
-} from 'lucide-react';
-
-export interface InstitutionalTemplate {
-  id: string;
-  labelEn: string;
-  labelAr: string;
-  contentEn: string;
-  contentAr: string;
-}
-
-export const INSTITUTIONAL_TEMPLATES: InstitutionalTemplate[] = [
-  {
-    id: 'tpl-01',
-    labelEn: 'Permission Request for Artwork Modification',
-    labelAr: 'طلب تصريح بتعديل العمل الفني',
-    contentEn: "Sample draft — not sent.\n\nPlease review the proposed artwork treatment and supporting conservation assessment. The responsible team and applicable decision authority must be confirmed before work proceeds.",
-    contentAr: "مسودة تجريبية — لم تُرسل.\n\nيرجى مراجعة معالجة العمل الفني المقترحة وتقييم الحفظ الداعم. يلزم تحديد الفريق المسؤول والصلاحية المنطبقة قبل التنفيذ.",
-  },
-  {
-    id: 'tpl-02',
-    labelEn: 'Technical Clarification Request',
-    labelAr: 'طلب استيضاحات هندسية وفنية',
-    contentEn: 'Subject: Technical Clarifications Required for Artwork Installation\n\nDear Artist,\n\nIn preparation for gallery installation at Sharjah Art Museum, our engineering team requires immediate clarification regarding mounting anchor specs, required floor point-load tolerances (kg/m²), and electrical lumen limits for your designated gallery space.',
-    contentAr: 'الموضوع: استيضاحات هندسية لازمة لتثبيت العمل الفني\n\nالفنان العزيز،\n\nاستعداداً لتركيب الأعمال بمتحف الشارقة للفنون، يرجى تزويد الفريق الفني فوراً بمواصفات صفائح التثبيت، قدرة تحمل الأرضيات (كجم/م²)، وحدود شدة الإضاءة المطلوبة لقاعتكم.',
-  },
-  {
-    id: 'tpl-03',
-    labelEn: 'Approval Request for Fabrication',
-    labelAr: 'طلب اعتماد التصنيع والإنتاج',
-    contentEn: "Sample draft — not sent.\n\nPlease review the proposed fabrication specifications and material samples. Confirm the applicable approval route and authorized scope before production.",
-    contentAr: "مسودة تجريبية — لم تُرسل.\n\nيرجى مراجعة مواصفات التصنيع وعينات المواد المقترحة. يلزم تأكيد مسار الاعتماد والنطاق المصرح به قبل الإنتاج.",
-  },
-  {
-    id: 'tpl-04',
-    labelEn: 'Request for Installation Guidelines',
-    labelAr: 'طلب إرشادات التثبيت والتركيب',
-    contentEn: 'Subject: Request for Installation Guidelines\n\nDear Artist,\n\nTo ensure flawless presentation during the official opening, please provide comprehensive step-by-step assembly diagrams, unpacking safety protocols, and designated spatial offsets for your Biennial artwork.',
-    contentAr: 'الموضوع: طلب الدليل الإرشادي لتركيب وتثبيت العمل الفني\n\nالأستاذ الفنان المحترم،\n\nحرصاً على العرض الأمثل لعملكم في الافتتاح الرسمي، يرجى موافاتنا بمخطط التركيب خطوة بخطوة، وإجراءات السلامة لفض الصناديق، والمسافات الفراغية المعتمدة للعمل.',
-  },
-  {
-    id: 'tpl-05',
-    labelEn: 'Request for Final Technical Files',
-    labelAr: 'طلب الملفات الفنية النهائية',
-    contentEn: 'Subject: Request for Final Technical Files\n\nDear Artist,\n\nPlease transmit the master uncompressed media playback files (Apple ProRes 422HQ / Master DCP), projection schematics, and high-resolution raw imagery required for the official Exhibition Catalogue print run.',
-    contentAr: 'الموضوع: طلب استلام الملفات الفنية الرقمية النهائية\n\nالأستاذ الفنان المحترم،\n\nيرجى إرسال النسخ الرئيسية غير المضغوطة لملفات العرض (ProRes 422HQ / DCP)، ومخطط العرض الضوئي، والصور عالية الدقة المخصصة لطباعة كتالوج المعرض الرسمي.',
-  },
-  {
-    id: 'tpl-06',
-    labelEn: 'External Transport Request',
-    labelAr: 'طلب دعم النقل والترحيل الخارجي',
-    contentEn: "Sample draft — not sent.\n\nPlease propose transport and customs arrangements for the listed artworks. Insurance coverage, exclusions and responsibility must be checked against the relevant policy and agreement.",
-    contentAr: "مسودة تجريبية — لم تُرسل.\n\nيرجى اقتراح ترتيبات نقل الأعمال الفنية والتخليص الجمركي. يلزم التحقق من التغطية التأمينية والاستثناءات والمسؤوليات وفق الوثيقة والاتفاق المنطبقين.",
-  },
-  {
-    id: 'tpl-07',
-    labelEn: 'Equipment Request to External Partner',
-    labelAr: 'طلب استعارة أجهزة وتجهيزات تقنية',
-    contentEn: "Sample draft — not sent.\n\nPlease advise on availability and proposed loan terms for the required projection and audio equipment. Any institutional agreement and authorization remain subject to confirmation.",
-    contentAr: "مسودة تجريبية — لم تُرسل.\n\nيرجى الإفادة بتوفر أجهزة العرض والصوت المطلوبة وشروط إعارتها المقترحة. يلزم تأكيد أي اتفاق مؤسسي أو صلاحية ذات صلة.",
-  },
-  {
-    id: 'tpl-08',
-    labelEn: 'Written Confirmation Requested',
-    labelAr: 'طلب تأكيد خطي رسمي (بديل نموذج الموافقة)',
-    contentEn: "Sample draft — not sent.\n\nPlease confirm the packing and condition-inspection arrangements applicable to this artwork. Use the approved agreement to establish any framing requirements and inspection period; this template sets no universal policy.",
-    contentAr: "مسودة تجريبية — لم تُرسل.\n\nيرجى تأكيد ترتيبات التعبئة وفحص الحالة المنطبقة على العمل. تُحدد متطلبات الإطار ومدة الفحص من الاتفاق المعتمد؛ لا يقرر هذا النموذج سياسة عامة.",
-  },
-];
-
-export interface CommunicationViewProps {
-  lang?: Language;
-  currentRole?: RoleKey;
-  onNavigateTab?: (tab: WorkspaceTab) => void;
-}
-
-export const CommunicationView: React.FC<CommunicationViewProps> = (props) => {
-  const i18n = useI18n();
-  const workspace = useWorkspace();
-
-  const lang = props.lang ?? i18n.lang;
-  const isAr = lang === 'ar';
-  const currentRole = props.currentRole ?? workspace.currentRole;
-  const onNavigateTab = props.onNavigateTab ?? workspace.navigateTab;
-
-  const [messages, setMessages] = useState<MessageRecord[]>(INITIAL_MESSAGES);
-  const [draftContent, setDraftContent] = useState('');
-  const [withAttachment, setWithAttachment] = useState(false);
-  const [taskLinkedToast, setTaskLinkedToast] = useState<string | null>(null);
-
-  const handleTemplateSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedId = e.target.value;
-    if (!selectedId) return;
-
-    const tpl = INSTITUTIONAL_TEMPLATES.find(t => t.id === selectedId);
-    if (tpl) {
-      setDraftContent((isAr ? 'مسودة تجريبية · لم تُرسل\n\n' : 'Sample draft · not transmitted\n\n') + (isAr ? tpl.contentAr : tpl.contentEn));
-    }
-    // Reset selector back to default
-    e.target.value = '';
-  };
-
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!draftContent.trim()) return;
-
-    const newMessage: MessageRecord = {
-      id: `msg-${Date.now()}`,
-      senderNameEn: currentRole === 'ARTIST' ? 'Youssef Nabhan (Artist)' : 'Maha (Coordinator)',
-      senderNameAr: currentRole === 'ARTIST' ? 'يوسف نبهان (الفنان)' : 'مها (المنسق)',
-      senderRole: currentRole === 'ARTIST' ? 'ARTIST' : 'COORDINATOR',
-      recipientRole: currentRole === 'ARTIST' ? 'COORDINATOR' : 'ARTIST',
-      timestamp: isAr ? 'الآن' : 'Just now',
-      contentEn: draftContent,
-      contentAr: draftContent,
-      hasAttachment: withAttachment,
-      attachmentName: withAttachment ? (isAr ? `Engineering_Floor_Load_Clearance.pdf (${i18n.formatNumber(1.2)} ميجابايت)` : 'Engineering_Floor_Load_Clearance.pdf (1.2 MB)') : undefined,
-    };
-
-    setMessages([...messages, newMessage]);
-    setDraftContent('');
-    setWithAttachment(false);
-  };
-
-  const handleConvertMessageToTask = (msgId: string) => {
-    setTaskLinkedToast(
-      isAr 
-        ? "معاينة متابعة تجريبية فقط؛ لم تُنشأ مهمة في مساحة أخرى."
-        : "Sample follow-up preview only; no task was created in another workspace."
-    );
-    setTimeout(() => setTaskLinkedToast(null), 4000);
-  };
-
-  return (
-    <div className="space-y-6">
-      {/* Toast Alert */}
-      {taskLinkedToast && (
-        <div className="p-3.5 bg-sadu-sage-light border border-sadu-sage rounded-md text-sadu-ink text-xs font-semibold flex items-center justify-between shadow-xs">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-sadu-sage" />
-            <span>{taskLinkedToast}</span>
-          </div>
-          <button onClick={() => setTaskLinkedToast(null)} className="text-sadu-muted hover:text-sadu-charcoal">✕</button>
-        </div>
-      )}
-
-      {/* Header */}
-      <div className="bg-sadu-linen border border-sadu-gold rounded-lg p-6 shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-xs font-bold text-sadu-brick uppercase tracking-wider mb-1">
-              <MessageSquare className="w-4 h-4" />
-              <span>{isAr ? "مساحة رسائل تجريبية · لا إرسال فعلي" : "Sample message workspace · not transmitted"}</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-editorial font-bold text-sadu-charcoal">
-              {isAr ? "محادثة تجريبية بين فنان ومنسق" : "Sample artist–coordinator conversation"}
-            </h1>
-            <p className="text-xs sm:text-sm text-sadu-muted mt-1">
-              {isAr
-                ? "مسودات ورسائل تجريبية داخل هذا المتصفح فقط. لا تُرسل ولا تُحفظ في سجل مؤسسي دائم."
-                : "Draft messages remain in this browser only. Nothing is transmitted or stored in a durable institutional record."}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="px-3 py-1 rounded bg-sadu-sand border border-sadu-gold text-xs font-mono font-bold text-sadu-ink">
-              THREAD-SCB-2026-YN
-            </span>
-          </div>
-        </div>
-
-        {/* Evidence vs Authority Rule Box */}
-        <div className="mt-4 p-3.5 bg-sadu-paper border-s-4 border-sadu-ink text-xs leading-relaxed">
-          <span className="font-bold text-sadu-ink block mb-0.5">
-            {isAr ? 'قانون الحوكمة (الأدلة مقابل سلطة القرار):' : 'Governance Principle (Evidence vs Decision Authority):'}
-          </span>
-          {isAr
-            ? "لا تغير الرسالة التجريبية نطاقاً معتمداً ولا تفوض دفعاً. يتطلب أي تغيير فعلي أدلته ومراجعته المفوضة؛ ولا تُستنتج صلاحية توقيع لشخص بعينه."
-            : "A sample message does not change approved scope or authorize payment. Any real change would require its own evidence and applicable delegated review; no named signatory is inferred."}
-        </div>
-      </div>
-
-      {/* Message Stream */}
-      <div className="bg-sadu-linen border border-sadu-gold rounded-lg p-6 shadow-xs space-y-4">
-        <div className="flex items-center justify-between border-b border-sadu-gold/40 pb-3 text-xs text-sadu-muted">
-          <span className="font-semibold text-sadu-charcoal">
-            {isAr ? `المراسلات المسجلة في ملف المشاركة (${i18n.formatNumber(messages.length)} رسالة):` : `Recorded Communications in Assignment Dossier (${messages.length}):`}
-          </span>
-          <span className="flex items-center gap-1">
-            <Lock className="w-3.5 h-3.5 text-sadu-sage" />
-            {isAr ? "مثال في الجلسة · دون تشفير" : "Session sample · no encryption"}
-          </span>
-        </div>
-
-        <div className="space-y-4">
-          {messages.map(msg => {
-            const isMe = msg.senderRole === currentRole;
-            return (
-              <div
-                key={msg.id}
-                className={`p-4 rounded-md border transition-all ${
-                  isMe
-                    ? 'bg-sadu-sand border-sadu-gold me-6'
-                    : 'bg-sadu-paper border-sadu-gold ms-6'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-2 text-xs">
-                  <span className="font-bold text-sadu-charcoal">
-                    {isAr ? msg.senderNameAr : msg.senderNameEn}
-                  </span>
-                  <span className="text-sadu-muted text-[11px] flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    {msg.timestamp}
-                  </span>
-                </div>
-
-                <p className="text-xs sm:text-sm text-sadu-charcoal leading-relaxed">
-                  {isAr ? msg.contentAr : msg.contentEn}
-                </p>
-
-                {msg.hasAttachment && (
-                  <div className="mt-3 p-2.5 bg-sadu-linen rounded border border-sadu-gold text-xs flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sadu-ink font-medium">
-                      <Paperclip className="w-4 h-4 text-sadu-brick" />
-                      <span>{msg.attachmentName}</span>
-                    </div>
-                    <span className="text-[10px] text-sadu-sage font-semibold">
-                      ✓ {isAr ? 'مرجع مرفق تجريبي — لم تُفحص السلامة الرقمية' : 'Sample attachment reference — integrity not checked'}
-                    </span>
-                  </div>
-                )}
-
-                {/* Convert to Task Action for Coordinators */}
-                {currentRole === 'COORDINATOR' && (
-                  <div className="mt-3 pt-2 border-t border-sadu-gold/40 flex justify-end">
-                    <button
-                      onClick={() => handleConvertMessageToTask(msg.id)}
-                      className="px-2.5 py-1 text-[11px] font-semibold text-sadu-brick hover:bg-sadu-sand rounded border border-sadu-brick/30 transition-colors flex items-center gap-1 cursor-pointer"
-                    >
-                      <PlusCircle className="w-3.5 h-3.5" />
-                      <span>{isAr ? 'تحويل المراسلة إلى مهمة بغرفة التحكم' : 'Convert to Linked Task in Control Room'}</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Message Composer */}
-        <form onSubmit={handleSendMessage} className="mt-6 pt-4 border-t border-sadu-gold space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-sadu-muted">
-            <span className="font-semibold text-sadu-charcoal">
-              {isAr ? 'كتابة رسالة مؤسسية رسمية:' : 'Compose Attributable Institutional Message:'}
-            </span>
-
-            <div className="flex items-center gap-3">
-              <select
-                id="select-institutional-template"
-                defaultValue=""
-                onChange={handleTemplateSelect}
-                className="text-xs bg-sadu-sand border border-sadu-gold text-sadu-charcoal focus:border-sadu-brick rounded-md px-2.5 py-1 cursor-pointer outline-hidden transition-colors"
-                title={isAr ? 'إدراج نموذج مراسلة تجريبي' : 'Insert sample correspondence template'}
-              >
-                <option value="" disabled>
-                  {isAr ? 'إدراج نموذج سريع...' : 'Quick Insert Template...'}
-                </option>
-                {INSTITUTIONAL_TEMPLATES.map(tpl => (
-                  <option key={tpl.id} value={tpl.id}>
-                    {isAr ? tpl.labelAr : tpl.labelEn}
-                  </option>
-                ))}
-              </select>
-
-              <label className="flex items-center gap-1.5 cursor-pointer text-xs text-sadu-ink">
-                <input
-                  type="checkbox"
-                  checked={withAttachment}
-                  onChange={e => setWithAttachment(e.target.checked)}
-                  className="rounded text-sadu-brick focus:ring-0"
-                />
-                <Paperclip className="w-3.5 h-3.5" />
-                <span>{isAr ? "إضافة تسمية مرفق تجريبي (دون رفع)" : "Include sample attachment label (no upload)"}</span>
-              </label>
-            </div>
-          </div>
-
-          <textarea
-            value={draftContent}
-            onChange={e => setDraftContent(e.target.value)}
-            rows={3}
-            placeholder={
-              isAr
-                ? "اكتب رسالة تجريبية (لا تُرسل؛ مؤقتة في هذه المعاينة)"
-                : "Write a sample message (not transmitted; temporary in this view)"
-            }
-            className="w-full p-3 text-xs sm:text-sm bg-sadu-linen border border-sadu-gold rounded-md focus:border-sadu-brick focus:outline-hidden text-sadu-charcoal"
-          />
-
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] text-sadu-muted">
-              {isAr ? 'المرسل: ' : 'Sender: '}
-              <strong>
-                {currentRole === 'ARTIST' ? (isAr ? 'يوسف نبهان' : 'Youssef Nabhan') : (isAr ? 'مها (المنسق)' : 'Maha (Coordinator)')}
-              </strong>
-            </span>
-
-            <button
-              type="submit"
-              disabled={!draftContent.trim()}
-              className="px-5 py-2 text-xs font-bold text-white bg-sadu-brick hover:bg-sadu-brick-dark disabled:opacity-40 rounded-md transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
-            >
-              <span>{isAr ? "إضافة رسالة تجريبية · لا إرسال" : "Add sample message · not sent"}</span>
-              <Send className="w-3.5 h-3.5 rtl:rotate-180" />
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
-````
-
 ## File: src/components/workspaces/EditorialPipeline.tsx
 ````typescript
 import React, { useState } from 'react';
@@ -26349,6 +25875,135 @@ export function ChairmanBrief({ onDirectorate, onPublishing, onFinance }: Props)
 }
 ````
 
+## File: src/components/PresenterDrawer.tsx
+````typescript
+import React, { useState } from 'react';
+import { Language } from '../types';
+import { AuthoredBand } from './AuthoredBand';
+import { useI18n } from '../context/I18nContext';
+import {
+  X,
+  ShieldCheck,
+  CheckCircle2,
+  FileText,
+  Info,
+  Compass,
+  Layers,
+  Building2,
+  AlertTriangle,
+  Award,
+} from 'lucide-react';
+
+interface PresenterDrawerProps {
+  isOpen: boolean;
+  onClose: () => void;
+  lang: Language;
+}
+
+export const PresenterDrawer: React.FC<PresenterDrawerProps> = ({ isOpen, onClose, lang }) => {
+  const i18n = useI18n();
+  const activeLang = lang ?? i18n.lang;
+  const isAr = activeLang === 'ar';
+  const { formatNumber } = i18n;
+  const [activeTab, setActiveTab] = useState<'architecture' | 'benchmarks' | 'ux'>('architecture');
+
+  if (!isOpen) return null;
+
+  const tabClass = (tab: typeof activeTab) => `pb-2.5 px-3 text-xs font-bold transition-all border-b-2 cursor-pointer flex items-center gap-1.5 shrink-0 ${
+    activeTab === tab ? 'border-sadu-brick text-sadu-brick' : 'border-transparent text-sadu-muted hover:text-sadu-charcoal'
+  }`;
+
+  return (
+    <div className="fixed inset-0 z-50 bg-sadu-charcoal/50 backdrop-blur-xs flex justify-end">
+      <div className="bg-sadu-linen border-s border-sadu-gold w-full max-w-2xl h-full shadow-2xl overflow-y-auto p-6 sm:p-8 flex flex-col justify-between text-sadu-charcoal">
+        <div className="space-y-6">
+          <div className="flex items-center justify-between pb-4 border-b border-sadu-gold">
+            <div className="flex items-center gap-2 text-xs font-bold text-sadu-brick uppercase tracking-wider">
+              <Compass className="w-4 h-4" />
+              <span>{isAr ? 'لوحة الشرح المعماري والمواءمة الحكومية' : 'Presenter Architecture & Strategic Alignment'}</span>
+            </div>
+            <button onClick={onClose} className="p-1 rounded-md text-sadu-muted hover:bg-sadu-sand/70 hover:text-sadu-charcoal transition-colors cursor-pointer" aria-label={isAr ? 'إغلاق' : 'Close'}>
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <AuthoredBand className="my-2" compact />
+
+          <div className="flex border-b border-sadu-gold/60 gap-2 overflow-x-auto scrollbar-none">
+            <button type="button" onClick={() => setActiveTab('architecture')} className={tabClass('architecture')}>
+              <Layers className="w-3.5 h-3.5" />
+              <span>{isAr ? 'المبادئ المعمارية' : 'Architectural Intent'}</span>
+            </button>
+            <button type="button" onClick={() => setActiveTab('benchmarks')} className={tabClass('benchmarks')}>
+              <Building2 className="w-3.5 h-3.5" />
+              <span>{isAr ? 'المقارنات الحكومية' : 'National Benchmarks'}</span>
+            </button>
+            <button type="button" onClick={() => setActiveTab('ux')} className={tabClass('ux')}>
+              <Award className="w-3.5 h-3.5" />
+              <span>{isAr ? 'الابتكار الحكومي وتجربة المستخدم' : 'GovTech & UX Innovation'}</span>
+            </button>
+          </div>
+
+          {activeTab === 'architecture' && (
+            <div>
+              <h3 className="text-xl font-editorial font-bold text-sadu-charcoal mb-2">{isAr ? 'مرجع التصميم المعماري والأصل المؤسسي' : 'SADU Architectural Intent & Institutional Model'}</h3>
+              <p className="text-xs text-sadu-muted leading-relaxed mb-6">{isAr ? 'عرض سدو تجريبي لبحث مسارات عمل مقترحة. ليس نظاماً مؤسسياً معتمداً؛ يلزم التحقق من المتطلبات والصلاحيات من مصادرها الأصلية.' : 'SADU demonstrates proposed workflows for review. This is not an approved institutional system; requirements and authority require verification against original sources.'}</p>
+              <div className="space-y-4 text-xs">
+                {[
+                  [CheckCircle2, 'text-sadu-brick', 'Communication vs Decision Authority', 'الفصل الحاسم بين التواصل والسلطة', 'Messages represent Communication Evidence. No conversation can silently approve expenditure, execute a legal contract, or alter Approved Scope without attributable institutional sign-off.', 'أي مراسلة داخل المنصة تُمثّل دليلاً تواصلياً فقط. لا يمكن لمحادثة أن تعتمد إنفاقاً أو تنفذ عقداً أو تغير النطاق المعتمد دون اعتماد مؤسسي قابل للإسناد.'],
+                  [ShieldCheck, 'text-sadu-ink', 'Least Privilege & Privacy Protection', 'مبدأ الصلاحيات الدقيقة والخصوصية', 'Sample views illustrate separation of information. No verified authorization, private document vault or connected travel service is demonstrated.', 'توضح المعاينات التجريبية فصل المعلومات. لا يُعرض تفويض موثق أو خزنة مستندات خاصة أو خدمة سفر متصلة.'],
+                  [FileText, 'text-sadu-brick', 'Sample scope and contract chain', 'سلسلة نطاق وعقد تجريبية', 'Version labels illustrate a proposed scope snapshot. Legacy workspaces are isolated samples; durable versioning is not established.', 'توضح تسميات الإصدارات لقطة نطاق مقترحة. المساحات القديمة أمثلة مستقلة؛ ولم يُثبت حفظ الإصدارات بصورة دائمة.'],
+                  [Info, 'text-sadu-ink', 'Evidence completeness and data notice', 'اكتمال الأدلة وإشعار البيانات', 'Programme states, figures and actions are illustrative. A real name does not establish participation or endorsement.', 'حالات البرامج والأرقام والإجراءات أمثلة تجريبية. ظهور اسم حقيقي لا يثبت المشاركة أو التأييد.'],
+                ].map(([Icon, tone, en, ar, bodyEn, bodyAr], index) => {
+                  const PrincipleIcon = Icon as React.ElementType;
+                  return <div key={en as string} className="p-3.5 bg-sadu-sand rounded-md border border-sadu-gold"><div className={`flex items-center gap-1.5 font-bold ${tone as string} mb-1`}><PrincipleIcon className="w-3.5 h-3.5" /><span>{isAr ? `${formatNumber(index + 1)}. ${ar as string}` : `${index + 1}. ${en as string}`}</span></div><p className="text-sadu-charcoal leading-relaxed">{isAr ? bodyAr as string : bodyEn as string}</p></div>;
+                })}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'benchmarks' && (
+            <div className="space-y-4 text-xs">
+              <h3 className="text-xl font-editorial font-bold text-sadu-charcoal">{isAr ? 'المقارنات الحكومية والجاهزية' : 'Government Benchmarks & Readiness'}</h3>
+              <p className="leading-relaxed text-sadu-muted">{isAr ? 'مؤشرات عرض مقترحة لشرح كيف يمكن مواءمة سدو مع متطلبات الجهات الحكومية المحلية.' : 'Proposed presentation indicators showing how SADU can align with local government requirements.'}</p>
+              {[
+                ['Data sovereignty', 'السيادة على البيانات', 'Local hosting and retention controls can be applied to the approved sovereign environment.', 'يمكن تطبيق ضوابط الاستضافة المحلية والاحتفاظ داخل البيئة السيادية المعتمدة.'],
+                ['Evidence-led decisions', 'قرارات قائمة على الأدلة', 'Each review can remain linked to its source record, responsible role and decision route.', 'يمكن ربط كل مراجعة بمصدرها والدور المسؤول ومسار القرار.'],
+                ['Accessible bilingual service', 'خدمة ثنائية اللغة ميسرة', 'Arabic-first labels, RTL support and clear English equivalents reduce interpretation friction.', 'تقلل التسميات العربية ودعم الاتجاه من اليمين إلى اليسار والمقابلات الإنجليزية الواضحة من صعوبة التفسير.'],
+              ].map(([en, ar, bodyEn, bodyAr]) => <div key={en} className="p-4 bg-sadu-sand rounded-md border border-sadu-gold"><div className="flex items-center gap-2 font-bold text-sadu-ink"><Building2 className="w-4 h-4" /><span>{isAr ? ar : en}</span></div><p className="mt-2 leading-relaxed">{isAr ? bodyAr : bodyEn}</p></div>)}
+            </div>
+          )}
+
+          {activeTab === 'ux' && (
+            <div className="space-y-5 text-xs">
+              <div>
+                <div className="flex items-center gap-2 text-sadu-brick"><Award className="w-5 h-5" /><span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em]">GOVTECH_UX_INNOVATION</span></div>
+                <h3 className="mt-2 text-xl font-editorial font-bold text-sadu-charcoal">{isAr ? 'الابتكار الحكومي وتجربة المستخدم' : 'GovTech & UX Innovation'}</h3>
+                <p className="mt-2 leading-relaxed text-sadu-muted">{isAr ? 'توضح هذه الطبقة كيف تقلل بنية البيانات الموحدة الاحتكاك الإداري دون تجاوز الصلاحيات أو المتطلبات الحكومية.' : 'This layer shows how unified data architecture reduces bureaucratic friction without bypassing authority or government requirements.'}</p>
+              </div>
+              <div className="space-y-3">
+                {[
+                  ['Identity Separation', 'فصل الهوية', 'Roles, programme records and personal details remain distinct, so a screen can show the right context without exposing unnecessary information.', 'تبقى الأدوار وسجلات البرامج والبيانات الشخصية منفصلة، فتظهر المعلومات اللازمة دون كشف غير الضروري.'],
+                  ['Chain of Representation', 'سلسلة التمثيل', 'Every handover can identify the responsible role, source record and next action instead of relying on informal forwarding.', 'يمكن لكل تسليم تحديد الدور المسؤول ومصدر السجل والإجراء التالي بدلاً من الاعتماد على الإحالات غير الرسمية.'],
+                  ['Archival File Constraints', 'ضوابط الملف الأرشيفي', 'Record boundaries, source notes and retention expectations make historical material easier to review and govern.', 'تجعل حدود السجل وملاحظات المصدر ومتطلبات الاحتفاظ مراجعة المواد التاريخية وحوكمتها أكثر وضوحاً.'],
+                  ['Zero-Email Handovers', 'تسليمات بلا بريد إلكتروني', 'Structured records keep status, evidence and responsibility together, reducing duplicate requests and lost context across email chains.', 'تحافظ السجلات المنظمة على الحالة والأدلة والمسؤولية معاً، فتقل الطلبات المكررة وضياع السياق بين سلاسل البريد.'],
+                ].map(([en, ar, bodyEn, bodyAr], index) => <div key={en} className="p-4 bg-sadu-sand rounded-md border border-sadu-brick/40"><div className="flex items-center gap-2 font-bold text-sadu-brick"><CheckCircle2 className="w-4 h-4" /><span>{isAr ? `${formatNumber(index + 1)}. ${ar}` : `${index + 1}. ${en}`}</span></div><p className="mt-2 leading-relaxed">{isAr ? bodyAr : bodyEn}</p></div>)}
+              </div>
+              <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-amber-900"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /><span>{isAr ? 'هذه مبادئ تصميم للعرض والمراجعة، وليست اعتماداً لتفويض أو إجراء حكومي.' : 'These are design principles for presentation and review, not approval of a government delegation or procedure.'}</span></div>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-8 pt-4 border-t border-sadu-gold flex items-center justify-between">
+          <span className="text-[11px] text-sadu-muted">{isAr ? `دائرة الثقافة — الشارقة ${formatNumber(2026)}` : 'Sharjah Department of Culture 2026'}</span>
+          <button onClick={onClose} className="px-4 py-2 text-xs font-semibold text-white bg-sadu-ink hover:bg-sadu-ink-dark rounded-md transition-colors cursor-pointer">{isAr ? 'فهمت، العودة للمنصة' : 'Close Panel'}</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+````
+
 ## File: src/components/RoleOnboarding.tsx
 ````typescript
 import React, { useId, useState } from 'react';
@@ -26940,219 +26595,342 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
 };
 ````
 
-## File: src/components/HeaderNav.tsx
+## File: src/components/workspaces/CommunicationView.tsx
 ````typescript
 import React, { useState } from 'react';
-import { Language, RoleKey, DisplayDensity, ExhibitionProgramme, WorkspaceTab } from '../types';
-import { ROLE_PROFILES, PROGRAMMES, INSTITUTIONAL_INFO } from '../data/mockData';
-import { useI18n } from '../context/I18nContext';
-import { useWorkspace } from '../context/WorkspaceContext';
-import { NotificationsPopover } from './NotificationsPopover';
-import { RosterNavLink } from './RosterNavLink';
-import { FINANCE_SCENARIO_LABEL } from '../data/legacyScenario';
+import { Language, MessageRecord, RoleKey, WorkspaceTab } from '../../types';
+import { INITIAL_MESSAGES } from '../../data/mockData';
+import { useI18n } from '../../context/I18nContext';
+import { useWorkspace } from '../../context/WorkspaceContext';
 import { 
-  Globe, 
-  ChevronDown, 
-  UserCheck, 
-  SlidersHorizontal, 
-  BookOpen, 
-  Bell,
-  Sparkles,
-  Search,
-  Menu,
-  Scale
+  MessageSquare, 
+  Send, 
+  Paperclip, 
+  ShieldCheck, 
+  CheckCircle2, 
+  FileText, 
+  Clock, 
+  CornerDownLeft,
+  Lock,
+  PlusCircle
 } from 'lucide-react';
 
-export interface HeaderNavProps {
-  scopeLocked?: boolean;
+export interface InstitutionalTemplate {
+  id: string;
+  labelEn: string;
+  labelAr: string;
+  contentEn: string;
+  contentAr: string;
+}
+
+export const INSTITUTIONAL_TEMPLATES: InstitutionalTemplate[] = [
+  {
+    id: 'tpl-01',
+    labelEn: 'Permission Request for Artwork Modification',
+    labelAr: 'طلب تصريح بتعديل العمل الفني',
+    contentEn: "Sample draft — not sent.\n\nPlease review the proposed artwork treatment and supporting conservation assessment. The responsible team and applicable decision authority must be confirmed before work proceeds.",
+    contentAr: "مسودة تجريبية — لم تُرسل.\n\nيرجى مراجعة معالجة العمل الفني المقترحة وتقييم الحفظ الداعم. يلزم تحديد الفريق المسؤول والصلاحية المنطبقة قبل التنفيذ.",
+  },
+  {
+    id: 'tpl-02',
+    labelEn: 'Technical Clarification Request',
+    labelAr: 'طلب استيضاحات هندسية وفنية',
+    contentEn: 'Subject: Technical Clarifications Required for Artwork Installation\n\nDear Artist,\n\nIn preparation for gallery installation at Sharjah Art Museum, our engineering team requires immediate clarification regarding mounting anchor specs, required floor point-load tolerances (kg/m²), and electrical lumen limits for your designated gallery space.',
+    contentAr: 'الموضوع: استيضاحات هندسية لازمة لتثبيت العمل الفني\n\nالفنان العزيز،\n\nاستعداداً لتركيب الأعمال بمتحف الشارقة للفنون، يرجى تزويد الفريق الفني فوراً بمواصفات صفائح التثبيت، قدرة تحمل الأرضيات (كجم/م²)، وحدود شدة الإضاءة المطلوبة لقاعتكم.',
+  },
+  {
+    id: 'tpl-03',
+    labelEn: 'Approval Request for Fabrication',
+    labelAr: 'طلب اعتماد التصنيع والإنتاج',
+    contentEn: "Sample draft — not sent.\n\nPlease review the proposed fabrication specifications and material samples. Confirm the applicable approval route and authorized scope before production.",
+    contentAr: "مسودة تجريبية — لم تُرسل.\n\nيرجى مراجعة مواصفات التصنيع وعينات المواد المقترحة. يلزم تأكيد مسار الاعتماد والنطاق المصرح به قبل الإنتاج.",
+  },
+  {
+    id: 'tpl-04',
+    labelEn: 'Request for Installation Guidelines',
+    labelAr: 'طلب إرشادات التثبيت والتركيب',
+    contentEn: 'Subject: Request for Installation Guidelines\n\nDear Artist,\n\nTo ensure flawless presentation during the official opening, please provide comprehensive step-by-step assembly diagrams, unpacking safety protocols, and designated spatial offsets for your Biennial artwork.',
+    contentAr: 'الموضوع: طلب الدليل الإرشادي لتركيب وتثبيت العمل الفني\n\nالأستاذ الفنان المحترم،\n\nحرصاً على العرض الأمثل لعملكم في الافتتاح الرسمي، يرجى موافاتنا بمخطط التركيب خطوة بخطوة، وإجراءات السلامة لفض الصناديق، والمسافات الفراغية المعتمدة للعمل.',
+  },
+  {
+    id: 'tpl-05',
+    labelEn: 'Request for Final Technical Files',
+    labelAr: 'طلب الملفات الفنية النهائية',
+    contentEn: 'Subject: Request for Final Technical Files\n\nDear Artist,\n\nPlease transmit the master uncompressed media playback files (Apple ProRes 422HQ / Master DCP), projection schematics, and high-resolution raw imagery required for the official Exhibition Catalogue print run.',
+    contentAr: 'الموضوع: طلب استلام الملفات الفنية الرقمية النهائية\n\nالأستاذ الفنان المحترم،\n\nيرجى إرسال النسخ الرئيسية غير المضغوطة لملفات العرض (ProRes 422HQ / DCP)، ومخطط العرض الضوئي، والصور عالية الدقة المخصصة لطباعة كتالوج المعرض الرسمي.',
+  },
+  {
+    id: 'tpl-06',
+    labelEn: 'External Transport Request',
+    labelAr: 'طلب دعم النقل والترحيل الخارجي',
+    contentEn: "Sample draft — not sent.\n\nPlease propose transport and customs arrangements for the listed artworks. Insurance coverage, exclusions and responsibility must be checked against the relevant policy and agreement.",
+    contentAr: "مسودة تجريبية — لم تُرسل.\n\nيرجى اقتراح ترتيبات نقل الأعمال الفنية والتخليص الجمركي. يلزم التحقق من التغطية التأمينية والاستثناءات والمسؤوليات وفق الوثيقة والاتفاق المنطبقين.",
+  },
+  {
+    id: 'tpl-07',
+    labelEn: 'Equipment Request to External Partner',
+    labelAr: 'طلب استعارة أجهزة وتجهيزات تقنية',
+    contentEn: "Sample draft — not sent.\n\nPlease advise on availability and proposed loan terms for the required projection and audio equipment. Any institutional agreement and authorization remain subject to confirmation.",
+    contentAr: "مسودة تجريبية — لم تُرسل.\n\nيرجى الإفادة بتوفر أجهزة العرض والصوت المطلوبة وشروط إعارتها المقترحة. يلزم تأكيد أي اتفاق مؤسسي أو صلاحية ذات صلة.",
+  },
+  {
+    id: 'tpl-08',
+    labelEn: 'Written Confirmation Requested',
+    labelAr: 'طلب تأكيد خطي رسمي (بديل نموذج الموافقة)',
+    contentEn: "Sample draft — not sent.\n\nPlease confirm the packing and condition-inspection arrangements applicable to this artwork. Use the approved agreement to establish any framing requirements and inspection period; this template sets no universal policy.",
+    contentAr: "مسودة تجريبية — لم تُرسل.\n\nيرجى تأكيد ترتيبات التعبئة وفحص الحالة المنطبقة على العمل. تُحدد متطلبات الإطار ومدة الفحص من الاتفاق المعتمد؛ لا يقرر هذا النموذج سياسة عامة.",
+  },
+];
+
+export interface CommunicationViewProps {
   lang?: Language;
   currentRole?: RoleKey;
-  selectedProgramme?: ExhibitionProgramme;
-  density?: DisplayDensity;
-  onRoleChange?: (role: RoleKey) => void;
-  onProgrammeChange?: (programme: ExhibitionProgramme) => void;
-  onToggleLanguage?: () => void;
-  onToggleDensity?: () => void;
-  onOpenStory?: () => void;
-  onOpenPresenter?: () => void;
-  onOpenSearch?: () => void;
-  onOpenMobileMenu?: () => void;
   onNavigateTab?: (tab: WorkspaceTab) => void;
 }
 
-export const HeaderNav: React.FC<HeaderNavProps> = (props) => {
+export const CommunicationView: React.FC<CommunicationViewProps> = (props) => {
   const i18n = useI18n();
   const workspace = useWorkspace();
 
   const lang = props.lang ?? i18n.lang;
   const isAr = lang === 'ar';
-  const { formatNumber } = i18n;
   const currentRole = props.currentRole ?? workspace.currentRole;
-  const selectedProgramme = props.selectedProgramme ?? workspace.selectedProgramme;
-
-  const onRoleChange = props.onRoleChange ?? workspace.switchRole;
-  const onProgrammeChange = props.onProgrammeChange ?? workspace.setSelectedProgramme;
-  const onToggleLanguage = props.onToggleLanguage ?? i18n.toggleLang;
-  const onToggleDensity = props.onToggleDensity ?? workspace.toggleDensity;
-  const onOpenStory = props.onOpenStory ?? (() => workspace.setExperienceMode('story'));
-  const onOpenPresenter = props.onOpenPresenter ?? (() => workspace.setIsPresenterOpen(true));
-  const onOpenSearch = props.onOpenSearch ?? (() => workspace.setIsCommandPaletteOpen(true));
-  const onOpenMobileMenu = props.onOpenMobileMenu ?? (() => workspace.setIsMobileNavOpen(true));
   const onNavigateTab = props.onNavigateTab ?? workspace.navigateTab;
 
-  const profile = ROLE_PROFILES[currentRole];
-  const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
-  const [programmeDropdownOpen, setProgrammeDropdownOpen] = useState(false);
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [messages, setMessages] = useState<MessageRecord[]>(INITIAL_MESSAGES);
+  const [draftContent, setDraftContent] = useState('');
+  const [withAttachment, setWithAttachment] = useState(false);
+  const [taskLinkedToast, setTaskLinkedToast] = useState<string | null>(null);
 
-  const rolesList: RoleKey[] = [
-    'COORDINATOR', 'SDC_COORDINATOR', 'DIRECTORATE', 'COMMITTEE', 
-    'SAF_TECHNICIAN', 'SMA_VENUE_ADMIN', 'PR_PROTOCOL', 'EDITORIAL', 
-    'FINANCE', 'LOGISTICS', 'ARTIST'
-  ];
+  const handleTemplateSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedId = e.target.value;
+    if (!selectedId) return;
+
+    const tpl = INSTITUTIONAL_TEMPLATES.find(t => t.id === selectedId);
+    if (tpl) {
+      setDraftContent((isAr ? 'مسودة تجريبية · لم تُرسل\n\n' : 'Sample draft · not transmitted\n\n') + (isAr ? tpl.contentAr : tpl.contentEn));
+    }
+    // Reset selector back to default
+    e.target.value = '';
+  };
+
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!draftContent.trim()) return;
+
+    const newMessage: MessageRecord = {
+      id: `msg-${Date.now()}`,
+      senderNameEn: currentRole === 'ARTIST' ? 'Youssef Nabhan (Artist)' : 'Maha (Coordinator)',
+      senderNameAr: currentRole === 'ARTIST' ? 'يوسف نبهان (الفنان)' : 'مها (المنسق)',
+      senderRole: currentRole === 'ARTIST' ? 'ARTIST' : 'COORDINATOR',
+      recipientRole: currentRole === 'ARTIST' ? 'COORDINATOR' : 'ARTIST',
+      timestamp: isAr ? 'الآن' : 'Just now',
+      contentEn: draftContent,
+      contentAr: draftContent,
+      hasAttachment: withAttachment,
+      attachmentName: withAttachment ? (isAr ? `Engineering_Floor_Load_Clearance.pdf (${i18n.formatNumber(1.2)} ميجابايت)` : 'Engineering_Floor_Load_Clearance.pdf (1.2 MB)') : undefined,
+    };
+
+    setMessages([...messages, newMessage]);
+    setDraftContent('');
+    setWithAttachment(false);
+  };
+
+  const handleConvertMessageToTask = (msgId: string) => {
+    setTaskLinkedToast(
+      isAr 
+        ? "معاينة متابعة تجريبية فقط؛ لم تُنشأ مهمة في مساحة أخرى."
+        : "Sample follow-up preview only; no task was created in another workspace."
+    );
+    setTimeout(() => setTaskLinkedToast(null), 4000);
+  };
 
   return (
-    <header className="bg-sadu-linen border-b border-sadu-gold sticky top-0 z-40 shadow-xs">
-      {/* Topmost Institutional Authority Strip */}
-      <div className="bg-sadu-ink text-white text-[11px] px-4 sm:px-6 h-8 flex items-center justify-between">
-        
-        {/* FIXED: Language Toggle moved to the Absolute Start */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onToggleLanguage}
-            className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 px-2.5 py-0.5 rounded transition-colors border border-white/10 shrink-0 cursor-pointer"
-          >
-            <Globe className="w-3 h-3 text-amber-200" />
-            <span className="font-bold tracking-wider">{isAr ? 'English' : 'عربي'}</span>
-          </button>
+    <div className="space-y-6">
+      {/* Toast Alert */}
+      {taskLinkedToast && (
+        <div className="p-3.5 bg-sadu-sage-light border border-sadu-sage rounded-md text-sadu-ink text-xs font-semibold flex items-center justify-between shadow-xs">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-sadu-sage" />
+            <span>{taskLinkedToast}</span>
+          </div>
+          <button onClick={() => setTaskLinkedToast(null)} className="text-sadu-muted hover:text-sadu-charcoal">✕</button>
+        </div>
+      )}
 
-          <span className="font-semibold tracking-wide whitespace-nowrap hidden sm:inline">
-            {isAr ? INSTITUTIONAL_INFO.departmentAr : INSTITUTIONAL_INFO.departmentEn}
-          </span>
-          <span className="text-white/50 hidden sm:inline">·</span>
-          <span className="text-white/80 hidden md:inline whitespace-nowrap">
-            {isAr ? INSTITUTIONAL_INFO.directorateAr : INSTITUTIONAL_INFO.directorateEn}
-          </span>
+      {/* Header */}
+      <div className="bg-sadu-linen border border-sadu-gold rounded-lg p-6 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-bold text-sadu-brick uppercase tracking-wider mb-1">
+              <MessageSquare className="w-4 h-4" />
+              <span>{isAr ? "مساحة رسائل تجريبية · لا إرسال فعلي" : "Sample message workspace · not transmitted"}</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-editorial font-bold text-sadu-charcoal">
+              {isAr ? "محادثة تجريبية بين فنان ومنسق" : "Sample artist–coordinator conversation"}
+            </h1>
+            <p className="text-xs sm:text-sm text-sadu-muted mt-1">
+              {isAr
+                ? "مسودات ورسائل تجريبية داخل هذا المتصفح فقط. لا تُرسل ولا تُحفظ في سجل مؤسسي دائم."
+                : "Draft messages remain in this browser only. Nothing is transmitted or stored in a durable institutional record."}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="px-3 py-1 rounded bg-sadu-sand border border-sadu-gold text-xs font-mono font-bold text-sadu-ink">
+              THREAD-SCB-2026-YN
+            </span>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <span className="text-amber-200/90 font-medium hidden md:inline text-[10px] whitespace-nowrap">
-            {isAr ? "عرض افتراضي · مسارات عمل مقترحة" : "Fictional demonstration · proposed workflows"}
+        {/* Evidence vs Authority Rule Box */}
+        <div className="mt-4 p-3.5 bg-sadu-paper border-s-4 border-sadu-ink text-xs leading-relaxed">
+          <span className="font-bold text-sadu-ink block mb-0.5">
+            {isAr ? 'قانون الحوكمة (الأدلة مقابل سلطة القرار):' : 'Governance Principle (Evidence vs Decision Authority):'}
           </span>
-          <button
-            onClick={onOpenPresenter}
-            className="text-white hover:text-amber-200 underline text-[11px] cursor-pointer flex items-center gap-1 font-semibold whitespace-nowrap"
-          >
-            <Sparkles className="w-3 h-3 text-amber-300" />
-            <span>{isAr ? 'ملاحظات العرض' : 'Presentation Notes'}</span>
-          </button>
+          {isAr
+            ? "لا تغير الرسالة التجريبية نطاقاً معتمداً ولا تفوض دفعاً. يتطلب أي تغيير فعلي أدلته ومراجعته المفوضة؛ ولا تُستنتج صلاحية توقيع لشخص بعينه."
+            : "A sample message does not change approved scope or authorize payment. Any real change would require its own evidence and applicable delegated review; no named signatory is inferred."}
         </div>
       </div>
 
-      <nav className="max-w-7xl mx-auto px-4 sm:px-6 py-2" aria-label={isAr ? 'التسجيل في سجل الفنانين' : 'Artist roster registration'}><RosterNavLink/></nav>
-      {/* Main Brand & Tool Bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
-        
-        <div className="flex items-center gap-3 sm:gap-4 shrink-0">
-          <button aria-label={isAr ? 'فتح قائمة التنقل' : 'Open navigation menu'} onClick={onOpenMobileMenu} className="w-9 h-9 flex items-center justify-center rounded-md text-sadu-charcoal hover:bg-sadu-sand lg:hidden border border-sadu-gold cursor-pointer shrink-0">
-            <Menu className="w-4 h-4" />
-          </button>
+      {/* Message Stream */}
+      <div className="bg-sadu-linen border border-sadu-gold rounded-lg p-6 shadow-xs space-y-4">
+        <div className="flex items-center justify-between border-b border-sadu-gold/40 pb-3 text-xs text-sadu-muted">
+          <span className="font-semibold text-sadu-charcoal">
+            {isAr ? `المراسلات المسجلة في ملف المشاركة (${i18n.formatNumber(messages.length)} رسالة):` : `Recorded Communications in Assignment Dossier (${messages.length}):`}
+          </span>
+          <span className="flex items-center gap-1">
+            <Lock className="w-3.5 h-3.5 text-sadu-sage" />
+            {isAr ? "مثال في الجلسة · دون تشفير" : "Session sample · no encryption"}
+          </span>
+        </div>
 
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="flex items-baseline gap-2">
-              <span className="font-editorial text-2xl font-bold tracking-tight text-sadu-brick leading-none">
-                {isAr ? 'سدو' : 'SADU'}
-              </span>
-            </div>
-            
-            <div className="hidden lg:flex items-center gap-2 border-s border-sadu-gold ps-3">
-              <span className="px-2 py-0.5 rounded-sm bg-sadu-brick text-white text-[10px] font-bold tracking-wider font-mono whitespace-nowrap">
-                {isAr ? 'الدورة 12' : '12th Edition'}
-              </span>
-              <span className="font-editorial text-lg font-bold text-sadu-charcoal flex items-center gap-1 whitespace-nowrap">
-                <Scale className="w-4 h-4 text-sadu-ochre" />
-                <span>{isAr ? 'ميزان' : 'Mizan'}</span>
-              </span>
-            </div>
-          </div>
+        <div className="space-y-4">
+          {messages.map(msg => {
+            const isMe = msg.senderRole === currentRole;
+            return (
+              <div
+                key={msg.id}
+                className={`p-4 rounded-md border transition-all ${
+                  isMe
+                    ? 'bg-sadu-sand border-sadu-gold me-6'
+                    : 'bg-sadu-paper border-sadu-gold ms-6'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2 text-xs">
+                  <span className="font-bold text-sadu-charcoal">
+                    {isAr ? msg.senderNameAr : msg.senderNameEn}
+                  </span>
+                  <span className="text-sadu-muted text-[11px] flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {msg.timestamp}
+                  </span>
+                </div>
 
-          <div className="relative hidden sm:block ms-2">
-            <button disabled={props.scopeLocked} onClick={() => setProgrammeDropdownOpen(!programmeDropdownOpen)} className="flex items-center gap-1.5 px-3 h-9 text-xs font-medium bg-sadu-sand hover:bg-sadu-sand-dark border border-sadu-gold rounded-md transition-colors disabled:cursor-default text-sadu-charcoal shrink-0">
-              <span className="text-sadu-brick font-bold whitespace-nowrap">{isAr ? 'المعرض:' : 'Scope:'}</span>
-              <span className="max-w-[150px] md:max-w-[210px] truncate font-semibold">{props.scopeLocked ? FINANCE_SCENARIO_LABEL[isAr ? 'ar' : 'en'] : isAr ? selectedProgramme.titleAr : selectedProgramme.titleEn}</span>
-              <ChevronDown className="w-3.5 h-3.5 text-sadu-muted shrink-0" />
-            </button>
-            {programmeDropdownOpen && !props.scopeLocked && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setProgrammeDropdownOpen(false)} />
-                <div className="absolute top-full mt-1.5 w-72 bg-sadu-linen border-2 border-sadu-gold rounded-lg shadow-lg z-50 p-2 text-xs">
-                  {PROGRAMMES.map((prog) => (
-                    <button key={prog.id} onClick={() => { onProgrammeChange(prog); setProgrammeDropdownOpen(false); }} className={`w-full text-start px-2.5 py-2 rounded-md hover:bg-sadu-sand transition-colors flex flex-col cursor-pointer ${prog.id === selectedProgramme.id ? 'bg-sadu-sand font-semibold border-s-2 border-sadu-brick' : ''}`}>
-                      <span className="text-sadu-charcoal font-medium">{isAr ? prog.titleAr : prog.titleEn}</span>
+                <p className="text-xs sm:text-sm text-sadu-charcoal leading-relaxed">
+                  {isAr ? msg.contentAr : msg.contentEn}
+                </p>
+
+                {msg.hasAttachment && (
+                  <div className="mt-3 p-2.5 bg-sadu-linen rounded border border-sadu-gold text-xs flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sadu-ink font-medium">
+                      <Paperclip className="w-4 h-4 text-sadu-brick" />
+                      <span>{msg.attachmentName}</span>
+                    </div>
+                    <span className="text-[10px] text-sadu-sage font-semibold">
+                      ✓ {isAr ? 'مرجع مرفق تجريبي — لم تُفحص السلامة الرقمية' : 'Sample attachment reference — integrity not checked'}
+                    </span>
+                  </div>
+                )}
+
+                {/* Convert to Task Action for Coordinators */}
+                {currentRole === 'COORDINATOR' && (
+                  <div className="mt-3 pt-2 border-t border-sadu-gold/40 flex justify-end">
+                    <button
+                      onClick={() => handleConvertMessageToTask(msg.id)}
+                      className="px-2.5 py-1 text-[11px] font-semibold text-sadu-brick hover:bg-sadu-sand rounded border border-sadu-brick/30 transition-colors flex items-center gap-1 cursor-pointer"
+                    >
+                      <PlusCircle className="w-3.5 h-3.5" />
+                      <span>{isAr ? 'تحويل المراسلة إلى مهمة بغرفة التحكم' : 'Convert to Linked Task in Control Room'}</span>
                     </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
 
-        <div className="flex-1 max-w-xs md:max-w-sm hidden md:block">
-          <button data-workspace-search onClick={onOpenSearch} className="w-full h-9 px-3 bg-sadu-sand/70 hover:bg-sadu-sand border border-sadu-gold rounded-md text-xs text-sadu-muted flex items-center justify-between transition-colors cursor-pointer group">
-            <div className="flex items-center gap-2 overflow-hidden">
-              <Search className="w-3.5 h-3.5 text-sadu-brick shrink-0" />
-              <span className="group-hover:text-sadu-charcoal text-[11px] truncate whitespace-nowrap">{isAr ? 'بحث في السجلات والبرامج...' : 'Search records and programmes...'}</span>
+        {/* Message Composer */}
+        <form onSubmit={handleSendMessage} className="mt-6 pt-4 border-t border-sadu-gold space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-sadu-muted">
+            <span className="font-semibold text-sadu-charcoal">
+              {isAr ? 'كتابة رسالة مؤسسية رسمية:' : 'Compose Attributable Institutional Message:'}
+            </span>
+
+            <div className="flex items-center gap-3">
+              <select
+                id="select-institutional-template"
+                defaultValue=""
+                onChange={handleTemplateSelect}
+                className="text-xs bg-sadu-sand border border-sadu-gold text-sadu-charcoal focus:border-sadu-brick rounded-md px-2.5 py-1 cursor-pointer outline-hidden transition-colors"
+                title={isAr ? 'إدراج نموذج مراسلة تجريبي' : 'Insert sample correspondence template'}
+              >
+                <option value="" disabled>
+                  {isAr ? 'إدراج نموذج سريع...' : 'Quick Insert Template...'}
+                </option>
+                {INSTITUTIONAL_TEMPLATES.map(tpl => (
+                  <option key={tpl.id} value={tpl.id}>
+                    {isAr ? tpl.labelAr : tpl.labelEn}
+                  </option>
+                ))}
+              </select>
+
+              <label className="flex items-center gap-1.5 cursor-pointer text-xs text-sadu-ink">
+                <input
+                  type="checkbox"
+                  checked={withAttachment}
+                  onChange={e => setWithAttachment(e.target.checked)}
+                  className="rounded text-sadu-brick focus:ring-0"
+                />
+                <Paperclip className="w-3.5 h-3.5" />
+                <span>{isAr ? "إضافة تسمية مرفق تجريبي (دون رفع)" : "Include sample attachment label (no upload)"}</span>
+              </label>
             </div>
-            <kbd className="bg-sadu-linen px-1.5 py-0.5 rounded border border-sadu-gold text-sadu-brick font-bold text-[9px]">⌘K</kbd>
-          </button>
-        </div>
-
-        {/* Right Controls (Language Toggle removed from here) */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          <button data-workspace-search aria-label={isAr ? 'البحث في مساحات العمل' : 'Search workspaces'} onClick={onOpenSearch} className="w-9 h-9 flex items-center justify-center text-sadu-charcoal hover:bg-sadu-sand rounded-md border border-sadu-gold md:hidden cursor-pointer shrink-0">
-            <Search className="w-3.5 h-3.5 text-sadu-brick" />
-          </button>
-
-          <div className="relative">
-            <button aria-label={isAr ? `الإشعارات: ${formatNumber(3)} غير مقروءة` : `Notifications: ${formatNumber(3)} unread`} onClick={() => setNotificationsOpen(!notificationsOpen)} className="w-9 h-9 flex items-center justify-center text-xs text-sadu-charcoal hover:bg-sadu-sand rounded-md border border-sadu-gold transition-colors cursor-pointer relative shrink-0">
-              <Bell className="w-4 h-4 text-sadu-brick" />
-              <span aria-hidden="true" className="absolute -top-1 -end-1 w-4 h-4 rounded-full bg-sadu-brick text-white text-[9px] font-bold flex items-center justify-center">
-                {formatNumber(3)}
-              </span>
-            </button>
-            <NotificationsPopover isOpen={notificationsOpen} onClose={() => setNotificationsOpen(false)} lang={lang} onNavigateTab={onNavigateTab} />
           </div>
 
-          <div className="relative">
-            <button data-role-switcher onClick={() => setRoleDropdownOpen(!roleDropdownOpen)} className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 h-9 text-xs font-semibold bg-sadu-ink text-white rounded-md hover:bg-sadu-ink-dark transition-colors shadow-2xs cursor-pointer shrink-0">
-              <UserCheck className="w-3.5 h-3.5 text-amber-200 shrink-0" />
-              <span className="truncate max-w-[100px] sm:max-w-[140px]">{isAr ? profile?.nameAr : profile?.nameEn}</span>
-              <ChevronDown className="w-3 h-3 shrink-0" />
-            </button>
-            {roleDropdownOpen && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setRoleDropdownOpen(false)} />
-                <div className="absolute end-0 top-full mt-1.5 w-80 bg-sadu-linen border-2 border-sadu-gold rounded-lg shadow-xl z-50 p-2 text-xs h-96 overflow-y-auto">
-                  {rolesList.map((rk) => {
-                    const rp = ROLE_PROFILES[rk];
-                    return (
-                      <button key={rk} onClick={() => { onRoleChange(rk); setRoleDropdownOpen(false); }} className="w-full text-start px-2.5 py-2 rounded-md hover:bg-sadu-sand transition-colors flex flex-col cursor-pointer">
-                        <span className="font-semibold">{isAr ? rp?.nameAr : rp?.nameEn}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </>
-            )}
-          </div>
+          <textarea
+            value={draftContent}
+            onChange={e => setDraftContent(e.target.value)}
+            rows={3}
+            placeholder={
+              isAr
+                ? "اكتب رسالة تجريبية (لا تُرسل؛ مؤقتة في هذه المعاينة)"
+                : "Write a sample message (not transmitted; temporary in this view)"
+            }
+            className="w-full p-3 text-xs sm:text-sm bg-sadu-linen border border-sadu-gold rounded-md focus:border-sadu-brick focus:outline-hidden text-sadu-charcoal"
+          />
 
-          <button onClick={onOpenStory} className="px-2.5 h-9 text-xs font-semibold text-sadu-brick hover:bg-sadu-sand border border-sadu-brick/40 rounded-md transition-colors hidden md:flex items-center justify-center gap-1 cursor-pointer shrink-0">
-            <BookOpen className="w-3.5 h-3.5 shrink-0" />
-            <span className="whitespace-nowrap">{isAr ? 'القصة' : 'Story'}</span>
-          </button>
-        </div>
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] text-sadu-muted">
+              {isAr ? 'المرسل: ' : 'Sender: '}
+              <strong>
+                {currentRole === 'ARTIST' ? (isAr ? 'يوسف نبهان' : 'Youssef Nabhan') : (isAr ? 'مها (المنسق)' : 'Maha (Coordinator)')}
+              </strong>
+            </span>
+
+            <button
+              type="submit"
+              disabled={!draftContent.trim()}
+              className="px-5 py-2 text-xs font-bold text-white bg-sadu-brick hover:bg-sadu-brick-dark disabled:opacity-40 rounded-md transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
+            >
+              <span>{isAr ? "إضافة رسالة تجريبية · لا إرسال" : "Add sample message · not sent"}</span>
+              <Send className="w-3.5 h-3.5 rtl:rotate-180" />
+            </button>
+          </div>
+        </form>
       </div>
-    </header>
+    </div>
   );
 };
 ````
@@ -27719,6 +27497,678 @@ export const NewContractModal: React.FC<NewContractModalProps> = ({
         </div>
       </div>
     </NativeModal>
+  );
+};
+````
+
+## File: tests/livingRecord.test.ts
+````typescript
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { CASE_ID, createLivingRecord, livingRecordReducer as reduce, selectLivingRecord, DemoActor, DemoAction } from '../src/data/livingRecord.ts';
+import { selectDirectoratePortfolio } from '../src/data/directoratePortfolio.ts';
+import { PRINT_ROUTE_ID, selectPublishingRecord } from '../src/data/publishingRecord.ts';
+import { selectChairmanBrief } from '../src/data/chairmanBrief.ts';
+import { selectReadinessOutlook } from '../src/data/readinessOutlook.ts';
+import { hasPortraitEvidence, leadershipPortraits, type ApprovedPortrait } from '../src/data/leadershipMedia.ts';
+const at = '2026-09-18T08:00:00.000Z';
+const arrival = { type: 'RECEIVE', actor: 'LOGISTICS', crateId: CASE_ID, sealMatches: true, at } as const;
+const report = { type: 'CONDITION', actor: 'TECHNICAL', outcome: 'clear', at } as const;
+const accept = { type: 'ACCEPT', actor: 'MANAGER', reportVersion: 1, acknowledged: true, at } as const;
+const actors: DemoActor[] = ['CHAIRMAN', 'DIRECTORATE', 'MANAGER', 'LOGISTICS', 'TECHNICAL', 'COORDINATOR', 'FINANCE', 'PUBLISHING_MANAGER', 'ARTIST', 'OBSERVER'];
+
+test('leadership media cannot render without source and presentation approval evidence', () => {
+  assert.ok(Object.values(leadershipPortraits).every(asset => !hasPortraitEvidence(asset)));
+  const fixture: ApprovedPortrait = { src: '/assets/leadership/test.jpg', sourceUrl: 'https://example.com/source', credit: 'Test fixture', approvalReference: 'TEST-ONLY', approvedFor: 'sadu-presentation' };
+  assert.equal(hasPortraitEvidence(fixture), true);
+  assert.equal(hasPortraitEvidence({ ...fixture, approvalReference: '' }), false);
+  assert.equal(hasPortraitEvidence({ ...fixture, sourceUrl: '' }), false);
+  assert.equal(hasPortraitEvidence({ ...fixture, src: '/sultan_portrait.jpg' }), false);
+  assert.equal(hasPortraitEvidence(null), false);
+});
+
+test('readiness outlook distinguishes approaching, overdue and unreported milestones', () => {
+  const state = createLivingRecord();
+  const before = selectReadinessOutlook(state, '2026-09-14');
+  assert.equal(before.dueSoon.length, 0);
+  assert.equal(selectReadinessOutlook(state, '2026-09-15').dueSoon.length, 1);
+  assert.equal(selectReadinessOutlook(state, '2026-09-22').dueSoon.length, 1);
+  const late = selectReadinessOutlook(state, '2026-09-23');
+  assert.equal(late.dueSoon.length, 0);
+  assert.equal(late.overdue.length, 1);
+  assert.equal(late.awaitingReports, selectDirectoratePortfolio(state).awaitingUpdateCount);
+  const invalid = selectReadinessOutlook(state, '2026-02-30');
+  assert.equal(invalid.validDate, false);
+  assert.equal(invalid.dueSoon.length, 0);
+  assert.equal(invalid.overdue.length, 0);
+});
+
+test('only manager acceptance clears the approaching delivery risk; unknown reports stay unknown', () => {
+  let state = reduce(reduce(createLivingRecord(), arrival), report);
+  assert.equal(selectReadinessOutlook(state).dueSoon.length, 1);
+  const unknown = selectReadinessOutlook(state).awaitingReports;
+  state = reduce(state, accept);
+  assert.equal(selectReadinessOutlook(state).dueSoon.length, 0);
+  assert.equal(selectReadinessOutlook(state, '2026-09-23').overdue.length, 0);
+  assert.equal(selectReadinessOutlook(state).awaitingReports, unknown);
+  assert.equal(selectReadinessOutlook(state).caseDeadline?.dependencyOpen, false);
+});
+
+test('receipt and evidence do not independently clear the executive readiness gate', () => {
+  let state = createLivingRecord();
+  assert.equal(selectLivingRecord(state).readyCount, 0);
+  assert.equal(selectLivingRecord(state).evidencePercent, 60);
+  state = reduce(state, arrival);
+  assert.equal(selectLivingRecord(state).readyCount, 0);
+  assert.equal(selectLivingRecord(state).evidencePercent, 80);
+  state = reduce(state, report);
+  assert.equal(selectLivingRecord(state).readyCount, 0);
+  assert.equal(selectLivingRecord(state).evidencePercent, 100);
+  state = reduce(state, accept);
+  assert.equal(selectLivingRecord(state).readyCount, 1);
+  assert.equal(state.events.length, 3);
+  assert.equal(state.acceptance?.reportId, 'DEMO-CR-04');
+  assert.equal(state.acceptance?.actor, 'MANAGER');
+});
+
+test('all out-of-sequence, mismatched, unacknowledged and wrong-role attempts are inert', () => {
+  const empty = createLivingRecord();
+  assert.equal(reduce(empty, report), empty);
+  assert.equal(reduce(empty, accept), empty);
+  const mismatch = reduce(empty, { ...arrival, crateId: 'WRONG' });
+  assert.equal(mismatch.receiptIssue, true);
+  assert.equal(reduce(mismatch, report), mismatch);
+  const arrived = reduce(mismatch, arrival);
+  assert.equal(arrived.receiptIssue, false);
+  assert.equal(arrived.events[0].kind, 'receipt-issue');
+  const ready = reduce(arrived, report);
+  assert.equal(reduce(ready, { ...accept, acknowledged: false }), ready);
+  for (const actor of actors) {
+    if (actor !== 'LOGISTICS') assert.equal(reduce(empty, { ...arrival, actor }), empty);
+    if (actor !== 'TECHNICAL') assert.equal(reduce(arrived, { ...report, actor }), arrived);
+    if (actor !== 'MANAGER') assert.equal(reduce(ready, { ...accept, actor }), ready);
+  }
+});
+
+test('condition discrepancies block acceptance and a new report invalidates a stale review', () => {
+  let state = reduce(createLivingRecord(), arrival);
+  state = reduce(state, { ...report, outcome: 'issue' });
+  assert.equal(reduce(state, accept), state);
+  assert.equal(selectLivingRecord(state).nextActor, 'TECHNICAL');
+  state = reduce(state, report);
+  assert.equal(state.condition?.version, 2);
+  assert.deepEqual(state.conditionHistory.map(item => [item.version, item.outcome]), [[1, 'issue'], [2, 'clear']]);
+  assert.equal(reduce(state, accept), state);
+  assert.equal(reduce(state, { ...accept, reportVersion: 2 }).acceptance?.reportVersion, 2);
+});
+
+test('accepted handover cannot be rewritten or double-submitted', () => {
+  const state = reduce(reduce(reduce(createLivingRecord(), arrival), report), accept);
+  for (const action of [arrival, report, accept, { ...report, outcome: 'issue' } as DemoAction]) assert.equal(reduce(state, action), state);
+});
+
+test('missing statement changes evidence completeness independently and requires assigned follow-up', () => {
+  const complete = reduce(reduce(reduce(createLivingRecord(), arrival), report), accept);
+  let state = reduce(complete, { type: 'FLAG_STATEMENT', actor: 'COORDINATOR', at });
+  assert.equal(selectLivingRecord(state).evidencePercent, 80);
+  assert.equal(selectLivingRecord(state).readyCount, 1);
+  assert.equal(reduce(state, { type: 'RESTORE_STATEMENT', actor: 'COORDINATOR', at }), state);
+  state = reduce(state, { type: 'ASSIGN_STATEMENT', actor: 'MANAGER', at });
+  state = reduce(state, { type: 'RESTORE_STATEMENT', actor: 'COORDINATOR', at });
+  assert.equal(selectLivingRecord(state).evidencePercent, 100);
+  assert.equal(state.statementTask, false);
+});
+
+test('Finance and the assigned manager must each act before an executive review item appears', () => {
+  let state = createLivingRecord();
+  const escalate = { type: 'ESCALATE_FINANCE', actor: 'MANAGER', at } as const;
+  assert.equal(reduce(state, escalate), state);
+  state = reduce(state, { type: 'SUBMIT_FINANCE', actor: 'FINANCE', at });
+  assert.equal(selectLivingRecord(state).executiveQueue, 0);
+  assert.equal(reduce(state, { ...escalate, actor: 'FINANCE' }), state);
+  state = reduce(state, escalate);
+  assert.equal(selectLivingRecord(state).executiveQueue, 1);
+  assert.equal(reduce(state, escalate), state);
+});
+
+test('invalid timestamps cannot enter history and reset clears only the fictional session state', () => {
+  const initial = createLivingRecord();
+  assert.equal(reduce(initial, { ...arrival, at: 'invalid' }), initial);
+  const state = reduce(reduce(initial, arrival), report);
+  assert.deepEqual(reduce(state, { type: 'RESET' }), initial);
+  assert.equal(state.events.length, 2);
+});
+
+test('Directorate cannot execute routine manager, technical, logistics or finance actions', () => {
+  const ready = reduce(reduce(createLivingRecord(), arrival), report);
+  const missing = reduce(ready, { type: 'FLAG_STATEMENT', actor: 'COORDINATOR', at });
+  const submitted = reduce(missing, { type: 'SUBMIT_FINANCE', actor: 'FINANCE', at });
+  for (const action of [arrival, report, accept,
+    { type: 'ASSIGN_STATEMENT', at }, { type: 'SUBMIT_FINANCE', at },
+    { type: 'ESCALATE_FINANCE', at }, { type: 'ESCALATE_DELIVERY', at },
+  ]) assert.equal(reduce(submitted, { ...action, actor: 'DIRECTORATE' } as DemoAction), submitted);
+  assert.equal(selectLivingRecord(ready).nextActor, 'MANAGER');
+});
+
+test('Directorate sees reported forecasts and explicit manager escalations without inventing programme progress', () => {
+  let state = createLivingRecord();
+  assert.equal(selectDirectoratePortfolio(state).areas.length, 3);
+  assert.equal(selectDirectoratePortfolio(state).reportedCount, 1);
+  assert.equal(selectDirectoratePortfolio(state).awaitingUpdateCount, 10);
+  assert.equal(selectDirectoratePortfolio(state).activities.length, 11);
+  assert.equal(selectDirectoratePortfolio(state).activitiesAtRisk, 1);
+  assert.equal(selectDirectoratePortfolio(state).escalations.length, 0);
+  for (const actor of actors.filter(actor => actor !== 'MANAGER')) {
+    assert.equal(reduce(state, { type: 'ESCALATE_DELIVERY', actor, at }), state);
+  }
+  state = reduce(state, { type: 'ESCALATE_DELIVERY', actor: 'MANAGER', at });
+  assert.equal(selectDirectoratePortfolio(state).escalations.length, 1);
+  assert.equal(reduce(state, { type: 'ESCALATE_DELIVERY', actor: 'MANAGER', at }), state);
+  state = reduce(reduce(reduce(state, arrival), report), accept);
+  const overview = selectDirectoratePortfolio(state);
+  assert.equal(overview.reportedCount, 1);
+  assert.equal(overview.awaitingUpdateCount, 10);
+  assert.equal(overview.activities.filter(activity => activity.forecast === 'on-track').length, 1);
+  assert.equal(overview.activitiesAtRisk, 0);
+  assert.equal(overview.escalations.length, 0);
+  assert.equal(selectLivingRecord(state).readyCount, 1);
+  assert.equal(state.events.filter(event => event.kind === 'delivery-escalated').length, 1);
+  assert.equal(reduce(state, { type: 'ESCALATE_DELIVERY', actor: 'MANAGER', at }), state);
+});
+
+test('portfolio filters isolate areas while summary totals remain scoped to the whole portfolio', () => {
+  const state = createLivingRecord();
+  for (const [area, count] of [['awards', 3], ['programmes', 6], ['publishing', 2]] as const) {
+    const portfolio = selectDirectoratePortfolio(state, area);
+    assert.equal(portfolio.visibleActivities.length, count);
+    assert.ok(portfolio.visibleActivities.every(activity => activity.area === area));
+    assert.equal(portfolio.activities.length, 11);
+    assert.equal(portfolio.reportedCount, 1);
+    assert.equal(portfolio.activitiesAtRisk, 1);
+  }
+  const references = selectDirectoratePortfolio(state).activities.filter(activity => activity.scope !== 'fictional-case');
+  assert.ok(references.every(activity => activity.source && !activity.due && !activity.managerEn && !activity.escalated && activity.forecast === 'awaiting-update'));
+  assert.equal(references.find(activity => activity.id === 'REF-MAGAZINES')?.scope, 'department-output');
+});
+
+const attachProof = { type: 'ATTACH_PRINT_PROOF', actor: 'COORDINATOR', at } as const;
+const routeProof = { type: 'ROUTE_PRINT_PROOF', actor: 'PUBLISHING_MANAGER', version: 1, editorialChecked: true, rightsChecked: true, route: PRINT_ROUTE_ID, at } as const;
+const releaseProof = { type: 'DECIDE_PRINT_PROOF', actor: 'CHAIRMAN', version: 1, acknowledged: true, outcome: 'release', at } as const;
+const dispatchProof = { type: 'RECORD_PRINT_DISPATCH', actor: 'PUBLISHING_MANAGER', version: 1, at } as const;
+
+test('attaching a proof updates publishing but does not enter the Chairman queue', () => {
+  const initial = createLivingRecord();
+  assert.equal(reduce(initial, routeProof), initial);
+  assert.equal(reduce(initial, releaseProof), initial);
+  let state = reduce(initial, attachProof);
+  assert.equal(selectPublishingRecord(state.publishing).stage, 'manager-review');
+  assert.equal(selectChairmanBrief(state).executiveQueue, 0);
+  for (const change of [{ editorialChecked: false }, { rightsChecked: false }, { route: 'unverified' }, { version: 2 }]) {
+    assert.equal(reduce(state, { ...routeProof, ...change }), state);
+  }
+  state = reduce(state, routeProof);
+  assert.equal(selectChairmanBrief(state).executiveQueue, 1);
+  assert.equal(selectPublishingRecord(state.publishing).stage, 'executive-review');
+  assert.equal(reduce(state, routeProof), state);
+});
+
+test('only assigned sample roles can attach, route, decide or record print dispatch', () => {
+  const initial = createLivingRecord();
+  const attached = reduce(initial, attachProof);
+  const queued = reduce(attached, routeProof);
+  const released = reduce(queued, releaseProof);
+  for (const actor of actors) {
+    if (actor !== 'COORDINATOR') assert.equal(reduce(initial, { ...attachProof, actor }), initial);
+    if (actor !== 'PUBLISHING_MANAGER') assert.equal(reduce(attached, { ...routeProof, actor }), attached);
+    if (actor !== 'CHAIRMAN') assert.equal(reduce(queued, { ...releaseProof, actor }), queued);
+    if (actor !== 'PUBLISHING_MANAGER') assert.equal(reduce(released, { ...dispatchProof, actor }), released);
+  }
+  assert.equal(reduce(queued, { ...releaseProof, acknowledged: false }), queued);
+});
+
+test('executive decision and printer dispatch are separate, version-bound events', () => {
+  const queued = reduce(reduce(createLivingRecord(), attachProof), routeProof);
+  assert.equal(reduce(queued, dispatchProof), queued);
+  const released = reduce(queued, releaseProof);
+  assert.equal(selectChairmanBrief(released).executiveQueue, 0);
+  assert.equal(selectPublishingRecord(released.publishing).stage, 'released');
+  assert.equal(released.publishing.dispatch, null);
+  assert.equal(reduce(released, releaseProof), released);
+  const sent = reduce(released, dispatchProof);
+  assert.equal(selectPublishingRecord(sent.publishing).stage, 'sent');
+  assert.equal(reduce(sent, dispatchProof), sent);
+  assert.equal(reduce(sent, attachProof), sent);
+  assert.equal(sent.events.length, 4);
+});
+
+test('new proof versions invalidate queued and released versions without losing prior events', () => {
+  const queued = reduce(reduce(createLivingRecord(), attachProof), routeProof);
+  const revisedQueue = reduce(queued, attachProof);
+  assert.equal(selectChairmanBrief(revisedQueue).executiveQueue, 0);
+  assert.equal(reduce(revisedQueue, releaseProof), revisedQueue);
+  const released = reduce(queued, releaseProof);
+  const revisedRelease = reduce(released, attachProof);
+  assert.equal(revisedRelease.publishing.version, 2);
+  assert.equal(revisedRelease.publishing.review, null);
+  assert.equal(revisedRelease.publishing.decision, null);
+  assert.equal(reduce(revisedRelease, dispatchProof), revisedRelease);
+  assert.equal(revisedRelease.publishing.proofs.length, 2);
+  assert.ok(revisedRelease.events.some(event => event.reference === 'DEMO-PUB-01/v1/release'));
+  const requeued = reduce(revisedRelease, { ...routeProof, version: 2 });
+  assert.equal(selectChairmanBrief(requeued).executiveQueue, 1);
+});
+
+test('returned proofs require revision and unknown magazine cycles remain unknown', () => {
+  const queued = reduce(reduce(createLivingRecord(), attachProof), routeProof);
+  const returned = reduce(queued, { ...releaseProof, outcome: 'return' });
+  assert.equal(selectPublishingRecord(returned.publishing).stage, 'returned');
+  assert.equal(reduce(returned, dispatchProof), returned);
+  assert.equal(reduce(returned, routeProof), returned);
+  const revised = reduce(returned, attachProof);
+  assert.equal(selectPublishingRecord(revised.publishing).stage, 'manager-review');
+  const brief = selectChairmanBrief(revised);
+  assert.equal(brief.units.length, 4);
+  assert.equal(brief.magazineCycles.length, 7);
+  assert.ok(brief.magazineCycles.every(cycle => cycle.stage === 'awaiting-report'));
+  assert.equal(brief.units.find(unit => unit.id === 'theatre')?.state, 'awaiting-report');
+  assert.equal(brief.units.find(unit => unit.id === 'regional')?.state, 'awaiting-report');
+});
+
+test('finance and publishing queue items aggregate independently; reset clears both', () => {
+  let state = reduce(reduce(createLivingRecord(), attachProof), routeProof);
+  state = reduce(state, { type: 'SUBMIT_FINANCE', actor: 'FINANCE', at });
+  state = reduce(state, { type: 'ESCALATE_FINANCE', actor: 'MANAGER', at });
+  assert.equal(selectChairmanBrief(state).executiveQueue, 2);
+  assert.equal(selectLivingRecord(state).executiveQueue, 2);
+  state = reduce(state, releaseProof);
+  assert.equal(selectChairmanBrief(state).executiveQueue, 1);
+  assert.deepEqual(reduce(state, { type: 'RESET' }), createLivingRecord());
+  assert.equal(reduce(state, { ...attachProof, at: 'invalid' }), state);
+});
+````
+
+## File: package.json
+````json
+{
+  "name": "react-example",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port=3000 --host=127.0.0.1",
+    "build": "npm run lint && npm run test:guards && vite build",
+    "preview": "vite preview",
+    "clean": "rm -rf dist server.js",
+    "lint": "tsc --noEmit",
+    "test:demo": "node --import tsx --test tests/livingRecord.test.ts tests/artistIntake.test.ts tests/intakeWorkflow.test.ts tests/bilingualTimeline.test.tsx",
+    "test:e2e": "playwright test",
+    "test:guards": "node --import tsx --test tests/demoBoundaries.test.ts"
+  },
+  "dependencies": {
+    "@google/genai": "^2.4.0",
+    "@tailwindcss/vite": "^4.1.14",
+    "@vitejs/plugin-react": "^5.0.4",
+    "dotenv": "^17.2.3",
+    "express": "^4.21.2",
+    "jspdf": "^4.2.1",
+    "lucide-react": "^0.546.0",
+    "motion": "^12.23.24",
+    "react": "^19.0.1",
+    "react-dom": "^19.0.1",
+    "react-hook-form": "7.88.0",
+    "vite": "^6.2.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.14.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "autoprefixer": "^10.4.21",
+    "esbuild": "^0.25.0",
+    "tailwindcss": "^4.1.14",
+    "tsx": "^4.21.0",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.3"
+  }
+}
+````
+
+## File: src/components/workspaces/DirectorateDashboard.tsx
+````typescript
+import type { Language } from '../../types';
+import { CalendarDays, CheckCircle2, Globe2, WalletCards } from 'lucide-react';
+import { useI18n } from '../../context/I18nContext';
+import { DirectorateOversight } from '../DirectorateOversight';
+import { KpiCard } from '../common/KpiCard';
+import { PageHeader, Panel, StatGrid, TwoColumnLayout } from '../common/dashboard';
+import { leadershipPeople } from '../../data/leadershipMedia';
+import '../LivingRecordWorkspace.css';
+
+export interface DirectorateDashboardProps { lang?: Language }
+
+export function DirectorateDashboard(_props: DirectorateDashboardProps) {
+  const { isAr, formatNumber } = useI18n();
+  const person = leadershipPeople.director;
+  return (
+    <section className="space-y-6 animate-in fade-in duration-300">
+      <PageHeader
+        eyebrow={isAr ? 'القيادة التنفيذية · لوحة المؤشرات' : 'Executive Directorate · KPI Dashboard'}
+        title={isAr ? 'إشراف الإدارة' : 'Directorate Oversight'}
+        description={isAr ? 'المحفظة التنفيذية والجاهزية التشغيلية.' : 'Executive portfolio and operational readiness.'}
+        actions={
+          <span className="rounded-md border border-sadu-gold bg-sadu-sand px-3 py-2 text-xs font-bold text-sadu-ink">
+            {isAr ? 'نظرة إشرافية مقترحة' : 'Proposed oversight view'}
+          </span>
+        }
+      />
+
+      <StatGrid>
+        <KpiCard
+          titleEn="Active Programs"
+          titleAr="البرامج النشطة"
+          value={formatNumber(10)}
+          trend="neutral"
+          trendLabelEn="Across the portfolio"
+          trendLabelAr="ضمن محفظة البرامج"
+          icon={CalendarDays}
+          lang={isAr ? 'ar' : 'en'}
+        />
+        <KpiCard
+          titleEn="Pending Approvals"
+          titleAr="الاعتمادات المعلقة"
+          value={formatNumber(3)}
+          trend="down"
+          trendLabelEn="Requires review"
+          trendLabelAr="تتطلب المراجعة"
+          icon={CheckCircle2}
+          lang={isAr ? 'ar' : 'en'}
+          alert
+        />
+        <KpiCard
+          titleEn="International Guests"
+          titleAr="الضيوف الدوليين"
+          value={formatNumber(45)}
+          trend="neutral"
+          trendLabelEn="Scheduled this cycle"
+          trendLabelAr="مجدولون لهذه الدورة"
+          icon={Globe2}
+          lang={isAr ? 'ar' : 'en'}
+        />
+        <KpiCard
+          titleEn="Budget Utilization"
+          titleAr="استغلال الميزانية"
+          value="62%"
+          trend="up"
+          trendLabelEn="Of approved envelope"
+          trendLabelAr="من الاعتماد المعتمد"
+          icon={WalletCards}
+          lang={isAr ? 'ar' : 'en'}
+        />
+      </StatGrid>
+
+      <TwoColumnLayout
+        left={
+          <Panel className="h-full" padded={false}>
+            <div className="border-b border-sadu-gold/50 p-4 sm:p-5">
+              <h2 className="text-lg font-editorial font-bold text-sadu-charcoal">{isAr ? 'ملخص المحفظة التنفيذية' : 'Executive portfolio summary'}</h2>
+              <p className="mt-1 text-xs leading-relaxed text-sadu-muted">
+                {isAr
+                  ? 'بانتظار تقارير مؤرخة للبرامج الفعلية. تعرض هذه اللوحة بيانات سيناريو للعرض فقط.'
+                  : 'Dated reports for live programmes are pending. This boardroom view presents scenario data for demonstration only.'}
+              </p>
+            </div>
+            <div className="p-4 sm:p-5">
+              <div className="living-record" dir={isAr ? 'rtl' : 'ltr'} style={{ minHeight: 0, background: 'transparent' }}>
+                <DirectorateOversight />
+              </div>
+            </div>
+          </Panel>
+        }
+        right={
+          <Panel className="h-full" padded={false}>
+            <div className="border-b border-sadu-gold/50 p-4 sm:p-5">
+              <h2 className="text-lg font-editorial font-bold text-sadu-charcoal">{isAr ? 'حالة العرض التنفيذي' : 'Boardroom readiness'}</h2>
+              <p className="mt-1 text-xs leading-relaxed text-sadu-muted">{isAr ? 'مؤشرات العرض قبل مراجعة المجلس.' : 'Presentation checks before executive review.'}</p>
+            </div>
+            <dl className="divide-y divide-sadu-gold/30 text-xs">
+              <div className="flex items-center justify-between gap-4 p-4"><dt className="text-sadu-muted">{isAr ? 'نطاق البرامج' : 'Programme scope'}</dt><dd className="font-bold text-sadu-sage">{isAr ? 'مُحمّل' : 'Loaded'}</dd></div>
+              <div className="flex items-center justify-between gap-4 p-4"><dt className="text-sadu-muted">{isAr ? 'تقارير المديرين' : 'Manager reports'}</dt><dd className="font-bold text-amber-700">{isAr ? 'بانتظار التحديث' : 'Awaiting updates'}</dd></div>
+              <div className="flex items-center justify-between gap-4 p-4"><dt className="text-sadu-muted">{isAr ? 'مخاطر مصعّدة' : 'Escalated risks'}</dt><dd className="font-mono font-bold text-sadu-charcoal">{formatNumber(0)}</dd></div>
+              <div className="flex items-center justify-between gap-4 p-4"><dt className="text-sadu-muted">{isAr ? 'مصدر الحالة' : 'Status source'}</dt><dd className="font-bold text-sadu-ink">{isAr ? 'بيانات تجريبية' : 'Scenario data'}</dd></div>
+            </dl>
+          </Panel>
+        }
+        leftSpan="lg:col-span-2"
+      />
+    </section>
+  );
+}
+````
+
+## File: src/components/HeaderNav.tsx
+````typescript
+import React, { useState } from 'react';
+import { Language, RoleKey, DisplayDensity, ExhibitionProgramme, WorkspaceTab } from '../types';
+import { ROLE_PROFILES, PROGRAMMES, INSTITUTIONAL_INFO } from '../data/mockData';
+import { useI18n } from '../context/I18nContext';
+import { useWorkspace } from '../context/WorkspaceContext';
+import { NotificationsPopover } from './NotificationsPopover';
+import { RosterNavLink } from './RosterNavLink';
+import { FINANCE_SCENARIO_LABEL } from '../data/legacyScenario';
+import { DEMO_PROGRAMME } from '../data/livingRecord';
+import { 
+  Globe, 
+  ChevronDown, 
+  UserCheck, 
+  SlidersHorizontal, 
+  BookOpen, 
+  Bell,
+  Sparkles,
+  Search,
+  Menu,
+  Scale,
+  Wrench
+} from 'lucide-react';
+
+export interface HeaderNavProps {
+  scopeLocked?: boolean;
+  lang?: Language;
+  currentRole?: RoleKey;
+  selectedProgramme?: ExhibitionProgramme;
+  density?: DisplayDensity;
+  onRoleChange?: (role: RoleKey) => void;
+  onProgrammeChange?: (programme: ExhibitionProgramme) => void;
+  onToggleLanguage?: () => void;
+  onToggleDensity?: () => void;
+  onOpenStory?: () => void;
+  onOpenPresenter?: () => void;
+  onOpenSearch?: () => void;
+  onOpenMobileMenu?: () => void;
+  onNavigateTab?: (tab: WorkspaceTab) => void;
+}
+
+export const HeaderNav: React.FC<HeaderNavProps> = (props) => {
+  const i18n = useI18n();
+  const workspace = useWorkspace();
+
+  const lang = props.lang ?? i18n.lang;
+  const isAr = lang === 'ar';
+  const { formatNumber } = i18n;
+  const currentRole = props.currentRole ?? workspace.currentRole;
+  const selectedProgramme = props.selectedProgramme ?? workspace.selectedProgramme;
+
+  const onRoleChange = props.onRoleChange ?? workspace.switchRole;
+  const onProgrammeChange = props.onProgrammeChange ?? workspace.setSelectedProgramme;
+  const onToggleLanguage = props.onToggleLanguage ?? i18n.toggleLang;
+  const onToggleDensity = props.onToggleDensity ?? workspace.toggleDensity;
+  const onOpenStory = props.onOpenStory ?? (() => workspace.setExperienceMode('story'));
+  const onOpenPresenter = props.onOpenPresenter ?? (() => workspace.setIsPresenterOpen(true));
+  const onOpenSearch = props.onOpenSearch ?? (() => workspace.setIsCommandPaletteOpen(true));
+  const onOpenMobileMenu = props.onOpenMobileMenu ?? (() => workspace.setIsMobileNavOpen(true));
+  const onNavigateTab = props.onNavigateTab ?? workspace.navigateTab;
+
+  const profile = ROLE_PROFILES[currentRole];
+  const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
+  const [programmeDropdownOpen, setProgrammeDropdownOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+
+  const rolesList: RoleKey[] = [
+    'COORDINATOR', 'SDC_COORDINATOR', 'DIRECTORATE', 'COMMITTEE', 
+    'SAF_TECHNICIAN', 'SMA_VENUE_ADMIN', 'PR_PROTOCOL', 'EDITORIAL', 
+    'FINANCE', 'LOGISTICS', 'ARTIST'
+  ];
+
+  return (
+    <header className="bg-sadu-linen border-b border-sadu-gold sticky top-0 z-40 shadow-xs">
+      {/* Topmost Institutional Authority Strip */}
+      <div className="bg-sadu-ink text-white text-[11px] px-4 sm:px-6 h-8 flex items-center justify-between">
+        
+        {/* FIXED: Language Toggle moved to the Absolute Start */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onToggleLanguage}
+            className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 px-2.5 py-0.5 rounded transition-colors border border-white/10 shrink-0 cursor-pointer"
+          >
+            <Globe className="w-3 h-3 text-amber-200" />
+            <span className="font-bold tracking-wider">{isAr ? 'English' : 'عربي'}</span>
+          </button>
+
+          <span className="font-semibold tracking-wide whitespace-nowrap hidden sm:inline">
+            {isAr ? INSTITUTIONAL_INFO.departmentAr : INSTITUTIONAL_INFO.departmentEn}
+          </span>
+          <span className="text-white/50 hidden sm:inline">·</span>
+          <span className="text-white/80 hidden md:inline whitespace-nowrap">
+            {isAr ? INSTITUTIONAL_INFO.directorateAr : INSTITUTIONAL_INFO.directorateEn}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <span className="text-amber-200/90 font-medium hidden md:inline text-[10px] whitespace-nowrap">
+            {isAr ? "عرض افتراضي · مسارات عمل مقترحة" : "Fictional demonstration · proposed workflows"}
+          </span>
+          <button
+            onClick={() => onProgrammeChange && onProgrammeChange(DEMO_PROGRAMME)}
+            className="text-white hover:text-amber-200 underline text-[11px] cursor-pointer flex items-center gap-1 font-semibold whitespace-nowrap"
+            title={isAr ? 'عرض المحرك الفني الأساسي' : 'View raw state machine engine'}
+          >
+            <Wrench className="w-3 h-3 text-amber-300" />
+            <span>{isAr ? 'محرك الحالات (للتدقيق)' : 'State Machine Audit'}</span>
+          </button>
+          <button
+            onClick={onOpenPresenter}
+            className="text-white hover:text-amber-200 underline text-[11px] cursor-pointer flex items-center gap-1 font-semibold whitespace-nowrap border-s border-white/20 ps-3"
+          >
+            <Sparkles className="w-3 h-3 text-amber-300" />
+            <span>{isAr ? 'ملاحظات العرض' : 'Presentation Notes'}</span>
+          </button>
+        </div>
+      </div>
+
+      <nav className="max-w-7xl mx-auto px-4 sm:px-6 py-2" aria-label={isAr ? 'التسجيل في سجل الفنانين' : 'Artist roster registration'}><RosterNavLink/></nav>
+      {/* Main Brand & Tool Bar */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+        
+        <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+          <button aria-label={isAr ? 'فتح قائمة التنقل' : 'Open navigation menu'} onClick={onOpenMobileMenu} className="w-9 h-9 flex items-center justify-center rounded-md text-sadu-charcoal hover:bg-sadu-sand lg:hidden border border-sadu-gold cursor-pointer shrink-0">
+            <Menu className="w-4 h-4" />
+          </button>
+
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="flex items-baseline gap-2">
+              <span className="font-editorial text-2xl font-bold tracking-tight text-sadu-brick leading-none">
+                {isAr ? 'سدو' : 'SADU'}
+              </span>
+            </div>
+            
+            <div className="hidden lg:flex items-center gap-2 border-s border-sadu-gold ps-3">
+              <span className="px-2 py-0.5 rounded-sm bg-sadu-brick text-white text-[10px] font-bold tracking-wider font-mono whitespace-nowrap">
+                {isAr ? 'الدورة 12' : '12th Edition'}
+              </span>
+              <span className="font-editorial text-lg font-bold text-sadu-charcoal flex items-center gap-1 whitespace-nowrap">
+                <Scale className="w-4 h-4 text-sadu-ochre" />
+                <span>{isAr ? 'ميزان' : 'Mizan'}</span>
+              </span>
+            </div>
+          </div>
+
+          <div className="relative hidden sm:block ms-2">
+            <button disabled={props.scopeLocked} onClick={() => setProgrammeDropdownOpen(!programmeDropdownOpen)} className="flex items-center gap-1.5 px-3 h-9 text-xs font-medium bg-sadu-sand hover:bg-sadu-sand-dark border border-sadu-gold rounded-md transition-colors disabled:cursor-default text-sadu-charcoal shrink-0">
+              <span className="text-sadu-brick font-bold whitespace-nowrap">{isAr ? 'المعرض:' : 'Scope:'}</span>
+              <span className="max-w-[150px] md:max-w-[210px] truncate font-semibold">{props.scopeLocked ? FINANCE_SCENARIO_LABEL[isAr ? 'ar' : 'en'] : isAr ? selectedProgramme.titleAr : selectedProgramme.titleEn}</span>
+              <ChevronDown className="w-3.5 h-3.5 text-sadu-muted shrink-0" />
+            </button>
+            {programmeDropdownOpen && !props.scopeLocked && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setProgrammeDropdownOpen(false)} />
+                <div className="absolute top-full mt-1.5 w-72 bg-sadu-linen border-2 border-sadu-gold rounded-lg shadow-lg z-50 p-2 text-xs">
+                  {PROGRAMMES.map((prog) => (
+                    <button key={prog.id} onClick={() => { onProgrammeChange(prog); setProgrammeDropdownOpen(false); }} className={`w-full text-start px-2.5 py-2 rounded-md hover:bg-sadu-sand transition-colors flex flex-col cursor-pointer ${prog.id === selectedProgramme.id ? 'bg-sadu-sand font-semibold border-s-2 border-sadu-brick' : ''}`}>
+                      <span className="text-sadu-charcoal font-medium">{isAr ? prog.titleAr : prog.titleEn}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        <div className="flex-1 max-w-xs md:max-w-sm hidden md:block">
+          <button data-workspace-search onClick={onOpenSearch} className="w-full h-9 px-3 bg-sadu-sand/70 hover:bg-sadu-sand border border-sadu-gold rounded-md text-xs text-sadu-muted flex items-center justify-between transition-colors cursor-pointer group">
+            <div className="flex items-center gap-2 overflow-hidden">
+              <Search className="w-3.5 h-3.5 text-sadu-brick shrink-0" />
+              <span className="group-hover:text-sadu-charcoal text-[11px] truncate whitespace-nowrap">{isAr ? 'بحث في السجلات والبرامج...' : 'Search records and programmes...'}</span>
+            </div>
+            <kbd className="bg-sadu-linen px-1.5 py-0.5 rounded border border-sadu-gold text-sadu-brick font-bold text-[9px]">⌘K</kbd>
+          </button>
+        </div>
+
+        {/* Right Controls (Language Toggle removed from here) */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <button data-workspace-search aria-label={isAr ? 'البحث في مساحات العمل' : 'Search workspaces'} onClick={onOpenSearch} className="w-9 h-9 flex items-center justify-center text-sadu-charcoal hover:bg-sadu-sand rounded-md border border-sadu-gold md:hidden cursor-pointer shrink-0">
+            <Search className="w-3.5 h-3.5 text-sadu-brick" />
+          </button>
+
+          <div className="relative">
+            <button aria-label={isAr ? `الإشعارات: ${formatNumber(3)} غير مقروءة` : `Notifications: ${formatNumber(3)} unread`} onClick={() => setNotificationsOpen(!notificationsOpen)} className="w-9 h-9 flex items-center justify-center text-xs text-sadu-charcoal hover:bg-sadu-sand rounded-md border border-sadu-gold transition-colors cursor-pointer relative shrink-0">
+              <Bell className="w-4 h-4 text-sadu-brick" />
+              <span aria-hidden="true" className="absolute -top-1 -end-1 w-4 h-4 rounded-full bg-sadu-brick text-white text-[9px] font-bold flex items-center justify-center">
+                {formatNumber(3)}
+              </span>
+            </button>
+            <NotificationsPopover isOpen={notificationsOpen} onClose={() => setNotificationsOpen(false)} lang={lang} onNavigateTab={onNavigateTab} />
+          </div>
+
+          <div className="relative">
+            <button data-role-switcher onClick={() => setRoleDropdownOpen(!roleDropdownOpen)} className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 h-9 text-xs font-semibold bg-sadu-ink text-white rounded-md hover:bg-sadu-ink-dark transition-colors shadow-2xs cursor-pointer shrink-0">
+              <UserCheck className="w-3.5 h-3.5 text-amber-200 shrink-0" />
+              <span className="truncate max-w-[100px] sm:max-w-[140px]">{isAr ? profile?.nameAr : profile?.nameEn}</span>
+              <ChevronDown className="w-3 h-3 shrink-0" />
+            </button>
+            {roleDropdownOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setRoleDropdownOpen(false)} />
+                <div className="absolute end-0 top-full mt-1.5 w-80 bg-sadu-linen border-2 border-sadu-gold rounded-lg shadow-xl z-50 p-2 text-xs h-96 overflow-y-auto">
+                  {rolesList.map((rk) => {
+                    const rp = ROLE_PROFILES[rk];
+                    return (
+                      <button key={rk} onClick={() => { onRoleChange(rk); setRoleDropdownOpen(false); }} className="w-full text-start px-2.5 py-2 rounded-md hover:bg-sadu-sand transition-colors flex flex-col cursor-pointer">
+                        <span className="font-semibold">{isAr ? rp?.nameAr : rp?.nameEn}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
+
+          <button onClick={onOpenStory} className="px-2.5 h-9 text-xs font-semibold text-sadu-brick hover:bg-sadu-sand border border-sadu-brick/40 rounded-md transition-colors hidden md:flex items-center justify-center gap-1 cursor-pointer shrink-0">
+            <BookOpen className="w-3.5 h-3.5 shrink-0" />
+            <span className="whitespace-nowrap">{isAr ? 'القصة' : 'Story'}</span>
+          </button>
+        </div>
+      </div>
+    </header>
   );
 };
 ````
@@ -28571,451 +29021,6 @@ export const ROLE_PROFILES: Record<RoleKey, {
     permittedViews: ['overview', 'approved-scope', 'operations'],
   }
 };
-````
-
-## File: tests/livingRecord.test.ts
-````typescript
-import { test } from 'node:test';
-import assert from 'node:assert/strict';
-import { CASE_ID, createLivingRecord, livingRecordReducer as reduce, selectLivingRecord, DemoActor, DemoAction } from '../src/data/livingRecord.ts';
-import { selectDirectoratePortfolio } from '../src/data/directoratePortfolio.ts';
-import { PRINT_ROUTE_ID, selectPublishingRecord } from '../src/data/publishingRecord.ts';
-import { selectChairmanBrief } from '../src/data/chairmanBrief.ts';
-import { selectReadinessOutlook } from '../src/data/readinessOutlook.ts';
-import { hasPortraitEvidence, leadershipPortraits, type ApprovedPortrait } from '../src/data/leadershipMedia.ts';
-const at = '2026-09-18T08:00:00.000Z';
-const arrival = { type: 'RECEIVE', actor: 'LOGISTICS', crateId: CASE_ID, sealMatches: true, at } as const;
-const report = { type: 'CONDITION', actor: 'TECHNICAL', outcome: 'clear', at } as const;
-const accept = { type: 'ACCEPT', actor: 'MANAGER', reportVersion: 1, acknowledged: true, at } as const;
-const actors: DemoActor[] = ['CHAIRMAN', 'DIRECTORATE', 'MANAGER', 'LOGISTICS', 'TECHNICAL', 'COORDINATOR', 'FINANCE', 'PUBLISHING_MANAGER', 'ARTIST', 'OBSERVER'];
-
-test('leadership media cannot render without source and presentation approval evidence', () => {
-  assert.ok(Object.values(leadershipPortraits).every(asset => !hasPortraitEvidence(asset)));
-  const fixture: ApprovedPortrait = { src: '/assets/leadership/test.jpg', sourceUrl: 'https://example.com/source', credit: 'Test fixture', approvalReference: 'TEST-ONLY', approvedFor: 'sadu-presentation' };
-  assert.equal(hasPortraitEvidence(fixture), true);
-  assert.equal(hasPortraitEvidence({ ...fixture, approvalReference: '' }), false);
-  assert.equal(hasPortraitEvidence({ ...fixture, sourceUrl: '' }), false);
-  assert.equal(hasPortraitEvidence({ ...fixture, src: '/sultan_portrait.jpg' }), false);
-  assert.equal(hasPortraitEvidence(null), false);
-});
-
-test('readiness outlook distinguishes approaching, overdue and unreported milestones', () => {
-  const state = createLivingRecord();
-  const before = selectReadinessOutlook(state, '2026-09-14');
-  assert.equal(before.dueSoon.length, 0);
-  assert.equal(selectReadinessOutlook(state, '2026-09-15').dueSoon.length, 1);
-  assert.equal(selectReadinessOutlook(state, '2026-09-22').dueSoon.length, 1);
-  const late = selectReadinessOutlook(state, '2026-09-23');
-  assert.equal(late.dueSoon.length, 0);
-  assert.equal(late.overdue.length, 1);
-  assert.equal(late.awaitingReports, selectDirectoratePortfolio(state).awaitingUpdateCount);
-  const invalid = selectReadinessOutlook(state, '2026-02-30');
-  assert.equal(invalid.validDate, false);
-  assert.equal(invalid.dueSoon.length, 0);
-  assert.equal(invalid.overdue.length, 0);
-});
-
-test('only manager acceptance clears the approaching delivery risk; unknown reports stay unknown', () => {
-  let state = reduce(reduce(createLivingRecord(), arrival), report);
-  assert.equal(selectReadinessOutlook(state).dueSoon.length, 1);
-  const unknown = selectReadinessOutlook(state).awaitingReports;
-  state = reduce(state, accept);
-  assert.equal(selectReadinessOutlook(state).dueSoon.length, 0);
-  assert.equal(selectReadinessOutlook(state, '2026-09-23').overdue.length, 0);
-  assert.equal(selectReadinessOutlook(state).awaitingReports, unknown);
-  assert.equal(selectReadinessOutlook(state).caseDeadline?.dependencyOpen, false);
-});
-
-test('receipt and evidence do not independently clear the executive readiness gate', () => {
-  let state = createLivingRecord();
-  assert.equal(selectLivingRecord(state).readyCount, 0);
-  assert.equal(selectLivingRecord(state).evidencePercent, 60);
-  state = reduce(state, arrival);
-  assert.equal(selectLivingRecord(state).readyCount, 0);
-  assert.equal(selectLivingRecord(state).evidencePercent, 80);
-  state = reduce(state, report);
-  assert.equal(selectLivingRecord(state).readyCount, 0);
-  assert.equal(selectLivingRecord(state).evidencePercent, 100);
-  state = reduce(state, accept);
-  assert.equal(selectLivingRecord(state).readyCount, 1);
-  assert.equal(state.events.length, 3);
-  assert.equal(state.acceptance?.reportId, 'DEMO-CR-04');
-  assert.equal(state.acceptance?.actor, 'MANAGER');
-});
-
-test('all out-of-sequence, mismatched, unacknowledged and wrong-role attempts are inert', () => {
-  const empty = createLivingRecord();
-  assert.equal(reduce(empty, report), empty);
-  assert.equal(reduce(empty, accept), empty);
-  const mismatch = reduce(empty, { ...arrival, crateId: 'WRONG' });
-  assert.equal(mismatch.receiptIssue, true);
-  assert.equal(reduce(mismatch, report), mismatch);
-  const arrived = reduce(mismatch, arrival);
-  assert.equal(arrived.receiptIssue, false);
-  assert.equal(arrived.events[0].kind, 'receipt-issue');
-  const ready = reduce(arrived, report);
-  assert.equal(reduce(ready, { ...accept, acknowledged: false }), ready);
-  for (const actor of actors) {
-    if (actor !== 'LOGISTICS') assert.equal(reduce(empty, { ...arrival, actor }), empty);
-    if (actor !== 'TECHNICAL') assert.equal(reduce(arrived, { ...report, actor }), arrived);
-    if (actor !== 'MANAGER') assert.equal(reduce(ready, { ...accept, actor }), ready);
-  }
-});
-
-test('condition discrepancies block acceptance and a new report invalidates a stale review', () => {
-  let state = reduce(createLivingRecord(), arrival);
-  state = reduce(state, { ...report, outcome: 'issue' });
-  assert.equal(reduce(state, accept), state);
-  assert.equal(selectLivingRecord(state).nextActor, 'TECHNICAL');
-  state = reduce(state, report);
-  assert.equal(state.condition?.version, 2);
-  assert.deepEqual(state.conditionHistory.map(item => [item.version, item.outcome]), [[1, 'issue'], [2, 'clear']]);
-  assert.equal(reduce(state, accept), state);
-  assert.equal(reduce(state, { ...accept, reportVersion: 2 }).acceptance?.reportVersion, 2);
-});
-
-test('accepted handover cannot be rewritten or double-submitted', () => {
-  const state = reduce(reduce(reduce(createLivingRecord(), arrival), report), accept);
-  for (const action of [arrival, report, accept, { ...report, outcome: 'issue' } as DemoAction]) assert.equal(reduce(state, action), state);
-});
-
-test('missing statement changes evidence completeness independently and requires assigned follow-up', () => {
-  const complete = reduce(reduce(reduce(createLivingRecord(), arrival), report), accept);
-  let state = reduce(complete, { type: 'FLAG_STATEMENT', actor: 'COORDINATOR', at });
-  assert.equal(selectLivingRecord(state).evidencePercent, 80);
-  assert.equal(selectLivingRecord(state).readyCount, 1);
-  assert.equal(reduce(state, { type: 'RESTORE_STATEMENT', actor: 'COORDINATOR', at }), state);
-  state = reduce(state, { type: 'ASSIGN_STATEMENT', actor: 'MANAGER', at });
-  state = reduce(state, { type: 'RESTORE_STATEMENT', actor: 'COORDINATOR', at });
-  assert.equal(selectLivingRecord(state).evidencePercent, 100);
-  assert.equal(state.statementTask, false);
-});
-
-test('Finance and the assigned manager must each act before an executive review item appears', () => {
-  let state = createLivingRecord();
-  const escalate = { type: 'ESCALATE_FINANCE', actor: 'MANAGER', at } as const;
-  assert.equal(reduce(state, escalate), state);
-  state = reduce(state, { type: 'SUBMIT_FINANCE', actor: 'FINANCE', at });
-  assert.equal(selectLivingRecord(state).executiveQueue, 0);
-  assert.equal(reduce(state, { ...escalate, actor: 'FINANCE' }), state);
-  state = reduce(state, escalate);
-  assert.equal(selectLivingRecord(state).executiveQueue, 1);
-  assert.equal(reduce(state, escalate), state);
-});
-
-test('invalid timestamps cannot enter history and reset clears only the fictional session state', () => {
-  const initial = createLivingRecord();
-  assert.equal(reduce(initial, { ...arrival, at: 'invalid' }), initial);
-  const state = reduce(reduce(initial, arrival), report);
-  assert.deepEqual(reduce(state, { type: 'RESET' }), initial);
-  assert.equal(state.events.length, 2);
-});
-
-test('Directorate cannot execute routine manager, technical, logistics or finance actions', () => {
-  const ready = reduce(reduce(createLivingRecord(), arrival), report);
-  const missing = reduce(ready, { type: 'FLAG_STATEMENT', actor: 'COORDINATOR', at });
-  const submitted = reduce(missing, { type: 'SUBMIT_FINANCE', actor: 'FINANCE', at });
-  for (const action of [arrival, report, accept,
-    { type: 'ASSIGN_STATEMENT', at }, { type: 'SUBMIT_FINANCE', at },
-    { type: 'ESCALATE_FINANCE', at }, { type: 'ESCALATE_DELIVERY', at },
-  ]) assert.equal(reduce(submitted, { ...action, actor: 'DIRECTORATE' } as DemoAction), submitted);
-  assert.equal(selectLivingRecord(ready).nextActor, 'MANAGER');
-});
-
-test('Directorate sees reported forecasts and explicit manager escalations without inventing programme progress', () => {
-  let state = createLivingRecord();
-  assert.equal(selectDirectoratePortfolio(state).areas.length, 3);
-  assert.equal(selectDirectoratePortfolio(state).reportedCount, 1);
-  assert.equal(selectDirectoratePortfolio(state).awaitingUpdateCount, 10);
-  assert.equal(selectDirectoratePortfolio(state).activities.length, 11);
-  assert.equal(selectDirectoratePortfolio(state).activitiesAtRisk, 1);
-  assert.equal(selectDirectoratePortfolio(state).escalations.length, 0);
-  for (const actor of actors.filter(actor => actor !== 'MANAGER')) {
-    assert.equal(reduce(state, { type: 'ESCALATE_DELIVERY', actor, at }), state);
-  }
-  state = reduce(state, { type: 'ESCALATE_DELIVERY', actor: 'MANAGER', at });
-  assert.equal(selectDirectoratePortfolio(state).escalations.length, 1);
-  assert.equal(reduce(state, { type: 'ESCALATE_DELIVERY', actor: 'MANAGER', at }), state);
-  state = reduce(reduce(reduce(state, arrival), report), accept);
-  const overview = selectDirectoratePortfolio(state);
-  assert.equal(overview.reportedCount, 1);
-  assert.equal(overview.awaitingUpdateCount, 10);
-  assert.equal(overview.activities.filter(activity => activity.forecast === 'on-track').length, 1);
-  assert.equal(overview.activitiesAtRisk, 0);
-  assert.equal(overview.escalations.length, 0);
-  assert.equal(selectLivingRecord(state).readyCount, 1);
-  assert.equal(state.events.filter(event => event.kind === 'delivery-escalated').length, 1);
-  assert.equal(reduce(state, { type: 'ESCALATE_DELIVERY', actor: 'MANAGER', at }), state);
-});
-
-test('portfolio filters isolate areas while summary totals remain scoped to the whole portfolio', () => {
-  const state = createLivingRecord();
-  for (const [area, count] of [['awards', 3], ['programmes', 6], ['publishing', 2]] as const) {
-    const portfolio = selectDirectoratePortfolio(state, area);
-    assert.equal(portfolio.visibleActivities.length, count);
-    assert.ok(portfolio.visibleActivities.every(activity => activity.area === area));
-    assert.equal(portfolio.activities.length, 11);
-    assert.equal(portfolio.reportedCount, 1);
-    assert.equal(portfolio.activitiesAtRisk, 1);
-  }
-  const references = selectDirectoratePortfolio(state).activities.filter(activity => activity.scope !== 'fictional-case');
-  assert.ok(references.every(activity => activity.source && !activity.due && !activity.managerEn && !activity.escalated && activity.forecast === 'awaiting-update'));
-  assert.equal(references.find(activity => activity.id === 'REF-MAGAZINES')?.scope, 'department-output');
-});
-
-const attachProof = { type: 'ATTACH_PRINT_PROOF', actor: 'COORDINATOR', at } as const;
-const routeProof = { type: 'ROUTE_PRINT_PROOF', actor: 'PUBLISHING_MANAGER', version: 1, editorialChecked: true, rightsChecked: true, route: PRINT_ROUTE_ID, at } as const;
-const releaseProof = { type: 'DECIDE_PRINT_PROOF', actor: 'CHAIRMAN', version: 1, acknowledged: true, outcome: 'release', at } as const;
-const dispatchProof = { type: 'RECORD_PRINT_DISPATCH', actor: 'PUBLISHING_MANAGER', version: 1, at } as const;
-
-test('attaching a proof updates publishing but does not enter the Chairman queue', () => {
-  const initial = createLivingRecord();
-  assert.equal(reduce(initial, routeProof), initial);
-  assert.equal(reduce(initial, releaseProof), initial);
-  let state = reduce(initial, attachProof);
-  assert.equal(selectPublishingRecord(state.publishing).stage, 'manager-review');
-  assert.equal(selectChairmanBrief(state).executiveQueue, 0);
-  for (const change of [{ editorialChecked: false }, { rightsChecked: false }, { route: 'unverified' }, { version: 2 }]) {
-    assert.equal(reduce(state, { ...routeProof, ...change }), state);
-  }
-  state = reduce(state, routeProof);
-  assert.equal(selectChairmanBrief(state).executiveQueue, 1);
-  assert.equal(selectPublishingRecord(state.publishing).stage, 'executive-review');
-  assert.equal(reduce(state, routeProof), state);
-});
-
-test('only assigned sample roles can attach, route, decide or record print dispatch', () => {
-  const initial = createLivingRecord();
-  const attached = reduce(initial, attachProof);
-  const queued = reduce(attached, routeProof);
-  const released = reduce(queued, releaseProof);
-  for (const actor of actors) {
-    if (actor !== 'COORDINATOR') assert.equal(reduce(initial, { ...attachProof, actor }), initial);
-    if (actor !== 'PUBLISHING_MANAGER') assert.equal(reduce(attached, { ...routeProof, actor }), attached);
-    if (actor !== 'CHAIRMAN') assert.equal(reduce(queued, { ...releaseProof, actor }), queued);
-    if (actor !== 'PUBLISHING_MANAGER') assert.equal(reduce(released, { ...dispatchProof, actor }), released);
-  }
-  assert.equal(reduce(queued, { ...releaseProof, acknowledged: false }), queued);
-});
-
-test('executive decision and printer dispatch are separate, version-bound events', () => {
-  const queued = reduce(reduce(createLivingRecord(), attachProof), routeProof);
-  assert.equal(reduce(queued, dispatchProof), queued);
-  const released = reduce(queued, releaseProof);
-  assert.equal(selectChairmanBrief(released).executiveQueue, 0);
-  assert.equal(selectPublishingRecord(released.publishing).stage, 'released');
-  assert.equal(released.publishing.dispatch, null);
-  assert.equal(reduce(released, releaseProof), released);
-  const sent = reduce(released, dispatchProof);
-  assert.equal(selectPublishingRecord(sent.publishing).stage, 'sent');
-  assert.equal(reduce(sent, dispatchProof), sent);
-  assert.equal(reduce(sent, attachProof), sent);
-  assert.equal(sent.events.length, 4);
-});
-
-test('new proof versions invalidate queued and released versions without losing prior events', () => {
-  const queued = reduce(reduce(createLivingRecord(), attachProof), routeProof);
-  const revisedQueue = reduce(queued, attachProof);
-  assert.equal(selectChairmanBrief(revisedQueue).executiveQueue, 0);
-  assert.equal(reduce(revisedQueue, releaseProof), revisedQueue);
-  const released = reduce(queued, releaseProof);
-  const revisedRelease = reduce(released, attachProof);
-  assert.equal(revisedRelease.publishing.version, 2);
-  assert.equal(revisedRelease.publishing.review, null);
-  assert.equal(revisedRelease.publishing.decision, null);
-  assert.equal(reduce(revisedRelease, dispatchProof), revisedRelease);
-  assert.equal(revisedRelease.publishing.proofs.length, 2);
-  assert.ok(revisedRelease.events.some(event => event.reference === 'DEMO-PUB-01/v1/release'));
-  const requeued = reduce(revisedRelease, { ...routeProof, version: 2 });
-  assert.equal(selectChairmanBrief(requeued).executiveQueue, 1);
-});
-
-test('returned proofs require revision and unknown magazine cycles remain unknown', () => {
-  const queued = reduce(reduce(createLivingRecord(), attachProof), routeProof);
-  const returned = reduce(queued, { ...releaseProof, outcome: 'return' });
-  assert.equal(selectPublishingRecord(returned.publishing).stage, 'returned');
-  assert.equal(reduce(returned, dispatchProof), returned);
-  assert.equal(reduce(returned, routeProof), returned);
-  const revised = reduce(returned, attachProof);
-  assert.equal(selectPublishingRecord(revised.publishing).stage, 'manager-review');
-  const brief = selectChairmanBrief(revised);
-  assert.equal(brief.units.length, 4);
-  assert.equal(brief.magazineCycles.length, 7);
-  assert.ok(brief.magazineCycles.every(cycle => cycle.stage === 'awaiting-report'));
-  assert.equal(brief.units.find(unit => unit.id === 'theatre')?.state, 'awaiting-report');
-  assert.equal(brief.units.find(unit => unit.id === 'regional')?.state, 'awaiting-report');
-});
-
-test('finance and publishing queue items aggregate independently; reset clears both', () => {
-  let state = reduce(reduce(createLivingRecord(), attachProof), routeProof);
-  state = reduce(state, { type: 'SUBMIT_FINANCE', actor: 'FINANCE', at });
-  state = reduce(state, { type: 'ESCALATE_FINANCE', actor: 'MANAGER', at });
-  assert.equal(selectChairmanBrief(state).executiveQueue, 2);
-  assert.equal(selectLivingRecord(state).executiveQueue, 2);
-  state = reduce(state, releaseProof);
-  assert.equal(selectChairmanBrief(state).executiveQueue, 1);
-  assert.deepEqual(reduce(state, { type: 'RESET' }), createLivingRecord());
-  assert.equal(reduce(state, { ...attachProof, at: 'invalid' }), state);
-});
-````
-
-## File: package.json
-````json
-{
-  "name": "react-example",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite --port=3000 --host=127.0.0.1",
-    "build": "npm run lint && npm run test:guards && vite build",
-    "preview": "vite preview",
-    "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit",
-    "test:demo": "node --import tsx --test tests/livingRecord.test.ts tests/artistIntake.test.ts tests/intakeWorkflow.test.ts tests/bilingualTimeline.test.tsx",
-    "test:e2e": "playwright test",
-    "test:guards": "node --import tsx --test tests/demoBoundaries.test.ts"
-  },
-  "dependencies": {
-    "@google/genai": "^2.4.0",
-    "@tailwindcss/vite": "^4.1.14",
-    "@vitejs/plugin-react": "^5.0.4",
-    "dotenv": "^17.2.3",
-    "express": "^4.21.2",
-    "jspdf": "^4.2.1",
-    "lucide-react": "^0.546.0",
-    "motion": "^12.23.24",
-    "react": "^19.0.1",
-    "react-dom": "^19.0.1",
-    "react-hook-form": "7.88.0",
-    "vite": "^6.2.3"
-  },
-  "devDependencies": {
-    "@playwright/test": "^1.63.0",
-    "@types/express": "^4.17.21",
-    "@types/node": "^22.14.0",
-    "@types/react": "^19.3.0",
-    "@types/react-dom": "^19.3.0",
-    "autoprefixer": "^10.4.21",
-    "esbuild": "^0.25.0",
-    "tailwindcss": "^4.1.14",
-    "tsx": "^4.21.0",
-    "typescript": "~5.8.2",
-    "vite": "^6.2.3"
-  }
-}
-````
-
-## File: src/components/workspaces/DirectorateDashboard.tsx
-````typescript
-import type { Language } from '../../types';
-import { CalendarDays, CheckCircle2, Globe2, WalletCards } from 'lucide-react';
-import { useI18n } from '../../context/I18nContext';
-import { DirectorateOversight } from '../DirectorateOversight';
-import { KpiCard } from '../common/KpiCard';
-import { PageHeader, Panel, StatGrid, TwoColumnLayout } from '../common/dashboard';
-import { leadershipPeople } from '../../data/leadershipMedia';
-import '../LivingRecordWorkspace.css';
-
-export interface DirectorateDashboardProps { lang?: Language }
-
-export function DirectorateDashboard(_props: DirectorateDashboardProps) {
-  const { isAr, formatNumber } = useI18n();
-  const person = leadershipPeople.director;
-  return (
-    <section className="space-y-6 animate-in fade-in duration-300">
-      <PageHeader
-        eyebrow={isAr ? 'القيادة التنفيذية · لوحة المؤشرات' : 'Executive Directorate · KPI Dashboard'}
-        title={isAr ? 'إشراف الإدارة' : 'Directorate Oversight'}
-        description={isAr ? 'المحفظة التنفيذية والجاهزية التشغيلية.' : 'Executive portfolio and operational readiness.'}
-        actions={
-          <span className="rounded-md border border-sadu-gold bg-sadu-sand px-3 py-2 text-xs font-bold text-sadu-ink">
-            {isAr ? 'نظرة إشرافية مقترحة' : 'Proposed oversight view'}
-          </span>
-        }
-      />
-
-      <StatGrid>
-        <KpiCard
-          titleEn="Active Programs"
-          titleAr="البرامج النشطة"
-          value={formatNumber(10)}
-          trend="neutral"
-          trendLabelEn="Across the portfolio"
-          trendLabelAr="ضمن محفظة البرامج"
-          icon={CalendarDays}
-          lang={isAr ? 'ar' : 'en'}
-        />
-        <KpiCard
-          titleEn="Pending Approvals"
-          titleAr="الاعتمادات المعلقة"
-          value={formatNumber(3)}
-          trend="down"
-          trendLabelEn="Requires review"
-          trendLabelAr="تتطلب المراجعة"
-          icon={CheckCircle2}
-          lang={isAr ? 'ar' : 'en'}
-          alert
-        />
-        <KpiCard
-          titleEn="International Guests"
-          titleAr="الضيوف الدوليين"
-          value={formatNumber(45)}
-          trend="neutral"
-          trendLabelEn="Scheduled this cycle"
-          trendLabelAr="مجدولون لهذه الدورة"
-          icon={Globe2}
-          lang={isAr ? 'ar' : 'en'}
-        />
-        <KpiCard
-          titleEn="Budget Utilization"
-          titleAr="استغلال الميزانية"
-          value="62%"
-          trend="up"
-          trendLabelEn="Of approved envelope"
-          trendLabelAr="من الاعتماد المعتمد"
-          icon={WalletCards}
-          lang={isAr ? 'ar' : 'en'}
-        />
-      </StatGrid>
-
-      <TwoColumnLayout
-        left={
-          <Panel className="h-full" padded={false}>
-            <div className="border-b border-sadu-gold/50 p-4 sm:p-5">
-              <h2 className="text-lg font-editorial font-bold text-sadu-charcoal">{isAr ? 'ملخص المحفظة التنفيذية' : 'Executive portfolio summary'}</h2>
-              <p className="mt-1 text-xs leading-relaxed text-sadu-muted">
-                {isAr
-                  ? 'بانتظار تقارير مؤرخة للبرامج الفعلية. تعرض هذه اللوحة بيانات سيناريو للعرض فقط.'
-                  : 'Dated reports for live programmes are pending. This boardroom view presents scenario data for demonstration only.'}
-              </p>
-            </div>
-            <div className="p-4 sm:p-5">
-              <div className="living-record" dir={isAr ? 'rtl' : 'ltr'} style={{ minHeight: 0, background: 'transparent' }}>
-                <DirectorateOversight />
-              </div>
-            </div>
-          </Panel>
-        }
-        right={
-          <Panel className="h-full" padded={false}>
-            <div className="border-b border-sadu-gold/50 p-4 sm:p-5">
-              <h2 className="text-lg font-editorial font-bold text-sadu-charcoal">{isAr ? 'حالة العرض التنفيذي' : 'Boardroom readiness'}</h2>
-              <p className="mt-1 text-xs leading-relaxed text-sadu-muted">{isAr ? 'مؤشرات العرض قبل مراجعة المجلس.' : 'Presentation checks before executive review.'}</p>
-            </div>
-            <dl className="divide-y divide-sadu-gold/30 text-xs">
-              <div className="flex items-center justify-between gap-4 p-4"><dt className="text-sadu-muted">{isAr ? 'نطاق البرامج' : 'Programme scope'}</dt><dd className="font-bold text-sadu-sage">{isAr ? 'مُحمّل' : 'Loaded'}</dd></div>
-              <div className="flex items-center justify-between gap-4 p-4"><dt className="text-sadu-muted">{isAr ? 'تقارير المديرين' : 'Manager reports'}</dt><dd className="font-bold text-amber-700">{isAr ? 'بانتظار التحديث' : 'Awaiting updates'}</dd></div>
-              <div className="flex items-center justify-between gap-4 p-4"><dt className="text-sadu-muted">{isAr ? 'مخاطر مصعّدة' : 'Escalated risks'}</dt><dd className="font-mono font-bold text-sadu-charcoal">{formatNumber(0)}</dd></div>
-              <div className="flex items-center justify-between gap-4 p-4"><dt className="text-sadu-muted">{isAr ? 'مصدر الحالة' : 'Status source'}</dt><dd className="font-bold text-sadu-ink">{isAr ? 'بيانات تجريبية' : 'Scenario data'}</dd></div>
-            </dl>
-          </Panel>
-        }
-        leftSpan="lg:col-span-2"
-      />
-    </section>
-  );
-}
 ````
 
 ## File: src/data/storyChapters.ts
@@ -31353,7 +31358,7 @@ import { ArtistIntakeProvider } from './context/ArtistIntakeContext';
 import { IntakeDraftBackupProvider } from './context/IntakeDraftBackupContext';
 import { NavigationProvider, useNavigation } from './context/NavigationContext';
 import { RosterRegistration } from './components/RosterRegistration';
-import { DEMO_PROGRAMME_ID, DEMO_PROGRAMME } from './data/livingRecord';
+import { DEMO_PROGRAMME_ID } from './data/livingRecord';
 import { HeaderNav } from './components/HeaderNav';
 import { DemoNotice } from './components/DemoNotice';
 import { AuthoredBand } from './components/AuthoredBand';
@@ -31482,12 +31487,12 @@ function SADUApp() {
   }, []);
 
   const handleSelectRoleAndExplore = (role: RoleKey) => {
-    const connectedDemo = ['DIRECTORATE', 'SDC_COORDINATOR', 'SAF_TECHNICIAN', 'FINANCE', 'LOGISTICS', 'EDITORIAL', 'ARTIST'].includes(role);
     switchRole(role);
-    setSelectedProgramme(connectedDemo ? DEMO_PROGRAMME : PROGRAMMES[0]);
+    // ALWAYS drop the user into the polished UI (12th Calligraphy Biennial)
+    setSelectedProgramme(PROGRAMMES[0]);
     setLeadershipView('CHAIRMAN');
     setExperienceMode('platform');
-    setShowRoleOnboarding(!connectedDemo);
+    setShowRoleOnboarding(true);
   };
 
   const handleRoleChangeFromNav = (role: RoleKey) => {
@@ -31902,11 +31907,14 @@ export function LivingRecordWorkspace() {
   const leadership = actor === 'CHAIRMAN' || actor === 'DIRECTORATE';
   return <div className="living-record" lang={lang} dir={isAr ? 'rtl' : 'ltr'}>
     <header className="lr-toolbar">
-      <div><strong className="lr-brand">{t('SADU', 'سدو')}</strong><span>{t('The Living Record', 'السجل الحي')}</span></div>
+      <div><strong className="lr-brand">{t('SADU', 'سدو')}</strong><span className="px-2 py-0.5 rounded bg-sadu-brick text-white text-xs ms-2">{t('Raw State Machine Audit', 'التدقيق الفني لمحرك الحالات')}</span></div>
       <nav aria-label={t('Global navigation', 'التنقل العام')}><RosterNavLink/><button onClick={() => setExperienceMode('story')}>{t('Presentation', 'العرض التقديمي')}</button><button onClick={toggleLang}>{isAr ? 'English' : 'العربية'}</button></nav>
     </header>
     <main className="lr-main">
-      <div className="lr-context">{actor === 'ARTIST' ? <span>{t('ARTIST INTAKE · FICTIONAL PROGRAMMES', 'تقديم الفنان · برامج افتراضية')}</span> : actor === 'CHAIRMAN' ? <span>{t('SDC INTERNAL OPERATIONS · PROPOSED VIEW', 'العمليات الداخلية لدائرة الثقافة · عرض مقترح')}</span> : actor === 'PUBLISHING_MANAGER' ? <span>{t('SDC PUBLISHING · FICTIONAL ISSUE', 'النشر في دائرة الثقافة · عدد افتراضي')}</span> : actor === 'DIRECTORATE' ? <span>{t('CULTURAL PORTFOLIO · PROPOSED VIEW', 'محفظة البرامج الثقافية · عرض مقترح')}</span> : <span>{t('FICTIONAL WORKFLOWS · SESSION ONLY', 'مسارات افتراضية · لهذه الجلسة فقط')}</span>}</div>
+      <div className="lr-context" role="note">
+        <span>{t('IT AUDIT TOOL · RAW LIVING RECORD · SESSION ONLY', 'أداة تدقيق تقنية · السجل الحي الخام · لهذه الجلسة فقط')}</span>
+      </div>
+      <div className="lr-context">{actor === 'ARTIST' ? <span>{t('ARTIST INTAKE · FICTIONAL PROGRAMMES', 'تقديم الفنان · برامج افتراضية')}</span> : actor === 'CHAIRMAN' ? <span>{t('SDC INTERNAL OPERATIONS · PROPOSED VIEW', 'العمليات الداخلية لدائرة الثقافة · عرض مقترح')}</span> : actor === 'PUBLISHING_MANAGER' ? <span>{t('SDC PUBLISHING · FICTIONAL ISSUE', 'النشر في دائرة الثقافة · عدد افتراضي')}</span> : actor === 'DIRECTORATE' ? <span>{t('CULTURAL PORTFOLIO · PROPOSED VIEW', 'محفظة البرامج الثقافية · عرض مقترح')}</span> : <span className="font-bold text-sadu-brick">{t('RAW ENGINE ROOM · COMPLIANCE AUDIT VIEW', 'غرفة المحرك الأساسية · عرض تدقيق الامتثال')}</span>}</div>
       <nav className="lr-roles" aria-label={t('Demonstration roles', 'الأدوار التجريبية')}>
         {roles.map(role => <button key={role.actor} aria-pressed={actor === role.actor} onClick={() => go(role.actor)}>{isAr ? role.ar : role.en}</button>)}
       </nav>
@@ -31966,7 +31974,7 @@ export function LivingRecordWorkspace() {
       {actor === 'COORDINATOR' ? <section className="lr-panel"><h2>{t('Publishing handover · sample', 'تسليم النشر · تجريبي')}</h2><PublishingCase actor={actor}/></section> : null}
       {actor === 'MANAGER' && <section className="lr-panel"><h2>{t('Escalate a schedule risk', 'تصعيد مخاطر الجدول')}</h2><p>{t('Raise an impact on installation readiness for Directorate attention. Operational follow-up stays with the exhibition manager and assigned team.', 'ارفع أثر المخاطر على الجاهزية للتركيب إلى الإدارة. تبقى المتابعة التشغيلية لدى مدير المعارض والفريق المكلف.')}</p><button className="lr-primary" disabled={Boolean(state.acceptance) || state.deliveryEscalated} onClick={() => dispatch({ type: 'ESCALATE_DELIVERY', ...envelope() })}>{state.acceptance ? t('Delivery dependency resolved', 'عولج متطلب التنفيذ') : state.deliveryEscalated ? t('Schedule risk raised', 'رُفعت مخاطر الجدول') : t('Raise schedule risk to Directorate', 'رفع مخاطر الجدول إلى الإدارة')}</button></section>}
       <p className="lr-announcement" role="status">{actor === 'ARTIST' ? t('Your profile supports separate proposals. The assigned coordinator checks submitted versions.', 'يدعم ملفك مقترحات مستقلة. يراجع المنسق المكلف الإصدارات المقدمة.') : actor === 'DIRECTORATE' ? t('Manager reports update this overview. Operational actions remain in the assigned workspaces.', 'تحدّث تقارير المديرين هذه النظرة العامة. تبقى الإجراءات التشغيلية في مساحات العمل المكلفة.') : newEvent ? t('Latest record: ', 'آخر سجل: ') + eventLabels[newEvent.kind][isAr ? 1 : 0] : t('Explore department oversight, then switch to the assigned manager and delivery roles.', 'استكشف متابعة الأقسام، ثم انتقل إلى المدير المكلف وأدوار التنفيذ.')}</p>
-      <footer className="lr-bottom"><span>{t('Proposed workflow · institutional delegation requires validation', 'مسار عمل مقترح · يلزم التحقق من التفويض المؤسسي')}</span><div>{actor !== 'ARTIST' && <button onClick={() => setModal('reset')}><RotateCcw/>{t('Reset delivery and publishing demo', 'إعادة تجربة التنفيذ والنشر')}</button>}<button onClick={() => setSelectedProgramme(PROGRAMMES[0])}>{t('Other sample workspaces', 'مساحات العمل التجريبية الأخرى')}</button></div></footer>
+      <footer className="lr-bottom"><span>{t('Proposed workflow · institutional delegation requires validation', 'مسار عمل مقترح · يلزم التحقق من التفويض المؤسسي')}</span><div>{actor !== 'ARTIST' && <button onClick={() => setModal('reset')}><RotateCcw/>{t('Reset delivery and publishing demo', 'إعادة تجربة التنفيذ والنشر')}</button>}<button onClick={() => setSelectedProgramme(PROGRAMMES[0])}>{t('Return to Executive Dashboards', 'العودة للوحات القيادة التنفيذية')}</button></div></footer>
     </main>
 
     <dialog ref={dialogRef} className="lr-dialog" aria-labelledby="lr-dialog-title" onCancel={closeDossier} onClose={closeDossier}>

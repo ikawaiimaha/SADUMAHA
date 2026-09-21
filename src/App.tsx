@@ -30,6 +30,7 @@ import { InstitutionalBreadcrumb } from './components/InstitutionalBreadcrumb';
 import { LegacyScenarioNotice } from './components/LegacyScenarioNotice';
 import { isFinanceScenario } from './data/legacyScenario';
 import { WorkspaceNavBar } from './components/WorkspaceNavBar';
+import { RehearsalTeleprompter } from './components/RehearsalTeleprompter';
 import { AppShell } from './components/layout/AppShell';
 
 // Workspace Views
@@ -236,7 +237,7 @@ export default function App() {
   return (
     <I18nProvider initialLang="ar">
       <WorkspaceProvider initialRole="DIRECTORATE" initialExperienceMode="story">
-        <LivingRecordProvider><ArtistIntakeProvider><IntakeDraftBackupProvider><NavigationProvider><SADUApp /></NavigationProvider></IntakeDraftBackupProvider></ArtistIntakeProvider></LivingRecordProvider>
+        <LivingRecordProvider><ArtistIntakeProvider><IntakeDraftBackupProvider><NavigationProvider><RehearsalTeleprompter /><SADUApp /></NavigationProvider></IntakeDraftBackupProvider></ArtistIntakeProvider></LivingRecordProvider>
       </WorkspaceProvider>
     </I18nProvider>
   );
