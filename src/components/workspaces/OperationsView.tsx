@@ -756,7 +756,7 @@ export const OperationsView: React.FC<OperationsViewProps> = (props) => {
                   {isAr ? 'فحص الأحمال الإنشائية وهندسة الإضاءة والمقاولات الفنية' : 'Structural Load Capacity & External Fabrication Gate'}
                 </h3>
                 <span className="text-xs text-sadu-muted">
-                  {isAr ? 'المسؤول: م. طارق منصور (رئيس الفريق الفني)' : 'Accountable: Eng. Tariq Mansour (Chief Technician)'}
+                  {isAr ? 'المسؤول: محمد جنيد (الاعتمادات الفنية والصوتيات)' : 'Accountable: Mohamed Junaid (Technical & AV Approvals)'}
                 </span>
               </div>
               
