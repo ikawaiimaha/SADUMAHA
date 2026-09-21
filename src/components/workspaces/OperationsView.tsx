@@ -240,7 +240,7 @@ export const OperationsView: React.FC<OperationsViewProps> = (props) => {
           <div>
             <div className="flex items-center gap-2 text-xs font-bold text-sadu-ink uppercase tracking-wider mb-1">
               <Wrench className="w-4 h-4" />
-              <span>{isAr ? 'العمليات التخصصية الميدانية المتزامنة' : 'Parallel Specialist Operations & Technical Gates'}</span>
+              <span>{isAr ? 'العمليات الميدانية المتزامنة' : 'Parallel Operations and Review'}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-editorial font-bold text-sadu-charcoal">
               {isAr ? 'مسارات التنفيذ والتحقق التخصصي' : 'Specialist Workstreams & Execution Ledger'}

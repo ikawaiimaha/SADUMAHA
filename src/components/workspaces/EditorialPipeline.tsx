@@ -313,7 +313,7 @@ export const EditorialPipeline: React.FC = () => {
               className="px-3 py-1.5 text-xs font-bold bg-sadu-linen hover:bg-sadu-sand text-sadu-ink border border-sadu-gold rounded transition-colors flex items-center gap-1.5 cursor-pointer"
             >
               <Languages className="w-3.5 h-3.5 text-sadu-brick" />
-              <span>{showRuleDetails ? (isAr ? 'إخفاء تفاصيل المسار' : 'Hide Pipeline Flow') : (isAr ? 'عرض تفاصيل المسار' : 'View Pipeline Flow')}</span>
+              <span>{showRuleDetails ? (isAr ? 'إخفاء تفاصيل المراجعة' : 'Hide Review Stages') : (isAr ? 'عرض مراحل المراجعة' : 'View Review Stages')}</span>
               {showRuleDetails ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
             </button>
           </div>
@@ -392,7 +392,7 @@ export const EditorialPipeline: React.FC = () => {
             }`}
           >
             <FileText className="w-3.5 h-3.5" />
-            <span>{isAr ? 'نصوص المونوغراف والنقوش الشعرية' : 'Curatorial Monograph & Poetry Pipeline'}</span>
+            <span>{isAr ? 'نصوص المونوغراف والنقوش الشعرية' : 'Curatorial Monograph & Poetry Review'}</span>
             <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-white/20 font-mono">
               {formatNumber(assets.length)}
             </span>

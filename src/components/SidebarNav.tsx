@@ -71,7 +71,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
       case 'ARTIST':
         return { en: 'Artist Studio', ar: 'استوديو الفنان' };
       case 'ARCHIVE':
-        return { en: "Sample archive", ar: 'أرشيف تجريبي' };
+        return { en: 'Archive', ar: 'الأرشيف' };
       default:
         return { en: 'Role Overview', ar: 'نظرة عامة على الدور' };
     }
@@ -93,18 +93,18 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
     { 
       id: 'overview', 
       icon: LayoutDashboard, 
-      labelEn: overviewLabel.en, 
-      labelAr: overviewLabel.ar,
+      labelEn: 'Dashboard',
+      labelAr: 'الرئيسية',
       tagEn: 'Primary',
       tagAr: 'الرئيسي',
-      descriptionEn: 'Role-specific active operating desk and immediate tasks',
-      descriptionAr: 'المكتب التشغيلي المباشر والمهام العاجلة الخاصة بالدور'
+      descriptionEn: 'Overview of the current role and priority matters',
+      descriptionAr: 'نظرة عامة على الدور الحالي والموضوعات ذات الأولوية'
     },
     { 
       id: 'dossiers', 
       icon: FileText, 
-      labelEn: 'Curatorial Dossiers', 
-      labelAr: 'ملفات الاختيار والتحكيم',
+      labelEn: 'Selection',
+      labelAr: 'الاختيار',
       tagEn: 'Jury',
       tagAr: 'التحكيم',
       descriptionEn: 'Artwork proposals, visual scoring, and jury evaluations',
@@ -113,8 +113,8 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
     { 
       id: 'approved-scope', 
       icon: Lock, 
-      labelEn: 'Approved Scope (v1.2)', 
-      labelAr: 'النطاق المعتمد (v1.2)',
+      labelEn: 'Approved Scope',
+      labelAr: 'النطاق المعتمد',
       tagEn: 'Frozen',
       tagAr: 'مجمد',
       descriptionEn: 'Certified specs, dimensions, weights, and production requirements',
@@ -123,8 +123,8 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
     { 
       id: 'contracts', 
       icon: FileSignature, 
-      labelEn: 'Contracts & Legal', 
-      labelAr: 'العقود النظامية والتواقيع',
+      labelEn: 'Contracts',
+      labelAr: 'العقود',
       tagEn: 'Legal',
       tagAr: 'قانوني',
       descriptionEn: 'Digital signature workflows, LPOs, and financial compliance',
@@ -133,8 +133,8 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
     { 
       id: 'operations', 
       icon: Wrench, 
-      labelEn: 'Specialist Operations', 
-      labelAr: 'العمليات التخصصية والميدان',
+      labelEn: 'Operations',
+      labelAr: 'العمليات',
       tagEn: 'Gates',
       tagAr: 'بوابات',
       descriptionEn: 'Technical venue permits, protocol visas, editorial, and freight',
@@ -143,8 +143,8 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
     { 
       id: 'communications', 
       icon: MessageSquare, 
-      labelEn: 'Sample messages',
-      labelAr: 'رسائل تجريبية',
+      labelEn: 'Communications',
+      labelAr: 'المراسلات',
       tagEn: 'Audit',
       tagAr: 'توثيق',
       descriptionEn: 'Audit-logged direct correspondence between artists and leads',
@@ -153,8 +153,8 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
     { 
       id: 'archive', 
       icon: Archive, 
-      labelEn: 'Archive & Closeout', 
-      labelAr: 'أرشيف وإغلاق تجريبيان',
+      labelEn: 'Archive',
+      labelAr: 'الأرشيف',
       tagEn: "Sample",
       tagAr: "تجريبي",
       descriptionEn: "Session-only sample documents and closeout states; no certificates",

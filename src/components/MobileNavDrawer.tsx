@@ -62,13 +62,13 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
   const profile = ROLE_PROFILES[currentRole];
 
   const allTabs = [
-    { id: 'overview' as WorkspaceTab, icon: LayoutDashboard, labelEn: 'Perspective Desk', labelAr: 'مكتب الدور النشط', tag: currentRole },
-    { id: 'dossiers' as WorkspaceTab, icon: FileText, labelEn: 'Curatorial Dossiers', labelAr: 'ملفات الاختيار والتحكيم', tag: 'Jury' },
-    { id: 'approved-scope' as WorkspaceTab, icon: Lock, labelEn: 'Approved Scope (v1.2)', labelAr: 'النطاق المعتمد والمواصفات', tag: 'Frozen' },
-    { id: 'contracts' as WorkspaceTab, icon: FileSignature, labelEn: 'Contracts & Legal', labelAr: 'العقود النظامية والتواقيع', tag: 'Legal' },
-    { id: 'operations' as WorkspaceTab, icon: Wrench, labelEn: 'Specialist Operations', labelAr: 'العمليات التخصصية والميدان', tag: 'Gates' },
-    { id: 'communications' as WorkspaceTab, icon: MessageSquare, labelEn: 'Sample messages', labelAr: 'رسائل تجريبية', tag: 'Log' },
-    { id: 'archive' as WorkspaceTab, icon: Archive, labelEn: 'Sample archive & closeout', labelAr: 'أرشيف وإغلاق تجريبيان', tag: 'Sample' },
+    { id: 'overview' as WorkspaceTab, icon: LayoutDashboard, labelEn: 'Dashboard', labelAr: 'الرئيسية' },
+    { id: 'dossiers' as WorkspaceTab, icon: FileText, labelEn: 'Selection', labelAr: 'الاختيار' },
+    { id: 'approved-scope' as WorkspaceTab, icon: Lock, labelEn: 'Approved Scope', labelAr: 'النطاق المعتمد' },
+    { id: 'contracts' as WorkspaceTab, icon: FileSignature, labelEn: 'Contracts', labelAr: 'العقود' },
+    { id: 'operations' as WorkspaceTab, icon: Wrench, labelEn: 'Operations', labelAr: 'العمليات' },
+    { id: 'communications' as WorkspaceTab, icon: MessageSquare, labelEn: 'Communications', labelAr: 'المراسلات' },
+    { id: 'archive' as WorkspaceTab, icon: Archive, labelEn: 'Archive', labelAr: 'الأرشيف' },
   ];
 
   const permittedViews = profile?.permittedViews || ['overview'];
@@ -165,7 +165,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
         {/* Main Workspace Navigation */}
         <div className="p-3 flex-1 space-y-1">
           <span className="px-2 py-1 text-[10px] font-bold text-sadu-brick uppercase tracking-wider block">
-            {isAr ? 'مسارات العمل والوثائق' : 'Workspace Ledgers'}
+            {isAr ? 'الأقسام والسجلات' : 'Institutional Sections'}
           </span>
 
           {tabs.map((tab) => {
@@ -188,11 +188,6 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
                   <Icon className="w-4 h-4 shrink-0" />
                   <span>{isAr ? tab.labelAr : tab.labelEn}</span>
                 </div>
-                <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${
-                  isActive ? 'bg-white/20 text-white' : 'bg-sadu-gold/30 text-sadu-ink'
-                }`}>
-                  {tab.tag}
-                </span>
               </button>
             );
           })}
@@ -242,7 +237,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
             className="w-full p-2 bg-sadu-ink text-white font-semibold rounded-md flex items-center justify-center gap-2 hover:bg-sadu-ink-dark cursor-pointer shadow-2xs"
           >
             <Sparkles className="w-4 h-4 text-amber-300" />
-            <span>{isAr ? 'لوحة الشرح المعماري' : 'Presenter Architecture'}</span>
+            <span>{isAr ? 'ملاحظات العرض' : 'Presentation Notes'}</span>
           </button>
         </div>
       </div>

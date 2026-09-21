@@ -354,8 +354,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       {
         id: 'ws-overview',
         category: 'workspaces',
-        title: isAr ? 'مكتب الدور النشط / لوحة المتابعة الرئيسية' : 'My Perspective Desk / Control Overview',
-        subtitle: isAr ? 'لوحة التحكم والعمليات الخاصة بالدور النشط ومتابعة بنود الانتباه' : 'Active role operations overview and priority triage desk',
+        title: isAr ? 'الرئيسية / لوحة المتابعة' : 'Dashboard / Overview',
+        subtitle: isAr ? 'نظرة عامة على الدور الحالي والموضوعات ذات الأولوية' : 'Overview of the current role and priority matters',
         icon: LayoutDashboard,
         badge: 'Desk',
         action: () => {

@@ -50,7 +50,7 @@ export function ChairmanBrief({ onDirectorate, onPublishing, onFinance }: Props)
         <ul className="lr-magazine-grid">{brief.magazineCycles.map(magazine => <li key={magazine.id}><strong>{t(magazine.en, magazine.ar)}</strong><span>{t('Awaiting report', 'بانتظار التقرير')}</span></li>)}</ul>
         <ClaimProvenance sourceKey="magazines" isAr={isAr}/>
         <div className="lr-print-summary"><h3>{t('Connected publishing example', 'مثال النشر المترابط')}</h3><p className="lr-small">{t('Fictional cultural bulletin · separate from the seven titles', 'نشرة ثقافية افتراضية · مستقلة عن العناوين السبعة')}</p><span className="lr-status" data-testid="chairman-publishing-stage">{printStages[brief.publishing.stage][isAr ? 1 : 0]}</span></div>
-        <button className="lr-link" onClick={onPublishing}>{t('Open sample publishing pipeline', 'فتح مسار النشر التجريبي')}</button>
+        <button className="lr-link" onClick={onPublishing}>{t('Open sample publishing review', 'فتح مراجعة النشر التجريبية')}</button>
       </section>
       <section className="lr-panel">
         <p className="lr-eyebrow">{t('03 · EXECUTIVE REVIEW', '٠٣ · المراجعة التنفيذية')}</p>

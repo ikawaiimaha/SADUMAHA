@@ -24,7 +24,7 @@ export const PresenterDrawer: React.FC<PresenterDrawerProps> = ({ isOpen, onClos
           <div className="flex items-center justify-between pb-4 border-b border-sadu-gold">
             <div className="flex items-center gap-2 text-xs font-bold text-sadu-brick uppercase tracking-wider">
               <Compass className="w-4 h-4" />
-              <span>{isAr ? 'لوحة الشرح المعماري للمقدم والمقيمين' : 'Presenter & Architectural Evaluation Notes'}</span>
+              <span>{isAr ? 'ملاحظات العرض والتقييم' : 'Presentation and evaluation notes'}</span>
             </div>
             <button
               onClick={onClose}
@@ -68,7 +68,7 @@ export const PresenterDrawer: React.FC<PresenterDrawerProps> = ({ isOpen, onClos
               <p className="text-sadu-charcoal leading-relaxed">
                 {isAr
                   ? "توضح المعاينات التجريبية فصل المعلومات. لا يُعرض تفويض موثق أو خزنة مستندات خاصة أو خدمة سفر متصلة."
-                  : "Sample views illustrate separation of information. No authenticated authorization, private document vault or connected travel service is demonstrated."}
+                  : "Sample views illustrate separation of information. No verified authorization, private document vault or connected travel service is demonstrated."}
               </p>
             </div>
 

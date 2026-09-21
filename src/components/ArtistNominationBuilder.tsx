@@ -207,7 +207,7 @@ export const ArtistNominationBuilder: React.FC<ArtistNominationBuilderProps> = (
               }}
               className="w-full sm:w-auto px-6 py-2 text-xs font-bold text-white bg-sadu-brick hover:bg-sadu-brick-dark rounded-md transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
             >
-              <span>{isAr ? 'العودة لملفات القراءة والتقييم' : 'Return to Curatorial Dossiers'}</span>
+              <span>{isAr ? 'العودة إلى الاختيار' : 'Return to Selection'}</span>
               <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
             </button>
           </div>

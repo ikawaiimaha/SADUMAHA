@@ -100,7 +100,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = (props) => {
             className="text-white hover:text-amber-200 underline text-[11px] cursor-pointer flex items-center gap-1 font-semibold whitespace-nowrap"
           >
             <Sparkles className="w-3 h-3 text-amber-300" />
-            <span>{isAr ? 'لوحة الشرح المعماري' : 'Presenter Architecture'}</span>
+            <span>{isAr ? 'ملاحظات العرض' : 'Presentation Notes'}</span>
           </button>
         </div>
       </div>
@@ -157,7 +157,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = (props) => {
           <button data-workspace-search onClick={onOpenSearch} className="w-full h-9 px-3 bg-sadu-sand/70 hover:bg-sadu-sand border border-sadu-gold rounded-md text-xs text-sadu-muted flex items-center justify-between transition-colors cursor-pointer group">
             <div className="flex items-center gap-2 overflow-hidden">
               <Search className="w-3.5 h-3.5 text-sadu-brick shrink-0" />
-              <span className="group-hover:text-sadu-charcoal text-[11px] truncate whitespace-nowrap">{isAr ? 'بحث سريع وأوامر...' : 'Search workspaces & gates...'}</span>
+              <span className="group-hover:text-sadu-charcoal text-[11px] truncate whitespace-nowrap">{isAr ? 'بحث في السجلات والبرامج...' : 'Search records and programmes...'}</span>
             </div>
             <kbd className="bg-sadu-linen px-1.5 py-0.5 rounded border border-sadu-gold text-sadu-brick font-bold text-[9px]">⌘K</kbd>
           </button>

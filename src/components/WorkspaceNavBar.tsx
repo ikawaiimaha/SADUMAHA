@@ -39,39 +39,7 @@ export const WorkspaceNavBar: React.FC<WorkspaceNavBarProps> = (props) => {
   const roleProfile = ROLE_PROFILES[currentRole];
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Dynamic label for the overview tab based on role
-  const getRoleOverviewLabel = () => {
-    switch (currentRole) {
-      case 'DIRECTORATE':
-      case 'LEADERSHIP':
-        return { en: 'Executive Directorate', ar: 'القيادة التنفيذية' };
-      case 'COORDINATOR':
-        return { en: 'Control Room (41)', ar: `غرفة التحكم (${i18n.formatNumber(41)})` };
-      case 'COMMITTEE':
-        return { en: 'Curatorial Jury', ar: 'التحكيم الفني' };
-      case 'TECHNICAL_MUSEUM':
-      case 'TECHNICAL':
-      case 'VENUE_ADMIN':
-        return { en: 'Technical & SAM Loop', ar: 'الهندسة وتصاريح SAM' };
-      case 'PR_PROTOCOL':
-      case 'PR_VISA':
-        return { en: 'PR & Protocol Gate', ar: 'المراسم والبروتوكول' };
-      case 'EDITORIAL':
-        return { en: 'Editorial & Catalogue', ar: 'التحرير والكتالوج' };
-      case 'FINANCE':
-        return { en: 'Finance & Compliance', ar: 'المالية والمشتريات' };
-      case 'LOGISTICS':
-        return { en: 'Freight & Movement', ar: 'الشحن واللوجستيات' };
-      case 'ARTIST':
-        return { en: 'Artist Studio', ar: 'استوديو الفنان' };
-      case 'ARCHIVE':
-        return { en: "Sample archive", ar: 'أرشيف تجريبي' };
-      default:
-        return { en: 'Perspective Desk', ar: 'مكتب المنظور' };
-    }
-  };
-
-  const overviewLabel = getRoleOverviewLabel();
+  const overviewLabel = { en: 'Dashboard', ar: 'الرئيسية' };
 
   const allTabs = [
     { 
@@ -80,45 +48,44 @@ export const WorkspaceNavBar: React.FC<WorkspaceNavBarProps> = (props) => {
       labelEn: overviewLabel.en, 
       labelAr: overviewLabel.ar,
       isPrimaryRole: true,
-      badge: isAr ? 'مكتبي' : 'My Desk'
+      badge: isAr ? 'الرئيسية' : 'Main'
     },
     { 
       id: 'dossiers' as WorkspaceTab, 
       icon: FileText, 
-      labelEn: 'Curatorial Selection', 
-      labelAr: 'ملفات الاختيار' 
+      labelEn: 'Selection',
+      labelAr: 'الاختيار'
     },
     { 
       id: 'approved-scope' as WorkspaceTab, 
       icon: Lock, 
-      labelEn: 'Approved Scope (v1.2)', 
-      labelAr: 'النطاق المعتمد',
-      badge: 'v1.2'
+      labelEn: 'Approved Scope',
+      labelAr: 'النطاق المعتمد'
     },
     { 
       id: 'contracts' as WorkspaceTab, 
       icon: FileSignature, 
-      labelEn: 'Contracts & Legal', 
-      labelAr: 'العقود النظامية' 
+      labelEn: 'Contracts',
+      labelAr: 'العقود'
     },
     { 
       id: 'operations' as WorkspaceTab, 
       icon: Wrench, 
-      labelEn: 'Specialist Operations', 
-      labelAr: 'العمليات التخصصية',
+      labelEn: 'Operations',
+      labelAr: 'العمليات',
       hasAlert: true
     },
     { 
       id: 'communications' as WorkspaceTab, 
       icon: MessageSquare, 
-      labelEn: 'Sample messages',
-      labelAr: 'رسائل تجريبية'
+      labelEn: 'Communications',
+      labelAr: 'المراسلات'
     },
     { 
       id: 'archive' as WorkspaceTab, 
       icon: ArchiveIcon, 
-      labelEn: "Sample archive",
-      labelAr: "أرشيف تجريبي"
+      labelEn: 'Archive',
+      labelAr: 'الأرشيف'
     },
   ];
 
@@ -177,7 +144,7 @@ export const WorkspaceNavBar: React.FC<WorkspaceNavBarProps> = (props) => {
                   </span>
                 )}
 
-                {/* Subtle Alert Indicator on Specialist Operations */}
+                {/* Subtle alert indicator on Operations */}
                 {tab.hasAlert && !isActive && (
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse" />
                 )}

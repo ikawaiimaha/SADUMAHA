@@ -173,7 +173,7 @@ export const ArchiveView: React.FC<ArchiveViewProps> = (props) => {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <PageHeader
-        eyebrow={isAr ? 'اليوم صفر · استيعاب البيانات التاريخية' : 'Day Zero · Historical Data Ingestion'}
+        eyebrow={isAr ? 'اليوم الأول · مراجعة السجلات التاريخية' : 'Day Zero · Historical Records Review'}
         title={isAr ? 'ترحيل ذاكرة بينالي الخط' : 'Calligraphy Biennial Legacy Migration'}
         description={isAr ? 'لوحة متابعة تجريبية لترحيل الدورات الإحدى عشرة السابقة إلى سجل أرشيفي موحد وقابل للتدقيق.' : 'A boardroom-ready view of the eleven prior editions moving into one auditable archival record.'}
         actions={
@@ -197,8 +197,8 @@ export const ArchiveView: React.FC<ArchiveViewProps> = (props) => {
             <div className="border-b border-sadu-gold/50 p-4 sm:p-5">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <div className="flex items-center gap-2 text-sadu-brick"><Database className="h-4 w-4" /><span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em]">ARCHIVE_PIPELINE_V1</span></div>
-                  <h2 className="mt-2 text-lg font-editorial font-bold text-sadu-charcoal">{isAr ? 'مراحل نموذج الأرشيف' : 'Archival record pipeline'}</h2>
+                  <div className="flex items-center gap-2 text-sadu-brick"><Database className="h-4 w-4" /><span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em]">ARCHIVE_RECORDS_REVIEW</span></div>
+                  <h2 className="mt-2 text-lg font-editorial font-bold text-sadu-charcoal">{isAr ? 'مراحل مراجعة الأرشيف' : 'Archival review stages'}</h2>
                   <p className="mt-1 text-xs leading-relaxed text-sadu-muted">{isAr ? 'تتبع دورة حياة السجل من المصدر الأصلي حتى اعتماده كسجل قابل للعرض.' : 'A normalized lifecycle from original source through provenance review to a board-ready record.'}</p>
                 </div>
                 <span className="shrink-0 rounded border border-sadu-gold bg-sadu-sand px-2 py-1 font-mono text-[10px] font-bold text-sadu-ink">{isAr ? '١١ دورة' : '11 editions'}</span>
@@ -233,7 +233,7 @@ export const ArchiveView: React.FC<ArchiveViewProps> = (props) => {
 
       <Panel>
         <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div><h2 className="flex items-center gap-2 text-lg font-editorial font-bold text-sadu-charcoal"><Archive className="h-5 w-5 text-sadu-brick" />{isAr ? 'قنوات المصادر المعلقة' : 'Pending source ingestion'}</h2><p className="mt-1 text-xs text-sadu-muted">{isAr ? 'حالة المعالجة حسب نوع الحافظة الأصلية.' : 'Processing status by original container type.'}</p></div>
+          <div><h2 className="flex items-center gap-2 text-lg font-editorial font-bold text-sadu-charcoal"><Archive className="h-5 w-5 text-sadu-brick" />{isAr ? 'السجلات قيد المراجعة' : 'Pending records review'}</h2><p className="mt-1 text-xs text-sadu-muted">{isAr ? 'حالة المراجعة حسب مصدر السجل الأصلي.' : 'Review status by original record source.'}</p></div>
           <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-sadu-muted">{isAr ? 'آخر فحص: اليوم 09:40' : 'Last scan: today 09:40'}</span>
         </div>
         <div className="grid gap-4 lg:grid-cols-3">
@@ -247,7 +247,7 @@ export const ArchiveView: React.FC<ArchiveViewProps> = (props) => {
           <div>
             <div className="flex items-center gap-2 text-xs font-bold text-sadu-brick uppercase tracking-wider mb-1">
               <Archive className="w-4 h-4" />
-              <span>{isAr ? "الذاكرة المؤسسية · أرشيف تجريبي" : "Institutional memory · sample archive"}</span>
+              <span>{isAr ? 'الذاكرة المؤسسية · الأرشيف' : 'Institutional memory · archive'}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-editorial font-bold text-sadu-charcoal">
               {isAr ? "إغلاق ملف وقائمة مستندات للتجربة" : "Sample dossier closeout and document list"}

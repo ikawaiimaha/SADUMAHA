@@ -128,7 +128,7 @@ export const NewContractModal: React.FC<NewContractModalProps> = ({
   };
 
   const handleUaePass = () => {
-    showSignatureToast(isAr ? 'تمت محاكاة المصادقة عبر UAE PASS للتجربة' : 'UAE PASS Authentication Simulated for Demo');
+    showSignatureToast(isAr ? 'تمت محاكاة التحقق من الهوية عبر UAE PASS للتجربة' : 'UAE PASS Identity Check Simulated for Demo');
   };
 
   const handleGlobalEcdsa = () => {
@@ -380,8 +380,8 @@ export const NewContractModal: React.FC<NewContractModalProps> = ({
               </div>
 
               <SignaturePanel
-                titleEn="Digital Authorization"
-                titleAr="التفويض الرقمي"
+                titleEn="Digital Signature"
+                titleAr="التوقيع الرقمي"
                 lang={currentLang}
                 onUaePass={handleUaePass}
                 onGlobalEcdsa={handleGlobalEcdsa}

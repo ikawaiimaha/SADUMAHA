@@ -44,13 +44,13 @@ export const InstitutionalBreadcrumb: React.FC<InstitutionalBreadcrumbProps> = (
   const ChevronIcon = isAr ? ChevronLeft : ChevronRight;
 
   const tabLabels: Record<WorkspaceTab, { en: string; ar: string }> = {
-    overview: { en: 'Perspective Desk', ar: 'مكتب الدور النشط' },
-    dossiers: { en: 'Curatorial Selection Dossiers', ar: 'ملفات الاختيار والتحكيم' },
-    'approved-scope': { en: 'Approved Scope Register (v1.2)', ar: 'سجل النطاق المعتمد (v1.2)' },
-    contracts: { en: 'Bilateral Contracts & Legal Sign-off', ar: 'العقود الثنائية والاعتماد' },
-    operations: { en: 'Specialist Operations & Engineering Gates', ar: 'العمليات التخصصية والهندسية' },
-    communications: { en: "Sample messages · not sent", ar: 'رسائل تجريبية · لا إرسال' },
-    archive: { en: "Sample archive & closeout", ar: 'أرشيف وإغلاق تجريبيان' },
+    overview: { en: 'Dashboard', ar: 'الرئيسية' },
+    dossiers: { en: 'Selection', ar: 'الاختيار' },
+    'approved-scope': { en: 'Approved Scope', ar: 'النطاق المعتمد' },
+    contracts: { en: 'Contracts', ar: 'العقود' },
+    operations: { en: 'Operations', ar: 'العمليات' },
+    communications: { en: 'Communications', ar: 'المراسلات' },
+    archive: { en: 'Archive', ar: 'الأرشيف' },
   };
 
   return (

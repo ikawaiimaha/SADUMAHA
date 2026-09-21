@@ -173,7 +173,7 @@ export const CommunicationView: React.FC<CommunicationViewProps> = (props) => {
             <p className="text-xs sm:text-sm text-sadu-muted mt-1">
               {isAr
                 ? "مسودات ورسائل تجريبية داخل هذا المتصفح فقط. لا تُرسل ولا تُحفظ في سجل مؤسسي دائم."
-                : "Draft/sample messages in this browser only. Nothing is transmitted or stored in a durable institutional record."}
+                : "Draft messages remain in this browser only. Nothing is transmitted or stored in a durable institutional record."}
             </p>
           </div>
 

@@ -11,8 +11,8 @@ export interface SignaturePanelProps {
 }
 
 export const SignaturePanel: React.FC<SignaturePanelProps> = ({
-  titleEn = 'Authentication & signature route',
-  titleAr = 'مسار المصادقة والتوقيع',
+  titleEn = 'Identity & signature route',
+  titleAr = 'مسار الهوية والتوقيع',
   lang = 'en',
   onUaePass,
   onGlobalEcdsa,
