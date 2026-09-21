@@ -27,6 +27,12 @@ npm run preview -- --host 127.0.0.1
 
 `lint` runs TypeScript checking. `build` runs that check and then produces the Vite application in `dist/`. No API key or environment file is required for this demonstration.
 
+## Deployment & Data Sovereignty
+
+SADU utilizes a secure, containerized architecture specifically designed for seamless deployment onto Sahab Smart Solutions infrastructure or whichever local sovereign cloud the Sharjah Digital Department (SDD) mandates. This deployment model keeps institutional data within the required UAE jurisdiction and allows hosting, networking, identity, backup, and retention controls to align with applicable Sharjah government requirements.
+
+The current repository is a browser-only demonstration and does not itself provide production authentication, server persistence, encryption, or institutional authorization. A production deployment should package the application and its supporting services as approved containers, apply SDD-mandated security controls, and complete the relevant infrastructure, data-classification, and operational approval reviews before handling live institutional records.
+
 ## Upload to GitHub
 
 1. Extract the ZIP.

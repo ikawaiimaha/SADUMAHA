@@ -4,17 +4,24 @@ import { useI18n } from '../../context/I18nContext';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { 
   Archive, 
+  ArchiveRestore,
   ShieldCheck, 
   CheckCircle2, 
   Lock, 
   FileText, 
+  FileSpreadsheet,
+  HardDrive,
+  Database,
   Download, 
   Award,
   Clock,
   Sparkles,
   Truck,
-  AlertCircle
+  AlertCircle,
+  FolderArchive
 } from 'lucide-react';
+import { KpiCard } from '../common/KpiCard';
+import { PageHeader, Panel, StatGrid, TwoColumnLayout } from '../common/dashboard';
 
 export interface ArchiveViewProps {
   lang?: Language;
@@ -114,8 +121,126 @@ export const ArchiveView: React.FC<ArchiveViewProps> = (props) => {
   const totalCount = manifestItems.length;
   const progressPercent = Math.round((verifiedCount / totalCount) * 100);
 
+  const ingestionSources = [
+    {
+      id: 'excel',
+      titleEn: 'Legacy Excel sheets',
+      titleAr: 'جداول Excel التاريخية',
+      detailEn: '11 workbooks · 1,284 rows discovered',
+      detailAr: '١١ مصنفاً · تم اكتشاف ١٬٢٨٤ صفاً',
+      progress: 38,
+      stateEn: 'Column mapping in progress',
+      stateAr: 'مطابقة الأعمدة قيد التنفيذ',
+      icon: FileSpreadsheet,
+      tone: 'text-sadu-brick',
+      bar: 'bg-sadu-brick',
+    },
+    {
+      id: 'cabinets',
+      titleEn: 'Physical filing cabinets',
+      titleAr: 'ملفات خزائن الأرشيف الورقية',
+      detailEn: '326 folders · 74 folders indexed',
+      detailAr: '٣٢٦ ملفاً · فهرسة ٧٤ ملفاً',
+      progress: 23,
+      stateEn: 'Inventory and scan queue',
+      stateAr: 'قائمة الجرد والمسح الضوئي',
+      icon: FolderArchive,
+      tone: 'text-sadu-ink',
+      bar: 'bg-sadu-ink',
+    },
+    {
+      id: 'drives',
+      titleEn: 'Disconnected hard drives',
+      titleAr: 'محركات الأقراص غير المتصلة',
+      detailEn: '4 devices · 2 devices checksum-scanned',
+      detailAr: '٤ أجهزة · فحص البصمة لجهازين',
+      progress: 51,
+      stateEn: 'Recovery and checksum review',
+      stateAr: 'الاسترداد ومراجعة البصمات',
+      icon: HardDrive,
+      tone: 'text-sadu-sage',
+      bar: 'bg-sadu-sage',
+    },
+  ];
+
+  const ingestionStages = [
+    { labelEn: 'Discovered', labelAr: 'مكتشف', value: '2,146', valueAr: '٢٬١٤٦', status: 'complete' },
+    { labelEn: 'Normalized', labelAr: 'موحد', value: '876', valueAr: '٨٧٦', status: 'active' },
+    { labelEn: 'Provenance review', labelAr: 'مراجعة المصدر', value: '412', valueAr: '٤١٢', status: 'pending' },
+    { labelEn: 'Board-ready', labelAr: 'جاهز للمجلس', value: '118', valueAr: '١١٨', status: 'pending' },
+  ];
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in duration-300">
+      <PageHeader
+        eyebrow={isAr ? 'اليوم صفر · استيعاب البيانات التاريخية' : 'Day Zero · Historical Data Ingestion'}
+        title={isAr ? 'ترحيل ذاكرة بينالي الخط' : 'Calligraphy Biennial Legacy Migration'}
+        description={isAr ? 'لوحة متابعة تجريبية لترحيل الدورات الإحدى عشرة السابقة إلى سجل أرشيفي موحد وقابل للتدقيق.' : 'A boardroom-ready view of the eleven prior editions moving into one auditable archival record.'}
+        actions={
+          <span className="inline-flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-800">
+            <ArchiveRestore className="h-4 w-4" />
+            {isAr ? 'الترحيل قيد التنفيذ' : 'Migration in progress'}
+          </span>
+        }
+      />
+
+      <StatGrid>
+        <KpiCard titleEn="Editions in scope" titleAr="الدورات المشمولة" value={formatNumber(11)} icon={Archive} lang={lang} />
+        <KpiCard titleEn="Records discovered" titleAr="السجلات المكتشفة" value={formatNumber(2146)} icon={Database} lang={lang} />
+        <KpiCard titleEn="Normalized records" titleAr="السجلات الموحدة" value={formatNumber(876)} trend="up" trendLabelEn="41% of discovered" trendLabelAr="٤١٪ من المكتشف" icon={CheckCircle2} lang={lang} />
+        <KpiCard titleEn="Source channels" titleAr="قنوات المصدر" value={formatNumber(3)} trend="neutral" trendLabelEn="Excel · paper · drives" trendLabelAr="Excel · ورقي · محركات" icon={ShieldCheck} lang={lang} />
+      </StatGrid>
+
+      <TwoColumnLayout
+        left={
+          <Panel className="h-full" padded={false}>
+            <div className="border-b border-sadu-gold/50 p-4 sm:p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2 text-sadu-brick"><Database className="h-4 w-4" /><span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em]">ARCHIVE_PIPELINE_V1</span></div>
+                  <h2 className="mt-2 text-lg font-editorial font-bold text-sadu-charcoal">{isAr ? 'مراحل نموذج الأرشيف' : 'Archival record pipeline'}</h2>
+                  <p className="mt-1 text-xs leading-relaxed text-sadu-muted">{isAr ? 'تتبع دورة حياة السجل من المصدر الأصلي حتى اعتماده كسجل قابل للعرض.' : 'A normalized lifecycle from original source through provenance review to a board-ready record.'}</p>
+                </div>
+                <span className="shrink-0 rounded border border-sadu-gold bg-sadu-sand px-2 py-1 font-mono text-[10px] font-bold text-sadu-ink">{isAr ? '١١ دورة' : '11 editions'}</span>
+              </div>
+            </div>
+            <div className="space-y-3 p-4 sm:p-5">
+              {ingestionStages.map((stage, index) => (
+                <div key={stage.labelEn} className="flex items-center gap-3">
+                  <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${stage.status === 'complete' ? 'bg-sadu-sage text-white' : stage.status === 'active' ? 'bg-sadu-brick text-white' : 'border border-sadu-gold bg-sadu-sand text-sadu-muted'}`}>{index + 1}</div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-3"><span className="text-xs font-bold text-sadu-charcoal">{isAr ? stage.labelAr : stage.labelEn}</span><span className="font-mono text-xs font-bold text-sadu-ink">{isAr ? stage.valueAr : stage.value}</span></div>
+                    <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-sadu-sand"><div className={`h-full rounded-full ${stage.status === 'complete' ? 'w-full bg-sadu-sage' : stage.status === 'active' ? 'w-2/5 bg-sadu-brick' : 'w-1/5 bg-sadu-gold'}`} /></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Panel>
+        }
+        right={
+          <Panel className="h-full" padded={false}>
+            <div className="border-b border-sadu-gold/50 p-4 sm:p-5"><div className="flex items-center gap-2 text-sadu-ink"><FileText className="h-4 w-4" /><h2 className="text-lg font-editorial font-bold text-sadu-charcoal">{isAr ? 'سجل النطاق' : 'Migration scope ledger'}</h2></div></div>
+            <dl className="divide-y divide-sadu-gold/30 text-xs">
+              <div className="flex items-center justify-between gap-4 p-4"><dt className="text-sadu-muted">{isAr ? 'أقدم دورة' : 'Earliest edition'}</dt><dd className="font-mono font-bold text-sadu-charcoal">2015 · SCE-01</dd></div>
+              <div className="flex items-center justify-between gap-4 p-4"><dt className="text-sadu-muted">{isAr ? 'آخر دورة' : 'Latest edition'}</dt><dd className="font-mono font-bold text-sadu-charcoal">2025 · SCE-11</dd></div>
+              <div className="flex items-center justify-between gap-4 p-4"><dt className="text-sadu-muted">{isAr ? 'مخطط البيانات' : 'Target schema'}</dt><dd className="font-mono font-bold text-sadu-brick">LIVING_RECORD_V2</dd></div>
+              <div className="flex items-center justify-between gap-4 p-4"><dt className="text-sadu-muted">{isAr ? 'سياسة المصدر' : 'Provenance policy'}</dt><dd className="font-bold text-sadu-sage">{isAr ? 'مطلوبة' : 'Required'}</dd></div>
+            </dl>
+          </Panel>
+        }
+        leftSpan="lg:col-span-2"
+      />
+
+      <Panel>
+        <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div><h2 className="flex items-center gap-2 text-lg font-editorial font-bold text-sadu-charcoal"><Archive className="h-5 w-5 text-sadu-brick" />{isAr ? 'قنوات المصادر المعلقة' : 'Pending source ingestion'}</h2><p className="mt-1 text-xs text-sadu-muted">{isAr ? 'حالة المعالجة حسب نوع الحافظة الأصلية.' : 'Processing status by original container type.'}</p></div>
+          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-sadu-muted">{isAr ? 'آخر فحص: اليوم 09:40' : 'Last scan: today 09:40'}</span>
+        </div>
+        <div className="grid gap-4 lg:grid-cols-3">
+          {ingestionSources.map((source) => { const Icon = source.icon; return <article key={source.id} className="rounded-lg border border-sadu-gold/60 bg-sadu-linen p-4"><div className="flex items-start justify-between gap-3"><div className="flex items-start gap-3"><Icon className={`mt-0.5 h-5 w-5 shrink-0 ${source.tone}`} /><div><h3 className="text-sm font-bold text-sadu-charcoal">{isAr ? source.titleAr : source.titleEn}</h3><p className="mt-1 text-[11px] leading-relaxed text-sadu-muted">{isAr ? source.detailAr : source.detailEn}</p></div></div><span className="font-mono text-xs font-bold text-sadu-ink">{formatPercent(source.progress)}</span></div><div className="mt-4 h-2 overflow-hidden rounded-full bg-sadu-sand"><div className={`h-full rounded-full ${source.bar}`} style={{ width: `${source.progress}%` }} /></div><div className="mt-2 flex items-center justify-between gap-2 text-[10px]"><span className="font-semibold text-sadu-muted">{isAr ? source.stateAr : source.stateEn}</span><span className="font-mono text-sadu-muted">{source.progress}/100</span></div></article>; })}
+        </div>
+      </Panel>
+
       {/* Top Banner */}
       <div className="bg-sadu-linen border border-sadu-gold rounded-lg p-6 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

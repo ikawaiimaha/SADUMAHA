@@ -1,0 +1,16 @@
+# SADU / SADUVISION
+
+SADU is a bilingual, Arabic/English institutional workflow demonstration for cultural programme delivery, artist intake, contracts, operations, communications, and archival records.
+
+## Deployment & Data Sovereignty
+
+SADU utilizes a secure, containerized architecture specifically designed for seamless deployment onto Sahab Smart Solutions infrastructure or whichever local sovereign cloud the Sharjah Digital Department (SDD) mandates. The intended deployment model keeps institutional data within the required UAE jurisdiction and supports alignment with applicable Sharjah government hosting, identity, backup, retention, and security requirements.
+
+The repository currently contains a browser-only demonstration. It does not provide production authentication, server persistence, encryption, or institutional authorization. Any production deployment must apply the controls mandated by SDD and complete infrastructure, data-classification, and operational approval reviews before live institutional data is introduced.
+
+## Repository guidance
+
+- Application source is under `src/`.
+- The app is built with React, TypeScript, and Vite.
+- Use `npm ci --ignore-scripts`, `npm run lint`, and `npm run build` for the standard verification flow.
+- The demonstration uses sample data and does not establish institutional authority or production readiness.
