@@ -6,6 +6,7 @@ import { useWorkspace } from '../context/WorkspaceContext';
 import { NotificationsPopover } from './NotificationsPopover';
 import { RosterNavLink } from './RosterNavLink';
 import { FINANCE_SCENARIO_LABEL } from '../data/legacyScenario';
+import { DEMO_PROGRAMME } from '../data/livingRecord';
 import { 
   Globe, 
   ChevronDown, 
@@ -16,7 +17,8 @@ import {
   Sparkles,
   Search,
   Menu,
-  Scale
+  Scale,
+  Wrench
 } from 'lucide-react';
 
 export interface HeaderNavProps {
@@ -96,8 +98,16 @@ export const HeaderNav: React.FC<HeaderNavProps> = (props) => {
             {isAr ? "عرض افتراضي · مسارات عمل مقترحة" : "Fictional demonstration · proposed workflows"}
           </span>
           <button
-            onClick={onOpenPresenter}
+            onClick={() => onProgrammeChange && onProgrammeChange(DEMO_PROGRAMME)}
             className="text-white hover:text-amber-200 underline text-[11px] cursor-pointer flex items-center gap-1 font-semibold whitespace-nowrap"
+            title={isAr ? 'عرض المحرك الفني الأساسي' : 'View raw state machine engine'}
+          >
+            <Wrench className="w-3 h-3 text-amber-300" />
+            <span>{isAr ? 'محرك الحالات (للتدقيق)' : 'State Machine Audit'}</span>
+          </button>
+          <button
+            onClick={onOpenPresenter}
+            className="text-white hover:text-amber-200 underline text-[11px] cursor-pointer flex items-center gap-1 font-semibold whitespace-nowrap border-s border-white/20 ps-3"
           >
             <Sparkles className="w-3 h-3 text-amber-300" />
             <span>{isAr ? 'ملاحظات العرض' : 'Presentation Notes'}</span>

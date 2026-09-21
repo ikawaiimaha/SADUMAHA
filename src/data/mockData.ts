@@ -622,8 +622,8 @@ export const MOUNIR_FATMI_SUBMISSION: CommitteeReviewSubmission = {
 export const INITIAL_MESSAGES: MessageRecord[] = [
   {
     id: 'msg-01',
-    senderNameEn: 'Salma Al-Suwaidi (Cultural Coordinator)',
-    senderNameAr: 'سلمى السويدي (منسق الشؤون الثقافية)',
+    senderNameEn: 'Maha (Exhibition Coordinator)',
+    senderNameAr: 'مها (منسق المعارض)',
     senderRole: 'COORDINATOR',
     recipientRole: 'ARTIST',
     timestamp: 'Yesterday at 10:14 AM',
@@ -657,8 +657,8 @@ export const ROLE_PROFILES: Record<RoleKey, {
   permittedViews: string[];
 }> = {
   COORDINATOR: {
-    nameEn: 'Salma Al-Suwaidi',
-    nameAr: 'سلمى السويدي',
+    nameEn: 'Maha (Exhibition Coordinator)',
+    nameAr: 'مها (منسق المعارض)',
     titleEn: 'Cultural Affairs Project Coordinator',
     titleAr: 'منسق الشؤون الثقافية والمشاريع الفنية',
     scopeEn: 'The Overseer: Air traffic controller watching data flow across the 5-step lifecycle and handoff tracker.',
@@ -668,8 +668,8 @@ export const ROLE_PROFILES: Record<RoleKey, {
     permittedViews: ['overview', 'dossiers', 'approved-scope', 'contracts', 'operations', 'communications', 'archive'],
   },
   SDC_COORDINATOR: {
-    nameEn: 'Salma Al-Suwaidi',
-    nameAr: 'سلمى السويدي',
+    nameEn: 'Maha (Exhibition Coordinator)',
+    nameAr: 'مها (منسق المعارض)',
     titleEn: 'Cultural Affairs Project Coordinator',
     titleAr: 'منسق الشؤون الثقافية والمشاريع الفنية',
     scopeEn: 'The Overseer: Air traffic controller watching data flow across the 5-step lifecycle and handoff tracker.',

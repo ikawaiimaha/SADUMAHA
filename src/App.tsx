@@ -16,7 +16,7 @@ import { ArtistIntakeProvider } from './context/ArtistIntakeContext';
 import { IntakeDraftBackupProvider } from './context/IntakeDraftBackupContext';
 import { NavigationProvider, useNavigation } from './context/NavigationContext';
 import { RosterRegistration } from './components/RosterRegistration';
-import { DEMO_PROGRAMME_ID, DEMO_PROGRAMME } from './data/livingRecord';
+import { DEMO_PROGRAMME_ID } from './data/livingRecord';
 import { HeaderNav } from './components/HeaderNav';
 import { DemoNotice } from './components/DemoNotice';
 import { AuthoredBand } from './components/AuthoredBand';
@@ -145,12 +145,12 @@ function SADUApp() {
   }, []);
 
   const handleSelectRoleAndExplore = (role: RoleKey) => {
-    const connectedDemo = ['DIRECTORATE', 'SDC_COORDINATOR', 'SAF_TECHNICIAN', 'FINANCE', 'LOGISTICS', 'EDITORIAL', 'ARTIST'].includes(role);
     switchRole(role);
-    setSelectedProgramme(connectedDemo ? DEMO_PROGRAMME : PROGRAMMES[0]);
+    // ALWAYS drop the user into the polished UI (12th Calligraphy Biennial)
+    setSelectedProgramme(PROGRAMMES[0]);
     setLeadershipView('CHAIRMAN');
     setExperienceMode('platform');
-    setShowRoleOnboarding(!connectedDemo);
+    setShowRoleOnboarding(true);
   };
 
   const handleRoleChangeFromNav = (role: RoleKey) => {

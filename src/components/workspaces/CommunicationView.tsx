@@ -121,8 +121,8 @@ export const CommunicationView: React.FC<CommunicationViewProps> = (props) => {
 
     const newMessage: MessageRecord = {
       id: `msg-${Date.now()}`,
-      senderNameEn: currentRole === 'ARTIST' ? 'Youssef Nabhan (Artist)' : 'Salma Al-Suwaidi (Coordinator)',
-      senderNameAr: currentRole === 'ARTIST' ? 'يوسف نبهان (الفنان)' : 'سلمى السويدي (المنسق)',
+      senderNameEn: currentRole === 'ARTIST' ? 'Youssef Nabhan (Artist)' : 'Maha (Coordinator)',
+      senderNameAr: currentRole === 'ARTIST' ? 'يوسف نبهان (الفنان)' : 'مها (المنسق)',
       senderRole: currentRole === 'ARTIST' ? 'ARTIST' : 'COORDINATOR',
       recipientRole: currentRole === 'ARTIST' ? 'COORDINATOR' : 'ARTIST',
       timestamp: isAr ? 'الآن' : 'Just now',
@@ -316,7 +316,7 @@ export const CommunicationView: React.FC<CommunicationViewProps> = (props) => {
             <span className="text-[11px] text-sadu-muted">
               {isAr ? 'المرسل: ' : 'Sender: '}
               <strong>
-                {currentRole === 'ARTIST' ? (isAr ? 'يوسف نبهان' : 'Youssef Nabhan') : (isAr ? 'سلمى السويدي (المنسق)' : 'Salma Al-Suwaidi (Coordinator)')}
+                {currentRole === 'ARTIST' ? (isAr ? 'يوسف نبهان' : 'Youssef Nabhan') : (isAr ? 'مها (المنسق)' : 'Maha (Coordinator)')}
               </strong>
             </span>
 
