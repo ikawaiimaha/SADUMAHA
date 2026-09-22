@@ -15,6 +15,7 @@ import { PresenterDrawer } from '../PresenterDrawer';
 import { WorkspaceRouter } from './WorkspaceRouter';
 
 export interface AppShellProps {
+    onSignOut: () => void;
   children?: ReactNode;
   currentRole: any;
   selectedProgramme: any;
@@ -49,6 +50,7 @@ export interface AppShellProps {
 }
 
 export const AppShell: React.FC<AppShellProps> = ({
+    onSignOut,
   currentRole,
   selectedProgramme,
   lang,
@@ -99,6 +101,7 @@ export const AppShell: React.FC<AppShellProps> = ({
         onOpenMobileMenu={onOpenMobileMenu}
         onNavigateTab={onNavigateTab}
         scopeLocked={financeScopeLocked}
+        onSignOut={onSignOut}
       />
 
       <AuthoredBand compact />
