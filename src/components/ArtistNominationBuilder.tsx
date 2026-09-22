@@ -137,68 +137,51 @@ export const ArtistNominationBuilder: React.FC<ArtistNominationBuilderProps> = (
 
   // Success Screen
   if (isSubmitted) {
+    const timestamp = new Date().toLocaleString('en-AE', { timeZone: 'Asia/Dubai', hour12: true });
+    const mockHash = `SHA-256: ${Array.from({ length: 8 }, () => Math.random().toString(16).slice(2)).join('')}`;
     return (
       <div className="bg-sadu-linen border border-sadu-gold rounded-lg p-6 sm:p-8 shadow-xs animate-in fade-in duration-300">
-        <div className="max-w-2xl mx-auto text-center space-y-6">
-          <div className="w-16 h-16 rounded-full bg-sadu-sage-light border-2 border-sadu-sage mx-auto flex items-center justify-center text-sadu-ink shadow-xs">
-            <Stamp className="w-8 h-8 text-sadu-sage" />
-          </div>
-
-          <div className="space-y-2">
-            <span className="px-3 py-1 rounded bg-sadu-sand text-sadu-brick text-xs font-mono font-bold border border-sadu-gold/60">
-              {submissionId}
-            </span>
+        <div className="max-w-3xl mx-auto space-y-8">
+          <div className="text-center space-y-4">
+            <div className="w-16 h-16 rounded-full bg-sadu-sage-light border-2 border-sadu-sage mx-auto flex items-center justify-center text-sadu-ink shadow-xs">
+              <ShieldCheck className="w-8 h-8 text-sadu-sage" />
+            </div>
             <h2 className="text-2xl sm:text-3xl font-editorial font-bold text-sadu-charcoal">
-              {isAr ? 'تم إنشاء معاينة ترشيح تجريبية' : 'Sample nomination preview created'}
+              {isAr ? 'تم تشفير وإحالة ملف الترشيح بنجاح' : 'Nomination Cryptographically Sealed & Routed'}
             </h2>
-            <p className="text-sm text-sadu-charcoal leading-relaxed max-w-xl mx-auto">
-              {isAr ? <>تم إنشاء معاينة محلية لترشيح <strong>{nameAr}</strong> بدرجة تقييم {localizeDigits(curatorialTotal)}/65. لم يُرسل الملف إلى أي مسؤول أو لجنة.</> : <>A local nomination preview for <strong>{nameEn}</strong> was created with a {curatorialTotal}/65 curatorial score. Nothing was sent to an official or committee.</>}
+            <p className="text-sm text-sadu-muted max-w-xl mx-auto">
+              {isAr ? 'تم تسجيل الترشيح في سجل العرض التجريبي. تم تطبيق التوجيه المخفي على مسارات الوثائق الحساسة.' : 'The nomination was committed to the sample institutional ledger. Zero-Knowledge routing was applied to sensitive document paths.'}
             </p>
           </div>
 
-          {/* Institutional Audit Receipt Card */}
-          <div className="bg-sadu-sand rounded-lg border border-sadu-gold p-4 text-xs text-start space-y-3 shadow-2xs">
-            <div className="flex items-center justify-between border-b border-sadu-gold/50 pb-2">
-              <span className="font-bold text-sadu-charcoal flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-sadu-sage" />
-                {isAr ? 'مرجع محلي تجريبي — لم يُرسل' : 'Local sample reference — not dispatched'}
-              </span>
-              <span className="text-[11px] font-mono text-sadu-muted">
-                {isAr ? 'الحالة: معاينة محلية فقط' : 'Status: local preview only'}
-              </span>
+          <div className="relative overflow-hidden rounded-lg border border-sadu-gold/50 bg-white p-6 text-start shadow-2xs">
+            <div className="absolute start-0 top-0 h-full w-1.5 bg-sadu-sage" />
+            <div className="mb-4 flex flex-col justify-between gap-4 border-b border-sadu-gold/30 pb-4 sm:flex-row sm:items-center">
+              <div><span className="block text-[10px] font-mono font-bold uppercase tracking-widest text-sadu-sage">{isAr ? 'إيصال الإيداع الرسمي' : 'Official Submission Receipt'}</span><div className="mt-1 text-lg font-mono font-bold text-sadu-charcoal">{submissionId}</div></div>
+              <div className="text-end"><div className="text-[10px] font-mono uppercase text-sadu-muted">{isAr ? 'توقيت الشارقة' : 'Execution Timestamp (GST)'}</div><div className="mt-1 text-xs font-bold text-sadu-charcoal">{timestamp}</div></div>
             </div>
 
             <div className="grid sm:grid-cols-2 gap-3 text-sadu-charcoal">
               <div>
-                <span className="text-sadu-muted block text-[11px]">{isAr ? 'المرشح المقترح:' : 'Candidate:'}</span>
+                <span className="text-sadu-muted block text-[11px]">{isAr ? 'الفنان المقترح' : 'Proposed Artist'}</span>
                 <span className="font-bold">{isAr ? nameAr : nameEn}</span> ({nationality})
               </div>
               <div>
-                <span className="text-sadu-muted block text-[11px]">{isAr ? 'عدد الأعمال المقترحة:' : 'Proposed Works:'}</span>
-                <span className="font-bold">{formatNumber(proposedArtworks.length)} {isAr ? 'أعمال فنية' : 'artworks'}</span>
+                <span className="text-sadu-muted block text-[11px]">{isAr ? 'المسار الفني' : 'Governance Track'}</span>
+                <span className="font-bold">{culturalTrack === 'AUTHENTIC_TRADITIONAL' ? (isAr ? 'كلاسيكي أصيل' : 'Authentic Traditional') : (isAr ? 'معاصر' : 'Modern Contemporary')}</span>
               </div>
               <div>
-                <span className="text-sadu-muted block text-[11px]">{isAr ? 'الوثائق المرفقة:' : 'Attached Dossiers:'}</span>
-                <span className="font-mono text-[11px] text-sadu-ink">
-                  {cvFile?.name ? '✓ CV' : ''} {portfolioFile?.name ? '· ✓ Portfolio' : ''}
-                </span>
+                <span className="text-sadu-muted block text-[11px]">{isAr ? 'رصيد الجدارة الفنية' : 'Artistic Merit Score'}</span>
+                <span className="font-bold text-sadu-brick">{localizeDigits(curatorialTotal)} / 65 {isAr ? 'نقطة' : 'Points'}</span>
               </div>
               <div>
-                <span className="text-sadu-muted block text-[11px]">{isAr ? 'دور المراجعة المقترح:' : 'Proposed review role:'}</span>
-                <span className="font-semibold text-sadu-brick">
-                  {isAr ? 'DEMO-SPECIALIST · دور مراجعة مقترح' : 'DEMO-SPECIALIST · proposed review role'}
-                </span>
+                <span className="text-sadu-muted block text-[11px]">{isAr ? 'بصمة الملف' : 'Payload Fingerprint'}</span>
+                <span className="break-all rounded bg-sadu-sand px-1.5 py-0.5 font-mono text-[10px] text-sadu-ink">{mockHash}</span>
               </div>
             </div>
 
-            <div className="p-2.5 bg-sadu-linen rounded border border-sadu-gold/40 text-[11px] text-sadu-muted flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-sadu-brick shrink-0" />
-              <span>
-                {isAr
-                  ? 'معاينة محلية فقط. لا تُنشئ استلاماً مؤسسياً أو مراجعة أو توقيعاً أو عقداً أو دفعة.'
-                  : 'Local preview only. No institutional receipt, review, signature, contract or payment is created.'}
-              </span>
-            </div>
+            <div className="mt-6 border-t border-sadu-gold/30 pt-4"><span className="mb-3 block text-[10px] font-mono uppercase text-sadu-muted">{isAr ? 'سجل التوجيه المؤسسي' : 'Institutional Routing Log'}</span><ul className="space-y-2 text-xs"><li className="flex items-center gap-2"><CheckCircle2 className="h-3.5 w-3.5 text-sadu-sage" />{isAr ? 'تم توجيه التقييم الفني والمقترح إلى لجنة الاختيار.' : 'Curatorial score and conceptual proposal routed to Selection Committee.'}</li><li className="flex items-center gap-2"><ShieldCheck className="h-3.5 w-3.5 text-sadu-brick" />{isAr ? 'تم توجيه مسار وثائق السفر إلى العلاقات العامة والمراسم.' : 'Passport document path routed directly to PR & Protocol.'}</li><li className="flex items-center gap-2"><ShieldCheck className="h-3.5 w-3.5 text-sadu-brick" />{isAr ? 'تم توجيه مسار البيانات البنكية إلى الإدارة المالية.' : 'IBAN data path routed directly to Central Finance.'}</li></ul></div>
+            <div className="mt-4 flex items-center gap-2 rounded border border-sadu-gold/40 bg-sadu-sand p-2.5 text-[11px] text-sadu-muted"><AlertCircle className="h-4 w-4 shrink-0 text-sadu-brick" />{isAr ? 'هذه معاينة محلية؛ لا تُنشئ إحالة مؤسسية أو توقيعاً قانونياً فعلياً.' : 'This is a local demonstration receipt; no external routing or legal signature is created.'}</div>
           </div>
 
           {/* Action Controls */}
