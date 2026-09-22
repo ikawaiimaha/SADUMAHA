@@ -17,7 +17,8 @@ import {
   Stamp,
   AlertCircle,
   Paperclip,
-  Check
+  Check,
+  GitMerge
 } from 'lucide-react';
 
 export interface ProposedArtworkDraft {
@@ -66,6 +67,19 @@ export const ArtistNominationBuilder: React.FC<ArtistNominationBuilderProps> = (
     name: 'AlBahrani_Selected_Calligraphic_Works_2020_2025.pdf',
     size: '14.2 MB',
   });
+
+  const [culturalTrack, setCulturalTrack] = useState<'AUTHENTIC_TRADITIONAL' | 'MODERN_CONTEMPORARY'>('MODERN_CONTEMPORARY');
+  const [curatorialScores, setCuratorialScores] = useState({
+    alignmentTheme: 10,
+    artisticQuality: 10,
+    trackSpecificOne: 9,
+    trackSpecificTwo: 10,
+    artistProfile: 5,
+    exhibitionHistory: 5,
+    strategicValue: 5,
+    trackSpecificThree: 10,
+  });
+  const curatorialTotal = Object.values(curatorialScores).reduce((total, score) => total + score, 0);
 
   // 4. Proposed Artworks Dynamic List
   const [proposedArtworks, setProposedArtworks] = useState<ProposedArtworkDraft[]>([
@@ -138,7 +152,7 @@ export const ArtistNominationBuilder: React.FC<ArtistNominationBuilderProps> = (
               {isAr ? 'تم إنشاء معاينة ترشيح تجريبية' : 'Sample nomination preview created'}
             </h2>
             <p className="text-sm text-sadu-charcoal leading-relaxed max-w-xl mx-auto">
-              {isAr ? <>تم إنشاء معاينة محلية لترشيح <strong>{nameAr}</strong>. لم يُرسل الملف إلى أي مسؤول أو لجنة.</> : <>A local nomination preview for <strong>{nameEn}</strong> was created. Nothing was sent to an official or committee.</>}
+              {isAr ? <>تم إنشاء معاينة محلية لترشيح <strong>{nameAr}</strong> بدرجة تقييم {localizeDigits(curatorialTotal)}/65. لم يُرسل الملف إلى أي مسؤول أو لجنة.</> : <>A local nomination preview for <strong>{nameEn}</strong> was created with a {curatorialTotal}/65 curatorial score. Nothing was sent to an official or committee.</>}
             </p>
           </div>
 
@@ -603,6 +617,38 @@ export const ArtistNominationBuilder: React.FC<ArtistNominationBuilderProps> = (
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* SECTION 5: CURATORIAL EVALUATION */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 border-b border-sadu-gold/30 pb-2">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-sadu-brick font-mono text-xs font-bold text-white">{formatNumber(5)}</span>
+          <h3 className="font-editorial text-base font-bold text-sadu-charcoal">{isAr ? 'التقييم الفني والمفاهيمي (لإرفاقه مع الترشيح)' : 'Section 5: Curatorial Evaluation (Attached to Nomination)'}</h3>
+        </div>
+
+        <div className="flex flex-col justify-between gap-4 rounded-lg border border-sadu-gold bg-sadu-sand p-4 sm:flex-row sm:items-center">
+          <div><span className="mb-1 flex items-center gap-1.5 text-sm font-bold text-sadu-charcoal"><GitMerge className="h-4 w-4 text-sadu-brick" />{isAr ? 'تحديد الاتجاه الفني للمقترح' : 'Select Artistic Governance Track'}</span><span className="text-xs text-sadu-muted">{isAr ? 'تتغير معايير التقييم تلقائياً لإنصاف الأصالة الكلاسيكية مقابل الابتكار المعاصر.' : 'Rubric metrics adapt dynamically to evaluate classical purity vs contemporary Hurufiyya.'}</span></div>
+          <div className="flex shrink-0 items-center gap-2 rounded-md border border-sadu-gold bg-sadu-linen p-1">
+            <button type="button" onClick={() => setCulturalTrack('AUTHENTIC_TRADITIONAL')} className={`rounded px-3 py-1.5 text-xs font-bold transition-colors ${culturalTrack === 'AUTHENTIC_TRADITIONAL' ? 'bg-sadu-ink text-white' : 'text-sadu-charcoal hover:bg-sadu-sand'}`}>{isAr ? 'الاتجاه الأصيل' : 'Authentic Direction'}</button>
+            <button type="button" onClick={() => setCulturalTrack('MODERN_CONTEMPORARY')} className={`rounded px-3 py-1.5 text-xs font-bold transition-colors ${culturalTrack === 'MODERN_CONTEMPORARY' ? 'bg-sadu-brick text-white' : 'text-sadu-charcoal hover:bg-sadu-sand'}`}>{isAr ? 'الاتجاه المعاصر' : 'Contemporary Avant-Garde'}</button>
+          </div>
+        </div>
+
+        <div className="space-y-4 rounded-lg border border-sadu-gold bg-sadu-paper p-5">
+          <div className="flex flex-col justify-between gap-3 border-b border-sadu-gold/40 pb-3 sm:flex-row sm:items-center"><div className="flex items-center gap-2"><span className="rounded bg-sadu-brick px-2 py-0.5 font-mono text-xs font-bold text-white">{isAr ? 'مقياس التقييم' : 'Curatorial Score'}</span><h3 className="text-base font-editorial font-bold text-sadu-charcoal">{isAr ? 'نقاط الجدارة الفنية' : 'Artistic Merit Points'}</h3></div><div className="rounded-md border border-sadu-gold bg-sadu-sand px-4 py-2 text-end"><span className="text-2xl font-editorial font-bold text-sadu-brick">{localizeDigits(curatorialTotal)} <span className="text-sm font-sans font-normal text-sadu-muted">/ 65</span></span></div></div>
+          <div className="grid gap-4 pt-2 sm:grid-cols-2">
+            {([
+              ['alignmentTheme', 'Alignment with Biennale Theme', 'التوافق مع ثيمة البينالي', 10],
+              ['artisticQuality', 'Artistic Quality', 'الجودة الفنية والتمكن', 10],
+              ['trackSpecificOne', culturalTrack === 'AUTHENTIC_TRADITIONAL' ? 'Geometric Proportion' : 'Abstract Innovation', culturalTrack === 'AUTHENTIC_TRADITIONAL' ? 'النسبة الهندسية' : 'الابتكار التجريدي', 10],
+              ['trackSpecificTwo', culturalTrack === 'AUTHENTIC_TRADITIONAL' ? 'Classical Mastery' : 'Contemporary Relevance', culturalTrack === 'AUTHENTIC_TRADITIONAL' ? 'إتقان الكلاسيكيات' : 'المعاصرة', 10],
+              ['artistProfile', 'Career Standing', 'المكانة والمسار', 5],
+              ['exhibitionHistory', 'Exhibition Record', 'سجل المعارض', 5],
+              ['strategicValue', 'Strategic Value', 'القيمة الاستراتيجية', 5],
+              ['trackSpecificThree', culturalTrack === 'AUTHENTIC_TRADITIONAL' ? 'Traditional Preparation' : 'Material Experimentation', culturalTrack === 'AUTHENTIC_TRADITIONAL' ? 'التحضير التقليدي' : 'التجريب المادي', 10],
+            ] as const).map(([key, labelEn, labelAr, max]) => <div key={key} className="space-y-1.5 rounded-md border border-sadu-gold/60 bg-sadu-sand/60 p-3"><div className="flex justify-between text-xs font-semibold text-sadu-charcoal"><span>{isAr ? labelAr : labelEn}</span><span className="font-mono text-sadu-brick">{curatorialScores[key]} / {max}</span></div><input type="range" min="0" max={max} value={curatorialScores[key]} onChange={event => setCuratorialScores(previous => ({ ...previous, [key]: Number(event.target.value) }))} className="w-full cursor-pointer accent-sadu-brick" /></div>)}
+          </div>
         </div>
       </div>
 
