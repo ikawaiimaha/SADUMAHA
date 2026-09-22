@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { RoleKey, ExhibitionProgramme, WorkspaceTab, DisplayDensity, ExperienceMode } from '../types';
 import { PROGRAMMES, ROLE_PROFILES } from '../data/mockData';
 import { DEMO_PROGRAMME } from '../data/livingRecord';
-import { readPreference, writePreference } from '../utils/preferences';
+import { writePreference } from '../utils/preferences';
 
 import { recordEditorialCheck, type EditorialCheck } from '../data/editorialSamples';
 
@@ -42,13 +42,7 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
   initialRole = 'SDC_COORDINATOR',
   initialExperienceMode = 'story',
 }) => {
-  const [experienceMode, setExperienceModeState] = useState<ExperienceMode>(() => {
-    if (typeof window === 'undefined') return initialExperienceMode;
-    const savedMode = readPreference('sadu_experience_mode');
-    return savedMode === 'story' || savedMode === 'platform' || savedMode === 'onboarding'
-      ? savedMode
-      : initialExperienceMode;
-  });
+  const [experienceMode, setExperienceModeState] = useState<ExperienceMode>(initialExperienceMode);
   const [currentRole, setCurrentRoleState] = useState<RoleKey>(initialRole);
   const [selectedProgramme, setProgrammeState] = useState<ExhibitionProgramme>(DEMO_PROGRAMME);
   const setSelectedProgramme = (programme: ExhibitionProgramme | undefined) => setProgrammeState(programme ?? PROGRAMMES[0]);
