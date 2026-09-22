@@ -86,8 +86,6 @@ const IdentityGate: React.FC<{ onSignIn: () => void }> = ({ onSignIn }) => {
   );
 };
 
-const AuthenticatedApp: React.FC<{ onSignOut: () => void }> = ({ onSignOut }) => <><RehearsalTeleprompter /><SADUApp onSignOut={onSignOut} /></>;
-
 function SADUApp({ onSignOut }: { onSignOut: () => void }) {
   const { path } = useNavigation();
   const { lang, toggleLang, isAr } = useI18n();
@@ -265,12 +263,43 @@ function SADUApp({ onSignOut }: { onSignOut: () => void }) {
   );
 }
 
+function PresentationFirstApp({ isAuthenticated, setIsAuthenticated }: { isAuthenticated: boolean; setIsAuthenticated: (value: boolean) => void }) {
+  const { experienceMode, setExperienceMode, switchRole, setSelectedProgramme } = useWorkspace();
+  const { lang, toggleLang } = useI18n();
+  const { setLeadershipView } = useLivingRecord();
+
+  const enterPlatform = (role: RoleKey) => {
+    switchRole(role);
+    setSelectedProgramme(PROGRAMMES[0]);
+    setLeadershipView('CHAIRMAN');
+    setExperienceMode('platform');
+  };
+
+  if (experienceMode === 'story') {
+    return (
+      <div className="story-experience">
+        <DemoNotice />
+        <StoryMode
+          lang={lang}
+          onSelectRoleAndExplore={enterPlatform}
+          onSelectManagementView={view => { enterPlatform('DIRECTORATE'); setLeadershipView(view); }}
+          onSkipToPlatform={() => setExperienceMode('platform')}
+          onToggleLanguage={toggleLang}
+        />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) return <IdentityGate onSignIn={() => setIsAuthenticated(true)} />;
+  return <><RehearsalTeleprompter /><SADUApp onSignOut={() => { setIsAuthenticated(false); setExperienceMode('story'); }} /></>;
+}
+
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   return (
     <I18nProvider initialLang="ar">
       <WorkspaceProvider initialRole="DIRECTORATE" initialExperienceMode="story">
-        <LivingRecordProvider><ArtistIntakeProvider><IntakeDraftBackupProvider><NavigationProvider>{isAuthenticated ? <AuthenticatedApp onSignOut={() => setIsAuthenticated(false)} /> : <IdentityGate onSignIn={() => setIsAuthenticated(true)} />}</NavigationProvider></IntakeDraftBackupProvider></ArtistIntakeProvider></LivingRecordProvider>
+        <LivingRecordProvider><ArtistIntakeProvider><IntakeDraftBackupProvider><NavigationProvider><PresentationFirstApp isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} /></NavigationProvider></IntakeDraftBackupProvider></ArtistIntakeProvider></LivingRecordProvider>
       </WorkspaceProvider>
     </I18nProvider>
   );
