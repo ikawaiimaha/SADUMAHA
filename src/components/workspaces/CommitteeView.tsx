@@ -62,7 +62,7 @@ export const CommitteeView: React.FC<CommitteeViewProps> = (props) => {
         <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-sadu-brick"><Scale className="h-4 w-4" />{isAr ? 'لجنة التحكيم والتقييم الفني' : 'Curatorial Assessment Committee'}</div>
         <h1 className="mt-2 text-2xl font-editorial font-bold text-sadu-charcoal sm:text-3xl">{isAr ? 'ملف القراءة والتقييم الآمن' : 'Secure Reading Dossier'}</h1>
         <div className="mt-3 flex flex-wrap items-center gap-4 text-xs font-mono text-sadu-muted"><span className="rounded border border-sadu-gold/50 bg-white px-2 py-1"><bdi dir="ltr">ID: SCB-YN-02</bdi></span><span className="flex items-center gap-1"><History className="h-3.5 w-3.5" />Payload: {dossierVersion} ({timestamp})</span></div>
-        {isCuratorOrCoordinator && <button type="button" onClick={() => setViewMode(viewMode === 'builder' ? 'dossier' : 'builder')} className="mt-5 flex cursor-pointer items-center gap-2 rounded-md border border-sadu-gold bg-sadu-sand px-4 py-2 text-xs font-bold text-sadu-brick hover:bg-sadu-sand-dark">{viewMode === 'builder' ? 'Back to Dossier' : 'Build New Nomination'}</button>}
+        {isCuratorOrCoordinator && isRecused === false && <button type="button" onClick={() => setViewMode(viewMode === 'builder' ? 'dossier' : 'builder')} className="mt-5 flex cursor-pointer items-center gap-2 rounded-md border border-sadu-gold bg-sadu-sand px-4 py-2 text-xs font-bold text-sadu-brick hover:bg-sadu-sand-dark">{viewMode === 'builder' ? 'Back to Dossier' : 'Build New Nomination'}</button>}
       </section>
 
       {viewMode === 'builder' ? <ArtistNominationBuilder lang={lang} onSuccess={() => setViewMode('dossier')} onCancel={() => setViewMode('dossier')} /> : (<>
