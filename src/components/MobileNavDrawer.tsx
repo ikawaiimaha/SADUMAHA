@@ -126,8 +126,10 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
           </div>
 
           <button
+            type="button"
             onClick={onClose}
-            className="p-1 rounded text-white/80 hover:text-white hover:bg-white/10 cursor-pointer"
+            className="min-h-11 min-w-11 p-2 rounded text-white/80 hover:text-white hover:bg-white/10 cursor-pointer"
+            aria-label={isAr ? 'إغلاق' : 'Close'}
           >
             <X className="w-5 h-5" />
           </button>
@@ -136,6 +138,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
         {/* Quick Search Button */}
         <div className="p-3 border-b border-sadu-gold/50 bg-sadu-sand/60">
           <button
+            type="button"
             onClick={() => {
               onClose();
               onOpenSearch();
@@ -187,6 +190,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
             const Icon = tab.icon;
             return (
               <button
+                type="button"
                 key={tab.id}
                 onClick={() => {
                   onNavigateTab(tab.id);
@@ -211,6 +215,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
         <div className="p-3 border-t border-sadu-gold bg-sadu-sand/70 space-y-2 text-xs">
           <div className="grid grid-cols-2 gap-2">
             <button
+              type="button"
               onClick={() => {
                 onToggleLanguage();
                 onClose();
@@ -222,6 +227,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
             </button>
 
             <button
+              type="button"
               onClick={() => {
                 onToggleDensity();
               }}
@@ -233,6 +239,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
           </div>
 
           <button
+            type="button"
             onClick={() => {
               onClose();
               onOpenStory();
@@ -244,6 +251,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
           </button>
 
           <button
+            type="button"
             onClick={() => {
               onClose();
               onOpenPresenter();

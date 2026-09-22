@@ -122,6 +122,7 @@ export const AppShell: React.FC<AppShellProps> = ({
 
       {showBackToTop && (
         <button
+          type="button"
           onClick={onScrollToTop}
           className="fixed bottom-6 end-6 z-30 p-2.5 bg-sadu-brick text-white rounded-full shadow-lg hover:bg-sadu-brick-dark transition-all cursor-pointer animate-in fade-in"
           title={isAr ? 'العودة إلى أعلى الصفحة' : 'Back to top'}

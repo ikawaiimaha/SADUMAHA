@@ -512,6 +512,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
           />
           {query && (
             <button 
+              type="button"
               onClick={() => { setQuery(''); inputRef.current?.focus(); }}
               aria-label={common.clear}
               className="text-sadu-muted hover:text-sadu-charcoal p-1 text-xs cursor-pointer"
@@ -528,6 +529,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         {/* Category Navigation Pills */}
         <div className="px-3 py-2 bg-sadu-sand/40 border-b border-sadu-gold/50 flex items-center gap-1.5 overflow-x-auto text-[11px] scrollbar-none">
           <button
+            type="button"
             onClick={() => { setSelectedCategory('all'); setSelectedIndex(0); }}
             className={`px-2.5 py-1 rounded-md font-semibold transition-colors cursor-pointer shrink-0 ${
               selectedCategory === 'all'
@@ -538,6 +540,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             {dict.categoryAll}
           </button>
           <button
+            type="button"
             onClick={() => { setSelectedCategory('workflows'); setSelectedIndex(0); }}
             className={`px-2.5 py-1 rounded-md font-semibold transition-colors cursor-pointer shrink-0 flex items-center gap-1 ${
               selectedCategory === 'workflows'
@@ -549,6 +552,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             <span>{dict.categoryWorkflows}</span>
           </button>
           <button
+            type="button"
             onClick={() => { setSelectedCategory('workspaces'); setSelectedIndex(0); }}
             className={`px-2.5 py-1 rounded-md font-semibold transition-colors cursor-pointer shrink-0 ${
               selectedCategory === 'workspaces'
@@ -559,6 +563,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             {dict.categoryWorkspaces}
           </button>
           <button
+            type="button"
             onClick={() => { setSelectedCategory('programmes'); setSelectedIndex(0); }}
             className={`px-2.5 py-1 rounded-md font-semibold transition-colors cursor-pointer shrink-0 ${
               selectedCategory === 'programmes'
@@ -569,6 +574,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             {dict.categoryProgrammes}
           </button>
           <button
+            type="button"
             onClick={() => { setSelectedCategory('actions'); setSelectedIndex(0); }}
             className={`px-2.5 py-1 rounded-md font-semibold transition-colors cursor-pointer shrink-0 ${
               selectedCategory === 'actions'
@@ -601,6 +607,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
               const Icon = cmd.icon;
               return (
                 <button
+                  type="button"
                   key={cmd.id}
                   onClick={cmd.action}
                   onMouseEnter={() => setSelectedIndex(idx)}
@@ -681,6 +688,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             </span>
 
             <button
+              type="button"
               onClick={() => { onNavigateTab('archive'); onClose(); }}
               className="inline-flex items-center gap-1 px-1.5 py-0.5 rtl:px-2 rtl:py-1 rounded bg-sadu-linen border border-sadu-gold text-sadu-charcoal hover:bg-sadu-gold/20 transition-colors cursor-pointer"
               title={dict.workflows.archiveTitle}
@@ -690,6 +698,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             </button>
 
             <button
+              type="button"
               onClick={() => { 
                 if (onOpenNewContract) { onOpenNewContract(); } else { onNavigateTab('contracts'); }
                 onClose(); 
@@ -702,6 +711,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             </button>
 
             <button
+              type="button"
               onClick={() => { onNavigateTab('contracts'); onClose(); }}
               className="inline-flex items-center gap-1 px-1.5 py-0.5 rtl:px-2 rtl:py-1 rounded bg-sadu-linen border border-sadu-gold text-sadu-charcoal hover:bg-sadu-gold/20 transition-colors cursor-pointer"
               title={dict.workflows.contractsTitle}
@@ -711,6 +721,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             </button>
 
             <button
+              type="button"
               onClick={() => { onNavigateTab('approved-scope'); onClose(); }}
               className="inline-flex items-center gap-1 px-1.5 py-0.5 rtl:px-2 rtl:py-1 rounded bg-sadu-linen border border-sadu-gold text-sadu-charcoal hover:bg-sadu-gold/20 transition-colors cursor-pointer"
               title={dict.workflows.scopeTitle}
@@ -720,6 +731,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             </button>
 
             <button
+              type="button"
               onClick={() => { onNavigateTab('dossiers'); onClose(); }}
               className="inline-flex items-center gap-1 px-1.5 py-0.5 rtl:px-2 rtl:py-1 rounded bg-sadu-linen border border-sadu-gold text-sadu-charcoal hover:bg-sadu-gold/20 transition-colors cursor-pointer"
               title={dict.workflows.dossiersTitle}
@@ -729,6 +741,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             </button>
 
             <button
+              type="button"
               onClick={() => { onToggleLanguage(); onClose(); }}
               className="inline-flex items-center gap-1 px-1.5 py-0.5 rtl:px-2 rtl:py-1 rounded bg-sadu-linen border border-sadu-gold text-sadu-charcoal hover:bg-sadu-gold/20 transition-colors cursor-pointer"
               title={dict.workflows.toggleLangTitle}

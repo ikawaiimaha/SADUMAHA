@@ -73,6 +73,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = (props) => {
         {/* FIXED: Language Toggle moved to the Absolute Start */}
         <div className="flex items-center gap-3">
           <button
+            type="button"
             onClick={onToggleLanguage}
             className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 px-2.5 py-0.5 rounded transition-colors border border-white/10 shrink-0 cursor-pointer"
           >
@@ -94,6 +95,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = (props) => {
             {isAr ? "عرض افتراضي · مسارات عمل مقترحة" : "Fictional demonstration · proposed workflows"}
           </span>
           <button
+            type="button"
             onClick={() => onProgrammeChange && onProgrammeChange(DEMO_PROGRAMME)}
             className="text-white hover:text-amber-200 underline text-[11px] cursor-pointer flex items-center gap-1 font-semibold whitespace-nowrap"
             title={isAr ? 'عرض المحرك الفني الأساسي' : 'View raw state machine engine'}
@@ -102,6 +104,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = (props) => {
             <span>{isAr ? 'محرك الحالات (للتدقيق)' : 'State Machine Audit'}</span>
           </button>
           <button
+            type="button"
             onClick={onOpenPresenter}
             className="text-white hover:text-amber-200 underline text-[11px] cursor-pointer flex items-center gap-1 font-semibold whitespace-nowrap border-s border-white/20 ps-3"
           >
@@ -116,7 +119,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = (props) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
         
         <div className="flex items-center gap-3 sm:gap-4 shrink-0">
-          <button aria-label={isAr ? 'فتح قائمة التنقل' : 'Open navigation menu'} onClick={onOpenMobileMenu} className="w-9 h-9 flex items-center justify-center rounded-md text-sadu-charcoal hover:bg-sadu-sand lg:hidden border border-sadu-gold cursor-pointer shrink-0">
+          <button type="button" aria-label={isAr ? 'فتح قائمة التنقل' : 'Open navigation menu'} onClick={onOpenMobileMenu} className="w-9 h-9 flex items-center justify-center rounded-md text-sadu-charcoal hover:bg-sadu-sand lg:hidden border border-sadu-gold cursor-pointer shrink-0">
             <Menu className="w-4 h-4" />
           </button>
 
@@ -139,7 +142,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = (props) => {
           </div>
 
           <div className="relative hidden sm:block ms-2">
-            <button disabled={props.scopeLocked} onClick={() => setProgrammeDropdownOpen(!programmeDropdownOpen)} className="flex items-center gap-1.5 px-3 h-9 text-xs font-medium bg-sadu-sand hover:bg-sadu-sand-dark border border-sadu-gold rounded-md transition-colors disabled:cursor-default text-sadu-charcoal shrink-0">
+            <button type="button" disabled={props.scopeLocked} onClick={() => setProgrammeDropdownOpen(!programmeDropdownOpen)} className="flex items-center gap-1.5 px-3 h-9 text-xs font-medium bg-sadu-sand hover:bg-sadu-sand-dark border border-sadu-gold rounded-md transition-colors disabled:cursor-default text-sadu-charcoal shrink-0">
               <span className="text-sadu-brick font-bold whitespace-nowrap">{isAr ? 'المعرض:' : 'Scope:'}</span>
               <span className="max-w-[150px] md:max-w-[210px] truncate font-semibold">{props.scopeLocked ? FINANCE_SCENARIO_LABEL[isAr ? 'ar' : 'en'] : isAr ? selectedProgramme.titleAr : selectedProgramme.titleEn}</span>
               <ChevronDown className="w-3.5 h-3.5 text-sadu-muted shrink-0" />
@@ -149,7 +152,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = (props) => {
                 <div className="fixed inset-0 z-40" onClick={() => setProgrammeDropdownOpen(false)} />
                 <div className="absolute top-full mt-1.5 w-72 bg-sadu-linen border-2 border-sadu-gold rounded-lg shadow-lg z-50 p-2 text-xs">
                   {PROGRAMMES.map((prog) => (
-                    <button key={prog.id} onClick={() => { onProgrammeChange(prog); setProgrammeDropdownOpen(false); }} className={`w-full text-start px-2.5 py-2 rounded-md hover:bg-sadu-sand transition-colors flex flex-col cursor-pointer ${prog.id === selectedProgramme.id ? 'bg-sadu-sand font-semibold border-s-2 border-sadu-brick' : ''}`}>
+                    <button type="button" key={prog.id} onClick={() => { onProgrammeChange(prog); setProgrammeDropdownOpen(false); }} className={`w-full text-start px-2.5 py-2 rounded-md hover:bg-sadu-sand transition-colors flex flex-col cursor-pointer ${prog.id === selectedProgramme.id ? 'bg-sadu-sand font-semibold border-s-2 border-sadu-brick' : ''}`}>
                       <span className="text-sadu-charcoal font-medium">{isAr ? prog.titleAr : prog.titleEn}</span>
                     </button>
                   ))}
@@ -160,7 +163,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = (props) => {
         </div>
 
         <div className="flex-1 max-w-xs md:max-w-sm hidden md:block">
-          <button data-workspace-search onClick={onOpenSearch} className="w-full h-9 px-3 bg-sadu-sand/70 hover:bg-sadu-sand border border-sadu-gold rounded-md text-xs text-sadu-muted flex items-center justify-between transition-colors cursor-pointer group">
+          <button type="button" data-workspace-search onClick={onOpenSearch} className="w-full h-9 px-3 bg-sadu-sand/70 hover:bg-sadu-sand border border-sadu-gold rounded-md text-xs text-sadu-muted flex items-center justify-between transition-colors cursor-pointer group">
             <div className="flex items-center gap-2 overflow-hidden">
               <Search className="w-3.5 h-3.5 text-sadu-brick shrink-0" />
               <span className="group-hover:text-sadu-charcoal text-[11px] truncate whitespace-nowrap">{isAr ? 'بحث في السجلات والبرامج...' : 'Search records and programmes...'}</span>
@@ -171,12 +174,12 @@ export const HeaderNav: React.FC<HeaderNavProps> = (props) => {
 
         {/* Right Controls (Language Toggle removed from here) */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          <button data-workspace-search aria-label={isAr ? 'البحث في مساحات العمل' : 'Search workspaces'} onClick={onOpenSearch} className="w-9 h-9 flex items-center justify-center text-sadu-charcoal hover:bg-sadu-sand rounded-md border border-sadu-gold md:hidden cursor-pointer shrink-0">
+          <button type="button" data-workspace-search aria-label={isAr ? 'البحث في مساحات العمل' : 'Search workspaces'} onClick={onOpenSearch} className="w-9 h-9 flex items-center justify-center text-sadu-charcoal hover:bg-sadu-sand rounded-md border border-sadu-gold md:hidden cursor-pointer shrink-0">
             <Search className="w-3.5 h-3.5 text-sadu-brick" />
           </button>
 
           <div className="relative">
-            <button aria-label={isAr ? `الإشعارات: ${formatNumber(3)} غير مقروءة` : `Notifications: ${formatNumber(3)} unread`} onClick={() => setNotificationsOpen(!notificationsOpen)} className="w-9 h-9 flex items-center justify-center text-xs text-sadu-charcoal hover:bg-sadu-sand rounded-md border border-sadu-gold transition-colors cursor-pointer relative shrink-0">
+            <button type="button" aria-label={isAr ? `الإشعارات: ${formatNumber(3)} غير مقروءة` : `Notifications: ${formatNumber(3)} unread`} onClick={() => setNotificationsOpen(!notificationsOpen)} className="w-9 h-9 flex items-center justify-center text-xs text-sadu-charcoal hover:bg-sadu-sand rounded-md border border-sadu-gold transition-colors cursor-pointer relative shrink-0">
               <Bell className="w-4 h-4 text-sadu-brick" />
               <span aria-hidden="true" className="absolute -top-1 -end-1 w-4 h-4 rounded-full bg-sadu-brick text-white text-[9px] font-bold flex items-center justify-center">
                 {formatNumber(3)}
@@ -190,9 +193,9 @@ export const HeaderNav: React.FC<HeaderNavProps> = (props) => {
             <span className="max-w-[130px] truncate text-xs font-semibold text-sadu-charcoal">{isAr ? profile?.nameAr : profile?.nameEn}</span>
             <span className="hidden items-center gap-1 text-[9px] font-mono text-sadu-sage sm:flex"><ShieldCheck className="h-3 w-3" />{isAr ? 'موثق' : 'Verified'}</span>
           </div>
-          {onSignOut && <button onClick={onSignOut} className="flex h-9 items-center gap-1 rounded-md border border-sadu-gold bg-sadu-linen px-2.5 text-xs font-semibold text-sadu-brick transition-colors hover:bg-red-50 hover:text-red-700" aria-label={isAr ? 'تسجيل الخروج' : 'Secure sign out'}><LogOut className="h-3.5 w-3.5" /><span className="hidden sm:inline">{isAr ? 'خروج' : 'Sign out'}</span></button>}
+          {onSignOut && <button type="button" onClick={onSignOut} className="flex h-9 items-center gap-1 rounded-md border border-sadu-gold bg-sadu-linen px-2.5 text-xs font-semibold text-sadu-brick transition-colors hover:bg-red-50 hover:text-red-700" aria-label={isAr ? 'تسجيل الخروج' : 'Secure sign out'}><LogOut className="h-3.5 w-3.5" /><span className="hidden sm:inline">{isAr ? 'خروج' : 'Sign out'}</span></button>}
 
-          <button onClick={onOpenStory} className="px-2.5 h-9 text-xs font-semibold text-sadu-brick hover:bg-sadu-sand border border-sadu-brick/40 rounded-md transition-colors hidden md:flex items-center justify-center gap-1 cursor-pointer shrink-0">
+          <button type="button" onClick={onOpenStory} className="px-2.5 h-9 text-xs font-semibold text-sadu-brick hover:bg-sadu-sand border border-sadu-brick/40 rounded-md transition-colors hidden md:flex items-center justify-center gap-1 cursor-pointer shrink-0">
             <BookOpen className="w-3.5 h-3.5 shrink-0" />
             <span className="whitespace-nowrap">{isAr ? 'القصة' : 'Story'}</span>
           </button>

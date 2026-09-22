@@ -155,7 +155,7 @@ export const CommunicationView: React.FC<CommunicationViewProps> = (props) => {
             <CheckCircle2 className="w-4 h-4 text-sadu-sage" />
             <span>{taskLinkedToast}</span>
           </div>
-          <button onClick={() => setTaskLinkedToast(null)} className="text-sadu-muted hover:text-sadu-charcoal">✕</button>
+          <button type="button" aria-label={isAr ? 'إغلاق' : 'Close'} onClick={() => setTaskLinkedToast(null)} className="text-sadu-muted hover:text-sadu-charcoal">✕</button>
         </div>
       )}
 

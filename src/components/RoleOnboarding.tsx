@@ -25,6 +25,7 @@ export const RoleOnboarding: React.FC<RoleOnboardingProps> = ({
     <NativeModal isOpen onClose={onDismiss} labelledBy={titleId} className="max-w-2xl" returnFocusSelector="[data-role-switcher]">
       <div className="bg-sadu-linen border-2 border-sadu-gold rounded-lg max-w-2xl w-full p-6 sm:p-8 shadow-xl text-sadu-charcoal relative">
         <button
+          type="button"
           onClick={onDismiss}
           className="absolute top-4 end-4 p-1 text-sadu-muted hover:text-sadu-charcoal hover:bg-sadu-sand/70 rounded-md transition-colors cursor-pointer"
           data-modal-close
@@ -97,6 +98,7 @@ export const RoleOnboarding: React.FC<RoleOnboardingProps> = ({
             </p>
 
             <button
+              type="button"
               onClick={() => setTaskCompleted(true)}
               disabled={taskCompleted}
               className={`w-full py-2 px-3 text-xs font-semibold rounded-md border transition-all cursor-pointer ${
@@ -119,6 +121,7 @@ export const RoleOnboarding: React.FC<RoleOnboardingProps> = ({
           </div>
 
           <button
+            type="button"
             onClick={onDismiss}
             className="w-full sm:w-auto px-6 py-2.5 text-xs font-bold text-white bg-sadu-ink hover:bg-sadu-ink-dark rounded-md transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
           >

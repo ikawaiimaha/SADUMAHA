@@ -111,6 +111,7 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
             )}
 
             <button
+              type="button"
               onClick={handleDownloadPdf}
               className="px-3.5 py-2 text-xs font-bold rounded-md bg-sadu-brick text-white hover:bg-sadu-brick-dark transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
               title={isAr ? 'طباعة التقرير أو حفظه بصيغة PDF' : 'Download or print report'}
@@ -120,6 +121,7 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
             </button>
 
             <button
+              type="button"
               onClick={handleBrowserPrint}
               className="px-3 py-2 text-xs font-bold rounded-md bg-sadu-ink text-white hover:bg-sadu-ink-dark transition-colors flex items-center gap-1.5 cursor-pointer"
               title={isAr ? 'طباعة المستند أو حفظه من نافذة المتصفح' : 'Print document or save using browser dialog'}
@@ -129,6 +131,7 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
             </button>
 
             <button
+              type="button"
               onClick={onClose}
               className="p-2 text-sadu-muted hover:text-sadu-charcoal hover:bg-sadu-sand-dark rounded-md transition-colors cursor-pointer"
               aria-label={isAr ? 'إغلاق التقرير' : 'Close modal'}
