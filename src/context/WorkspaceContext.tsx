@@ -1,12 +1,13 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { RoleKey, ExhibitionProgramme, WorkspaceTab, DisplayDensity, ExperienceMode } from '../types';
-import { PROGRAMMES, ROLE_PROFILES } from '../data/mockData';
+import React, { createContext, useContext, useMemo, useState, ReactNode } from 'react';
+import { CommitteeReviewSubmission, RoleKey, ExhibitionProgramme, WorkspaceTab, DisplayDensity, ExperienceMode } from '../types';
+import { COMMITTEE_SUBMISSION, PROGRAMMES, ROLE_PROFILES } from '../data/mockData';
 import { DEMO_PROGRAMME } from '../data/livingRecord';
 import { writePreference } from '../utils/preferences';
 
 import { recordEditorialCheck, type EditorialCheck } from '../data/editorialSamples';
 
 interface WorkspaceContextType {
+  activeDataPayload: CommitteeReviewSubmission;
   editorialChecks: Record<string, EditorialCheck>;
   checkEditorial: (id: string) => void;
   currentRole: RoleKey;
@@ -53,6 +54,19 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
+  const activeDataPayload = useMemo(() => {
+    const rawData: CommitteeReviewSubmission = structuredClone(COMMITTEE_SUBMISSION);
+    if (currentRole === 'ARTIST') {
+      rawData.committeeRubric = undefined;
+      rawData.reviewerNotes = [];
+      rawData.proposedBudgetUsd = 0;
+      rawData.budgetBreakdown = undefined;
+      rawData.conditionsEn = [];
+      rawData.conditionsAr = [];
+    }
+    return rawData;
+  }, [currentRole]);
+
   const [editorialChecks, setEditorialChecks] = useState<Record<string, EditorialCheck>>({});
   const checkEditorial = (id: string) => setEditorialChecks(previous => recordEditorialCheck(previous, selectedProgramme.id, id, currentRole, new Date().toISOString()));
 
@@ -77,6 +91,7 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
 
   return (
     <WorkspaceContext.Provider value={{
+      activeDataPayload,
       editorialChecks, checkEditorial, currentRole, setCurrentRole, switchRole, selectedProgramme, setSelectedProgramme,
       activeTab, setActiveTab, navigateTab, density, toggleDensity, experienceMode,
       setExperienceMode, isPresenterOpen, setIsPresenterOpen, isCommandPaletteOpen,

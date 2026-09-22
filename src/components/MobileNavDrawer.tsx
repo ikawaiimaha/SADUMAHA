@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Language, RoleKey, WorkspaceTab, ExhibitionProgramme } from '../types';
 import { ROLE_PROFILES, PROGRAMMES } from '../data/mockData';
 import { FINANCE_SCENARIO_ID, FINANCE_SCENARIO_LABEL } from '../data/legacyScenario';
@@ -57,6 +57,40 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
   onToggleDensity,
 }) => {
   const isAr = lang === 'ar';
+  const drawerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const drawer = drawerRef.current;
+    const previousOverflow = document.body.style.overflow;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== 'Tab' || !drawer) return;
+      const focusable = Array.from(drawer.querySelectorAll<HTMLElement>('button, a, select, input, [tabindex]:not([tabindex="-1"])')).filter(element => !element.hasAttribute('disabled'));
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.body.style.overflow = 'hidden';
+    drawer?.focus();
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const profile = ROLE_PROFILES[currentRole];
@@ -83,7 +117,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
       />
 
       {/* Drawer */}
-      <div className="relative w-4/5 max-w-xs sm:max-w-sm bg-sadu-linen h-full shadow-2xl z-50 flex flex-col border-e border-sadu-gold overflow-y-auto">
+      <div ref={drawerRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label={isAr ? 'قائمة التنقل' : 'Navigation Menu'} className="relative w-4/5 max-w-xs sm:max-w-sm bg-sadu-linen h-full shadow-2xl z-50 flex flex-col border-e border-sadu-gold overflow-y-auto">
         {/* Drawer Header */}
         <div className="p-4 bg-sadu-ink text-white flex items-center justify-between">
           <div>
