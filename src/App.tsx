@@ -268,6 +268,12 @@ function PresentationFirstApp({ isAuthenticated, setIsAuthenticated }: { isAuthe
   const { lang, toggleLang } = useI18n();
   const { setLeadershipView } = useLivingRecord();
 
+  const signIn = () => {
+    setSelectedProgramme(PROGRAMMES[0]);
+    setLeadershipView('CHAIRMAN');
+    setIsAuthenticated(true);
+  };
+
   const enterPlatform = (role: RoleKey) => {
     switchRole(role);
     setSelectedProgramme(PROGRAMMES[0]);
@@ -290,7 +296,7 @@ function PresentationFirstApp({ isAuthenticated, setIsAuthenticated }: { isAuthe
     );
   }
 
-  if (!isAuthenticated) return <IdentityGate onSignIn={() => setIsAuthenticated(true)} />;
+  if (!isAuthenticated) return <IdentityGate onSignIn={signIn} />;
   return <><RehearsalTeleprompter /><SADUApp onSignOut={() => { setIsAuthenticated(false); setExperienceMode('story'); }} /></>;
 }
 
