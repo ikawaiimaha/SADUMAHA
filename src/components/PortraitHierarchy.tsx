@@ -27,7 +27,7 @@ export function PortraitHierarchy({ rank, isAr, compact = false }: { rank: Leade
 export function PortraitCredit({ rank, isAr }: { rank: LeadershipRank; isAr: boolean }) {
   const asset = leadershipPortraits[rank];
   return <>{hasPortraitEvidence(asset)
-    ? <a href={asset.sourceUrl} target="_blank" rel="noreferrer">{asset.credit}</a>
+    ? <a aria-label={isAr ? 'حدود المصادر والصلاحيات للصور الرسمية' : 'Source and authority limits for portrait'} href={asset.sourceUrl} target="_blank" rel="noreferrer">{asset.credit}</a>
     : <span>{isAr ? 'ستضاف الصورة بعد توثيق المصدر والإذن باستخدامها في العرض.' : 'Portrait awaiting a documented source and permission for this presentation.'}</span>}
     <ClaimProvenance sourceKey={rank === 'ruler' ? 'department' : rank === 'chairman' ? 'calendar' : 'creativity'} isAr={isAr}/>
   </>;

@@ -16,7 +16,7 @@ export function ExecutiveQuote({ isAr }: { isAr: boolean }) {
       <footer className="quote-footer">
         <p className="quote-author">{isAr ? person.nameAr : person.nameEn}</p>
         <p className="quote-cite">{isAr ? person.titleAr : person.titleEn}</p>
-        <a href={source} target="_blank" rel="noreferrer">{isAr ? 'المصدر: مجلة الوسطى، العدد ٧٦، يناير ٢٠٢٦' : 'Source: Sharjah24 · 16 December 2025'}</a>
+        <a aria-label={isAr ? 'حدود المصادر والصلاحيات للاقتباس' : 'Source and authority limits for quote citation'} href={source} target="_blank" rel="noreferrer">{isAr ? 'المصدر: مجلة الوسطى، العدد ٧٦، يناير ٢٠٢٦' : 'Source: Sharjah24 · 16 December 2025'}</a>
       </footer>
     </blockquote>
     <p className="executive-quote__context">{isAr ? 'مقتطف عن التراث في سياق إدراج الفاية على قائمة التراث العالمي؛ وليس تأييداً لمنصة سدو.' : 'Heritage remarks at the Faya World Heritage inscription ceremony; not an endorsement of SADU.'}</p>

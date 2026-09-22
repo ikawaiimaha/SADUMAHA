@@ -90,7 +90,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
       <header className="story-toolbar border-b border-sadu-gold bg-sadu-linen px-4 sm:px-6 py-2 shadow-xs">
         <div className="max-w-6xl mx-auto flex flex-wrap gap-2 items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="font-editorial text-2xl font-bold tracking-tight text-sadu-brick">
+            <span role="heading" aria-level={2} className="font-editorial text-2xl font-bold tracking-tight text-sadu-brick">
               {isAr ? 'سدو' : 'SADU'}
             </span>
             <span className="hidden sm:inline text-xs text-sadu-muted border-s border-sadu-gold ps-3">
@@ -98,41 +98,44 @@ export const StoryMode: React.FC<StoryModeProps> = ({
             </span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <nav aria-label={isAr ? 'روابط التنقل العامة' : 'Utility navigation'} className="flex flex-wrap items-center gap-2">
             <RosterNavLink/>
             <button
+              type="button"
               onClick={onToggleLanguage}
               className="px-3 py-1.5 text-xs font-medium border border-sadu-gold rounded-md bg-sadu-sand hover:bg-sadu-sand/80 transition-colors cursor-pointer"
             >
               {isAr ? 'English' : 'العربية'}
             </button>
             <button
+              type="button"
               onClick={onSkipToPlatform}
               className="px-3 py-1.5 text-xs font-semibold text-sadu-brick hover:text-sadu-charcoal hover:bg-sadu-sand/70 rounded-md border border-transparent hover:border-sadu-gold transition-colors flex items-center gap-1 cursor-pointer"
             >
               <span>{isAr ? 'تخطي إلى المنصة' : 'Skip to Platform'}</span>
               <SkipForward className="w-3.5 h-3.5 rtl:rotate-180" />
             </button>
-          </div>
+          </nav>
         </div>
       </header>
 
       <AuthoredBand compact className="my-2" />
 
       <main className="story-main max-w-6xl w-full mx-auto">
-        <div className="story-progress">
+        <nav aria-label={isAr ? 'مراحل العرض التقديمي' : 'Chapter progress'} className="story-progress">
           <div className="flex items-center justify-between mb-2.5 text-xs text-sadu-muted">
             <span className="font-semibold uppercase tracking-wider text-sadu-brick">
               {isAr ? `الفصل ${formatNumber(currentChapter + 1)} من ${formatNumber(chapters.length)}` : `Chapter ${currentChapter + 1} of ${chapters.length}`}
             </span>
             <span>{isAr ? 'عرض تعريفي تفاعلي' : 'Guided Institutional Story'}</span>
           </div>
-          <div className="grid gap-1.5 h-1.5 w-full bg-sadu-sand/80 rounded-full overflow-hidden" style={{ gridTemplateColumns: `repeat(${chapters.length}, minmax(0, 1fr))` }}>
+          <div className="grid gap-1.5 h-1.5 w-full bg-sadu-sand/80 rounded-full overflow-visible" style={{ gridTemplateColumns: `repeat(${chapters.length}, minmax(0, 1fr))` }}>
             {chapters.map((chapter, idx) => (
               <button
                 key={idx}
+                type="button"
                 onClick={() => goToChapter(idx)}
-                className={`h-full transition-all cursor-pointer ${
+                className={`relative h-full min-h-[32px] -my-2 py-2 transition-all cursor-pointer focus:outline-none ${
                   idx === currentChapter ? 'bg-sadu-brick' : idx < currentChapter ? 'bg-sadu-ink' : 'bg-transparent hover:bg-sadu-gold'
                 }`}
                 title={isAr ? `الفصل ${formatNumber(idx + 1)}: ${chapter.titleAr}` : `Chapter ${idx + 1}: ${chapter.titleEn}`}
@@ -141,7 +144,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
               />
             ))}
           </div>
-        </div>
+        </nav>
 
         <section ref={cardRef} aria-labelledby="story-title" tabIndex={0} className={`story-card bg-sadu-linen border border-sadu-gold rounded-lg ${isPortraitChapter ? 'story-card--portrait' : ''} ${isLeadChapter ? 'story-card--lead' : ''}`}>
           
@@ -225,6 +228,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
                   ].map((item) => (
                     <button
                       key={item.view ?? item.labelEn}
+                      type="button"
                       onClick={() => item.view ? onSelectManagementView(item.view) : onSelectRoleAndExplore(item.role)}
                       className="rounded-md border border-sadu-gold bg-sadu-linen hover:bg-sadu-brick hover:text-white text-start transition-colors group cursor-pointer shadow-2xs flex items-center justify-between gap-2"
                     >
@@ -243,6 +247,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
         <div className="story-controls flex items-center justify-between border-t border-sadu-gold">
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={() => goToChapter(Math.max(0, currentChapter - 1))}
               disabled={currentChapter === 0}
               className="px-4 py-2 text-xs font-medium border border-sadu-gold rounded-md bg-sadu-linen disabled:opacity-40 hover:bg-sadu-sand/70 flex items-center gap-1 cursor-pointer"
@@ -252,6 +257,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
             </button>
 
             <button
+              type="button"
               onClick={() => { setAnnouncedChapter(null); setIsPlaying(!isPlaying); }}
               className="px-4 py-2 text-xs font-medium border border-sadu-gold rounded-md bg-sadu-linen hover:bg-sadu-sand/70 flex items-center gap-1.5 cursor-pointer"
             >
@@ -272,6 +278,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
           <div className="flex items-center gap-2">
             {currentChapter < chapters.length - 1 ? (
               <button
+                type="button"
                 onClick={() => goToChapter(currentChapter + 1)}
                 className="px-5 py-2 text-xs font-semibold text-white bg-sadu-brick hover:bg-sadu-brick-dark rounded-md flex items-center gap-1.5 shadow-xs cursor-pointer"
               >
@@ -280,6 +287,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
               </button>
             ) : (
               <button
+                type="button"
                 onClick={onSkipToPlatform}
                 className="px-5 py-2 text-xs font-semibold text-white bg-sadu-ink hover:bg-sadu-ink-dark rounded-md flex items-center gap-1.5 shadow-xs cursor-pointer"
               >
