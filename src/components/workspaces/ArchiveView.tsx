@@ -37,7 +37,7 @@ export const ArchiveView: React.FC<ArchiveViewProps> = (props) => {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <section className="rounded-lg border border-sadu-gold bg-sadu-linen p-6 shadow-xs">
+      <section className="rounded-lg border border-sadu-gold bg-sadu-linen p-4 shadow-xs sm:p-6">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <div className="mb-1 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-sadu-brick"><Archive className="h-4 w-4" /><span>{isAr ? 'الذاكرة المؤسسية والأرشيف السيادي' : 'Institutional Memory & Sovereign Archive'}</span></div>
