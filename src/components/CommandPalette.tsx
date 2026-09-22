@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Language, RoleKey, WorkspaceTab, ExhibitionProgramme } from '../types';
-import { ROLE_PROFILES, PROGRAMMES } from '../data/mockData';
+import { PROGRAMMES } from '../data/mockData';
 import { useI18n } from '../context/I18nContext';
 import { LOCALES } from '../i18n/locales';
 import { 
@@ -16,8 +16,7 @@ import {
   Wrench, 
   MessageSquare, 
   Archive, 
-  UserCheck, 
-  Layers, 
+  Layers,
   SlidersHorizontal, 
   Globe, 
   BookOpen, 
@@ -39,7 +38,6 @@ export interface CommandPaletteProps {
   selectedProgramme: ExhibitionProgramme;
   scopeLocked?: boolean;
   onNavigateTab: (tab: WorkspaceTab) => void;
-  onSelectRole: (role: RoleKey) => void;
   onSelectProgramme: (programme: ExhibitionProgramme) => void;
   onOpenStory: () => void;
   onOpenPresenter: () => void;
@@ -49,11 +47,11 @@ export interface CommandPaletteProps {
   onExportPdf?: () => void;
 }
 
-export type CommandCategory = 'all' | 'workflows' | 'workspaces' | 'roles' | 'programmes' | 'actions';
+export type CommandCategory = 'all' | 'workflows' | 'workspaces' | 'programmes' | 'actions';
 
 export interface CommandItem {
   id: string;
-  category: 'workflows' | 'workspaces' | 'roles' | 'programmes' | 'actions';
+  category: 'workflows' | 'workspaces' | 'programmes' | 'actions';
   title: string;
   subtitle?: string;
   icon: React.ElementType;
@@ -72,7 +70,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   selectedProgramme,
   scopeLocked = false,
   onNavigateTab,
-  onSelectRole,
   onSelectProgramme,
   onOpenStory,
   onOpenPresenter,
@@ -365,23 +362,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       },
 
       // ==========================================
-      // Institutional Perspectives (Roles)
-      // ==========================================
-      ...Object.entries(ROLE_PROFILES).map(([rk, prof]) => ({
-        id: `role-${rk}`,
-        category: 'roles' as const,
-        title: isAr ? `تبديل المنظور: ${prof.nameAr}` : `Switch Perspective: ${prof.nameEn}`,
-        subtitle: isAr ? prof.titleAr : prof.titleEn,
-        icon: UserCheck,
-        badge: rk,
-        keywords: ['role', 'perspective', 'switch', rk.toLowerCase(), prof.nameEn.toLowerCase(), prof.nameAr],
-        action: () => {
-          onSelectRole(rk as RoleKey);
-          onClose();
-        },
-      })),
-
-      // ==========================================
       // Exhibition Programmes
       // ==========================================
       ...(scopeLocked ? [] : PROGRAMMES).map(prog => ({
@@ -428,20 +408,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         },
       },
       {
-        id: 'act-personas',
-        category: 'actions',
-        title: acts.personasTitle,
-        subtitle: acts.personasSubtitle,
-        icon: Award,
-        badge: 'Executive',
-        keywords: ['leadership', 'persona', 'ruler', 'chairman', 'director', 'قيادة', 'محاكاة'],
-        action: () => {
-          onSelectRole('LEADERSHIP');
-          onNavigateTab('overview');
-          onClose();
-        },
-      },
-      {
         id: 'act-density',
         category: 'actions',
         title: acts.densityTitle,
@@ -464,8 +430,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     scopeLocked,
     isAr,
     currentLang,
-    onNavigateTab, 
-    onSelectRole, 
+    onNavigateTab,
     onSelectProgramme, 
     onOpenStory, 
     onOpenPresenter, 
@@ -513,7 +478,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       }
     } else if (e.key === 'Tab') {
       e.preventDefault();
-      const categories: CommandCategory[] = ['all', 'workflows', 'workspaces', 'roles', 'programmes', 'actions'];
+      const categories: CommandCategory[] = ['all', 'workflows', 'workspaces', 'programmes', 'actions'];
       const currentIndex = categories.indexOf(selectedCategory);
       const nextCategory = categories[(currentIndex + 1) % categories.length];
       setSelectedCategory(nextCategory);
@@ -592,16 +557,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             }`}
           >
             {dict.categoryWorkspaces}
-          </button>
-          <button
-            onClick={() => { setSelectedCategory('roles'); setSelectedIndex(0); }}
-            className={`px-2.5 py-1 rounded-md font-semibold transition-colors cursor-pointer shrink-0 ${
-              selectedCategory === 'roles'
-                ? 'bg-sadu-brick text-white'
-                : 'text-sadu-muted hover:text-sadu-charcoal hover:bg-sadu-sand'
-            }`}
-          >
-            {dict.categoryRoles}
           </button>
           <button
             onClick={() => { setSelectedCategory('programmes'); setSelectedIndex(0); }}

@@ -94,7 +94,6 @@ function SADUApp({ onSignOut, isAuthenticated }: { onSignOut: () => void; isAuth
   const { setLeadershipView } = useLivingRecord();
   const {
     currentRole,
-    setCurrentRole,
     switchRole,
     selectedProgramme,
     setSelectedProgramme,
@@ -203,11 +202,6 @@ function SADUApp({ onSignOut, isAuthenticated }: { onSignOut: () => void; isAuth
     setShowRoleOnboarding(true);
   };
 
-  const handleRoleChangeFromNav = (role: RoleKey) => {
-    switchRole(role);
-    setShowRoleOnboarding(true);
-  };
-
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -259,16 +253,13 @@ function SADUApp({ onSignOut, isAuthenticated }: { onSignOut: () => void; isAuth
         onOpenSearch={() => setShowCommandPalette(true)}
         onOpenPresenter={() => setShowPresenterDrawer(true)}
         onOpenMobileMenu={() => setShowMobileMenu(true)}
-        onRoleChange={handleRoleChangeFromNav}
         onProgrammeChange={selectLegacyProgramme}
         onNavigateTab={setActiveTab}
-        onSelectRole={handleRoleChangeFromNav}
         onSetShowRoleOnboarding={setShowRoleOnboarding}
         onSetShowCommandPalette={setShowCommandPalette}
         onSetShowNewContractModal={setShowNewContractModal}
         onSetShowMobileMenu={setShowMobileMenu}
         onSetShowPresenterDrawer={setShowPresenterDrawer}
-        onSetCurrentRole={setCurrentRole}
         onScrollToTop={scrollToTop}
         onSelectLegacyProgramme={selectLegacyProgramme}
         financeScopeLocked={financeScopeLocked}

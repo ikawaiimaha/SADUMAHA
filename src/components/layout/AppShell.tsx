@@ -29,16 +29,13 @@ export interface AppShellProps {
   onOpenSearch: () => void;
   onOpenPresenter: () => void;
   onOpenMobileMenu: () => void;
-  onRoleChange: (role: any) => void;
   onProgrammeChange: (programme: any) => void;
   onNavigateTab: (tab: any) => void;
-  onSelectRole: (role: any) => void;
   onSetShowRoleOnboarding: (value: boolean) => void;
   onSetShowCommandPalette: (value: boolean) => void;
   onSetShowNewContractModal: (value: boolean) => void;
   onSetShowMobileMenu: (value: boolean) => void;
   onSetShowPresenterDrawer: (value: boolean) => void;
-  onSetCurrentRole: (role: any) => void;
   onScrollToTop: () => void;
   onSelectLegacyProgramme: (programme: any) => void;
   financeScopeLocked: boolean;
@@ -63,16 +60,13 @@ export const AppShell: React.FC<AppShellProps> = ({
   onOpenSearch,
   onOpenPresenter,
   onOpenMobileMenu,
-  onRoleChange,
   onProgrammeChange,
   onNavigateTab,
-  onSelectRole,
   onSetShowRoleOnboarding,
   onSetShowCommandPalette,
   onSetShowNewContractModal,
   onSetShowMobileMenu,
   onSetShowPresenterDrawer,
-  onSetCurrentRole,
   onScrollToTop,
   onSelectLegacyProgramme,
   financeScopeLocked,
@@ -91,7 +85,6 @@ export const AppShell: React.FC<AppShellProps> = ({
         currentRole={currentRole}
         selectedProgramme={selectedProgramme}
         density={density}
-        onRoleChange={onRoleChange}
         onProgrammeChange={onProgrammeChange}
         onToggleLanguage={onToggleLanguage}
         onToggleDensity={onToggleDensity}
@@ -144,7 +137,6 @@ export const AppShell: React.FC<AppShellProps> = ({
         currentRole={currentRole}
         selectedProgramme={selectedProgramme}
         onNavigateTab={onNavigateTab}
-        onSelectRole={onSelectRole}
         onSelectProgramme={onSelectLegacyProgramme}
         scopeLocked={financeScopeLocked}
         onOpenStory={onOpenStory}
@@ -170,7 +162,6 @@ export const AppShell: React.FC<AppShellProps> = ({
         selectedProgramme={selectedProgramme}
         activeTab={activeTab}
         onNavigateTab={onNavigateTab}
-        onSelectRole={onSelectRole}
         onSelectProgramme={onSelectLegacyProgramme}
         scopeLocked={financeScopeLocked}
         onOpenSearch={onOpenSearch}
@@ -185,7 +176,6 @@ export const AppShell: React.FC<AppShellProps> = ({
           role={currentRole}
           lang={lang}
           onDismiss={() => onSetShowRoleOnboarding(false)}
-          onSelectAnotherRole={onSetCurrentRole}
         />
       )}
 

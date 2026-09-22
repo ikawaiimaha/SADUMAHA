@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Language, RoleKey, WorkspaceTab, ExhibitionProgramme } from '../types';
-import { ROLE_PROFILES, PROGRAMMES } from '../data/mockData';
+import { PROGRAMMES, ROLE_PROFILES } from '../data/mockData';
 import { FINANCE_SCENARIO_ID, FINANCE_SCENARIO_LABEL } from '../data/legacyScenario';
 import { 
   X, 
@@ -12,7 +12,6 @@ import {
   MessageSquare, 
   Archive, 
   Layers, 
-  UserCheck, 
   Globe, 
   SlidersHorizontal, 
   BookOpen, 
@@ -30,7 +29,6 @@ interface MobileNavDrawerProps {
   scopeLocked?: boolean;
   activeTab: WorkspaceTab;
   onNavigateTab: (tab: WorkspaceTab) => void;
-  onSelectRole: (role: RoleKey) => void;
   onSelectProgramme: (programme: ExhibitionProgramme) => void;
   onOpenSearch: () => void;
   onOpenStory: () => void;
@@ -48,7 +46,6 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
   scopeLocked = false,
   activeTab,
   onNavigateTab,
-  onSelectRole,
   onSelectProgramme,
   onOpenSearch,
   onOpenStory,
@@ -94,7 +91,6 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
   if (!isOpen) return null;
 
   const profile = ROLE_PROFILES[currentRole];
-
   const allTabs = [
     { id: 'overview' as WorkspaceTab, icon: LayoutDashboard, labelEn: 'Dashboard', labelAr: 'الرئيسية' },
     { id: 'dossiers' as WorkspaceTab, icon: FileText, labelEn: 'Selection', labelAr: 'الاختيار' },
@@ -178,22 +174,6 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
             </select>
           </div>
 
-          <div>
-            <span className="text-[10px] font-bold text-sadu-muted uppercase tracking-wider block mb-1">
-              {isAr ? 'الدور المؤسسي النشط:' : 'Active Perspective Role:'}
-            </span>
-            <select
-              value={currentRole}
-              onChange={(e) => onSelectRole(e.target.value as RoleKey)}
-              className="w-full text-xs font-semibold p-2 bg-sadu-linen border border-sadu-gold rounded-md text-sadu-charcoal focus:border-sadu-brick focus:outline-hidden"
-            >
-              {Object.entries(ROLE_PROFILES).map(([rk, prof]) => (
-                <option key={rk} value={rk}>
-                  {isAr ? `${prof.nameAr} (${rk})` : `${prof.nameEn} (${rk})`}
-                </option>
-              ))}
-            </select>
-          </div>
         </div>
 
         {/* Main Workspace Navigation */}

@@ -9,14 +9,12 @@ interface RoleOnboardingProps {
   role: RoleKey;
   lang: Language;
   onDismiss: () => void;
-  onSelectAnotherRole: (role: RoleKey) => void;
 }
 
 export const RoleOnboarding: React.FC<RoleOnboardingProps> = ({
   role,
   lang,
   onDismiss,
-  onSelectAnotherRole,
 }) => {
   const titleId = useId();
   const isAr = lang === 'ar';
@@ -117,7 +115,7 @@ export const RoleOnboarding: React.FC<RoleOnboardingProps> = ({
         {/* Footer Actions */}
         <div className="mt-6 pt-4 border-t border-sadu-gold flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="text-xs text-sadu-muted">
-            {isAr ? 'يمكنك تغيير الدور في أي وقت من الشريط العلوي' : 'You can switch roles anytime from the top bar'}
+            {isAr ? 'لتغيير الدور، سجّل الخروج ثم أعد تسجيل الدخول.' : 'Sign out and authenticate again to change role.'}
           </div>
 
           <button
