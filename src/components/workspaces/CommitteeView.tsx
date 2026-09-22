@@ -28,6 +28,7 @@ export const CommitteeView: React.FC<CommitteeViewProps> = (props) => {
   const [viewMode, setViewMode] = useState<'dossier' | 'builder'>('dossier');
   const [activeTab, setActiveTab] = useState<AssessmentTab>('evidence');
   const [isRecused, setIsRecused] = useState<boolean | null>(null);
+  const isConflictDeclared = isRecused === false;
   const [scores, setScores] = useState({ conceptual: 0, technical: 0, thematic: 0 });
   const [decision, setDecision] = useState<'approve' | 'conditional' | 'reject' | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -62,15 +63,15 @@ export const CommitteeView: React.FC<CommitteeViewProps> = (props) => {
         <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-sadu-brick"><Scale className="h-4 w-4" />{isAr ? 'لجنة التحكيم والتقييم الفني' : 'Curatorial Assessment Committee'}</div>
         <h1 className="mt-2 text-2xl font-editorial font-bold text-sadu-charcoal sm:text-3xl">{isAr ? 'ملف القراءة والتقييم الآمن' : 'Secure Reading Dossier'}</h1>
         <div className="mt-3 flex flex-wrap items-center gap-4 text-xs font-mono text-sadu-muted"><span className="rounded border border-sadu-gold/50 bg-white px-2 py-1"><bdi dir="ltr">ID: SCB-YN-02</bdi></span><span className="flex items-center gap-1"><History className="h-3.5 w-3.5" />Payload: {dossierVersion} ({timestamp})</span></div>
-        {isCuratorOrCoordinator && isRecused === false && <button type="button" onClick={() => setViewMode(viewMode === 'builder' ? 'dossier' : 'builder')} className="mt-5 flex cursor-pointer items-center gap-2 rounded-md border border-sadu-gold bg-sadu-sand px-4 py-2 text-xs font-bold text-sadu-brick hover:bg-sadu-sand-dark">{viewMode === 'builder' ? 'Back to Dossier' : 'Build New Nomination'}</button>}
+        {isCuratorOrCoordinator && isConflictDeclared && <button type="button" onClick={() => setViewMode(viewMode === 'builder' ? 'dossier' : 'builder')} className="mt-5 flex cursor-pointer items-center gap-2 rounded-md border border-sadu-gold bg-sadu-sand px-4 py-2 text-xs font-bold text-sadu-brick hover:bg-sadu-sand-dark">{viewMode === 'builder' ? 'Back to Dossier' : 'Build New Nomination'}</button>}
       </section>
 
-      {viewMode === 'builder' ? <ArtistNominationBuilder lang={lang} onSuccess={() => setViewMode('dossier')} onCancel={() => setViewMode('dossier')} /> : (<>
+      {isConflictDeclared && viewMode === 'builder' ? <ArtistNominationBuilder lang={lang} onSuccess={() => setViewMode('dossier')} onCancel={() => setViewMode('dossier')} /> : (<>
         {isRecused === null && <section className="rounded-lg border-2 border-sadu-gold bg-white p-6 shadow-md"><h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-sadu-charcoal"><AlertTriangle className="h-5 w-5 text-sadu-brick" />{isAr ? 'إقرار تضارب المصالح (إلزامي)' : 'Mandatory Conflict of Interest Declaration'}</h2><p className="mb-6 text-sm leading-relaxed text-sadu-muted">{isAr ? 'قبل الوصول إلى مساحة التقييم، يجب الإقرار بعدم وجود أي تضارب مصالح مالي أو شخصي أو مهني مع الفنان، أو التنحي عن تحكيم هذا الملف.' : 'Before accessing the assessment workspace, declare that you have no financial, personal, or professional conflict of interest with this applicant, or recuse yourself from this decision.'}</p><div className="flex flex-col gap-4 sm:flex-row"><button type="button" onClick={() => setIsRecused(false)} className="flex cursor-pointer items-center justify-center gap-2 rounded bg-sadu-charcoal px-6 py-3 text-sm font-bold text-white hover:bg-black"><CheckCircle2 className="h-4 w-4" />{isAr ? 'أقر بعدم وجود تضارب مصالح' : 'I Declare No Conflict of Interest'}</button><button type="button" onClick={() => setIsRecused(true)} className="flex cursor-pointer items-center justify-center gap-2 rounded border border-sadu-gold bg-white px-6 py-3 text-sm font-bold text-sadu-brick hover:bg-red-50"><Ban className="h-4 w-4" />{isAr ? 'التنحي عن تحكيم هذا الملف' : 'Recuse Myself from this Dossier'}</button></div></section>}
 
         {isRecused === true && <section className="space-y-4 rounded-lg border border-sadu-gold bg-sadu-sand p-8 text-center"><div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-sadu-gold/30 bg-white"><Lock className="h-8 w-8 text-sadu-muted" /></div><h2 className="text-xl font-editorial font-bold text-sadu-charcoal">{isAr ? 'تم تقييد الوصول بسبب التنحي' : 'Access Restricted due to Recusal'}</h2><p className="mx-auto max-w-lg text-sm text-sadu-muted">{isAr ? 'تم إغلاق صلاحية التقييم والتصويت على هذا الملف، وسيتم تسجيل التنحي في السجل المؤسسي.' : 'Assessment and voting rights for this dossier have been revoked. This recusal is logged in the institutional ledger.'}</p></section>}
 
-        {isRecused === false && <div className="space-y-6">
+        {isConflictDeclared && <div className="space-y-6">
           <div role="tablist" aria-label={isAr ? 'أقسام ملف التقييم' : 'Assessment Dossier Sections'} className="flex flex-wrap gap-2 border-b border-sadu-gold/40 pb-2">{[
             { id: 'evidence' as const, en: '1. Immutable Evidence', ar: '١. الأدلة المرفقة' },
             { id: 'rubric' as const, en: '2. Scoring Rubric', ar: '٢. معايير التقييم' },
