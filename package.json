@@ -11,7 +11,10 @@
     "lint": "tsc --noEmit",
     "test:demo": "node --import tsx --test tests/livingRecord.test.ts tests/artistIntake.test.ts tests/intakeWorkflow.test.ts tests/bilingualTimeline.test.tsx",
     "test:e2e": "playwright test",
-    "test:guards": "node --import tsx --test tests/demoBoundaries.test.ts"
+    "test:guards": "node --import tsx --test tests/demoBoundaries.test.ts",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
+    "chromatic": "npx chromatic --project-token=chpt_b93f012ea65c898"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
@@ -30,17 +33,36 @@
     "vite": "^6.2.3"
   },
   "devDependencies": {
+    "@chromatic-com/storybook": "latest",
     "@playwright/test": "^1.63.0",
+    "@storybook/addon-a11y": "^10.6.0",
+    "@storybook/addon-docs": "^10.6.0",
+    "@storybook/addon-mcp": "^10.6.0",
+    "@storybook/addon-vitest": "^10.6.0",
+    "@storybook/react-vite": "^10.6.0",
     "@types/express": "^4.17.21",
     "@types/mixpanel-browser": "^2.60.0",
     "@types/node": "^22.14.0",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "@vitest/browser-playwright": "latest",
+    "@vitest/coverage-v8": "latest",
     "autoprefixer": "^10.4.21",
     "esbuild": "^0.25.0",
+    "mockdate": "^3.0.5",
+    "msw": "^2.15.0",
+    "msw-storybook-addon": "^3.0.3",
+    "playwright": "latest",
+    "storybook": "^10.6.0",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
-    "vite": "^6.2.3"
+    "vite": "^6.2.3",
+    "vitest": "latest"
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
   }
 }
