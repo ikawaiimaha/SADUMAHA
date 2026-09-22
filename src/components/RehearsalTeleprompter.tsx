@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ChevronRight, ChevronLeft, Mic, MousePointerClick, X, EyeOff } from 'lucide-react';
 
 const REHEARSAL_STEPS = [
@@ -70,6 +70,8 @@ const REHEARSAL_STEPS = [
 export const RehearsalTeleprompter: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [tapCount, setTapCount] = useState(0);
+  const tapTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -84,63 +86,77 @@ export const RehearsalTeleprompter: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  const handleSecretTap = () => {
+    setTapCount(previous => {
+      const nextCount = previous + 1;
+      if (nextCount >= 3) {
+        setIsVisible(previousVisible => !previousVisible);
+        return 0;
+      }
+      return nextCount;
+    });
+
+    if (tapTimeoutRef.current) window.clearTimeout(tapTimeoutRef.current);
+    tapTimeoutRef.current = window.setTimeout(() => setTapCount(0), 1000);
+  };
+
   return (
     <>
       <div
-        className="fixed bottom-0 left-0 w-16 h-16 z-[9999] cursor-default"
-        onDoubleClick={() => setIsVisible(prev => !prev)}
-        title="Hidden Trigger: Double-Click to open Rehearsal Guide"
+        className="fixed bottom-40 left-0 w-20 h-40 z-[9999] cursor-default"
+        onClick={handleSecretTap}
+        title="Secret Trigger: Triple-Tap here"
       />
 
       {isVisible && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-3xl z-[9999] shadow-2xl rounded-xl overflow-hidden border-2 border-indigo-500 bg-slate-900 text-white font-sans animate-in slide-in-from-bottom-10">
-          <div className="bg-indigo-600 px-4 py-2 flex items-center justify-between cursor-move">
-            <div className="flex items-center gap-2 font-bold text-sm">
-              <EyeOff className="w-4 h-4 text-indigo-200" />
-              <span>SECRET REHEARSAL MODE (Hide with ⌥+R or Ctrl+Space)</span>
+        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-3xl z-[9999] shadow-2xl rounded-t-xl overflow-y-auto max-h-[85vh] border-t-2 border-indigo-500 bg-slate-900 text-white font-sans animate-in slide-in-from-bottom-10">
+          <div className="bg-indigo-600 px-4 py-2 sm:py-3 flex items-center justify-between sticky top-0 z-10 cursor-move">
+            <div className="flex items-center gap-2 font-bold text-xs sm:text-sm">
+              <EyeOff className="w-4 h-4 text-indigo-200 shrink-0" />
+              <span className="truncate">SECRET REHEARSAL MODE</span>
             </div>
-            <div className="flex items-center gap-4">
-              <span className="text-xs font-mono bg-indigo-800 px-2 py-1 rounded">Step {currentStep + 1} / {REHEARSAL_STEPS.length}</span>
-              <button onClick={() => setIsVisible(false)} className="hover:text-indigo-200 cursor-pointer" aria-label="Close rehearsal guide">
+            <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+              <span className="text-[10px] sm:text-xs font-mono bg-indigo-800 px-2 py-1 rounded">Step {currentStep + 1} / {REHEARSAL_STEPS.length}</span>
+              <button onClick={() => setIsVisible(false)} className="hover:text-indigo-200 p-1 cursor-pointer" aria-label="Close rehearsal guide">
                 <X className="w-5 h-5" />
               </button>
             </div>
           </div>
 
-          <div className="p-5 space-y-4">
-            <h2 className="text-lg font-bold text-indigo-300 border-b border-slate-700 pb-2">{REHEARSAL_STEPS[currentStep].title}</h2>
+          <div className="p-4 sm:p-5 space-y-4">
+            <h2 className="text-base sm:text-lg font-bold text-indigo-300 border-b border-slate-700 pb-2">{REHEARSAL_STEPS[currentStep].title}</h2>
             <div className="bg-slate-800 rounded p-3 border-l-4 border-amber-400 flex items-start gap-3">
               <MousePointerClick className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
               <div>
                 <span className="text-[10px] uppercase font-bold text-amber-400 tracking-wider block mb-1">What to do (Action)</span>
-                <p className="text-sm text-slate-200">{REHEARSAL_STEPS[currentStep].action}</p>
+                <p className="text-xs sm:text-sm text-slate-200">{REHEARSAL_STEPS[currentStep].action}</p>
               </div>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="bg-slate-800 rounded p-3 border-l-4 border-emerald-400 flex items-start gap-3">
                 <Mic className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
                 <div>
                   <span className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider block mb-1">What to say (English)</span>
-                  <p className="text-sm text-slate-200 leading-relaxed">{REHEARSAL_STEPS[currentStep].sayEn}</p>
+                  <p className="text-xs sm:text-sm text-slate-200 leading-relaxed">{REHEARSAL_STEPS[currentStep].sayEn}</p>
                 </div>
               </div>
               <div className="bg-slate-800 rounded p-3 border-r-4 border-sky-400 flex items-start gap-3 text-right" dir="rtl">
                 <Mic className="w-5 h-5 text-sky-400 shrink-0 mt-0.5" />
                 <div>
                   <span className="text-[10px] uppercase font-bold text-sky-400 tracking-wider block mb-1">ماذا تقول (العربية)</span>
-                  <p className="text-sm text-slate-200 leading-relaxed font-arabic">{REHEARSAL_STEPS[currentStep].sayAr}</p>
+                  <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-arabic">{REHEARSAL_STEPS[currentStep].sayAr}</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-slate-950 px-4 py-3 flex items-center justify-between">
-            <button disabled={currentStep === 0} onClick={() => setCurrentStep(prev => prev - 1)} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-30 rounded text-xs font-bold flex items-center gap-2 cursor-pointer">
-              <ChevronLeft className="w-4 h-4" /> Previous Step
+          <div className="bg-slate-950 px-4 py-3 flex items-center justify-between sticky bottom-0 z-10 border-t border-slate-800">
+            <button disabled={currentStep === 0} onClick={() => setCurrentStep(prev => prev - 1)} className="px-3 sm:px-4 py-2 sm:py-2.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-30 rounded text-xs font-bold flex items-center gap-1 sm:gap-2 cursor-pointer transition-colors">
+              <ChevronLeft className="w-4 h-4" /> <span className="hidden sm:inline">Previous Step</span><span className="sm:hidden">Prev</span>
             </button>
-            <button disabled={currentStep === REHEARSAL_STEPS.length - 1} onClick={() => setCurrentStep(prev => prev + 1)} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-30 rounded text-xs font-bold flex items-center gap-2 cursor-pointer">
-              Next Step <ChevronRight className="w-4 h-4" />
+            <button disabled={currentStep === REHEARSAL_STEPS.length - 1} onClick={() => setCurrentStep(prev => prev + 1)} className="px-3 sm:px-4 py-2 sm:py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-30 rounded text-xs font-bold flex items-center gap-1 sm:gap-2 cursor-pointer shadow-md transition-colors">
+              <span className="hidden sm:inline">Next Step</span><span className="sm:hidden">Next</span> <ChevronRight className="w-4 h-4" />
             </button>
           </div>
         </div>

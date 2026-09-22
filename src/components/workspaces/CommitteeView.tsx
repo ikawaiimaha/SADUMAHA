@@ -5,6 +5,7 @@ import { useI18n } from '../../context/I18nContext';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { StatusProgressIndicator } from '../common/StatusProgressIndicator';
 import { ArtistNominationBuilder } from '../ArtistNominationBuilder';
+import { CuratorialCanvas } from './CuratorialCanvas';
 import { ArtworkThumbnail } from '../common/ArtworkThumbnail';
 import { 
   CheckCircle2, 
@@ -47,7 +48,7 @@ export const CommitteeView: React.FC<CommitteeViewProps> = (props) => {
   const isCuratorOrCoordinator = currentRole === 'COORDINATOR' || currentRole === 'SDC_COORDINATOR' || (currentRole as string) === 'CURATOR';
 
   const sub = COMMITTEE_SUBMISSION;
-  const [activeTab, setActiveTab] = useState<'proposal' | 'works' | 'scores' | 'conditions' | 'verification' | 'nomination'>('scores');
+  const [activeTab, setActiveTab] = useState<'proposal' | 'works' | 'scores' | 'conditions' | 'verification' | 'nomination' | 'canvas'>('scores');
   
   const [culturalTrack, setCulturalTrack] = useState<'AUTHENTIC_TRADITIONAL' | 'MODERN_CONTEMPORARY'>('MODERN_CONTEMPORARY');
 
@@ -149,6 +150,7 @@ export const CommitteeView: React.FC<CommitteeViewProps> = (props) => {
         <div className="flex items-center gap-2 mt-6 pt-4 border-t border-sadu-gold/50 flex-wrap">
           {[
             { id: 'scores', labelEn: 'Dual-Track Juror Rubric', labelAr: 'معايير التقييم والملاحظات (Dual-Track)' },
+            { id: 'canvas', labelEn: 'Curatorial Canvas', labelAr: 'المخطط التقييمي والفراغي' },
             { id: 'verification', labelEn: 'Cultural & Textual Verification', labelAr: 'التحقق الثقافي والنصوصي', badge: isTextualVerificationComplete ? '✓' : 'Blocker' },
             { id: 'proposal', labelEn: 'Proposal Concept', labelAr: 'بيان المقترح والرؤية' },
             { id: 'works', labelEn: 'Artwork Checklist (3)', labelAr: 'قائمة الأعمال المقترحة (3)' },
@@ -401,6 +403,12 @@ export const CommitteeView: React.FC<CommitteeViewProps> = (props) => {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {activeTab === 'canvas' && (
+            <div className="p-2 sm:p-6 bg-sadu-cream rounded-xl border border-sadu-gold/30 shadow-inner">
+              <CuratorialCanvas />
             </div>
           )}
 

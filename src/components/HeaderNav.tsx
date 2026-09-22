@@ -64,7 +64,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = (props) => {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   const rolesList: RoleKey[] = [
-    'COORDINATOR', 'SDC_COORDINATOR', 'DIRECTORATE', 'COMMITTEE', 
+    'COORDINATOR', 'DIRECTORATE', 'COMMITTEE',
     'SAF_TECHNICIAN', 'SMA_VENUE_ADMIN', 'PR_PROTOCOL', 'EDITORIAL', 
     'FINANCE', 'LOGISTICS', 'ARTIST'
   ];
