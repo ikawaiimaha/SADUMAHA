@@ -32,6 +32,8 @@ import { isFinanceScenario } from './data/legacyScenario';
 import { WorkspaceNavBar } from './components/WorkspaceNavBar';
 import { RehearsalTeleprompter } from './components/RehearsalTeleprompter';
 import { AppShell } from './components/layout/AppShell';
+import Clarity from '@microsoft/clarity';
+import { identifyUser } from './utils/analytics';
 
 // Workspace Views
 import { LeadershipView } from './components/workspaces/LeadershipView';
@@ -86,7 +88,7 @@ const IdentityGate: React.FC<{ onSignIn: () => void }> = ({ onSignIn }) => {
   );
 };
 
-function SADUApp({ onSignOut }: { onSignOut: () => void }) {
+function SADUApp({ onSignOut, isAuthenticated }: { onSignOut: () => void; isAuthenticated: boolean }) {
   const { path } = useNavigation();
   const { lang, toggleLang, isAr } = useI18n();
   const { setLeadershipView } = useLivingRecord();
@@ -103,6 +105,24 @@ function SADUApp({ onSignOut }: { onSignOut: () => void }) {
     experienceMode,
     setExperienceMode,
   } = useWorkspace();
+
+  useEffect(() => {
+    const projectId = import.meta.env.VITE_CLARITY_PROJECT_ID as string | undefined;
+    if (projectId) {
+      Clarity.init(projectId);
+      Clarity.consentV2({ ad_Storage: 'denied', analytics_Storage: 'granted' });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const projectId = import.meta.env.VITE_CLARITY_PROJECT_ID as string | undefined;
+    if (projectId) {
+      Clarity.identify(currentRole);
+      Clarity.setTag('View', activeTab);
+    }
+    identifyUser(currentRole);
+  }, [isAuthenticated, currentRole, activeTab]);
   
   const [showPresenterDrawer, setShowPresenterDrawer] = useState(false);
   const [showRoleOnboarding, setShowRoleOnboarding] = useState(false);
@@ -297,7 +317,7 @@ function PresentationFirstApp({ isAuthenticated, setIsAuthenticated }: { isAuthe
   }
 
   if (!isAuthenticated) return <IdentityGate onSignIn={signIn} />;
-  return <><RehearsalTeleprompter /><SADUApp onSignOut={() => { setIsAuthenticated(false); setExperienceMode('story'); }} /></>;
+  return <><RehearsalTeleprompter /><SADUApp isAuthenticated={isAuthenticated} onSignOut={() => { setIsAuthenticated(false); setExperienceMode('story'); }} /></>;
 }
 
 export default function App() {

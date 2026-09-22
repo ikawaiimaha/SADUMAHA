@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Language } from '../types';
 import { useI18n } from '../context/I18nContext';
+import { trackEvent } from '../utils/analytics';
 import { 
   UserPlus, 
   UploadCloud, 
@@ -133,6 +134,11 @@ export const ArtistNominationBuilder: React.FC<ArtistNominationBuilderProps> = (
     const generatedId = `NOM-SCB-${Date.now().toString().slice(-6)}`;
     setSubmissionId(generatedId);
     setIsSubmitted(true);
+    trackEvent('Artist Dossier Submitted', {
+      'Governance Track': culturalTrack,
+      'Curatorial Score': curatorialTotal,
+      'Missing Documents': Number(!cvFile) + Number(!portfolioFile),
+    });
   };
 
   // Success Screen
