@@ -12,6 +12,7 @@ import {
   Lock,
   FileText,
   CheckCircle2,
+  Clock,
   AlertCircle,
   Send,
   EyeOff,
@@ -33,6 +34,7 @@ export const CoordinatorView: React.FC<CoordinatorViewProps> = (props) => {
   const { formatNumber } = i18n;
   const onNavigateTab = props.onNavigateTab ?? workspace.navigateTab;
   const [successToast, setSuccessToast] = useState<string | null>(null);
+  const [items, setItems] = useState(ATTENTION_ITEMS);
 
   const activeArtistsCount = 14;
   const proposalsInReviewCount = 3;
@@ -45,6 +47,12 @@ export const CoordinatorView: React.FC<CoordinatorViewProps> = (props) => {
   };
 
   const handleMessageArtist = (_artist: string) => onNavigateTab('communications');
+
+  const handleResolve = (id: string, title: string) => {
+    setItems(previous => previous.map(item => item.id === id ? { ...item, status: 'resolved' } : item));
+    setSuccessToast(isAr ? `تمت تسوية الإجراء: ${title}` : `Resolved action: ${title}`);
+    window.setTimeout(() => setSuccessToast(null), 3500);
+  };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -93,12 +101,15 @@ export const CoordinatorView: React.FC<CoordinatorViewProps> = (props) => {
       <section className="rounded-lg border border-sadu-gold bg-sadu-linen p-6 shadow-xs">
         <div className="mb-4"><h2 className="text-lg font-editorial font-bold text-sadu-charcoal">{isAr ? 'طابور تتبع الإنجاز عبر الأقسام' : 'Cross-Departmental Tracking Queue'}</h2><p className="text-xs text-sadu-muted">{isAr ? 'مراقبة حالة متطلبات الفنانين لدى الأقسام الأخرى وإرسال تذكيرات.' : 'Monitor artist requirements across departments and send follow-up nudges.'}</p></div>
         <div className="space-y-3">
-          {ATTENTION_ITEMS.map(item => <div key={item.id} className={`flex flex-col justify-between gap-4 rounded-md border p-4 transition-all sm:flex-row sm:items-center ${item.status === 'resolved' ? 'border-sadu-gold/40 bg-sadu-sand/40 opacity-75' : item.priority === 'critical' ? 'border-sadu-brick bg-sadu-paper' : 'border-sadu-gold bg-white'}`}>
-            <div className="max-w-xl space-y-1"><div className="flex flex-wrap items-center gap-2 text-[11px]"><span className="rounded bg-sadu-sand-dark px-2 py-0.5 font-semibold text-sadu-ink">{isAr ? 'مسند إلى:' : 'Assigned to:'} {item.assignedRole}</span><span className="flex flex-wrap items-center gap-1.5 text-sadu-muted">{isAr ? 'الفنان:' : 'Artist:'} <strong className="text-sadu-charcoal">{isAr ? item.artistAr : item.artistEn}</strong></span></div><h3 className={`mt-1 text-sm font-bold ${item.status === 'resolved' ? 'text-sadu-muted line-through' : 'text-sadu-charcoal'}`}>{isAr ? item.titleAr : item.titleEn}</h3></div>
-            <div className="flex shrink-0 items-center gap-2 self-end sm:self-auto">
-              {item.status !== 'resolved' ? <><button onClick={() => handleMessageArtist(item.artistEn)} className="flex cursor-pointer items-center gap-1.5 rounded border border-sadu-gold bg-sadu-linen px-3 py-1.5 text-xs font-semibold text-sadu-charcoal transition-colors hover:bg-sadu-sand"><MessageSquare className="h-3.5 w-3.5" />{isAr ? 'مراسلة الفنان' : 'Message Artist'}</button><button onClick={() => handleNudge(item.assignedRole)} className="flex cursor-pointer items-center gap-1.5 rounded bg-sadu-ink px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-sadu-ink-dark"><Send className="h-3.5 w-3.5" />{isAr ? 'تذكير القسم' : 'Nudge Dept'}</button></> : <span className="flex items-center gap-1 text-xs font-bold text-sadu-sage"><CheckCircle2 className="h-4 w-4" />{isAr ? 'مكتملة لدى القسم' : 'Resolved by Dept'}</span>}
-            </div>
-          </div>)}
+          {items.map(item => {
+            const isMyTask = item.assignedRole === 'COORDINATOR' || item.assignedRole === 'SDC_COORDINATOR';
+            return <div key={item.id} className={`flex flex-col justify-between gap-4 rounded-md border p-4 transition-all sm:flex-row sm:items-center ${item.status === 'resolved' ? 'border-sadu-gold/40 bg-sadu-sand/40 opacity-75' : item.priority === 'critical' ? 'border-sadu-brick bg-sadu-paper' : 'border-sadu-gold bg-white'}`}>
+              <div className="max-w-xl space-y-1"><div className="flex flex-wrap items-center gap-2 text-[11px]"><span className="flex items-center rounded bg-sadu-sand-dark px-2 py-0.5 font-semibold text-sadu-ink">{!isMyTask && <Lock className="mr-1 h-3 w-3 text-sadu-brick" />}{isAr ? 'مسند إلى:' : 'Assigned to:'} {item.assignedRole}</span><span className="flex flex-wrap items-center gap-1.5 text-sadu-muted">{isAr ? 'الفنان:' : 'Artist:'} <strong className="text-sadu-charcoal">{isAr ? item.artistAr : item.artistEn}</strong></span></div><h3 className={`mt-1 text-sm font-bold ${item.status === 'resolved' ? 'text-sadu-muted line-through' : 'text-sadu-charcoal'}`}>{isAr ? item.titleAr : item.titleEn}</h3><div className="mt-1 flex items-center gap-1 text-[11px] text-sadu-muted"><Clock className="h-3 w-3" />{isAr ? `${formatNumber(item.dueDays)} أيام متبقية` : `Due in ${item.dueDays}d`}</div></div>
+              <div className="flex shrink-0 items-center gap-2 self-end sm:self-auto">
+                {item.status !== 'resolved' ? isMyTask ? <button onClick={() => handleResolve(item.id, isAr ? item.titleAr : item.titleEn)} className="cursor-pointer rounded bg-sadu-ink px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-sadu-ink-dark">{isAr ? 'تأكيد التسوية' : 'Mark Resolved'}</button> : <><button onClick={() => handleMessageArtist(item.artistEn)} className="flex cursor-pointer items-center gap-1.5 rounded border border-sadu-gold bg-sadu-linen px-3 py-1.5 text-xs font-semibold text-sadu-charcoal transition-colors hover:bg-sadu-sand"><MessageSquare className="h-3.5 w-3.5" />{isAr ? 'مراسلة الفنان' : 'Message Artist'}</button><button onClick={() => handleNudge(item.assignedRole)} className="flex cursor-pointer items-center gap-1.5 rounded bg-sadu-sage px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#526757]"><Send className="h-3.5 w-3.5" />{isAr ? 'تذكير القسم' : 'Nudge Dept'}</button></> : <span className="flex items-center gap-1 text-xs font-bold text-sadu-sage"><CheckCircle2 className="h-4 w-4" />{isAr ? 'مكتملة' : 'Resolved'}</span>}
+              </div>
+            </div>;
+          })}
         </div>
       </section>
     </div>
