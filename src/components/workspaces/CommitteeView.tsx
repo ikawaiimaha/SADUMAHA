@@ -194,6 +194,20 @@ export const CommitteeView: React.FC<CommitteeViewProps> = (props) => {
           
           {activeTab === 'scores' && (
             <div className="space-y-6">
+              <div className="border-b border-sadu-gold/40 pb-4">
+                <span className="text-xs font-mono text-sadu-brick block uppercase tracking-wider mb-1">
+                  {isAr ? 'التقييم الفني المباشر' : 'Active Evaluation Target'}
+                </span>
+                <h2 className="text-xl sm:text-2xl font-editorial font-bold text-sadu-charcoal">
+                  {isAr ? sub.proposalTitleAr : sub.proposalTitleEn}
+                </h2>
+                <div className="flex items-center gap-2.5 flex-wrap mt-1">
+                  <p className="text-sm font-semibold text-sadu-ink">
+                    {isAr ? `الفنان المقترح: ${sub.artistNameAr}` : `Proposed Artist: ${sub.artistNameEn}`}
+                  </p>
+                </div>
+              </div>
+
               {sub.hasPreviousParticipation && (
                 <div className="p-4 bg-amber-50 border-2 border-amber-400 rounded-lg flex items-start gap-3 text-xs text-amber-950 shadow-2xs">
                   <AlertTriangle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
