@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
-import { Mail, Send, Users, Clock, CheckCircle2 } from 'lucide-react';
+import { Mail, Send, Users, Clock, CheckCircle2, Lock, ShieldCheck } from 'lucide-react';
+
+const APPROVED_EVENT_NAME = '12th Sharjah Calligraphy Biennial';
+const APPROVED_THEME = 'Balance';
+const OFFICIAL_CURATORIAL_MATERIAL = 'This edition invites artists to explore Balance through the interplay of script, space and silence, honoring the calligraphic tradition while inviting contemporary material experimentation.';
 
 interface CommitteePresentation {
   id: string;
@@ -54,8 +58,6 @@ export const HeadOfProgramsView: React.FC = () => {
 
   const [artistName, setArtistName] = useState('');
   const [artistEmail, setArtistEmail] = useState('');
-  const [eventName, setEventName] = useState('12th Sharjah Calligraphy Biennial');
-  const [theme, setTheme] = useState('Balance');
   const [brief, setBrief] = useState('');
 
   const handleRouteToCommittee = (id: string) => {
@@ -72,8 +74,8 @@ export const HeadOfProgramsView: React.FC = () => {
       id: `DL-${String(log.length + 1).padStart(3, '0')}`,
       artistName,
       artistEmail,
-      eventName,
-      theme,
+      eventName: APPROVED_EVENT_NAME,
+      theme: APPROVED_THEME,
       status: 'awaiting',
       dispatchedAt: 'Just now'
     };
@@ -113,7 +115,37 @@ export const HeadOfProgramsView: React.FC = () => {
               <h2 className="font-medium text-slate-800">Draft New Invitation</h2>
               <p className="text-xs text-slate-500 mt-1">Initiate a secure, encrypted onboarding invitation directly to the artist.</p>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-6">
+              {/* Locked Institutional Context */}
+              <div className="rounded-md border border-sadu-gold/60 bg-sadu-linen/60 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Locked Institutional Context</span>
+                  <Lock size={12} className="text-slate-400"/>
+                </div>
+                <div>
+                  <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400 block">Event</span>
+                  <span className="text-sm font-medium text-slate-800">{APPROVED_EVENT_NAME}</span>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400">Approved Theme</span>
+                    <Lock size={10} className="text-slate-400"/>
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                    <span className="text-sm font-medium text-slate-800">{APPROVED_THEME}</span>
+                    <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 rounded-full">
+                      <ShieldCheck size={10}/>
+                      Approved by Chairman of the Department
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400 block">Official Curatorial Material</span>
+                  <p className="text-xs text-slate-600 leading-relaxed mt-0.5">{OFFICIAL_CURATORIAL_MATERIAL}</p>
+                  <p className="text-[10px] text-slate-400 mt-1">Drafted by the Preparatory Committee.</p>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <label className="block text-xs font-medium text-slate-600">
                   Artist Name
@@ -137,34 +169,13 @@ export const HeadOfProgramsView: React.FC = () => {
                 </label>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <label className="block text-xs font-medium text-slate-600">
-                  Event Name
-                  <input
-                    type="text"
-                    value={eventName}
-                    onChange={e => setEventName(e.target.value)}
-                    className="mt-1 w-full rounded border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sadu-gold"
-                  />
-                </label>
-                <label className="block text-xs font-medium text-slate-600">
-                  Theme
-                  <input
-                    type="text"
-                    value={theme}
-                    onChange={e => setTheme(e.target.value)}
-                    className="mt-1 w-full rounded border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sadu-gold"
-                  />
-                </label>
-              </div>
-
               <label className="block text-xs font-medium text-slate-600">
-                Curatorial Brief / Specific Requirements
+                Specific Artist Request / Brief
                 <textarea
                   value={brief}
                   onChange={e => setBrief(e.target.value)}
                   rows={6}
-                  placeholder="Describe what the Committee is specifically interested in from this artist..."
+                  placeholder="Describe what you are specifically asking this artist to submit..."
                   className="mt-1 w-full rounded border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sadu-gold resize-none"
                 />
               </label>
@@ -192,12 +203,12 @@ export const HeadOfProgramsView: React.FC = () => {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <span className="font-medium text-slate-800 block">{entry.artistName}</span>
-                      <span className="text-xs text-slate-500">{entry.artistEmail}</span>
+                      <span className="text-xs text-slate-500">{entry.dispatchedAt}</span>
                     </div>
                     {entry.status === 'awaiting' ? (
                       <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded-full whitespace-nowrap">
                         <Clock size={12}/>
-                        Awaiting Artist Response
+                        Pending Artist Response
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full whitespace-nowrap">
@@ -205,11 +216,6 @@ export const HeadOfProgramsView: React.FC = () => {
                         Accepted - Routed to Coordinator {entry.coordinator}
                       </span>
                     )}
-                  </div>
-                  <div className="mt-2 text-xs text-slate-500 flex items-center gap-2">
-                    <span>{entry.eventName} · {entry.theme}</span>
-                    <span>·</span>
-                    <span>{entry.dispatchedAt}</span>
                   </div>
                 </div>
               ))}
