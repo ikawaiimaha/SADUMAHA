@@ -1,10 +1,14 @@
 import React, { useId, useMemo, useState } from 'react';
-import { ClipboardList, Send, CheckCircle2, RotateCcw } from 'lucide-react';
+import { ClipboardList, Send, CheckCircle2, RotateCcw, Sparkles, BookOpen } from 'lucide-react';
 
 export interface CommitteeThemeDraft {
   arabicName: string;
   englishName: string;
-  definition: string;
+  aestheticFramework: string;
+  contemporaryRelevance: string;
+  curatorialJustification: string;
+  /** Backward-compatible legacy alias */
+  definition?: string;
 }
 
 export interface CommitteeThemeWorkspaceProps {
@@ -14,7 +18,14 @@ export interface CommitteeThemeWorkspaceProps {
   onPresentToChairman?: (themes: CommitteeThemeDraft[], eventId?: string) => void;
 }
 
-const EMPTY_THEME: CommitteeThemeDraft = { arabicName: '', englishName: '', definition: '' };
+const EMPTY_THEME: CommitteeThemeDraft = {
+  arabicName: '',
+  englishName: '',
+  aestheticFramework: '',
+  contemporaryRelevance: '',
+  curatorialJustification: '',
+  definition: '',
+};
 
 const createEmptyThemes = (): CommitteeThemeDraft[] => [
   { ...EMPTY_THEME },
@@ -23,9 +34,10 @@ const createEmptyThemes = (): CommitteeThemeDraft[] => [
 ];
 
 /**
- * Preparatory Committee workspace: exactly three theme proposals must be drafted
- * together (Arabic Name, English Name, Definition/Meaning each) before the batch
- * can be presented to the Chairman for final selection.
+ * Preparatory Committee Workspace:
+ * Strict Curatorial Rigor: Themes cannot be justified with bureaucratic fluff.
+ * Exactly three theme proposals must be defended simultaneously using meticulous
+ * artistic criteria: Aesthetic Framework, Contemporary Relevance, and Curatorial Justification.
  */
 const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
   eventId,
@@ -35,36 +47,39 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
   const [isSubmitted, setIsSubmitted] = useState(false);
   const baseId = useId();
 
+  const isThemeComplete = (theme: CommitteeThemeDraft) =>
+    theme.arabicName.trim() !== '' &&
+    theme.englishName.trim() !== '' &&
+    theme.aestheticFramework.trim() !== '' &&
+    theme.contemporaryRelevance.trim() !== '' &&
+    theme.curatorialJustification.trim() !== '';
+
   const allFieldsFilled = useMemo(
-    () =>
-      themes.every(
-        theme =>
-          theme.arabicName.trim() !== '' &&
-          theme.englishName.trim() !== '' &&
-          theme.definition.trim() !== ''
-      ),
+    () => themes.every(isThemeComplete),
     [themes]
   );
 
-  const filledCount = themes.filter(
-    theme =>
-      theme.arabicName.trim() !== '' &&
-      theme.englishName.trim() !== '' &&
-      theme.definition.trim() !== ''
-  ).length;
+  const filledCount = themes.filter(isThemeComplete).length;
 
   const updateField = (index: number, field: keyof CommitteeThemeDraft, value: string) => {
     setThemes(current =>
-      current.map((theme, themeIndex) =>
-        themeIndex === index ? { ...theme, [field]: value } : theme
-      )
+      current.map((theme, themeIndex) => {
+        if (themeIndex !== index) return theme;
+        const updated = { ...theme, [field]: value };
+        updated.definition = `${updated.curatorialJustification} | Aesthetic: ${updated.aestheticFramework} | Relevance: ${updated.contemporaryRelevance}`.trim();
+        return updated;
+      })
     );
   };
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     if (!allFieldsFilled) return;
-    onPresentToChairman?.(themes, eventId);
+    const finalized = themes.map(t => ({
+      ...t,
+      definition: t.curatorialJustification,
+    }));
+    onPresentToChairman?.(finalized, eventId);
     setIsSubmitted(true);
   };
 
@@ -80,28 +95,53 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
           <CheckCircle2 className="h-6 w-6 shrink-0 text-emerald-700" />
           <div>
             <p className="font-editorial text-base font-bold text-sadu-charcoal">
-              Presented to Chairman
+              Presented to Chairman H.E. Abdullah Al Owais
             </p>
             <p className="text-xs text-sadu-muted">
-              All three theme proposals have been submitted for the Chairman's final selection.
+              All three rigorously formulated theme proposals have been submitted for executive review
+              and budget allocation.
             </p>
           </div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-3">
           {themes.map((theme, index) => (
             <div
               key={index}
-              className="rounded-lg border border-sadu-gold/50 bg-white p-4 text-sm"
+              className="space-y-3 rounded-lg border border-sadu-gold/60 bg-white p-4 text-xs"
             >
-              <span className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-sadu-muted">
-                Theme {index + 1}
-              </span>
-              <span className="block font-bold text-sadu-charcoal">{theme.englishName}</span>
-              <span dir="rtl" className="block text-sadu-charcoal">
-                {theme.arabicName}
-              </span>
-              <p className="mt-2 text-xs text-sadu-muted">{theme.definition}</p>
+              <div className="flex items-center justify-between border-b border-sadu-gold/30 pb-2">
+                <span className="text-[10px] font-bold uppercase tracking-wide text-sadu-muted">
+                  Candidate Proposal {index + 1}
+                </span>
+                <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold text-emerald-800">
+                  Rigorously Defended
+                </span>
+              </div>
+
+              <div>
+                <span className="block font-editorial text-base font-bold text-sadu-charcoal">
+                  {theme.englishName}
+                </span>
+                <span dir="rtl" className="block text-sm font-semibold text-sadu-brick">
+                  {theme.arabicName}
+                </span>
+              </div>
+
+              <div className="space-y-2 pt-1 text-[11px] text-sadu-muted">
+                <div>
+                  <strong className="block text-sadu-charcoal font-semibold">Aesthetic Framework:</strong>
+                  <p className="leading-relaxed bg-sadu-paper/70 p-1.5 rounded border border-sadu-gold/30">{theme.aestheticFramework}</p>
+                </div>
+                <div>
+                  <strong className="block text-sadu-charcoal font-semibold">Contemporary Relevance:</strong>
+                  <p className="leading-relaxed bg-sadu-paper/70 p-1.5 rounded border border-sadu-gold/30">{theme.contemporaryRelevance}</p>
+                </div>
+                <div>
+                  <strong className="block text-sadu-charcoal font-semibold">Curatorial Justification:</strong>
+                  <p className="leading-relaxed bg-sadu-paper/70 p-1.5 rounded border border-sadu-gold/30">{theme.curatorialJustification}</p>
+                </div>
+              </div>
             </div>
           ))}
         </div>
@@ -128,10 +168,10 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
           <ClipboardList className="h-5 w-5 text-sadu-brick" />
           <div>
             <h2 className="font-editorial text-lg font-bold text-sadu-charcoal">
-              Preparatory Committee &middot; Theme Proposals
+              Preparatory Committee &middot; Theme Formulation Table
             </h2>
             <p className="text-xs text-sadu-muted">
-              Submit exactly three candidate themes together for the Chairman's review.
+              Convened by Mohammed Al Qaseer. Exactly three theme proposals must be defended with rigorous artistic criteria for Chairman Al Owais's review.
             </p>
           </div>
         </div>
@@ -145,30 +185,31 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
         {themes.map((theme, index) => {
           const arabicId = `${baseId}-arabic-${index}`;
           const englishId = `${baseId}-english-${index}`;
-          const definitionId = `${baseId}-definition-${index}`;
-          const isThemeComplete =
-            theme.arabicName.trim() !== '' &&
-            theme.englishName.trim() !== '' &&
-            theme.definition.trim() !== '';
+          const aestheticId = `${baseId}-aesthetic-${index}`;
+          const contemporaryId = `${baseId}-contemporary-${index}`;
+          const curatorialId = `${baseId}-curatorial-${index}`;
+          const complete = isThemeComplete(theme);
 
           return (
             <div
               key={index}
-              className="flex flex-col space-y-3 rounded-lg border border-sadu-gold/50 bg-white p-4"
+              className="flex flex-col space-y-3 rounded-lg border border-sadu-gold/60 bg-white p-4 shadow-2xs"
             >
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-sadu-charcoal">Theme {index + 1}</h3>
-                {isThemeComplete ? (
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+              <div className="flex items-center justify-between border-b border-sadu-gold/30 pb-2">
+                <span className="text-xs font-bold text-sadu-charcoal">Theme Candidate {index + 1}</span>
+                {complete ? (
+                  <span className="inline-flex items-center gap-1 rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
+                    <CheckCircle2 className="h-3 w-3" /> Fully Defended
+                  </span>
                 ) : (
                   <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
-                    Incomplete
+                    Criteria Incomplete
                   </span>
                 )}
               </div>
 
               <label htmlFor={arabicId} className="block text-xs font-semibold text-sadu-charcoal">
-                Arabic Name
+                Arabic Name (الاسم بالعربية)
                 <input
                   id={arabicId}
                   type="text"
@@ -176,7 +217,7 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
                   required
                   value={theme.arabicName}
                   onChange={e => updateField(index, 'arabicName', e.target.value)}
-                  placeholder="الاسم بالعربية"
+                  placeholder="مثال: التوازن والانسجام"
                   className="mt-1 w-full rounded-md border border-sadu-gold/60 bg-white px-3 py-2 text-sm text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
                 />
               </label>
@@ -189,21 +230,47 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
                   required
                   value={theme.englishName}
                   onChange={e => updateField(index, 'englishName', e.target.value)}
-                  placeholder="Theme name in English"
+                  placeholder="e.g. Balance & Harmony"
                   className="mt-1 w-full rounded-md border border-sadu-gold/60 bg-white px-3 py-2 text-sm text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
                 />
               </label>
 
-              <label htmlFor={definitionId} className="block text-xs font-semibold text-sadu-charcoal">
-                Definition / Meaning
+              <label htmlFor={aestheticId} className="block text-xs font-semibold text-sadu-charcoal">
+                Aesthetic Framework & Visual Lineage
                 <textarea
-                  id={definitionId}
+                  id={aestheticId}
                   required
-                  rows={4}
-                  value={theme.definition}
-                  onChange={e => updateField(index, 'definition', e.target.value)}
-                  placeholder="Describe the meaning and curatorial intent of this theme"
-                  className="mt-1 w-full resize-none rounded-md border border-sadu-gold/60 bg-white px-3 py-2 text-sm text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
+                  rows={2}
+                  value={theme.aestheticFramework}
+                  onChange={e => updateField(index, 'aestheticFramework', e.target.value)}
+                  placeholder="Classical script lineage, proportional balance, and material aesthetics"
+                  className="mt-1 w-full resize-none rounded-md border border-sadu-gold/60 bg-white px-3 py-1.5 text-xs text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
+                />
+              </label>
+
+              <label htmlFor={contemporaryId} className="block text-xs font-semibold text-sadu-charcoal">
+                Contemporary Relevance & Discourse
+                <textarea
+                  id={contemporaryId}
+                  required
+                  rows={2}
+                  value={theme.contemporaryRelevance}
+                  onChange={e => updateField(index, 'contemporaryRelevance', e.target.value)}
+                  placeholder="Engagement with modern artistic movements and avant-garde media"
+                  className="mt-1 w-full resize-none rounded-md border border-sadu-gold/60 bg-white px-3 py-1.5 text-xs text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
+                />
+              </label>
+
+              <label htmlFor={curatorialId} className="block text-xs font-semibold text-sadu-charcoal">
+                Curatorial Justification & Rationale
+                <textarea
+                  id={curatorialId}
+                  required
+                  rows={3}
+                  value={theme.curatorialJustification}
+                  onChange={e => updateField(index, 'curatorialJustification', e.target.value)}
+                  placeholder="Rigorous academic defense why this concept warrants international selection"
+                  className="mt-1 w-full resize-none rounded-md border border-sadu-gold/60 bg-white px-3 py-1.5 text-xs text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
                 />
               </label>
             </div>
@@ -213,8 +280,8 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
 
       <div className="flex flex-col items-center justify-between gap-4 border-t border-sadu-gold/40 pt-4 sm:flex-row">
         <span className="text-xs text-sadu-muted">
-          {filledCount} of 3 theme proposals complete. All fields for all three themes are required
-          before this batch can be presented.
+          {filledCount} of 3 theme proposals fully defended. Every artistic field is mandatory before
+          formal routing to Chairman Al Owais.
         </span>
         <button
           type="submit"

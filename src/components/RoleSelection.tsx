@@ -1,7 +1,23 @@
 import React from 'react';
-import { Award, ClipboardList, GitMerge, Building2, ArrowRight, ShieldCheck } from 'lucide-react';
+import {
+  Award,
+  ShieldCheck,
+  ClipboardList,
+  GitMerge,
+  User,
+  FileText,
+  Megaphone,
+  ArrowRight,
+} from 'lucide-react';
 
-export type AppRole = 'Chairman' | 'Preparatory Committee' | 'Coordinator' | 'Directorate';
+export type AppRole =
+  | 'Chairman'
+  | 'Biennial Director'
+  | 'Preparatory Committee'
+  | 'Coordinator'
+  | 'Artist'
+  | 'Finance'
+  | 'PR';
 
 export interface RoleSelectionProps {
   onSelectRole: (role: AppRole) => void;
@@ -22,11 +38,21 @@ const ROLE_OPTIONS: RoleOption[] = [
   {
     key: 'Chairman',
     titleEn: 'Chairman',
-    titleAr: 'رئيس البينالي',
-    phaseBadge: 'Executive Gate',
+    titleAr: 'رئيس الدائرة',
+    phaseBadge: 'Executive Gate & Budget Allocation',
     description:
-      'Review submitted theme proposals, confer final executive approval, and lock the official biennial theme.',
+      "H.E. Abdullah Al Owais's executive suite. Macro oversight. Reviews heavily defended themes, confers official sign-off, and assigns the biennial budget.",
     icon: Award,
+    accentColor: 'text-sadu-brick',
+  },
+  {
+    key: 'Biennial Director',
+    titleEn: 'Biennial Director',
+    titleAr: 'مدير البينالي',
+    phaseBadge: 'Executive Veto & Oversight',
+    description:
+      "Mohammed Al Qaseer's workspace. Convenes the Preparatory Committee, and heads artist selection once the theme and budget are assigned.",
+    icon: ShieldCheck,
     accentColor: 'text-sadu-brick',
   },
   {
@@ -35,35 +61,55 @@ const ROLE_OPTIONS: RoleOption[] = [
     titleAr: 'اللجنة التحضيرية',
     phaseBadge: 'Theme Formulation',
     description:
-      'Draft and submit exactly three bilingual theme proposals with curatorial definitions for Chairman review.',
+      'Formulate three candidate themes defended with rigorous aesthetic frameworks, contemporary relevance, and curatorial justifications.',
     icon: ClipboardList,
     accentColor: 'text-sadu-brick',
   },
   {
     key: 'Coordinator',
-    titleEn: 'Coordinator',
+    titleEn: 'General Coordinator',
     titleAr: 'المنسق العام',
     phaseBadge: 'Program Operations',
     description:
-      'Manage curatorial drafting pools, assemble artist dossiers, and orchestrate invitation workflows.',
+      'Manage curatorial drafting pools, assemble artist dossiers, and orchestrate invitation workflows based on Al Qaseer’s selections.',
     icon: GitMerge,
     accentColor: 'text-sadu-ochre',
   },
   {
-    key: 'Directorate',
-    titleEn: 'Directorate',
-    titleAr: 'الإدارة التنفيذية',
-    phaseBadge: 'Institutional Oversight',
+    key: 'Artist',
+    titleEn: 'Artist / Participant',
+    titleAr: 'الفنان',
+    phaseBadge: 'External Access',
     description:
-      'Exercise administrative oversight, evaluate budgets, review candidate dossiers, and manage approvals.',
-    icon: Building2,
+      'Secure portal for invited artists to upload passports, high-res artwork photos, and bilingual bios.',
+    icon: User,
     accentColor: 'text-sadu-ink',
+  },
+  {
+    key: 'Finance',
+    titleEn: 'Finance & Contracts',
+    titleAr: 'الشؤون المالية',
+    phaseBadge: 'Legal & Budget',
+    description:
+      'Generate bespoke bilingual contracts and track artist payment tranches (unlocked after Chairman budget assignment).',
+    icon: FileText,
+    accentColor: 'text-sadu-ochre',
+  },
+  {
+    key: 'PR',
+    titleEn: 'PR & Protocol',
+    titleAr: 'العلاقات العامة',
+    phaseBadge: 'Logistics & Media',
+    description:
+      'Extract artist dossiers for exhibition catalogs, manage flight itineraries, and coordinate hospitality.',
+    icon: Megaphone,
+    accentColor: 'text-sadu-brick',
   },
 ];
 
 export const RoleSelection: React.FC<RoleSelectionProps> = ({ onSelectRole, selectedRole }) => {
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-8">
+    <div className="mx-auto w-full max-w-6xl space-y-8">
       {/* Portal Header */}
       <div className="rounded-xl border border-sadu-gold bg-sadu-paper p-8 text-center shadow-xs">
         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-sadu-brick/10 text-sadu-brick">
@@ -82,7 +128,7 @@ export const RoleSelection: React.FC<RoleSelectionProps> = ({ onSelectRole, sele
       </div>
 
       {/* Role Selection Grid */}
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {ROLE_OPTIONS.map(role => {
           const Icon = role.icon;
           const isSelected = selectedRole === role.key;

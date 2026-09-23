@@ -1,12 +1,26 @@
 import React, { useState } from 'react';
-import { Lock, ShieldCheck, CheckCircle2, RotateCcw, Award, Clock } from 'lucide-react';
+import {
+  Lock,
+  ShieldCheck,
+  CheckCircle2,
+  RotateCcw,
+  Award,
+  Clock,
+  WalletCards,
+  ArrowRight,
+  UserCheck,
+  Banknote,
+} from 'lucide-react';
 import { CommitteeThemeDraft } from './CommitteeThemeWorkspace';
 
 export type ThemeItem = CommitteeThemeDraft | {
   id?: string;
   arabicName: string;
   englishName: string;
-  definition: string;
+  aestheticFramework?: string;
+  contemporaryRelevance?: string;
+  curatorialJustification?: string;
+  definition?: string;
 };
 
 export interface ChairmanWorkspaceProps {
@@ -16,6 +30,8 @@ export interface ChairmanWorkspaceProps {
   themes?: ThemeItem[];
   /** Callback fired when the Chairman confers official ratification on a theme. */
   onThemeApproved?: (approvedTheme: ThemeItem) => void;
+  /** Callback fired when the Chairman assigns the official biennial budget. */
+  onBudgetAssigned?: (amount: number, theme: ThemeItem) => void;
   /** Optional initial approved theme index. */
   initialApprovedIndex?: number | null;
 }
@@ -24,9 +40,12 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
   eventId,
   themes,
   onThemeApproved,
+  onBudgetAssigned,
   initialApprovedIndex = null,
 }) => {
   const [approvedIndex, setApprovedIndex] = useState<number | null>(initialApprovedIndex);
+  const [allocatedBudget, setAllocatedBudget] = useState<number>(12500000);
+  const [isBudgetAssigned, setIsBudgetAssigned] = useState<boolean>(false);
 
   // Check if 3 submitted theme drafts exist and have content
   const hasSubmittedThemes =
@@ -41,8 +60,16 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
     }
   };
 
+  const handleAssignBudget = () => {
+    setIsBudgetAssigned(true);
+    if (winningTheme && onBudgetAssigned) {
+      onBudgetAssigned(allocatedBudget, winningTheme);
+    }
+  };
+
   const handleUnlock = () => {
     setApprovedIndex(null);
+    setIsBudgetAssigned(false);
   };
 
   // EMPTY STATE: If no themes are submitted yet, show an elegant empty state saying 'Awaiting Committee Proposals'
@@ -54,10 +81,10 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
             <Award className="h-6 w-6 text-sadu-brick" />
             <div>
               <h2 className="font-editorial text-lg font-bold text-sadu-charcoal">
-                Chairman Workspace &middot; Executive Ratification
+                Chairman Workspace &middot; H.E. Abdullah Al Owais
               </h2>
               <p className="text-xs text-sadu-muted">
-                Executive gate for conferring final ratification on the official biennial theme.
+                Executive review of Preparatory Committee thematic proposals & official budget sign-off.
               </p>
             </div>
           </div>
@@ -85,9 +112,9 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
           </p>
 
           <p className="mt-3 max-w-lg text-xs text-sadu-muted leading-relaxed">
-            The Preparatory Committee has not yet submitted theme proposals for this edition.
-            Exactly three candidate proposals must be formulated and submitted together before the
-            Chairman can review and ratify the official theme.
+            The Preparatory Committee (convened by Mohammed Al Qaseer) has not yet submitted theme proposals.
+            Exactly three candidate proposals defended with meticulous artistic criteria must be formulated
+            before Chairman Al Owais can confer official ratification and assign the budget.
           </p>
         </div>
       </section>
@@ -180,7 +207,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
                     Official Biennial Theme
                   </span>
                   <span className="text-xs font-semibold text-sadu-muted">
-                    Candidate #{approvedIndex! + 1} Selected
+                    Candidate #{approvedIndex! + 1} Ratified by H.E. Abdullah Al Owais
                   </span>
                 </div>
                 <h4 className="font-editorial text-2xl font-bold text-sadu-charcoal pt-1">
@@ -197,19 +224,39 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
               </div>
             </div>
 
-            <div className="mt-5 space-y-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-sadu-muted">
-                Curatorial Definition & Intent
-              </span>
-              <p className="rounded-lg border border-sadu-gold/50 bg-sadu-paper p-4 text-sm text-sadu-charcoal leading-relaxed">
-                {winningTheme.definition}
-              </p>
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-lg border border-sadu-gold/40 bg-sadu-paper/70 p-3">
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-sadu-muted">
+                  Aesthetic Framework
+                </span>
+                <p className="mt-1 text-xs text-sadu-charcoal leading-relaxed">
+                  {winningTheme.aestheticFramework || winningTheme.definition || 'Grounded in classical proportions and material inquiry.'}
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-sadu-gold/40 bg-sadu-paper/70 p-3">
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-sadu-muted">
+                  Contemporary Relevance
+                </span>
+                <p className="mt-1 text-xs text-sadu-charcoal leading-relaxed">
+                  {winningTheme.contemporaryRelevance || 'Engages contemporary spatial and experimental calligraphic installation discourses.'}
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-sadu-gold/40 bg-sadu-paper/70 p-3">
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-sadu-muted">
+                  Curatorial Justification
+                </span>
+                <p className="mt-1 text-xs text-sadu-charcoal leading-relaxed">
+                  {winningTheme.curatorialJustification || winningTheme.definition}
+                </p>
+              </div>
             </div>
 
-            <div className="mt-6 flex flex-col items-start justify-between gap-4 border-t border-sadu-gold/30 pt-4 sm:flex-row sm:items-center">
+            <div className="mt-5 flex flex-col items-start justify-between gap-4 border-t border-sadu-gold/30 pt-4 sm:flex-row sm:items-center">
               <div className="flex items-center gap-2 text-xs text-sadu-muted">
                 <ShieldCheck className="h-4 w-4 text-emerald-700" />
-                <span>Executive Signature &middot; Ready for Institutional Transmission</span>
+                <span>Executive Sign-Off Confirmed by Chairman Al Owais</span>
               </div>
               <button
                 type="button"
@@ -221,6 +268,130 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
               </button>
             </div>
           </div>
+          {/* BUDGET ASSIGNMENT UI ELEMENT */}
+          <div className="rounded-xl border-2 border-sadu-gold bg-gradient-to-b from-white to-sadu-paper p-6 shadow-sm space-y-5">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-sadu-gold/40 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sadu-brick text-white shadow-2xs">
+                  <WalletCards className="h-5 w-5" />
+                </div>
+                <div>
+                  <h4 className="font-editorial text-lg font-bold text-sadu-charcoal">
+                    Executive Budget Assignment & Phase 2 Authority Transfer
+                  </h4>
+                  <p className="text-xs text-sadu-muted">
+                    Conferred by H.E. Abdullah Al Owais &middot; Chairman / CEO
+                  </p>
+                </div>
+              </div>
+              <span className="rounded bg-sadu-sand px-2.5 py-1 text-[10px] font-bold text-sadu-brick uppercase tracking-wider border border-sadu-gold/60">
+                Phase 2 Delegation
+              </span>
+            </div>
+
+            <p className="text-xs text-sadu-muted leading-relaxed">
+              Theme ratification unlocks the biennial budget allocation. Confirming this appropriation
+              authorizes the <strong>Finance & Contracts</strong> department and transfers operational
+              mandate to <strong>Mohammed Al Qaseer (Biennial Director)</strong> to head the Artist Selection Committee.
+            </p>
+
+            <div className="space-y-3 rounded-lg border border-sadu-gold/50 bg-sadu-sand/40 p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <label className="block text-xs font-bold text-sadu-charcoal uppercase tracking-wider">
+                    Total Biennial Allocation (AED)
+                  </label>
+                  <span className="text-[11px] text-sadu-muted">
+                    Production, artist fees, international freight, and publishing
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {[
+                    { label: '10M AED', value: 10000000 },
+                    { label: '12.5M AED', value: 12500000 },
+                    { label: '15M AED', value: 15000000 },
+                  ].map(tier => (
+                    <button
+                      key={tier.value}
+                      type="button"
+                      onClick={() => setAllocatedBudget(tier.value)}
+                      className={`rounded px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer ${
+                        allocatedBudget === tier.value
+                          ? 'bg-sadu-brick text-white shadow-2xs'
+                          : 'bg-white border border-sadu-gold/60 text-sadu-charcoal hover:bg-sadu-gold/20'
+                      }`}
+                    >
+                      {tier.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="relative">
+                <span className="absolute left-3 top-2.5 text-xs font-bold text-sadu-brick">AED</span>
+                <input
+                  type="number"
+                  step="500000"
+                  value={allocatedBudget}
+                  onChange={e => setAllocatedBudget(Number(e.target.value) || 0)}
+                  className="w-full rounded-md border border-sadu-gold/70 bg-white py-2 pl-12 pr-4 font-mono text-base font-bold text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
+                />
+              </div>
+
+              {/* Tranche Breakdown */}
+              <div className="grid grid-cols-2 gap-2 pt-2 sm:grid-cols-4 text-xs">
+                <div className="rounded border border-sadu-gold/40 bg-white p-2 text-center">
+                  <span className="text-[10px] text-sadu-muted block">Commissions (50%)</span>
+                  <span className="font-bold text-sadu-charcoal">AED {(allocatedBudget * 0.5).toLocaleString()}</span>
+                </div>
+                <div className="rounded border border-sadu-gold/40 bg-white p-2 text-center">
+                  <span className="text-[10px] text-sadu-muted block">Logistics (25%)</span>
+                  <span className="font-bold text-sadu-charcoal">AED {(allocatedBudget * 0.25).toLocaleString()}</span>
+                </div>
+                <div className="rounded border border-sadu-gold/40 bg-white p-2 text-center">
+                  <span className="text-[10px] text-sadu-muted block">Publishing (15%)</span>
+                  <span className="font-bold text-sadu-charcoal">AED {(allocatedBudget * 0.15).toLocaleString()}</span>
+                </div>
+                <div className="rounded border border-sadu-gold/40 bg-white p-2 text-center">
+                  <span className="text-[10px] text-sadu-muted block">Protocol (10%)</span>
+                  <span className="font-bold text-sadu-charcoal">AED {(allocatedBudget * 0.1).toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Action or Success Notification */}
+            {isBudgetAssigned ? (
+              <div className="flex flex-col gap-2 rounded-lg border border-emerald-300 bg-emerald-50/90 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-2 text-emerald-900">
+                  <UserCheck className="h-5 w-5 shrink-0 text-emerald-700" />
+                  <div>
+                    <strong className="text-xs font-bold block">
+                      Authority Officially Transferred to Mohammed Al Qaseer
+                    </strong>
+                    <p className="text-[11px] text-emerald-800">
+                      Budget of AED {allocatedBudget.toLocaleString()} locked. Al Qaseer is now empowered
+                      to lead the Artist Selection Committee and authorize the General Coordinator.
+                    </p>
+                  </div>
+                </div>
+                <span className="w-fit rounded bg-emerald-700 px-2.5 py-1 text-[10px] font-bold text-white uppercase tracking-wider">
+                  Phase 2 Active
+                </span>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={handleAssignBudget}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-sadu-brick px-6 py-3 text-xs font-bold text-white shadow-xs transition-colors hover:bg-sadu-brick-dark cursor-pointer"
+              >
+                <Banknote className="h-4 w-4" />
+                <span>Assign AED {allocatedBudget.toLocaleString()} & Delegate Artist Selection to Mohammed Al Qaseer</span>
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
         </div>
       ) : (
         /* CANDIDATE PROPOSALS (3 SIDE-BY-SIDE CARDS) */
@@ -262,13 +433,24 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
                     </p>
                   </div>
 
-                  <div className="border-t border-sadu-gold/20 pt-2">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-sadu-muted block mb-1">
-                      Definition / Meaning
-                    </span>
-                    <p className="text-xs text-sadu-charcoal/90 leading-relaxed min-h-[72px]">
-                      {theme.definition}
-                    </p>
+                  <div className="space-y-2 border-t border-sadu-gold/20 pt-2 text-[11px]">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-sadu-muted block">
+                        Aesthetic Framework
+                      </span>
+                      <p className="text-sadu-charcoal/90 leading-relaxed line-clamp-3">
+                        {theme.aestheticFramework || 'Classical calligraphic proportion & material inquiry.'}
+                      </p>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-sadu-muted block">
+                        Curatorial Defense
+                      </span>
+                      <p className="text-sadu-charcoal/90 leading-relaxed line-clamp-3">
+                        {theme.curatorialJustification || theme.definition}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
