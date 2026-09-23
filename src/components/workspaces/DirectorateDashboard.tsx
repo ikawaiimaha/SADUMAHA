@@ -5,6 +5,8 @@ import { DirectorateOversight } from '../DirectorateOversight';
 import { KpiCard } from '../common/KpiCard';
 import { PageHeader, Panel, StatGrid, TwoColumnLayout } from '../common/dashboard';
 import { leadershipPeople } from '../../data/leadershipMedia';
+import { ChairmanThemeApproval } from '../governance/ChairmanThemeApproval';
+import { DirectorateVetoTable } from '../governance/DirectorateVetoTable';
 import '../LivingRecordWorkspace.css';
 
 export interface DirectorateDashboardProps { lang?: Language }
@@ -103,6 +105,9 @@ export function DirectorateDashboard(_props: DirectorateDashboardProps) {
         }
         leftSpan="lg:col-span-2"
       />
+
+      <ChairmanThemeApproval />
+      <DirectorateVetoTable />
     </section>
   );
 }

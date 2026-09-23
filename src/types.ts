@@ -62,6 +62,27 @@ export interface VendorBid {
 
 export type LpoStatus = 'pending_bids' | 'pending_technical_eval' | 'pending_lpo' | 'lpo_issued';
 
+// Phase 1-4 institutional chain-of-command governance types.
+export type ThemeStatus = 'PROPOSED' | 'APPROVED';
+export interface ThemeProposal {
+  id: string;
+  arabicName: string;
+  englishName: string;
+  definition: string;
+  status: ThemeStatus;
+}
+
+export type NominationSource = 'COMMITTEE' | 'COORDINATOR';
+export type NominationApprovalStatus = 'DRAFT' | 'PENDING_DIRECTORATE_REVIEW' | 'REVISION_REQUESTED' | 'APPROVED_FOR_DISPATCH';
+export interface ArtistNomination {
+  id: string;
+  artistName: string;
+  artistEmail: string;
+  nominationSource: NominationSource;
+  approvalStatus: NominationApprovalStatus;
+  directorateNotes: string | null;
+}
+
 export interface ProcurementPackage {
   id: string;
   code: string;

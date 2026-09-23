@@ -5,6 +5,7 @@ import { useI18n } from '../../context/I18nContext';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { StatusProgressIndicator } from '../common/StatusProgressIndicator';
 import { ArtistNominationBuilder } from '../ArtistNominationBuilder';
+import { ThemeGovernancePanel } from '../governance/ThemeGovernancePanel';
 import { AlertTriangle, Ban, CheckCircle2, ChevronRight, FileCheck, FileText, History, Lock, Scale } from 'lucide-react';
 
 export interface CommitteeViewProps {
@@ -66,6 +67,8 @@ export const CommitteeView: React.FC<CommitteeViewProps> = (props) => {
         {isCuratorOrCoordinator && isConflictDeclared && !submitted && <button type="button" onClick={() => setViewMode(viewMode === 'builder' ? 'dossier' : 'builder')} className="mt-5 flex cursor-pointer items-center gap-2 rounded-md border border-sadu-gold bg-sadu-sand px-4 py-2 text-xs font-bold text-sadu-brick hover:bg-sadu-sand-dark">{viewMode === 'builder' ? 'Back to Dossier' : 'Build New Nomination'}</button>}
         {submitted && <div className="mt-5 flex items-center gap-2 rounded-md border border-sadu-gold/50 bg-sadu-sand/50 px-4 py-2 text-xs font-bold text-sadu-muted"><Lock className="h-3.5 w-3.5" />{isAr ? 'الملف مقفل — للقراءة فقط' : 'Dossier Locked — Read Only'}</div>}
       </section>
+
+      <ThemeGovernancePanel />
 
       {isConflictDeclared && viewMode === 'builder' ? <ArtistNominationBuilder lang={lang} onSuccess={() => setViewMode('dossier')} onCancel={() => setViewMode('dossier')} /> : (<>
         {isRecused === null && <section className="rounded-lg border-2 border-sadu-gold bg-white p-6 shadow-md"><h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-sadu-charcoal"><AlertTriangle className="h-5 w-5 text-sadu-brick" />{isAr ? 'إقرار تضارب المصالح (إلزامي)' : 'Mandatory Conflict of Interest Declaration'}</h2><p className="mb-6 text-sm leading-relaxed text-sadu-muted">{isAr ? 'قبل الوصول إلى مساحة التقييم، يجب الإقرار بعدم وجود أي تضارب مصالح مالي أو شخصي أو مهني مع الفنان، أو التنحي عن تحكيم هذا الملف.' : 'Before accessing the assessment workspace, declare that you have no financial, personal, or professional conflict of interest with this applicant, or recuse yourself from this decision.'}</p><div className="flex flex-col gap-4 sm:flex-row"><button type="button" onClick={() => setIsRecused(false)} className="flex cursor-pointer items-center justify-center gap-2 rounded bg-sadu-charcoal px-6 py-3 text-sm font-bold text-white hover:bg-black"><CheckCircle2 className="h-4 w-4" />{isAr ? 'أقر بعدم وجود تضارب مصالح' : 'I Declare No Conflict of Interest'}</button><button type="button" onClick={() => setIsRecused(true)} className="flex cursor-pointer items-center justify-center gap-2 rounded border border-sadu-gold bg-white px-6 py-3 text-sm font-bold text-sadu-brick hover:bg-red-50"><Ban className="h-4 w-4" />{isAr ? 'التنحي عن تحكيم هذا الملف' : 'Recuse Myself from this Dossier'}</button></div></section>}

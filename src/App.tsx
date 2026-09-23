@@ -14,6 +14,7 @@ import { LivingRecordProvider, useLivingRecord } from './context/LivingRecordCon
 import { LivingRecordWorkspace } from './components/LivingRecordWorkspace';
 import { ArtistIntakeProvider } from './context/ArtistIntakeContext';
 import { IntakeDraftBackupProvider } from './context/IntakeDraftBackupContext';
+import { GovernanceProvider } from './context/GovernanceContext';
 import { NavigationProvider, useNavigation } from './context/NavigationContext';
 import { RosterRegistration } from './components/RosterRegistration';
 import { DEMO_PROGRAMME_ID } from './data/livingRecord';
@@ -317,7 +318,9 @@ export default function App() {
   return (
     <I18nProvider initialLang="ar">
       <WorkspaceProvider initialRole="DIRECTORATE" initialExperienceMode="story">
+        <GovernanceProvider>
         <LivingRecordProvider><ArtistIntakeProvider><IntakeDraftBackupProvider><NavigationProvider><PresentationFirstApp isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} /></NavigationProvider></IntakeDraftBackupProvider></ArtistIntakeProvider></LivingRecordProvider>
+        </GovernanceProvider>
       </WorkspaceProvider>
     </I18nProvider>
   );

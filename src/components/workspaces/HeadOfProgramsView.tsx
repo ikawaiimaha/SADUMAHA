@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Mail, Send, Users, Clock, CheckCircle2, Lock, ShieldCheck } from 'lucide-react';
+import { useGovernance } from '../../context/GovernanceContext';
 
 const APPROVED_EVENT_NAME = '12th Sharjah Calligraphy Biennial';
-const APPROVED_THEME = 'Balance';
-const OFFICIAL_CURATORIAL_MATERIAL = 'This edition invites artists to explore Balance through the interplay of script, space and silence, honoring the calligraphic tradition while inviting contemporary material experimentation.';
+const OFFICIAL_CURATORIAL_MATERIAL = 'This edition invites artists to explore the Chairman-approved theme through the interplay of script, space and silence, honoring the calligraphic tradition while inviting contemporary material experimentation.';
 
 interface CommitteePresentation {
   id: string;
@@ -52,6 +52,8 @@ const MOCK_DISPATCH_LOG: DispatchLogEntry[] = [
 ];
 
 export const HeadOfProgramsView: React.FC = () => {
+  const { nominations, approvedTheme } = useGovernance();
+  const readyForDispatch = nominations.filter(nom => nom.approvalStatus === 'APPROVED_FOR_DISPATCH');
   const [activeTab, setActiveTab] = useState<'dispatch' | 'committee'>('dispatch');
   const [presentations, setPresentations] = useState<CommitteePresentation[]>(MOCK_PRESENTATIONS);
   const [log, setLog] = useState<DispatchLogEntry[]>(MOCK_DISPATCH_LOG);
@@ -75,7 +77,7 @@ export const HeadOfProgramsView: React.FC = () => {
       artistName,
       artistEmail,
       eventName: APPROVED_EVENT_NAME,
-      theme: APPROVED_THEME,
+      theme: approvedTheme?.englishName ?? 'Pending Chairman Approval',
       status: 'awaiting',
       dispatchedAt: 'Just now'
     };
@@ -132,11 +134,13 @@ export const HeadOfProgramsView: React.FC = () => {
                     <Lock size={10} className="text-slate-400"/>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap mt-0.5">
-                    <span className="text-sm font-medium text-slate-800">{APPROVED_THEME}</span>
-                    <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 rounded-full">
-                      <ShieldCheck size={10}/>
-                      Approved by Chairman of the Department
-                    </span>
+                    <span className="text-sm font-medium text-slate-800">{approvedTheme ? approvedTheme.englishName : 'Pending Chairman Approval'}</span>
+                    {approvedTheme && (
+                      <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 rounded-full">
+                        <ShieldCheck size={10}/>
+                        Approved by Chairman of the Department
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div>
@@ -145,6 +149,23 @@ export const HeadOfProgramsView: React.FC = () => {
                   <p className="text-[10px] text-slate-400 mt-1">Drafted by the Preparatory Committee.</p>
                 </div>
               </div>
+
+              {readyForDispatch.length > 0 && (
+                <div className="rounded-md border border-slate-200 bg-slate-50 p-3 space-y-2">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 block">Approved for Dispatch</span>
+                  {readyForDispatch.map(nom => (
+                    <button
+                      key={nom.id}
+                      type="button"
+                      onClick={() => { setArtistName(nom.artistName); setArtistEmail(nom.artistEmail); }}
+                      className="w-full flex items-center justify-between rounded border border-slate-200 bg-white px-3 py-2 text-xs hover:border-slate-400 transition-colors"
+                    >
+                      <span className="font-medium text-slate-800">{nom.artistName}</span>
+                      <span className="text-slate-400">Use details</span>
+                    </button>
+                  ))}
+                </div>
+              )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <label className="block text-xs font-medium text-slate-600">
