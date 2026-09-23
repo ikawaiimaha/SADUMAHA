@@ -22,7 +22,9 @@ interface GovernanceContextType {
   requestRevision: (id: string, note: string) => void;
   markInvitationAccepted: (id: string) => void;
   contracts: Contract[];
-  generateContract: (input: { artistId: string; shippingTerms: string; productionCost: number | null }) => void;
+  generateContract: (input: { artistId: string; shippingTerms: string; paymentStructure: 'FULL_UPFRONT' | 'MILESTONE_SPLIT'; productionCost: number | null; initialPaymentAmount: number | null; finalPaymentAmount: number | null }) => void;
+  markContractSigned: (id: string) => void;
+  requestMilestoneDisbursement: (id: string) => void;
 }
 
 const GovernanceContext = createContext<GovernanceContextType | undefined>(undefined);
@@ -78,14 +80,31 @@ export const GovernanceProvider: React.FC<{ children: ReactNode }> = ({ children
         productionCost: input.productionCost,
         departmentCancellationClause: true,
         status: 'SENT_FOR_SIGNATURE',
+        paymentStructure: input.paymentStructure,
+        initialPaymentAmount: input.initialPaymentAmount,
+        finalPaymentAmount: input.finalPaymentAmount,
+        financeDisbursementStatus: 'PENDING_INITIAL',
       },
     ]);
+  };
+
+  const markContractSigned = (id: string) => {
+    setContracts(current => current.map(contract => contract.id === id ? { ...contract, status: 'SIGNED' } : contract));
+  };
+
+  const DISBURSEMENT_SEQUENCE: Contract['financeDisbursementStatus'][] = ['PENDING_INITIAL', 'INITIAL_PAID', 'PENDING_FINAL', 'COMPLETED'];
+  const requestMilestoneDisbursement = (id: string) => {
+    setContracts(current => current.map(contract => {
+      if (contract.id !== id) return contract;
+      const nextIndex = Math.min(DISBURSEMENT_SEQUENCE.indexOf(contract.financeDisbursementStatus) + 1, DISBURSEMENT_SEQUENCE.length - 1);
+      return { ...contract, financeDisbursementStatus: DISBURSEMENT_SEQUENCE[nextIndex] };
+    }));
   };
 
   const value = useMemo<GovernanceContextType>(() => ({
     themes, proposeTheme, approveTheme, approvedTheme,
     nominations, addDraftNomination, submitFinalistsToDirectorate, approveNomination, requestRevision, markInvitationAccepted,
-    contracts, generateContract,
+    contracts, generateContract, markContractSigned, requestMilestoneDisbursement,
   }), [themes, nominations, approvedTheme, contracts]);
 
   return <GovernanceContext.Provider value={value}>{children}</GovernanceContext.Provider>;

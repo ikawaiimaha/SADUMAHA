@@ -84,6 +84,8 @@ export interface ArtistNomination {
 }
 
 export type ContractStatus = 'DRAFT' | 'SENT_FOR_SIGNATURE' | 'SIGNED';
+export type PaymentStructure = 'FULL_UPFRONT' | 'MILESTONE_SPLIT';
+export type FinanceDisbursementStatus = 'PENDING_INITIAL' | 'INITIAL_PAID' | 'PENDING_FINAL' | 'COMPLETED';
 export interface Contract {
   id: string;
   artistId: string;
@@ -91,6 +93,10 @@ export interface Contract {
   productionCost: number | null;
   departmentCancellationClause: boolean;
   status: ContractStatus;
+  paymentStructure: PaymentStructure;
+  initialPaymentAmount: number | null;
+  finalPaymentAmount: number | null;
+  financeDisbursementStatus: FinanceDisbursementStatus;
 }
 
 export interface ProcurementPackage {
