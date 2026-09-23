@@ -73,7 +73,7 @@ export interface ThemeProposal {
 }
 
 export type NominationSource = 'COMMITTEE' | 'COORDINATOR';
-export type NominationApprovalStatus = 'DRAFT' | 'PENDING_DIRECTORATE_REVIEW' | 'REVISION_REQUESTED' | 'APPROVED_FOR_DISPATCH';
+export type NominationApprovalStatus = 'DRAFT' | 'PENDING_DIRECTORATE_REVIEW' | 'REVISION_REQUESTED' | 'APPROVED_FOR_DISPATCH' | 'INVITATION_ACCEPTED';
 export interface ArtistNomination {
   id: string;
   artistName: string;
@@ -81,6 +81,16 @@ export interface ArtistNomination {
   nominationSource: NominationSource;
   approvalStatus: NominationApprovalStatus;
   directorateNotes: string | null;
+}
+
+export type ContractStatus = 'DRAFT' | 'SENT_FOR_SIGNATURE' | 'SIGNED';
+export interface Contract {
+  id: string;
+  artistId: string;
+  shippingTerms: string;
+  productionCost: number | null;
+  departmentCancellationClause: boolean;
+  status: ContractStatus;
 }
 
 export interface ProcurementPackage {

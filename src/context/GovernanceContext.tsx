@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useMemo, useState, ReactNode } from 'react';
-import { ArtistNomination, NominationSource, ThemeProposal } from '../types';
+import { ArtistNomination, Contract, NominationSource, ThemeProposal } from '../types';
 
 const SEED_THEMES: ThemeProposal[] = [
   { id: 'THEME-01', arabicName: 'التوازن', englishName: 'Balance', definition: 'Exploring the interplay of script, space and silence.', status: 'PROPOSED' },
@@ -8,6 +8,7 @@ const SEED_THEMES: ThemeProposal[] = [
 ];
 
 const SEED_NOMINATIONS: ArtistNomination[] = [];
+const SEED_CONTRACTS: Contract[] = [];
 
 interface GovernanceContextType {
   themes: ThemeProposal[];
@@ -19,6 +20,9 @@ interface GovernanceContextType {
   submitFinalistsToDirectorate: (ids: string[]) => void;
   approveNomination: (id: string) => void;
   requestRevision: (id: string, note: string) => void;
+  markInvitationAccepted: (id: string) => void;
+  contracts: Contract[];
+  generateContract: (input: { artistId: string; shippingTerms: string; productionCost: number | null }) => void;
 }
 
 const GovernanceContext = createContext<GovernanceContextType | undefined>(undefined);
@@ -26,6 +30,7 @@ const GovernanceContext = createContext<GovernanceContextType | undefined>(undef
 export const GovernanceProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [themes, setThemes] = useState<ThemeProposal[]>(SEED_THEMES);
   const [nominations, setNominations] = useState<ArtistNomination[]>(SEED_NOMINATIONS);
+  const [contracts, setContracts] = useState<Contract[]>(SEED_CONTRACTS);
 
   const proposeTheme: GovernanceContextType['proposeTheme'] = (input) => {
     setThemes(current => {
@@ -59,10 +64,29 @@ export const GovernanceProvider: React.FC<{ children: ReactNode }> = ({ children
     setNominations(current => current.map(nom => nom.id === id ? { ...nom, approvalStatus: 'REVISION_REQUESTED', directorateNotes: note } : nom));
   };
 
+  const markInvitationAccepted = (id: string) => {
+    setNominations(current => current.map(nom => nom.id === id ? { ...nom, approvalStatus: 'INVITATION_ACCEPTED' } : nom));
+  };
+
+  const generateContract: GovernanceContextType['generateContract'] = (input) => {
+    setContracts(current => [
+      ...current,
+      {
+        id: `CON-${String(current.length + 1).padStart(3, '0')}`,
+        artistId: input.artistId,
+        shippingTerms: input.shippingTerms,
+        productionCost: input.productionCost,
+        departmentCancellationClause: true,
+        status: 'SENT_FOR_SIGNATURE',
+      },
+    ]);
+  };
+
   const value = useMemo<GovernanceContextType>(() => ({
     themes, proposeTheme, approveTheme, approvedTheme,
-    nominations, addDraftNomination, submitFinalistsToDirectorate, approveNomination, requestRevision,
-  }), [themes, nominations, approvedTheme]);
+    nominations, addDraftNomination, submitFinalistsToDirectorate, approveNomination, requestRevision, markInvitationAccepted,
+    contracts, generateContract,
+  }), [themes, nominations, approvedTheme, contracts]);
 
   return <GovernanceContext.Provider value={value}>{children}</GovernanceContext.Provider>;
 };

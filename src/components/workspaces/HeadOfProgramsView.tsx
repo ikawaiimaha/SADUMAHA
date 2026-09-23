@@ -20,6 +20,7 @@ const MOCK_PRESENTATIONS: CommitteePresentation[] = [
 
 interface DispatchLogEntry {
   id: string;
+  nominationId?: string;
   artistName: string;
   artistEmail: string;
   eventName: string;
@@ -52,7 +53,7 @@ const MOCK_DISPATCH_LOG: DispatchLogEntry[] = [
 ];
 
 export const HeadOfProgramsView: React.FC = () => {
-  const { nominations, approvedTheme } = useGovernance();
+  const { nominations, approvedTheme, markInvitationAccepted } = useGovernance();
   const readyForDispatch = nominations.filter(nom => nom.approvalStatus === 'APPROVED_FOR_DISPATCH');
   const [activeTab, setActiveTab] = useState<'dispatch' | 'committee'>('dispatch');
   const [presentations, setPresentations] = useState<CommitteePresentation[]>(MOCK_PRESENTATIONS);
@@ -61,6 +62,7 @@ export const HeadOfProgramsView: React.FC = () => {
   const [artistName, setArtistName] = useState('');
   const [artistEmail, setArtistEmail] = useState('');
   const [brief, setBrief] = useState('');
+  const [selectedNominationId, setSelectedNominationId] = useState<string | undefined>(undefined);
 
   const handleRouteToCommittee = (id: string) => {
     setPresentations(current =>
@@ -74,6 +76,7 @@ export const HeadOfProgramsView: React.FC = () => {
     if (!artistName.trim() || !artistEmail.trim()) return;
     const entry: DispatchLogEntry = {
       id: `DL-${String(log.length + 1).padStart(3, '0')}`,
+      nominationId: selectedNominationId,
       artistName,
       artistEmail,
       eventName: APPROVED_EVENT_NAME,
@@ -85,6 +88,12 @@ export const HeadOfProgramsView: React.FC = () => {
     setArtistName('');
     setArtistEmail('');
     setBrief('');
+    setSelectedNominationId(undefined);
+  };
+
+  const handleMarkAccepted = (entry: DispatchLogEntry) => {
+    setLog(current => current.map(item => item.id === entry.id ? { ...item, status: 'accepted', coordinator: item.coordinator ?? 'Maha' } : item));
+    if (entry.nominationId) markInvitationAccepted(entry.nominationId);
   };
 
   return (
@@ -157,7 +166,7 @@ export const HeadOfProgramsView: React.FC = () => {
                     <button
                       key={nom.id}
                       type="button"
-                      onClick={() => { setArtistName(nom.artistName); setArtistEmail(nom.artistEmail); }}
+                      onClick={() => { setArtistName(nom.artistName); setArtistEmail(nom.artistEmail); setSelectedNominationId(nom.id); }}
                       className="w-full flex items-center justify-between rounded border border-slate-200 bg-white px-3 py-2 text-xs hover:border-slate-400 transition-colors"
                     >
                       <span className="font-medium text-slate-800">{nom.artistName}</span>
@@ -227,10 +236,14 @@ export const HeadOfProgramsView: React.FC = () => {
                       <span className="text-xs text-slate-500">{entry.dispatchedAt}</span>
                     </div>
                     {entry.status === 'awaiting' ? (
-                      <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded-full whitespace-nowrap">
+                      <button
+                        type="button"
+                        onClick={() => handleMarkAccepted(entry)}
+                        className="inline-flex items-center gap-1 bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded-full whitespace-nowrap hover:bg-amber-200 transition-colors"
+                      >
                         <Clock size={12}/>
                         Pending Artist Response
-                      </span>
+                      </button>
                     ) : (
                       <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full whitespace-nowrap">
                         <CheckCircle2 size={12}/>
