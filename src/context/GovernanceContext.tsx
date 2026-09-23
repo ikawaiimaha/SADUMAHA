@@ -50,7 +50,7 @@ export const GovernanceProvider: React.FC<{ children: ReactNode }> = ({ children
   const addDraftNomination: GovernanceContextType['addDraftNomination'] = (input) => {
     setNominations(current => [
       ...current,
-      { id: `NOM-${String(current.length + 1).padStart(3, '0')}`, artistName: input.artistName, artistEmail: input.artistEmail, nominationSource: input.nominationSource, approvalStatus: 'DRAFT', directorateNotes: null },
+      { id: `NOM-${String(current.length + 1).padStart(3, '0')}`, artistName: input.artistName, artistEmail: input.artistEmail, nominationSource: input.nominationSource, approvalStatus: 'DRAFT', directorateNotes: null, requestedBudget: null },
     ]);
   };
 
