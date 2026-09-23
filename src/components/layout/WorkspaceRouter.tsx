@@ -14,6 +14,7 @@ import { PrProtocolDashboard } from '../workspaces/PrProtocolDashboard';
 import { FinanceDashboard } from '../workspaces/FinanceDashboard';
 import { LogisticsDashboard } from '../workspaces/LogisticsDashboard';
 import { EditorialDashboard } from '../workspaces/EditorialDashboard';
+import { HeadOfProgramsView } from '../workspaces/HeadOfProgramsView';
 
 export interface WorkspaceRouterProps {
   currentRole: RoleKey;
@@ -55,6 +56,8 @@ function renderOverview(currentRole: RoleKey) {
       return <LogisticsDashboard />;
     case 'ARCHIVE':
       return <ArchiveView />;
+    case 'HEAD_OF_PROGRAMS':
+      return <HeadOfProgramsView />;
     default:
       return <ForbiddenView />;
   }

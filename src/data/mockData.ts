@@ -711,6 +711,17 @@ export const ROLE_PROFILES: Record<RoleKey, {
     responsibilitySummaryAr: 'قائمة مراجعة تجريبية ومقياس مقترح من 35 نقطة؛ دون اتصال خارجي بالموقع.',
     permittedViews: ['overview', 'approved-scope', 'operations'],
   },
+  HEAD_OF_PROGRAMS: {
+    nameEn: 'Aisha (Head of International Programs)',
+    nameAr: 'عائشة (رئيسة البرامج الدولية)',
+    titleEn: 'Head of International Programs',
+    titleAr: 'رئيسة البرامج الدولية',
+    scopeEn: 'Dispatch Control: Review coordinator nominations and approve encrypted institutional invitations.',
+    scopeAr: 'مركز التحكم بالإرسال: مراجعة ترشيحات المنسقين واعتماد الدعوات المؤسسية المشفرة.',
+    responsibilitySummaryEn: 'Mail-merge preview and dispatch approval for official artist invitations.',
+    responsibilitySummaryAr: 'معاينة الدمج البريدي واعتماد إرسال دعوات الفنانين الرسمية.',
+    permittedViews: ['overview'],
+  },
   SAF_TECHNICIAN: {
     nameEn: 'Mohamed Junaid',
     nameAr: 'محمد جنيد',

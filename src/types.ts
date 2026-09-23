@@ -12,6 +12,7 @@ export type UserRole =
   | 'FINANCE'
   | 'LOGISTICS'
   | 'ARTIST'
+  | 'HEAD_OF_PROGRAMS'
   // Arts Square Triad Explicit Roles
   | 'SDC_COORDINATOR'
   | 'SAF_TECHNICIAN'

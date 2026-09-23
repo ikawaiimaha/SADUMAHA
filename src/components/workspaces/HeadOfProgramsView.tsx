@@ -47,7 +47,7 @@ export const HeadOfProgramsView: React.FC = () => {
     <div className="space-y-6">
       <header className="border-b border-sadu-gold/30 pb-4">
         <h1 className="text-2xl font-serif text-slate-800">International Programs & Dispatch Control</h1>
-        <p className="text-sm text-slate-500 mt-1">Review coordinator nominations and dispatch official encrypted institutional invitations.</p>
+        <p className="text-sm text-slate-500 mt-1">Welcome, Aisha. Review coordinator nominations and dispatch official encrypted institutional invitations.</p>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
