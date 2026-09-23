@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Clock, CheckCircle, Send, Eye } from 'lucide-react';
+import { Clock, CheckCircle, Send, Eye, Users } from 'lucide-react';
 
 interface InviteDraft {
   id: string;
@@ -9,6 +9,19 @@ interface InviteDraft {
   status: 'pending' | 'dispatched';
   brief: string;
 }
+
+interface CommitteePresentation {
+  id: string;
+  artistName: string;
+  summary: string;
+  routed: boolean;
+}
+
+const MOCK_PRESENTATIONS: CommitteePresentation[] = [
+  { id: 'CP-001', artistName: 'Youssef Nabhan', summary: '3 Artworks Submitted', routed: false },
+  { id: 'CP-002', artistName: 'Noura Al-Mazrouei', summary: '2 Artworks Submitted', routed: false },
+  { id: 'CP-003', artistName: 'Fatima Al Suwaidi', summary: '5 Artworks Submitted', routed: false }
+];
 
 const MOCK_DRAFTS: InviteDraft[] = [
   {
@@ -32,6 +45,8 @@ const MOCK_DRAFTS: InviteDraft[] = [
 export const HeadOfProgramsView: React.FC = () => {
   const [drafts, setDrafts] = useState<InviteDraft[]>(MOCK_DRAFTS);
   const [activeDraftId, setActiveDraftId] = useState<string | null>(MOCK_DRAFTS[0].id);
+  const [activeTab, setActiveTab] = useState<'dispatch' | 'committee'>('dispatch');
+  const [presentations, setPresentations] = useState<CommitteePresentation[]>(MOCK_PRESENTATIONS);
 
   const activeDraft = drafts.find(d => d.id === activeDraftId);
 
@@ -43,6 +58,14 @@ export const HeadOfProgramsView: React.FC = () => {
     );
   };
 
+  const handleRouteToCommittee = (id: string) => {
+    setPresentations(current =>
+      current.map(item =>
+        item.id === id ? { ...item, routed: true } : item
+      )
+    );
+  };
+
   return (
     <div className="space-y-6">
       <header className="border-b border-sadu-gold/30 pb-4">
@@ -50,6 +73,22 @@ export const HeadOfProgramsView: React.FC = () => {
         <p className="text-sm text-slate-500 mt-1">Welcome, Aisha. Review coordinator nominations and dispatch official encrypted institutional invitations.</p>
       </header>
 
+      <nav className="flex items-center gap-6 border-b border-slate-200">
+        <button
+          onClick={() => setActiveTab('dispatch')}
+          className={`pb-3 text-sm transition-colors ${activeTab === 'dispatch' ? 'border-b-2 border-slate-800 font-medium text-slate-800' : 'text-slate-400 hover:text-slate-600'}`}
+        >
+          Invitation Dispatch
+        </button>
+        <button
+          onClick={() => setActiveTab('committee')}
+          className={`pb-3 text-sm transition-colors ${activeTab === 'committee' ? 'border-b-2 border-slate-800 font-medium text-slate-800' : 'text-slate-400 hover:text-slate-600'}`}
+        >
+          Committee Routing
+        </button>
+      </nav>
+
+      {activeTab === 'dispatch' && (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Pane: The Approval Queue */}
         <div className="lg:col-span-1 bg-white border border-slate-200 rounded-md shadow-sm overflow-hidden">
@@ -142,6 +181,52 @@ export const HeadOfProgramsView: React.FC = () => {
           )}
         </div>
       </div>
+      )}
+
+      {activeTab === 'committee' && (
+        <div className="bg-white border border-slate-200 rounded-md shadow-sm overflow-hidden">
+          <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+            <div>
+              <h2 className="font-medium text-slate-800 flex items-center gap-2">
+                <Users className="text-slate-400" size={16}/>
+                Pending Committee Presentations
+              </h2>
+              <p className="text-xs text-slate-500 mt-1">Artist proposals awaiting routing to the Curatorial Committee.</p>
+            </div>
+          </div>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-xs uppercase tracking-wider text-slate-400 border-b border-slate-200">
+                <th className="px-6 py-3 font-medium">Artist</th>
+                <th className="px-6 py-3 font-medium">Summary</th>
+                <th className="px-6 py-3 font-medium text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {presentations.map(item => (
+                <tr key={item.id}>
+                  <td className="px-6 py-4 font-medium text-slate-800">{item.artistName}</td>
+                  <td className="px-6 py-4 text-slate-500">{item.artistName} - {item.summary}</td>
+                  <td className="px-6 py-4 text-right">
+                    <button
+                      onClick={() => handleRouteToCommittee(item.id)}
+                      disabled={item.routed}
+                      className={`inline-flex items-center gap-2 px-4 py-2 rounded text-sm font-medium transition-colors ${
+                        item.routed
+                          ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                          : 'bg-slate-800 text-white hover:bg-slate-700'
+                      }`}
+                    >
+                      <Send size={14}/>
+                      {item.routed ? 'Routed' : 'Route to Committee'}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };
