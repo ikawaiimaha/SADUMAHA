@@ -1,14 +1,5 @@
 import React, { useState } from 'react';
-import { Clock, CheckCircle, Send, Eye, Users } from 'lucide-react';
-
-interface InviteDraft {
-  id: string;
-  artistName: string;
-  coordinator: string;
-  theme: string;
-  status: 'pending' | 'dispatched';
-  brief: string;
-}
+import { Mail, Send, Users, Clock, CheckCircle2 } from 'lucide-react';
 
 interface CommitteePresentation {
   id: string;
@@ -23,40 +14,49 @@ const MOCK_PRESENTATIONS: CommitteePresentation[] = [
   { id: 'CP-003', artistName: 'Fatima Al Suwaidi', summary: '5 Artworks Submitted', routed: false }
 ];
 
-const MOCK_DRAFTS: InviteDraft[] = [
+interface DispatchLogEntry {
+  id: string;
+  artistName: string;
+  artistEmail: string;
+  eventName: string;
+  theme: string;
+  status: 'awaiting' | 'accepted';
+  coordinator?: string;
+  dispatchedAt: string;
+}
+
+const MOCK_DISPATCH_LOG: DispatchLogEntry[] = [
   {
-    id: 'INV-001',
+    id: 'DL-001',
     artistName: 'Youssef Nabhan',
-    coordinator: 'Maha',
+    artistEmail: 'y.nabhan@studio.art',
+    eventName: '12th Sharjah Calligraphy Biennial',
     theme: 'Balance',
-    status: 'pending',
-    brief: 'We are specifically interested in your large-scale Kufic bronze sculptures for the main hall.'
+    status: 'awaiting',
+    dispatchedAt: '2 days ago'
   },
   {
-    id: 'INV-002',
+    id: 'DL-002',
     artistName: 'Noura Al-Mazrouei',
-    coordinator: 'Maha',
+    artistEmail: 'noura.m@design.ae',
+    eventName: '12th Sharjah Calligraphy Biennial',
     theme: 'Balance',
-    status: 'pending',
-    brief: 'Your recent explorations in digital Ruq’ah projection align perfectly with the biennial’s multimedia sector.'
+    status: 'accepted',
+    coordinator: 'Maha',
+    dispatchedAt: '5 days ago'
   }
 ];
 
 export const HeadOfProgramsView: React.FC = () => {
-  const [drafts, setDrafts] = useState<InviteDraft[]>(MOCK_DRAFTS);
-  const [activeDraftId, setActiveDraftId] = useState<string | null>(MOCK_DRAFTS[0].id);
   const [activeTab, setActiveTab] = useState<'dispatch' | 'committee'>('dispatch');
   const [presentations, setPresentations] = useState<CommitteePresentation[]>(MOCK_PRESENTATIONS);
+  const [log, setLog] = useState<DispatchLogEntry[]>(MOCK_DISPATCH_LOG);
 
-  const activeDraft = drafts.find(d => d.id === activeDraftId);
-
-  const handleDispatch = (id: string) => {
-    setDrafts(current => 
-      current.map(draft => 
-        draft.id === id ? { ...draft, status: 'dispatched' } : draft
-      )
-    );
-  };
+  const [artistName, setArtistName] = useState('');
+  const [artistEmail, setArtistEmail] = useState('');
+  const [eventName, setEventName] = useState('12th Sharjah Calligraphy Biennial');
+  const [theme, setTheme] = useState('Balance');
+  const [brief, setBrief] = useState('');
 
   const handleRouteToCommittee = (id: string) => {
     setPresentations(current =>
@@ -64,6 +64,23 @@ export const HeadOfProgramsView: React.FC = () => {
         item.id === id ? { ...item, routed: true } : item
       )
     );
+  };
+
+  const handleGenerateDispatch = () => {
+    if (!artistName.trim() || !artistEmail.trim()) return;
+    const entry: DispatchLogEntry = {
+      id: `DL-${String(log.length + 1).padStart(3, '0')}`,
+      artistName,
+      artistEmail,
+      eventName,
+      theme,
+      status: 'awaiting',
+      dispatchedAt: 'Just now'
+    };
+    setLog(current => [entry, ...current]);
+    setArtistName('');
+    setArtistEmail('');
+    setBrief('');
   };
 
   return (
@@ -89,98 +106,116 @@ export const HeadOfProgramsView: React.FC = () => {
       </nav>
 
       {activeTab === 'dispatch' && (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Pane: The Approval Queue */}
-        <div className="lg:col-span-1 bg-white border border-slate-200 rounded-md shadow-sm overflow-hidden">
-          <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 font-medium text-sm text-slate-700 flex justify-between items-center">
-            <span>Draft Queue</span>
-            <span className="bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded-full">
-              {drafts.filter(d => d.status === 'pending').length} Pending
-            </span>
-          </div>
-          <div className="divide-y divide-slate-100">
-            {drafts.map(draft => (
-              <button
-                key={draft.id}
-                onClick={() => setActiveDraftId(draft.id)}
-                className={`w-full text-left px-4 py-4 transition-colors hover:bg-slate-50 ${activeDraftId === draft.id ? 'bg-slate-50 border-l-4 border-l-slate-800' : 'border-l-4 border-l-transparent'}`}
-              >
-                <div className="flex justify-between items-start mb-1">
-                  <span className="font-medium text-slate-800">{draft.artistName}</span>
-                  {draft.status === 'pending' ? (
-                    <Clock className="text-amber-500" size={14}/>
-                  ) : (
-                    <CheckCircle className="text-emerald-500" size={14}/>
-                  )}
-                </div>
-                <div className="text-xs text-slate-500 flex items-center gap-2">
-                  <span>Prepared by: {draft.coordinator}</span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Right Pane: The Mail-Merge Preview */}
-        <div className="lg:col-span-2 bg-white border border-slate-200 rounded-md shadow-sm flex flex-col h-[600px]">
-          {activeDraft ? (
-            <>
-              <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
-                <div>
-                  <h2 className="font-medium text-slate-800 flex items-center gap-2">
-                    <Eye className="text-slate-400" size={16}/>
-                    Invitation Preview
-                  </h2>
-                  <p className="text-xs text-slate-500 mt-1">System auto-merges Event Data and Coordinator Brief.</p>
-                </div>
-                <button
-                  onClick={() => handleDispatch(activeDraft.id)}
-                  disabled={activeDraft.status === 'dispatched'}
-                  className={`flex items-center gap-2 px-4 py-2 rounded text-sm font-medium transition-colors ${
-                    activeDraft.status === 'dispatched' 
-                      ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                      : 'bg-slate-800 text-white hover:bg-slate-700'
-                  }`}
-                >
-                  <Send size={14}/>
-                  {activeDraft.status === 'dispatched' ? 'Dispatched' : 'Approve & Dispatch'}
-                </button>
-              </div>
-              
-              <div className="p-8 overflow-y-auto flex-1 bg-slate-50/50">
-                <div className="bg-white border border-slate-200 p-8 shadow-sm max-w-2xl mx-auto font-serif text-slate-700 space-y-6">
-                  <div className="border-b border-slate-200 pb-4 mb-6">
-                    <p className="text-sm font-sans font-medium text-slate-400 uppercase tracking-wider mb-2">Subject</p>
-                    <p className="text-lg">Official Invitation: 12th Sharjah Calligraphy Biennial – {activeDraft.artistName}</p>
-                  </div>
-                  
-                  <p>Dear {activeDraft.artistName},</p>
-                  <p>On behalf of the Directorate of Cultural Affairs and the Curatorial Committee, it is our distinct honor to officially invite you to participate in <strong>The 12th Sharjah Calligraphy Biennial</strong>.</p>
-                  <p>Under this year’s curatorial theme, <em>{activeDraft.theme}</em>, the Committee has closely followed your practice. <strong>{activeDraft.brief}</strong></p>
-                  <p>To ensure the highest level of security for your personal data and to streamline your exhibition logistics, our institution utilizes the <strong>System for Arts Data Unification (SADU)</strong>. Please access your secure onboarding workspace here:</p>
-                  
-                  <div className="bg-slate-100 p-4 text-center rounded border border-slate-200 font-sans">
-                    <span className="text-blue-600 font-medium break-all">
-                      [https://sadu.sharjah.gov.ae/onboard/](https://sadu.sharjah.gov.ae/onboard/){activeDraft.id.toLowerCase()}-secure-token
-                    </span>
-                  </div>
-
-                  <p>Your dedicated Exhibition Coordinator, <strong>{activeDraft.coordinator}</strong>, will be your primary liaison throughout this journey.</p>
-                  <p>Sincerely,</p>
-                  <div className="pt-4">
-                    <p className="font-bold">Directorate of Cultural Affairs</p>
-                    <p className="text-sm text-slate-500 font-sans">Sharjah Department of Culture</p>
-                  </div>
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="flex-1 flex items-center justify-center text-slate-400">
-              Select a draft from the queue to preview.
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Pane: Draft New Invitation */}
+          <div className="bg-white border border-slate-200 rounded-md shadow-sm overflow-hidden">
+            <div className="bg-slate-50 px-6 py-4 border-b border-slate-200">
+              <h2 className="font-medium text-slate-800">Draft New Invitation</h2>
+              <p className="text-xs text-slate-500 mt-1">Initiate a secure, encrypted onboarding invitation directly to the artist.</p>
             </div>
-          )}
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <label className="block text-xs font-medium text-slate-600">
+                  Artist Name
+                  <input
+                    type="text"
+                    value={artistName}
+                    onChange={e => setArtistName(e.target.value)}
+                    placeholder="e.g. Youssef Nabhan"
+                    className="mt-1 w-full rounded border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sadu-gold"
+                  />
+                </label>
+                <label className="block text-xs font-medium text-slate-600">
+                  Artist Email
+                  <input
+                    type="email"
+                    value={artistEmail}
+                    onChange={e => setArtistEmail(e.target.value)}
+                    placeholder="artist@studio.art"
+                    className="mt-1 w-full rounded border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sadu-gold"
+                  />
+                </label>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <label className="block text-xs font-medium text-slate-600">
+                  Event Name
+                  <input
+                    type="text"
+                    value={eventName}
+                    onChange={e => setEventName(e.target.value)}
+                    className="mt-1 w-full rounded border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sadu-gold"
+                  />
+                </label>
+                <label className="block text-xs font-medium text-slate-600">
+                  Theme
+                  <input
+                    type="text"
+                    value={theme}
+                    onChange={e => setTheme(e.target.value)}
+                    className="mt-1 w-full rounded border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sadu-gold"
+                  />
+                </label>
+              </div>
+
+              <label className="block text-xs font-medium text-slate-600">
+                Curatorial Brief / Specific Requirements
+                <textarea
+                  value={brief}
+                  onChange={e => setBrief(e.target.value)}
+                  rows={6}
+                  placeholder="Describe what the Committee is specifically interested in from this artist..."
+                  className="mt-1 w-full rounded border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sadu-gold resize-none"
+                />
+              </label>
+
+              <button
+                onClick={handleGenerateDispatch}
+                disabled={!artistName.trim() || !artistEmail.trim()}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded text-sm font-medium bg-slate-800 text-white hover:bg-slate-700 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed transition-colors"
+              >
+                <Mail size={14}/>
+                Generate & Dispatch Secure Link
+              </button>
+            </div>
+          </div>
+
+          {/* Right Pane: Dispatch Log & Routing Status */}
+          <div className="bg-white border border-slate-200 rounded-md shadow-sm overflow-hidden">
+            <div className="bg-slate-50 px-6 py-4 border-b border-slate-200">
+              <h2 className="font-medium text-slate-800">Dispatch Log & Routing Status</h2>
+              <p className="text-xs text-slate-500 mt-1">Recently dispatched institutional invitations.</p>
+            </div>
+            <div className="divide-y divide-slate-100">
+              {log.map(entry => (
+                <div key={entry.id} className="px-6 py-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <span className="font-medium text-slate-800 block">{entry.artistName}</span>
+                      <span className="text-xs text-slate-500">{entry.artistEmail}</span>
+                    </div>
+                    {entry.status === 'awaiting' ? (
+                      <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded-full whitespace-nowrap">
+                        <Clock size={12}/>
+                        Awaiting Artist Response
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full whitespace-nowrap">
+                        <CheckCircle2 size={12}/>
+                        Accepted - Routed to Coordinator {entry.coordinator}
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-2 text-xs text-slate-500 flex items-center gap-2">
+                    <span>{entry.eventName} · {entry.theme}</span>
+                    <span>·</span>
+                    <span>{entry.dispatchedAt}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
       )}
 
       {activeTab === 'committee' && (

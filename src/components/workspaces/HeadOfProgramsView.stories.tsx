@@ -16,10 +16,12 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-export const Dispatched: Story = {
+export const DispatchNewInvitation: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(await canvas.findByRole('button', { name: /approve & dispatch/i }));
-    await waitFor(() => expect(canvas.getByRole('button', { name: /^dispatched$/i })).toBeInTheDocument());
+    await userEvent.type(await canvas.findByPlaceholderText(/e.g. youssef nabhan/i), 'Amal Al Hashimi');
+    await userEvent.type(canvas.getByPlaceholderText(/artist@studio.art/i), 'amal@studio.art');
+    await userEvent.click(canvas.getByRole('button', { name: /generate & dispatch secure link/i }));
+    await waitFor(() => expect(canvas.getByText('Amal Al Hashimi')).toBeInTheDocument());
   },
 };
