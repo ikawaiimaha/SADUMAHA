@@ -65,6 +65,7 @@ import {
 
 const IDENTITY_OPTIONS: { key: RoleKey; labelEn: string; labelAr: string; categoryEn: string; categoryAr: string }[] = [
   { key: 'DIRECTORATE', labelEn: 'Directorate Leadership', labelAr: 'القيادة التنفيذية', categoryEn: 'Leadership', categoryAr: 'القيادة' },
+  { key: 'HEAD_OF_PROGRAMS', labelEn: 'Head of International Programs', labelAr: 'رئيسة البرامج الدولية', categoryEn: 'Leadership', categoryAr: 'القيادة' },
   { key: 'COORDINATOR', labelEn: 'Exhibition Coordinator', labelAr: 'منسق المعارض', categoryEn: 'Management', categoryAr: 'الإدارة' },
   { key: 'COMMITTEE', labelEn: 'Curatorial Committee', labelAr: 'لجنة التحكيم', categoryEn: 'Assessment', categoryAr: 'التقييم' },
   { key: 'TECHNICAL_MUSEUM', labelEn: 'Technical & Installation', labelAr: 'العمليات الفنية', categoryEn: 'Operations', categoryAr: 'العمليات' },
