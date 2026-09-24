@@ -236,7 +236,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
 
               <div className="rounded-lg border border-sadu-gold/40 bg-sadu-paper/70 p-3">
                 <span className="block text-[10px] font-bold uppercase tracking-wider text-sadu-muted">
-                  Contemporary Relevance
+                  Contemporary & Historical Relevance
                 </span>
                 <p className="mt-1 text-xs text-sadu-charcoal leading-relaxed">
                   {winningTheme.contemporaryRelevance || 'Engages contemporary spatial and experimental calligraphic installation discourses.'}
@@ -268,7 +268,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
               </button>
             </div>
           </div>
-          {/* BUDGET ASSIGNMENT UI ELEMENT */}
+          {/* OFFICIAL BUDGET ASSIGNMENT SECTION */}
           <div className="rounded-xl border-2 border-sadu-gold bg-gradient-to-b from-white to-sadu-paper p-6 shadow-sm space-y-5">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-sadu-gold/40 pb-4">
               <div className="flex items-center gap-3">
@@ -277,7 +277,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
                 </div>
                 <div>
                   <h4 className="font-editorial text-lg font-bold text-sadu-charcoal">
-                    Executive Budget Assignment & Phase 2 Authority Transfer
+                    Official Budget Assignment
                   </h4>
                   <p className="text-xs text-sadu-muted">
                     Conferred by H.E. Abdullah Al Owais &middot; Chairman / CEO
@@ -290,52 +290,58 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
             </div>
 
             <p className="text-xs text-sadu-muted leading-relaxed">
-              Theme ratification unlocks the biennial budget allocation. Confirming this appropriation
-              authorizes the <strong>Finance & Contracts</strong> department and transfers operational
-              mandate to <strong>Mohammed Al Qaseer (Biennial Director)</strong> to head the Artist Selection Committee.
+              Theme ratification unlocks official biennial budget assignment. Authorizing this appropriation locks the budget and formally transfers operational authority to Biennial Director Mohammed Al Qaseer to convene the Artist Selection Committee.
             </p>
 
             <div className="space-y-3 rounded-lg border border-sadu-gold/50 bg-sadu-sand/40 p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <label className="block text-xs font-bold text-sadu-charcoal uppercase tracking-wider">
-                    Total Biennial Allocation (AED)
+                  <label htmlFor="approved-budget-amount" className="block text-xs font-bold text-sadu-charcoal uppercase tracking-wider">
+                    Approved Budget Amount (AED)
                   </label>
                   <span className="text-[11px] text-sadu-muted">
                     Production, artist fees, international freight, and publishing
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  {[
-                    { label: '10M AED', value: 10000000 },
-                    { label: '12.5M AED', value: 12500000 },
-                    { label: '15M AED', value: 15000000 },
-                  ].map(tier => (
-                    <button
-                      key={tier.value}
-                      type="button"
-                      onClick={() => setAllocatedBudget(tier.value)}
-                      className={`rounded px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer ${
-                        allocatedBudget === tier.value
-                          ? 'bg-sadu-brick text-white shadow-2xs'
-                          : 'bg-white border border-sadu-gold/60 text-sadu-charcoal hover:bg-sadu-gold/20'
-                      }`}
-                    >
-                      {tier.label}
-                    </button>
-                  ))}
-                </div>
+                {!isBudgetAssigned && (
+                  <div className="flex items-center gap-2">
+                    {[
+                      { label: '10M AED', value: 10000000 },
+                      { label: '12.5M AED', value: 12500000 },
+                      { label: '15M AED', value: 15000000 },
+                    ].map(tier => (
+                      <button
+                        key={tier.value}
+                        type="button"
+                        onClick={() => setAllocatedBudget(tier.value)}
+                        className={`rounded px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer ${
+                          allocatedBudget === tier.value
+                            ? 'bg-sadu-brick text-white shadow-2xs'
+                            : 'bg-white border border-sadu-gold/60 text-sadu-charcoal hover:bg-sadu-gold/20'
+                        }`}
+                      >
+                        {tier.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="relative">
                 <span className="absolute left-3 top-2.5 text-xs font-bold text-sadu-brick">AED</span>
                 <input
+                  id="approved-budget-amount"
                   type="number"
                   step="500000"
+                  disabled={isBudgetAssigned}
                   value={allocatedBudget}
                   onChange={e => setAllocatedBudget(Number(e.target.value) || 0)}
-                  className="w-full rounded-md border border-sadu-gold/70 bg-white py-2 pl-12 pr-4 font-mono text-base font-bold text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
+                  className={`w-full rounded-md border py-2 pl-12 pr-4 font-mono text-base font-bold focus:outline-none focus:ring-1 ${
+                    isBudgetAssigned
+                      ? 'border-emerald-300 bg-emerald-50/50 text-emerald-950 cursor-not-allowed'
+                      : 'border-sadu-gold/70 bg-white text-sadu-charcoal focus:border-sadu-brick focus:ring-sadu-brick'
+                  }`}
                 />
               </div>
 
@@ -360,33 +366,45 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
               </div>
             </div>
 
-            {/* Action or Success Notification */}
+            {/* Action or Final Success State */}
             {isBudgetAssigned ? (
-              <div className="flex flex-col gap-2 rounded-lg border border-emerald-300 bg-emerald-50/90 p-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-2 text-emerald-900">
-                  <UserCheck className="h-5 w-5 shrink-0 text-emerald-700" />
-                  <div>
-                    <strong className="text-xs font-bold block">
-                      Authority Officially Transferred to Mohammed Al Qaseer
-                    </strong>
-                    <p className="text-[11px] text-emerald-800">
-                      Budget of AED {allocatedBudget.toLocaleString()} locked. Al Qaseer is now empowered
-                      to lead the Artist Selection Committee and authorize the General Coordinator.
-                    </p>
+              <div className="flex flex-col gap-3 rounded-lg border-2 border-emerald-400 bg-emerald-50 p-5 shadow-xs">
+                <div className="flex items-start sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-700 text-white shadow-xs">
+                      <CheckCircle2 className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <span className="inline-block rounded bg-emerald-700 px-2 py-0.5 text-[10px] font-bold text-white uppercase tracking-wider mb-1">
+                        Budget Locked & Authority Transitioned
+                      </span>
+                      <h5 className="font-editorial text-lg font-bold text-emerald-950">
+                        Operational Authority Officially Transitioned to Mohammed Al Qaseer
+                      </h5>
+                    </div>
                   </div>
+                  <span className="rounded-full border border-emerald-600 bg-white px-3 py-1 font-mono text-xs font-bold text-emerald-800 shrink-0 shadow-2xs">
+                    AED {allocatedBudget.toLocaleString()} Locked
+                  </span>
                 </div>
-                <span className="w-fit rounded bg-emerald-700 px-2.5 py-1 text-[10px] font-bold text-white uppercase tracking-wider">
-                  Phase 2 Active
-                </span>
+
+                <div className="rounded-md border border-emerald-200 bg-white/80 p-3 text-xs text-emerald-900 leading-relaxed">
+                  <p>
+                    The budget is locked and operational authority has officially transitioned to the Biennial Director (Mohammed Al Qaseer) for artist selection.
+                  </p>
+                  <p className="mt-1 text-[11px] text-emerald-800">
+                    Mohammed Al Qaseer now heads the Artist Selection Committee to review nominations and commission artworks matching the ratified theme within the locked allocation.
+                  </p>
+                </div>
               </div>
             ) : (
               <button
                 type="button"
                 onClick={handleAssignBudget}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-sadu-brick px-6 py-3 text-xs font-bold text-white shadow-xs transition-colors hover:bg-sadu-brick-dark cursor-pointer"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-sadu-brick px-6 py-3.5 text-xs font-bold text-white shadow-xs transition-colors hover:bg-sadu-brick-dark cursor-pointer"
               >
                 <Banknote className="h-4 w-4" />
-                <span>Assign AED {allocatedBudget.toLocaleString()} & Delegate Artist Selection to Mohammed Al Qaseer</span>
+                <span>Authorize Budget & Transfer Authority</span>
                 <ArrowRight className="h-4 w-4" />
               </button>
             )}
@@ -438,16 +456,25 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
                       <span className="text-[10px] font-bold uppercase tracking-wider text-sadu-muted block">
                         Aesthetic Framework
                       </span>
-                      <p className="text-sadu-charcoal/90 leading-relaxed line-clamp-3">
+                      <p className="text-sadu-charcoal/90 leading-relaxed line-clamp-2">
                         {theme.aestheticFramework || 'Classical calligraphic proportion & material inquiry.'}
                       </p>
                     </div>
 
                     <div>
                       <span className="text-[10px] font-bold uppercase tracking-wider text-sadu-muted block">
-                        Curatorial Defense
+                        Contemporary & Historical Relevance
                       </span>
-                      <p className="text-sadu-charcoal/90 leading-relaxed line-clamp-3">
+                      <p className="text-sadu-charcoal/90 leading-relaxed line-clamp-2">
+                        {theme.contemporaryRelevance || 'International art standards & contemporary discourse.'}
+                      </p>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-sadu-muted block">
+                        Curatorial Justification
+                      </span>
+                      <p className="text-sadu-charcoal/90 leading-relaxed line-clamp-2">
                         {theme.curatorialJustification || theme.definition}
                       </p>
                     </div>

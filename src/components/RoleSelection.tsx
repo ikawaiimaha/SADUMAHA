@@ -39,9 +39,9 @@ const ROLE_OPTIONS: RoleOption[] = [
     key: 'Chairman',
     titleEn: 'Chairman',
     titleAr: 'رئيس الدائرة',
-    phaseBadge: 'Executive Gate & Budget Allocation',
+    phaseBadge: 'H.E. Abdullah Al Owais - Executive Gate',
     description:
-      "H.E. Abdullah Al Owais's executive suite. Macro oversight. Reviews heavily defended themes, confers official sign-off, and assigns the biennial budget.",
+      'Macro oversight of the Sharjah Department of Culture. Evaluates candidate themes, confers official sign-off, and assigns the biennial budget.',
     icon: Award,
     accentColor: 'text-sadu-brick',
   },
@@ -49,9 +49,9 @@ const ROLE_OPTIONS: RoleOption[] = [
     key: 'Biennial Director',
     titleEn: 'Biennial Director',
     titleAr: 'مدير البينالي',
-    phaseBadge: 'Executive Veto & Oversight',
+    phaseBadge: 'Mohammed Al Qaseer - Executive Veto, Budget Evaluation & Artist Selection',
     description:
-      "Mohammed Al Qaseer's workspace. Convenes the Preparatory Committee, and heads artist selection once the theme and budget are assigned.",
+      'Arts catalyst and calendar manager. Convenes the Preparatory Committee, and heads the artist selection committee once the theme and budget are assigned.',
     icon: ShieldCheck,
     accentColor: 'text-sadu-brick',
   },
@@ -61,47 +61,47 @@ const ROLE_OPTIONS: RoleOption[] = [
     titleAr: 'اللجنة التحضيرية',
     phaseBadge: 'Theme Formulation',
     description:
-      'Formulate three candidate themes defended with rigorous aesthetic frameworks, contemporary relevance, and curatorial justifications.',
+      'Formulates three candidate themes defended with rigorous aesthetic frameworks, contemporary & historical relevance, and curatorial justifications.',
     icon: ClipboardList,
     accentColor: 'text-sadu-brick',
   },
   {
     key: 'Coordinator',
-    titleEn: 'General Coordinator',
+    titleEn: 'Coordinator',
     titleAr: 'المنسق العام',
     phaseBadge: 'Program Operations',
     description:
-      'Manage curatorial drafting pools, assemble artist dossiers, and orchestrate invitation workflows based on Al Qaseer’s selections.',
+      'Manages curatorial drafting pools, assembles artist dossiers, and orchestrates invitation workflows based on Mohammed Al Qaseer’s artist selections.',
     icon: GitMerge,
     accentColor: 'text-sadu-ochre',
   },
   {
     key: 'Artist',
-    titleEn: 'Artist / Participant',
+    titleEn: 'Artist',
     titleAr: 'الفنان',
     phaseBadge: 'External Access',
     description:
-      'Secure portal for invited artists to upload passports, high-res artwork photos, and bilingual bios.',
+      'Secure portal for invited artists to upload passports, high-res artwork photos, and bilingual biographical statements.',
     icon: User,
     accentColor: 'text-sadu-ink',
   },
   {
     key: 'Finance',
-    titleEn: 'Finance & Contracts',
+    titleEn: 'Finance',
     titleAr: 'الشؤون المالية',
     phaseBadge: 'Legal & Budget',
     description:
-      'Generate bespoke bilingual contracts and track artist payment tranches (unlocked after Chairman budget assignment).',
+      'Generates bespoke bilingual contracts and tracks artist payment tranches (unlocked after Chairman budget assignment).',
     icon: FileText,
     accentColor: 'text-sadu-ochre',
   },
   {
     key: 'PR',
-    titleEn: 'PR & Protocol',
+    titleEn: 'PR',
     titleAr: 'العلاقات العامة',
     phaseBadge: 'Logistics & Media',
     description:
-      'Extract artist dossiers for exhibition catalogs, manage flight itineraries, and coordinate hospitality.',
+      'Extracts artist dossiers for exhibition catalogs, manages flight itineraries, and coordinates hospitality and media protocol.',
     icon: Megaphone,
     accentColor: 'text-sadu-brick',
   },
@@ -128,8 +128,8 @@ export const RoleSelection: React.FC<RoleSelectionProps> = ({ onSelectRole, sele
       </div>
 
       {/* Role Selection Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {ROLE_OPTIONS.map(role => {
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {ROLE_OPTIONS.map((role, index) => {
           const Icon = role.icon;
           const isSelected = selectedRole === role.key;
 
@@ -137,20 +137,20 @@ export const RoleSelection: React.FC<RoleSelectionProps> = ({ onSelectRole, sele
             <div
               key={role.key}
               onClick={() => onSelectRole(role.key)}
-              className={`group flex flex-col justify-between rounded-xl border p-6 shadow-xs transition-all cursor-pointer ${
+              className={`group flex flex-col justify-between h-full rounded-xl border p-6 shadow-xs transition-all cursor-pointer ${
                 isSelected
                   ? 'border-sadu-brick bg-white ring-2 ring-sadu-brick/30 shadow-md'
                   : 'border-sadu-gold bg-white hover:border-sadu-brick hover:bg-sadu-paper hover:shadow-md'
-              }`}
+              } ${index === 6 ? 'md:col-span-2 lg:col-span-1' : ''}`}
             >
-              <div className="space-y-4">
-                <div className="flex items-start justify-between">
+              <div className="space-y-3.5">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-sadu-gold/60 bg-sadu-sand transition-colors group-hover:bg-sadu-gold/20">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-sadu-gold/60 bg-sadu-sand transition-colors group-hover:bg-sadu-gold/20">
                       <Icon className={`h-6 w-6 ${role.accentColor}`} />
                     </div>
                     <div>
-                      <h2 className="font-editorial text-xl font-bold text-sadu-charcoal">
+                      <h2 className="font-editorial text-lg font-bold text-sadu-charcoal">
                         {role.titleEn}
                       </h2>
                       <span dir="rtl" className="text-sm font-semibold text-sadu-brick">
@@ -158,7 +158,10 @@ export const RoleSelection: React.FC<RoleSelectionProps> = ({ onSelectRole, sele
                       </span>
                     </div>
                   </div>
-                  <span className="rounded-md border border-sadu-gold/50 bg-sadu-sand px-2 py-0.5 text-[10px] font-bold text-sadu-muted">
+                </div>
+
+                <div>
+                  <span className="inline-block rounded-md border border-sadu-gold/50 bg-sadu-sand px-2 py-0.5 text-[10px] font-bold text-sadu-muted">
                     {role.phaseBadge}
                   </span>
                 </div>

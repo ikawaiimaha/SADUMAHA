@@ -47,7 +47,7 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
   const [isSubmitted, setIsSubmitted] = useState(false);
   const baseId = useId();
 
-  const isThemeComplete = (theme: CommitteeThemeDraft) =>
+  const isThemeComplete = (theme: CommitteeThemeDraft): boolean =>
     theme.arabicName.trim() !== '' &&
     theme.englishName.trim() !== '' &&
     theme.aestheticFramework.trim() !== '' &&
@@ -55,7 +55,7 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
     theme.curatorialJustification.trim() !== '';
 
   const allFieldsFilled = useMemo(
-    () => themes.every(isThemeComplete),
+    () => themes.length === 3 && themes.every(isThemeComplete),
     [themes]
   );
 
@@ -134,7 +134,7 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
                   <p className="leading-relaxed bg-sadu-paper/70 p-1.5 rounded border border-sadu-gold/30">{theme.aestheticFramework}</p>
                 </div>
                 <div>
-                  <strong className="block text-sadu-charcoal font-semibold">Contemporary Relevance:</strong>
+                  <strong className="block text-sadu-charcoal font-semibold">Contemporary & Historical Relevance:</strong>
                   <p className="leading-relaxed bg-sadu-paper/70 p-1.5 rounded border border-sadu-gold/30">{theme.contemporaryRelevance}</p>
                 </div>
                 <div>
@@ -235,41 +235,53 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
                 />
               </label>
 
+              {/* Aesthetic Framework */}
               <label htmlFor={aestheticId} className="block text-xs font-semibold text-sadu-charcoal">
-                Aesthetic Framework & Visual Lineage
+                <span>Aesthetic Framework</span>
+                <span className="block font-normal text-[11px] text-sadu-muted">
+                  Define the visual and stylistic parameters.
+                </span>
                 <textarea
                   id={aestheticId}
                   required
                   rows={2}
                   value={theme.aestheticFramework}
                   onChange={e => updateField(index, 'aestheticFramework', e.target.value)}
-                  placeholder="Classical script lineage, proportional balance, and material aesthetics"
+                  placeholder="Define the visual and stylistic parameters..."
                   className="mt-1 w-full resize-none rounded-md border border-sadu-gold/60 bg-white px-3 py-1.5 text-xs text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
                 />
               </label>
 
+              {/* Contemporary & Historical Relevance */}
               <label htmlFor={contemporaryId} className="block text-xs font-semibold text-sadu-charcoal">
-                Contemporary Relevance & Discourse
+                <span>Contemporary & Historical Relevance</span>
+                <span className="block font-normal text-[11px] text-sadu-muted">
+                  Justify the theme's position within international art standards.
+                </span>
                 <textarea
                   id={contemporaryId}
                   required
                   rows={2}
                   value={theme.contemporaryRelevance}
                   onChange={e => updateField(index, 'contemporaryRelevance', e.target.value)}
-                  placeholder="Engagement with modern artistic movements and avant-garde media"
+                  placeholder="Justify the theme's position within international art standards..."
                   className="mt-1 w-full resize-none rounded-md border border-sadu-gold/60 bg-white px-3 py-1.5 text-xs text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
                 />
               </label>
 
+              {/* Curatorial Justification */}
               <label htmlFor={curatorialId} className="block text-xs font-semibold text-sadu-charcoal">
-                Curatorial Justification & Rationale
+                <span>Curatorial Justification</span>
+                <span className="block font-normal text-[11px] text-sadu-muted">
+                  The rigorous defense of why this theme is necessary.
+                </span>
                 <textarea
                   id={curatorialId}
                   required
                   rows={3}
                   value={theme.curatorialJustification}
                   onChange={e => updateField(index, 'curatorialJustification', e.target.value)}
-                  placeholder="Rigorous academic defense why this concept warrants international selection"
+                  placeholder="The rigorous defense of why this theme is necessary..."
                   className="mt-1 w-full resize-none rounded-md border border-sadu-gold/60 bg-white px-3 py-1.5 text-xs text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
                 />
               </label>
