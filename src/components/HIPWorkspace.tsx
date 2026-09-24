@@ -83,13 +83,13 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
             </div>
             <div>
               <span className="rounded bg-sadu-sand px-2 py-0.5 text-[10px] font-bold text-sadu-brick uppercase tracking-wider border border-sadu-gold/60">
-                Stage 2: Curatorial Directives & Dynamic Blocklists
+                Stage 3: Curatorial Guidelines & Dynamic Blocklists
               </span>
               <h1 className="font-editorial text-2xl font-bold text-sadu-charcoal sm:text-3xl mt-1">
                 Head of International Programs (HIP)
               </h1>
               <p className="text-xs font-semibold text-sadu-brick" dir="rtl">
-                منسق معرض عام · إدارة التوجيهات والقائمة المحظورة
+                منسق معرض عام · صياغة الدليل التنسيقي والقائمة المحظورة
               </p>
             </div>
           </div>

@@ -31,9 +31,11 @@ export interface ChairmanWorkspaceProps {
   /** Callback fired when the Chairman confers official ratification on a theme. */
   onThemeApproved?: (approvedTheme: ThemeItem) => void;
   /** Callback fired when the Chairman assigns the official biennial budget. */
-  onBudgetAssigned?: (amount: number, theme: ThemeItem) => void;
+  onBudgetAssigned?: (amount: number, theme: ThemeItem, status?: 'PENDING_EDITORIAL_POLISH') => void;
   /** Optional initial approved theme index. */
   initialApprovedIndex?: number | null;
+  /** Optional current theme workflow status. */
+  themeStatus?: 'PENDING_CHAIRMAN_APPROVAL' | 'PENDING_EDITORIAL_POLISH' | 'PUBLISHED';
 }
 
 export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
@@ -42,6 +44,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
   onThemeApproved,
   onBudgetAssigned,
   initialApprovedIndex = null,
+  themeStatus,
 }) => {
   const [approvedIndex, setApprovedIndex] = useState<number | null>(initialApprovedIndex);
   const [allocatedBudget, setAllocatedBudget] = useState<number>(12500000);
@@ -63,7 +66,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
   const handleAssignBudget = () => {
     setIsBudgetAssigned(true);
     if (winningTheme && onBudgetAssigned) {
-      onBudgetAssigned(allocatedBudget, winningTheme);
+      onBudgetAssigned(allocatedBudget, winningTheme, 'PENDING_EDITORIAL_POLISH');
     }
   };
 
@@ -375,11 +378,11 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
                       <CheckCircle2 className="h-6 w-6" />
                     </div>
                     <div>
-                      <span className="inline-block rounded bg-emerald-700 px-2 py-0.5 text-[10px] font-bold text-white uppercase tracking-wider mb-1">
-                        Budget Locked & Authority Transitioned
+                      <span className="inline-block rounded bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider mb-1">
+                        Status: Pending Editorial Polish
                       </span>
                       <h5 className="font-editorial text-lg font-bold text-emerald-950">
-                        Operational Authority Officially Transitioned to Mohammed Al Qaseer
+                        Theme Approved and Budget Locked. Theme routed to Editorial Department for final bilingual phrasing.
                       </h5>
                     </div>
                   </div>
@@ -388,12 +391,12 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
                   </span>
                 </div>
 
-                <div className="rounded-md border border-emerald-200 bg-white/80 p-3 text-xs text-emerald-900 leading-relaxed">
-                  <p>
-                    The budget is locked and operational authority has officially transitioned to the Biennial Director (Mohammed Al Qaseer) for artist selection.
+                <div className="rounded-md border border-emerald-200 bg-white/80 p-3 text-xs text-emerald-900 leading-relaxed space-y-1">
+                  <p className="font-bold">
+                    Theme Approved and Budget Locked. Theme routed to Editorial Department for final bilingual phrasing.
                   </p>
-                  <p className="mt-1 text-[11px] text-emerald-800">
-                    Mohammed Al Qaseer now heads the Artist Selection Committee to review nominations and commission artworks matching the ratified theme within the locked allocation.
+                  <p className="text-[11px] text-emerald-800">
+                    The theme is not sent directly to the HIP. The Editorial Department will now review the Preparatory Committee's raw curatorial explanation and compose the official bilingual theme essay before Stage 3 unlocks for the HIP and Coordinators.
                   </p>
                 </div>
               </div>

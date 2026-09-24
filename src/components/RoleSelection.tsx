@@ -16,12 +16,12 @@ export type AppRole =
   | 'Chairman'
   | 'Biennial Director'
   | 'Preparatory Committee'
-  | 'HIP'
   | 'Editorial'
+  | 'HIP'
   | 'Coordinator'
   | 'Artist'
-  | 'PR'
-  | 'Finance';
+  | 'Finance'
+  | 'PR';
 
 export interface RoleSelectionProps {
   onSelectRole: (role: AppRole) => void;
@@ -63,30 +63,30 @@ const ROLE_OPTIONS: RoleOption[] = [
     key: 'Preparatory Committee',
     titleEn: 'Preparatory Committee',
     titleAr: 'اللجنة التحضيرية',
-    phaseBadge: 'Theme Formulation & Nomination',
+    phaseBadge: 'Theme Formulation & Initial Curatorial Intent',
     description:
       'Formulates three candidate themes defended with rigorous aesthetic frameworks, and collaboratively nominates artists into the Multaqa pool.',
     icon: ClipboardList,
     accentColor: 'text-sadu-brick',
   },
   {
-    key: 'HIP',
-    titleEn: 'HIP (Head of Programs)',
-    titleAr: 'منسق معرض عام',
-    phaseBadge: 'Arabic Directives & Blocklists',
+    key: 'Editorial',
+    titleEn: 'Editorial',
+    titleAr: 'قسم التحرير',
+    phaseBadge: 'Theme Rewriting & Bilingual Polishing',
     description:
-      'Drafts exhibition guidelines exclusively in Arabic and manages dynamic blocklists to enforce real-time diplomatic and safety directives.',
-    icon: Globe,
+      'Receives the Chairman-approved theme and raw curatorial intent, crafting the official polished bilingual institutional essays before unlocking Stage 3.',
+    icon: BookOpen,
     accentColor: 'text-sadu-brick',
   },
   {
-    key: 'Editorial',
-    titleEn: 'Editorial',
-    titleAr: 'التحرير والترجمة',
-    phaseBadge: 'Bilingual Translation & Institutional Publishing',
+    key: 'HIP',
+    titleEn: 'HIP (Head of Programs)',
+    titleAr: 'منسق معرض عام',
+    phaseBadge: 'Curatorial Guidelines & Blocklists',
     description:
-      'Receives locked Arabic curatorial briefs from HIP, drafts official English translations, and holds sole authority to publish to Coordinators.',
-    icon: BookOpen,
+      'Receives the published theme essay from Editorial and drafts the operational curatorial brief and dynamic blocklists.',
+    icon: Globe,
     accentColor: 'text-sadu-brick',
   },
   {
@@ -110,16 +110,6 @@ const ROLE_OPTIONS: RoleOption[] = [
     accentColor: 'text-sadu-ink',
   },
   {
-    key: 'PR',
-    titleEn: 'PR (التشريفات)',
-    titleAr: 'التشريفات والعلاقات',
-    phaseBadge: 'Passports & Print Verification',
-    description:
-      'Verifies artist passports, travel logistics, and high-resolution print quality files for catalog publishing and wall texts.',
-    icon: Megaphone,
-    accentColor: 'text-sadu-brick',
-  },
-  {
     key: 'Finance',
     titleEn: 'Finance (المالية)',
     titleAr: 'الشؤون المالية',
@@ -128,6 +118,16 @@ const ROLE_OPTIONS: RoleOption[] = [
       'Executes milestone payment tranches (advances, production, completion) based on locked contracts post-Chairman budget authorization.',
     icon: FileText,
     accentColor: 'text-sadu-ochre',
+  },
+  {
+    key: 'PR',
+    titleEn: 'PR (التشريفات)',
+    titleAr: 'التشريفات والعلاقات',
+    phaseBadge: 'Passports & Print Verification',
+    description:
+      'Verifies artist passports, travel logistics, and high-resolution print quality files for catalog publishing and wall texts.',
+    icon: Megaphone,
+    accentColor: 'text-sadu-brick',
   },
 ];
 

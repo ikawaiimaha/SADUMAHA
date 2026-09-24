@@ -3,7 +3,7 @@ import RoleSelection, { AppRole } from './components/RoleSelection';
 import CommitteeThemeWorkspace, { CommitteeThemeDraft } from './components/CommitteeThemeWorkspace';
 import ChairmanWorkspace, { ThemeItem } from './components/ChairmanWorkspace';
 import HIPWorkspace, { TranslationStatus } from './components/HIPWorkspace';
-import EditorialWorkspace from './components/EditorialWorkspace';
+import EditorialWorkspace, { ThemePolishStatus } from './components/EditorialWorkspace';
 import DirectorWorkspace from './components/DirectorWorkspace';
 import ArtistNominationForm, { NominatedArtistDossier } from './components/ArtistNominationForm';
 import {
@@ -91,7 +91,12 @@ function App() {
   const [assignedBudget, setAssignedBudget] = useState<number | null>(null);
   const [ratifiedTheme, setRatifiedTheme] = useState<ThemeItem | null>(null);
 
-  // Stage 2: HIP & Editorial Translation Routing State
+  // Stage 1 & 2: Theme Ratification & Editorial Polish State
+  const [themePolishStatus, setThemePolishStatus] = useState<ThemePolishStatus>('PENDING_EDITORIAL_POLISH');
+  const [themeEssayArabic, setThemeEssayArabic] = useState<string>('');
+  const [themeEssayEnglish, setThemeEssayEnglish] = useState<string>('');
+
+  // Stage 2: HIP & Translation Directives State
   const [guidelinesArabic, setGuidelinesArabic] = useState<string>(
     'دليل المعرض التوجيهي لبينالي الشارقة للخط: التأكيد على الحوار الجمالي الرصين بين النسب الفاضلة للخط العربي الأصيل والتجليات المعمارية المعاصرة. يتوجب على كافة الفنانين المرشحين تقديم أعمال تستند إلى أصالة السطر الكوفي والثلث مع استكشاف أبعاد الوسائط الحديثة والفراغية.'
   );
@@ -118,6 +123,22 @@ function App() {
   const handleBudgetAssigned = (amount: number, theme: ThemeItem) => {
     setAssignedBudget(amount);
     setRatifiedTheme(theme);
+    setThemePolishStatus('PENDING_EDITORIAL_POLISH');
+  };
+
+  const handlePublishOfficialTheme = ({
+    themeEssayArabic: essayAr,
+    themeEssayEnglish: essayEn,
+    approvedTheme,
+  }: {
+    themeEssayArabic: string;
+    themeEssayEnglish: string;
+    approvedTheme: ThemeItem;
+  }) => {
+    setThemeEssayArabic(essayAr);
+    setThemeEssayEnglish(essayEn);
+    setRatifiedTheme(approvedTheme);
+    setThemePolishStatus('PUBLISHED');
   };
 
   const handleSubmitToEditorial = (arabicText: string) => {
@@ -265,8 +286,22 @@ function App() {
             eventId={EVENT_ID}
             themes={submittedThemes}
             onBudgetAssigned={handleBudgetAssigned}
+            themeStatus={themePolishStatus}
           />
         )}
+
+        {currentRole === 'Editorial' && (
+          <EditorialWorkspace
+            approvedTheme={ratifiedTheme}
+            themePolishStatus={themePolishStatus}
+            onPublishOfficialTheme={handlePublishOfficialTheme}
+            assignedBudget={assignedBudget}
+            initialEssayArabic={themeEssayArabic}
+            initialEssayEnglish={themeEssayEnglish}
+            onBackToRoles={() => setCurrentRole(null)}
+          />
+        )}
+
         {currentRole === 'HIP' && (
           <HIPWorkspace
             guidelinesArabic={guidelinesArabic}
@@ -276,18 +311,6 @@ function App() {
             onUpdateCuratorialBrief={setCuratorialBrief}
             blocklist={blocklist}
             onUpdateBlocklist={setBlocklist}
-            ratifiedTheme={ratifiedTheme}
-            onBackToRoles={() => setCurrentRole(null)}
-          />
-        )}
-
-        {currentRole === 'Editorial' && (
-          <EditorialWorkspace
-            guidelinesArabic={guidelinesArabic}
-            guidelinesEnglish={guidelinesEnglish}
-            translationStatus={translationStatus}
-            onPublishBrief={handlePublishBrief}
-            onUpdateGuidelinesEnglish={setGuidelinesEnglish}
             ratifiedTheme={ratifiedTheme}
             onBackToRoles={() => setCurrentRole(null)}
           />
