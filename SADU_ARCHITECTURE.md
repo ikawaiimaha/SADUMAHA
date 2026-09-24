@@ -1,99 +1,71 @@
 # SADU Institutional Architecture & AI Governance Ruleset
 
 > **CRITICAL SYSTEM PROMPT INSTRUCTION FOR AI AGENTS:**  
-> This document is the absolute, immutable ruleset and single source of truth for the SADU (Sharjah Calligraphy Biennial) institutional governance portal. Any AI coding agent, system prompt, or automated refactoring workflow MUST treat this hierarchy, role division, operational gate, and state machine as immutable law for all code generation. No role titles, authorities, or gate sequences may be altered, merged, or diluted.
+> This document is the absolute, immutable ruleset and single source of truth for the SADU (Sharjah Calligraphy Biennial / Multaqa) institutional governance portal. Any AI coding agent, system prompt, or automated refactoring workflow MUST treat this exact chronological workflow, role division, operational gate, and state machine as immutable law for all code generation. No role titles, authorities, or gate sequences may be altered, merged, or diluted.
 
 ---
 
-## 1. The True Institutional Hierarchy & Chain of Command
+## 1. Chronological Operational Workflow (The Multaqa Stages)
 
-### 1. H.E. Abdullah Al Owais — Chairman / CEO (Executive Gate & Budget Allocation)
-* **Scope:** Macro oversight. Presides over the entire Sharjah Department of Culture across all seasonal and yearly activities.
-* **Portal Authority & Gate:** Serves as the ultimate executive gate. Evaluates candidate theme proposals defended by the Preparatory Committee, confers official theme ratification ("Approve Theme"), officially assigns the biennial budget ("Official Budget Assignment"), and executes the "Authorize Budget & Transfer Authority" sign-off, transitioning operational mandate to Biennial Director Mohammed Al Qaseer.
+### Stage 1: Theme & Executive Ratification
+* **Preparatory Committee (اللجنة التحضيرية):** Formulates 3 distinct theme proposals with strict, meticulous artistic justifications:
+  1. *Aesthetic Framework:* Define the visual and stylistic parameters.
+  2. *Contemporary & Historical Relevance:* Justify the theme's position within international art standards.
+  3. *Curatorial Justification:* The rigorous defense of why this theme is necessary.
+* **Biennial Director (Mohammed Al Qaseer / مدير البينالي):** Reviews the candidate proposals, exercises initial veto/curatorial review, and presents the defended themes to the Chairman.
+* **Chairman (H.E. Abdullah Al Owais / رئيس الدائرة):** Approves the final theme ("Approve Theme"), assigns the overarching biennial budget, and formally authorizes the transition of authority back to Mohammed Al Qaseer.
 
-### 2. Mohammed Al Qaseer — Biennial Director (Executive Veto, Budget Evaluation & Artist Selection)
-* **Scope:** Micro oversight / Arts Catalyst. Directs visual arts and calligraphy biennials.
-* **Portal Authority & Gate:**
-  * **Phase 1 (Initiation):** Manages the institutional calendar and convenes the Preparatory Committee to initiate theme proposals. Holds executive veto prior to Chairman escalation.
-  * **Phase 2 (Pivot upon Budget Authorization):** Once Chairman Al Owais approves the theme and assigns the budget, Al Qaseer pivots to become the Head of the **Artist Selection Committee**, selecting artists matching the ratified theme within the locked budget.
+### Stage 2: Curatorial Guidelines & Dynamic Blocklists
+* **HIP (Head of International Programs / منسق معرض عام):**
+  * Sets the overarching exhibition guidelines and curatorial brief based on the approved theme.
+  * Manages the **"Dynamic Blocklist"** (an active array of restricted tags, e.g., temporarily restricting certain nationalities or mediums due to real-time political/security directives).
+  * **System Invariant:** If a Coordinator or Committee member attempts to submit an artist matching an active blocked tag, the system immediately rejects the submission with an alert:  
+    `"Submission blocked by current HIP security/administrative directives."`
 
-### 3. Preparatory Committee (Theme Formulation)
-* **Scope:** Academic & Curatorial Theme Formulation.
-* **Portal Authority & Gate:** Convenes to formulate exactly three candidate theme proposals.
-* **Strict Curatorial Rigor:** Themes cannot be justified with bureaucratic fluff. Each proposal must be defended across three mandatory criteria:
-  1. **Aesthetic Framework:** Define the visual and stylistic parameters.
-  2. **Contemporary & Historical Relevance:** Justify the theme's position within international art standards.
-  3. **Curatorial Justification:** The rigorous defense of why this theme is necessary.
-* The submission button ("Present to Chairman") remains strictly disabled until all fields across all three candidate themes are 100% complete.
+### Stage 3: Artist Nomination (The Multaqa Protocol)
+* **Preparatory Committee & Coordinators (اللجنة التحضيرية والمنسقون):** Collaboratively nominate artists.
+* **Strict Dossier Schema (Hard Validation):** The system blocks submission unless the dossier contains all mandatory components:
+  1. `artistName` (String, Required)
+  2. `artistCategory` (Enum: `'Emerging'` or `'Established'`, Required)
+  3. `cvUpload` (CV in PDF format / boolean flag, Required)
+  4. `previousWorks` (Images of Previous Work / boolean flag, Required)
+  5. `newWorkMockup` (Mockups/Sketches of the proposed new work / boolean flag, Required)
+* **Strategic Tagging:** Each nominated artist must be tagged as either **Emerging Artist** or **Established Artist** to maintain exhibition balance.
 
-### 4. General Coordinator (Program Operations)
-* **Scope:** Program Operations. Assembles artist dossiers, cross-references restrictions, tracks intake requirements, and orchestrates invitation workflows based on Al Qaseer's artist selections.
+### Stage 4: Director's Veto & Balance Review
+* **Biennial Director (Mohammed Al Qaseer):**
+  * Reviews the submitted dossiers in the candidate pool.
+  * **Balance Review:** The UI provides a visual ratio and progress bar of Emerging vs. Established artists currently in the proposed pool to ensure institutional goals are met.
+  * **Absolute Veto Power:** Holds absolute veto power over any artist. Clicking "Veto/Reject" requires selecting a reason from a dropdown (e.g., Budget, Security, Curatorial Mismatch, Administrative Directive) and automatically routes the status and rejection feedback back to the Coordinators.
 
-### 5. Artist / Participant (الفنان — External Access)
-* **Scope:** External Contributor. Secure participant intake portal to upload passports, high-res artwork photos, production specs, and bilingual artist biographies.
+### Stage 5: Contracting & Logistics
+* **Coordinator (المنسق العام):** Drafts customized bilateral artist contracts specifying production values and shipping terms based on Director-approved artists.
+* **Artist (الفنان):** External access portal to approve contract terms and upload passports and print-quality high-resolution artwork files.
+* **PR (التشريفات):** Verifies passports and print-quality images for catalog publishing, delegation logistics, and exhibition wall text.
+* **Finance (المالية):** Executes payment tranches based on the locked contract and Chairman budget allocation.
 
-### 6. Finance & Contracts (الشؤون المالية — Legal & Budget)
-* **Scope:** Legal, Contracts & Disbursements. Generates bespoke bilingual PDF artist contracts and tracks milestone payment tranches.
-* **Hard Security Lock:** Contract generation and disbursements remain strictly locked until Chairman Al Owais assigns and authorizes the official budget.
-
-### 7. PR & Protocol (العلاقات العامة — Logistics & Media)
-* **Scope:** Logistics & Media. Extracts verified dossiers for catalog publishing, manages flight itineraries, and coordinates hospitality and protocol.
-
----
-
-## 2. Institutional Workflow & Operational Phase Gates
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│ PHASE 1: THEME FORMULATION & RATIFICATION                                   │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ 1. Mohammed Al Qaseer (Director) convenes Preparatory Committee.             │
-│ 2. Preparatory Committee formulates 3 distinct proposals:                   │
-│    - Aesthetic Framework (Visual & stylistic parameters)                    │
-│    - Contemporary & Historical Relevance (International art standards)      │
-│    - Curatorial Justification (Academic defense of necessity)               │
-│ 3. Proposals submitted to H.E. Abdullah Al Owais (Chairman / CEO).          │
-│ 4. Chairman reviews proposals -> Selects 1 proposal -> "Approve Theme".     │
-│ 5. Chairman unlocks "Official Budget Assignment":                           │
-│    - Inputs approved biennial budget amount (AED)                           │
-│    - Clicks "Authorize Budget & Transfer Authority"                         │
-└──────────────────────────────────────┬──────────────────────────────────────┘
-                                       │
-                                       ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│ PHASE 2: BUDGET LOCK & OPERATIONAL AUTHORITY TRANSITION                     │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ 6. Budget is locked. Operational authority transitions to Mohammed         │
-│    Al Qaseer to head the Artist Selection Committee.                        │
-│ 7. Al Qaseer reviews nominations & selects artists matching theme & budget. │
-│ 8. General Coordinator compiles artist dossiers and dispatches invitations. │
-│ 9. Finance & Contracts generates bilingual agreements & releases tranches.  │
-│ 10. PR & Protocol extracts catalog data & coordinates travel hospitality.    │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
 
 ---
 
-## 3. Codebase Invariants & Component Responsibilities
+## 2. Institutional Roles Mapping (8 Distinct Roles)
 
-1. **`src/components/RoleSelection.tsx`:**  
-   Defines the 7 institutional roles respecting the chain of command:
-   * Chairman (`H.E. Abdullah Al Owais - Executive Gate`)
-   * Biennial Director (`Mohammed Al Qaseer - Executive Veto, Budget Evaluation & Artist Selection`)
-   * Preparatory Committee (`Theme Formulation`)
-   * Coordinator (`Program Operations`)
-   * Artist (`External Access`)
-   * Finance (`Legal & Budget`)
-   * PR (`Logistics & Media`)  
-   The grid must be displayed proportionally (`grid-cols-1 md:grid-cols-2 lg:grid-cols-3`).
+1. **Chairman** (H.E. Abdullah Al Owais - Executive Gate & Budget Allocation)
+2. **Biennial Director** (Mohammed Al Qaseer - Executive Veto, Balance Review & Artist Selection)
+3. **Preparatory Committee** (Theme Formulation & Artist Nomination)
+4. **HIP** (Head of International Programs / منسق معرض عام - Curatorial Guidelines & Dynamic Blocklists)
+5. **Coordinator** (Program Operations & Dossier Assembly)
+6. **Artist** (External Access - Portfolio & Dossier Intake)
+7. **PR** (التشريفات - Passports & Print Verification)
+8. **Finance** (المالية - Contracts & Tranche Disbursements)
 
-2. **`src/components/CommitteeThemeWorkspace.tsx`:**  
-   Enforces zero bureaucratic fluff. No generic definition text area. Each of the 3 theme proposals requires:
-   * **Aesthetic Framework:** Define the visual and stylistic parameters.
-   * **Contemporary & Historical Relevance:** Justify the theme's position within international art standards.
-   * **Curatorial Justification:** The rigorous defense of why this theme is necessary.  
-   The "Present to Chairman" action remains strictly disabled until all fields across all three themes are completely filled.
+---
 
-3. **`src/components/ChairmanWorkspace.tsx`:**  
-   Displays candidate themes. When the Chairman clicks "Approve Theme", reveals the section titled **"Official Budget Assignment"** with an input field for the approved budget amount and an **"Authorize Budget & Transfer Authority"** button. Clicking this button triggers the final success state confirming the budget is locked and authority has officially transitioned to Mohammed Al Qaseer for artist selection.
+## 3. System Invariants & Enforcement Gates
+
+1. **Zero Fluff Theme Gate:** Chairman cannot approve until 3 distinct themes have Aesthetic Framework, Contemporary Relevance, and Curatorial Justification.
+2. **Dynamic Blocklist Gate:** Any nomination matching an active HIP blocked tag triggers an immediate system rejection: `"Submission blocked by current HIP security/administrative directives."`
+3. **Dossier Schema Gate:** Submissions missing `artistName`, `artistCategory` ('Emerging'/'Established'), `cvUpload`, `previousWorks`, or `newWorkMockup` are strictly blocked.
+4. **Director Balance & Veto Gate:** The Director's dashboard renders a visual ratio bar of Emerging vs. Established artists. Vetoes require selecting a reason from a dropdown (Budget, Security, Curatorial Mismatch, Administrative Directive) and routes the status back to Coordinators.
+5. **Financial Lock Gate:** Finance cannot execute payment tranches until contracts are locked post-Chairman budget authorization.
+
 

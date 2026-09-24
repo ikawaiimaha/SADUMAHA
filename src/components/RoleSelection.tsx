@@ -3,6 +3,7 @@ import {
   Award,
   ShieldCheck,
   ClipboardList,
+  Globe,
   GitMerge,
   User,
   FileText,
@@ -14,10 +15,11 @@ export type AppRole =
   | 'Chairman'
   | 'Biennial Director'
   | 'Preparatory Committee'
+  | 'HIP'
   | 'Coordinator'
   | 'Artist'
-  | 'Finance'
-  | 'PR';
+  | 'PR'
+  | 'Finance';
 
 export interface RoleSelectionProps {
   onSelectRole: (role: AppRole) => void;
@@ -49,9 +51,9 @@ const ROLE_OPTIONS: RoleOption[] = [
     key: 'Biennial Director',
     titleEn: 'Biennial Director',
     titleAr: 'مدير البينالي',
-    phaseBadge: 'Mohammed Al Qaseer - Executive Veto, Budget Evaluation & Artist Selection',
+    phaseBadge: 'Mohammed Al Qaseer - Executive Veto & Balance Review',
     description:
-      'Arts catalyst and calendar manager. Convenes the Preparatory Committee, and heads the artist selection committee once the theme and budget are assigned.',
+      'Reviews nominated dossiers, monitors Emerging vs. Established balance ratio, and holds absolute executive veto before contracting.',
     icon: ShieldCheck,
     accentColor: 'text-sadu-brick',
   },
@@ -59,19 +61,29 @@ const ROLE_OPTIONS: RoleOption[] = [
     key: 'Preparatory Committee',
     titleEn: 'Preparatory Committee',
     titleAr: 'اللجنة التحضيرية',
-    phaseBadge: 'Theme Formulation',
+    phaseBadge: 'Theme Formulation & Nomination',
     description:
-      'Formulates three candidate themes defended with rigorous aesthetic frameworks, contemporary & historical relevance, and curatorial justifications.',
+      'Formulates three candidate themes defended with rigorous aesthetic frameworks, and collaboratively nominates artists into the Multaqa pool.',
     icon: ClipboardList,
+    accentColor: 'text-sadu-brick',
+  },
+  {
+    key: 'HIP',
+    titleEn: 'HIP (Head of Programs)',
+    titleAr: 'منسق معرض عام',
+    phaseBadge: 'Curatorial Directives & Blocklists',
+    description:
+      'Sets overarching curatorial brief and manages the dynamic blocklist to enforce real-time diplomatic and safety directives.',
+    icon: Globe,
     accentColor: 'text-sadu-brick',
   },
   {
     key: 'Coordinator',
     titleEn: 'Coordinator',
     titleAr: 'المنسق العام',
-    phaseBadge: 'Program Operations',
+    phaseBadge: 'Program Operations & Dossiers',
     description:
-      'Manages curatorial drafting pools, assembles artist dossiers, and orchestrates invitation workflows based on Mohammed Al Qaseer’s artist selections.',
+      'Assembles strict schema artist dossiers (CV, previous works, mockups) and drafts customized contracts post-Director approval.',
     icon: GitMerge,
     accentColor: 'text-sadu-ochre',
   },
@@ -79,31 +91,31 @@ const ROLE_OPTIONS: RoleOption[] = [
     key: 'Artist',
     titleEn: 'Artist',
     titleAr: 'الفنان',
-    phaseBadge: 'External Access',
+    phaseBadge: 'External Access & Dossier Intake',
     description:
-      'Secure portal for invited artists to upload passports, high-res artwork photos, and bilingual biographical statements.',
+      'Secure portal for invited artists to review contract terms, confirm participation, and upload passports and high-res files.',
     icon: User,
     accentColor: 'text-sadu-ink',
   },
   {
-    key: 'Finance',
-    titleEn: 'Finance',
-    titleAr: 'الشؤون المالية',
-    phaseBadge: 'Legal & Budget',
-    description:
-      'Generates bespoke bilingual contracts and tracks artist payment tranches (unlocked after Chairman budget assignment).',
-    icon: FileText,
-    accentColor: 'text-sadu-ochre',
-  },
-  {
     key: 'PR',
-    titleEn: 'PR',
-    titleAr: 'العلاقات العامة',
-    phaseBadge: 'Logistics & Media',
+    titleEn: 'PR (التشريفات)',
+    titleAr: 'التشريفات والعلاقات',
+    phaseBadge: 'Passports & Print Verification',
     description:
-      'Extracts artist dossiers for exhibition catalogs, manages flight itineraries, and coordinates hospitality and media protocol.',
+      'Verifies artist passports, travel logistics, and high-resolution print quality files for catalog publishing and wall texts.',
     icon: Megaphone,
     accentColor: 'text-sadu-brick',
+  },
+  {
+    key: 'Finance',
+    titleEn: 'Finance (المالية)',
+    titleAr: 'الشؤون المالية',
+    phaseBadge: 'Contracts & Tranche Disbursements',
+    description:
+      'Executes milestone payment tranches (advances, production, completion) based on locked contracts post-Chairman budget authorization.',
+    icon: FileText,
+    accentColor: 'text-sadu-ochre',
   },
 ];
 
@@ -128,8 +140,8 @@ export const RoleSelection: React.FC<RoleSelectionProps> = ({ onSelectRole, sele
       </div>
 
       {/* Role Selection Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {ROLE_OPTIONS.map((role, index) => {
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        {ROLE_OPTIONS.map(role => {
           const Icon = role.icon;
           const isSelected = selectedRole === role.key;
 
@@ -137,23 +149,23 @@ export const RoleSelection: React.FC<RoleSelectionProps> = ({ onSelectRole, sele
             <div
               key={role.key}
               onClick={() => onSelectRole(role.key)}
-              className={`group flex flex-col justify-between h-full rounded-xl border p-6 shadow-xs transition-all cursor-pointer ${
+              className={`group flex flex-col justify-between h-full rounded-xl border p-5 shadow-xs transition-all cursor-pointer ${
                 isSelected
                   ? 'border-sadu-brick bg-white ring-2 ring-sadu-brick/30 shadow-md'
                   : 'border-sadu-gold bg-white hover:border-sadu-brick hover:bg-sadu-paper hover:shadow-md'
-              } ${index === 6 ? 'md:col-span-2 lg:col-span-1' : ''}`}
+              }`}
             >
-              <div className="space-y-3.5">
+              <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-sadu-gold/60 bg-sadu-sand transition-colors group-hover:bg-sadu-gold/20">
-                      <Icon className={`h-6 w-6 ${role.accentColor}`} />
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-sadu-gold/60 bg-sadu-sand transition-colors group-hover:bg-sadu-gold/20">
+                      <Icon className={`h-5 w-5 ${role.accentColor}`} />
                     </div>
                     <div>
-                      <h2 className="font-editorial text-lg font-bold text-sadu-charcoal">
+                      <h2 className="font-editorial text-base font-bold text-sadu-charcoal leading-tight">
                         {role.titleEn}
                       </h2>
-                      <span dir="rtl" className="text-sm font-semibold text-sadu-brick">
+                      <span dir="rtl" className="text-xs font-semibold text-sadu-brick block">
                         {role.titleAr}
                       </span>
                     </div>
@@ -161,7 +173,7 @@ export const RoleSelection: React.FC<RoleSelectionProps> = ({ onSelectRole, sele
                 </div>
 
                 <div>
-                  <span className="inline-block rounded-md border border-sadu-gold/50 bg-sadu-sand px-2 py-0.5 text-[10px] font-bold text-sadu-muted">
+                  <span className="inline-block rounded-md border border-sadu-gold/50 bg-sadu-sand px-2 py-0.5 text-[9px] font-bold text-sadu-muted">
                     {role.phaseBadge}
                   </span>
                 </div>
@@ -171,17 +183,17 @@ export const RoleSelection: React.FC<RoleSelectionProps> = ({ onSelectRole, sele
                 </p>
               </div>
 
-              <div className="mt-6 border-t border-sadu-gold/30 pt-4">
+              <div className="mt-4 border-t border-sadu-gold/30 pt-3">
                 <button
                   type="button"
                   onClick={e => {
                     e.stopPropagation();
                     onSelectRole(role.key);
                   }}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-sadu-brick px-4 py-2.5 text-xs font-bold text-white shadow-xs transition-colors hover:bg-sadu-brick-dark cursor-pointer group-hover:shadow"
+                  className="inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-sadu-brick px-3 py-2 text-xs font-bold text-white shadow-xs transition-colors hover:bg-sadu-brick-dark cursor-pointer group-hover:shadow"
                 >
                   <span>Enter as {role.titleEn}</span>
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
                 </button>
               </div>
             </div>

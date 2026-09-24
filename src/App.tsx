@@ -2,11 +2,14 @@ import React, { useState } from 'react';
 import RoleSelection, { AppRole } from './components/RoleSelection';
 import CommitteeThemeWorkspace, { CommitteeThemeDraft } from './components/CommitteeThemeWorkspace';
 import ChairmanWorkspace, { ThemeItem } from './components/ChairmanWorkspace';
+import HIPWorkspace from './components/HIPWorkspace';
+import DirectorWorkspace from './components/DirectorWorkspace';
+import ArtistNominationForm, { NominatedArtistDossier } from './components/ArtistNominationForm';
 import {
   RotateCcw,
   ShieldCheck,
   GitMerge,
-  Building2,
+  Globe,
   Clock,
   Users,
   User,
@@ -14,15 +17,91 @@ import {
   Megaphone,
   CheckCircle2,
   Lock,
+  Plus,
+  Ban,
+  FileCheck,
+  AlertTriangle,
 } from 'lucide-react';
 
 const EVENT_ID = '123e4567-e89b-12d3-a456-426614174000';
+
+const INITIAL_NOMINATIONS: NominatedArtistDossier[] = [
+  {
+    id: 'dossier-1',
+    artistName: 'Hassan Sharif',
+    artistCategory: 'Established',
+    nationality: 'United Arab Emirates',
+    medium: 'Conceptual Script & Mixed Media',
+    proposedWorkTitle: 'Calligraphic Repetitions III',
+    cvFileName: 'Hassan_Sharif_CV.pdf',
+    previousWorksCount: 5,
+    mockupCount: 3,
+    submittedBy: 'Preparatory Committee',
+    submittedAt: '2026-09-24T10:00:00Z',
+    status: 'APPROVED',
+  },
+  {
+    id: 'dossier-2',
+    artistName: 'Nour El Hoda',
+    artistCategory: 'Emerging',
+    nationality: 'Egypt',
+    medium: 'Kinetic Light Calligraphy',
+    proposedWorkTitle: 'Luminal Muhaqqaq',
+    cvFileName: 'Nour_ElHoda_Bio.pdf',
+    previousWorksCount: 4,
+    mockupCount: 2,
+    submittedBy: 'Coordinator',
+    submittedAt: '2026-09-24T11:15:00Z',
+    status: 'PENDING_DIRECTOR_REVIEW',
+  },
+  {
+    id: 'dossier-3',
+    artistName: 'Mohamed Zakariya',
+    artistCategory: 'Established',
+    nationality: 'United States',
+    medium: 'Classical Thuluth & Jali Diwani',
+    proposedWorkTitle: 'Sacred Proportions of the Alif',
+    cvFileName: 'Mohamed_Zakariya_Bio.pdf',
+    previousWorksCount: 6,
+    mockupCount: 2,
+    submittedBy: 'Preparatory Committee',
+    submittedAt: '2026-09-24T11:45:00Z',
+    status: 'APPROVED',
+  },
+  {
+    id: 'dossier-4',
+    artistName: 'Zayd Al-Kindi',
+    artistCategory: 'Emerging',
+    nationality: 'Oman',
+    medium: 'Algorithmic Kufic Projection',
+    proposedWorkTitle: 'Fractal Diwani Streams',
+    cvFileName: 'Zayd_AlKindi_CV.pdf',
+    previousWorksCount: 3,
+    mockupCount: 4,
+    submittedBy: 'Coordinator',
+    submittedAt: '2026-09-24T12:30:00Z',
+    status: 'PENDING_DIRECTOR_REVIEW',
+  },
+];
 
 function App() {
   const [currentRole, setCurrentRole] = useState<AppRole | null>(null);
   const [submittedThemes, setSubmittedThemes] = useState<CommitteeThemeDraft[] | undefined>(undefined);
   const [assignedBudget, setAssignedBudget] = useState<number | null>(null);
   const [ratifiedTheme, setRatifiedTheme] = useState<ThemeItem | null>(null);
+
+  // Stage 2: HIP State
+  const [curatorialBrief, setCuratorialBrief] = useState<string>(
+    'Sharjah Calligraphy Biennial Curatorial Directive: Emphasize the dialogue between classical proportion and avant-garde architectural manifestation. All nominated artists must balance aesthetic script lineage with rigorous spatial experimentation.'
+  );
+  const [blocklist, setBlocklist] = useState<string[]>([
+    'Restricted Nationality: Country X',
+    'Hazardous Medium: Open Flame',
+  ]);
+
+  // Stage 3 & 4: Nominated Artists Pool
+  const [nominatedArtists, setNominatedArtists] = useState<NominatedArtistDossier[]>(INITIAL_NOMINATIONS);
+  const [isNominationFormOpen, setIsNominationFormOpen] = useState<boolean>(false);
 
   const handlePresentToChairman = (themes: CommitteeThemeDraft[]) => {
     setSubmittedThemes(themes);
@@ -31,6 +110,32 @@ function App() {
   const handleBudgetAssigned = (amount: number, theme: ThemeItem) => {
     setAssignedBudget(amount);
     setRatifiedTheme(theme);
+  };
+
+  const handleNominateArtist = (dossier: NominatedArtistDossier) => {
+    setNominatedArtists(prev => [dossier, ...prev]);
+    setIsNominationFormOpen(false);
+  };
+
+  const handleVetoArtist = (id: string, reason: string, notes?: string) => {
+    setNominatedArtists(prev =>
+      prev.map(artist =>
+        artist.id === id
+          ? {
+              ...artist,
+              status: 'VETOED',
+              vetoReason: reason,
+              vetoNotes: notes,
+            }
+          : artist
+      )
+    );
+  };
+
+  const handleApproveArtist = (id: string) => {
+    setNominatedArtists(prev =>
+      prev.map(artist => (artist.id === id ? { ...artist, status: 'APPROVED' } : artist))
+    );
   };
 
   return (
@@ -91,10 +196,47 @@ function App() {
         )}
 
         {currentRole === 'Preparatory Committee' && (
-          <CommitteeThemeWorkspace
-            eventId={EVENT_ID}
-            onPresentToChairman={handlePresentToChairman}
-          />
+          <div className="space-y-6">
+            <div className="mx-auto flex max-w-5xl justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setIsNominationFormOpen(false)}
+                className={`rounded px-3 py-1.5 text-xs font-bold transition-colors cursor-pointer ${
+                  !isNominationFormOpen
+                    ? 'bg-sadu-brick text-white shadow-xs'
+                    : 'bg-white border border-sadu-gold/60 text-sadu-charcoal hover:bg-sadu-gold/20'
+                }`}
+              >
+                1. Theme Formulation Table
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsNominationFormOpen(true)}
+                className={`rounded px-3 py-1.5 text-xs font-bold transition-colors cursor-pointer ${
+                  isNominationFormOpen
+                    ? 'bg-sadu-brick text-white shadow-xs'
+                    : 'bg-white border border-sadu-gold/60 text-sadu-charcoal hover:bg-sadu-gold/20'
+                }`}
+              >
+                2. Nominate Artist (Multaqa Protocol)
+              </button>
+            </div>
+
+            {isNominationFormOpen ? (
+              <ArtistNominationForm
+                curatorialBrief={curatorialBrief}
+                blocklist={blocklist}
+                onSubmitNomination={handleNominateArtist}
+                submittedBy="Preparatory Committee"
+                onCancel={() => setIsNominationFormOpen(false)}
+              />
+            ) : (
+              <CommitteeThemeWorkspace
+                eventId={EVENT_ID}
+                onPresentToChairman={handlePresentToChairman}
+              />
+            )}
+          </div>
         )}
 
         {currentRole === 'Chairman' && (
@@ -104,113 +246,157 @@ function App() {
             onBudgetAssigned={handleBudgetAssigned}
           />
         )}
+        {currentRole === 'HIP' && (
+          <HIPWorkspace
+            curatorialBrief={curatorialBrief}
+            onUpdateCuratorialBrief={setCuratorialBrief}
+            blocklist={blocklist}
+            onUpdateBlocklist={setBlocklist}
+            ratifiedTheme={ratifiedTheme}
+            onBackToRoles={() => setCurrentRole(null)}
+          />
+        )}
+
         {currentRole === 'Coordinator' && (
-          <div className="mx-auto w-full max-w-5xl rounded-lg border border-sadu-gold bg-sadu-paper p-8 shadow-xs space-y-6">
-            <div className="flex items-center gap-3 border-b border-sadu-gold/40 pb-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-md bg-sadu-ochre/15 text-sadu-ochre">
-                <GitMerge className="h-5 w-5" />
+          <div className="mx-auto w-full max-w-5xl space-y-6">
+            {/* Coordinator Header */}
+            <div className="rounded-xl border border-sadu-gold bg-sadu-paper p-6 shadow-xs">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-sadu-gold/40 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-sadu-ochre text-white shadow-xs">
+                    <GitMerge className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <span className="rounded bg-sadu-sand px-2 py-0.5 text-[10px] font-bold text-sadu-ochre uppercase tracking-wider border border-sadu-gold/60">
+                      Stage 3 & 5 · Program Operations
+                    </span>
+                    <h2 className="font-editorial text-2xl font-bold text-sadu-charcoal sm:text-3xl mt-1">
+                      Coordinator Workspace
+                    </h2>
+                    <p className="text-xs font-semibold text-sadu-ochre" dir="rtl">
+                      المنسق العام · إعداد الملفات والعقود
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsNominationFormOpen(!isNominationFormOpen)}
+                    className="inline-flex items-center gap-1.5 rounded-md bg-sadu-brick px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-sadu-brick-dark cursor-pointer"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>{isNominationFormOpen ? 'View Dossiers' : 'Nominate Artist (Dossier)'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentRole(null)}
+                    className="rounded-md border border-sadu-gold bg-sadu-sand px-3 py-2 text-xs font-bold text-sadu-charcoal hover:bg-sadu-gold/20 cursor-pointer"
+                  >
+                    Back
+                  </button>
+                </div>
               </div>
-              <div>
-                <h2 className="font-editorial text-xl font-bold text-sadu-charcoal">
-                  Coordinator Workspace &middot; Program Operations
-                </h2>
-                <p className="text-xs text-sadu-muted">
-                  Phase 2: Artist Nomination Pool & Dossier Assembly
-                </p>
+
+              {/* HIP Curatorial Guidelines Reference */}
+              <div className="mt-4 rounded-md border border-sadu-gold/50 bg-white p-3 text-xs space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-sadu-charcoal flex items-center gap-1.5">
+                    <Globe className="h-3.5 w-3.5 text-sadu-brick" />
+                    HIP Exhibition Directives (Active)
+                  </span>
+                  <span className="text-[10px] text-red-700 font-bold bg-red-50 px-2 py-0.5 rounded border border-red-200">
+                    {blocklist.length} Blocklist Tags Enforced
+                  </span>
+                </div>
+                <p className="text-sadu-muted italic leading-relaxed">"{curatorialBrief}"</p>
               </div>
             </div>
 
-            <div className="rounded-md border border-sadu-gold/60 bg-white p-5 text-sm space-y-3">
-              {assignedBudget ? (
-                <>
-                  <div className="flex items-center gap-2 text-emerald-800 font-semibold">
-                    <CheckCircle2 className="h-4 w-4" />
-                    <span>Theme Ratified & Budget Assigned: AED {assignedBudget.toLocaleString()}</span>
+            {/* Dossier Upload Form or Pool View */}
+            {isNominationFormOpen ? (
+              <ArtistNominationForm
+                curatorialBrief={curatorialBrief}
+                blocklist={blocklist}
+                onSubmitNomination={handleNominateArtist}
+                submittedBy="Coordinator"
+                onCancel={() => setIsNominationFormOpen(false)}
+              />
+            ) : (
+              <div className="rounded-xl border border-sadu-gold bg-white p-6 shadow-xs space-y-4">
+                <div className="flex items-center justify-between border-b border-sadu-gold/30 pb-3">
+                  <div>
+                    <h3 className="font-editorial text-lg font-bold text-sadu-charcoal">
+                      Candidate Dossiers ({nominatedArtists.length})
+                    </h3>
+                    <p className="text-xs text-sadu-muted">
+                      Status and Director Mohammed Al Qaseer's reviews
+                    </p>
                   </div>
-                  <p className="text-xs text-sadu-muted leading-relaxed">
-                    Authority has routed to Mohammed Al Qaseer. The Coordinator is now authorized to assemble
-                    artist dossiers and manage invitation dispatches aligned with the ratified theme.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <div className="flex items-center gap-2 text-sadu-brick font-semibold">
-                    <Clock className="h-4 w-4" />
-                    <span>Awaiting Executive Theme Ratification</span>
-                  </div>
-                  <p className="text-xs text-sadu-muted leading-relaxed">
-                    The Preparatory Committee must formulate thematic proposals and Chairman Al Owais must lock
-                    the official theme and assign budget before artist nomination pools can be mobilized.
-                  </p>
-                </>
-              )}
-            </div>
+                  <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded border border-emerald-300">
+                    {nominatedArtists.filter(a => a.status === 'APPROVED').length} Ready for Stage 5 Contracts
+                  </span>
+                </div>
 
-            <div className="flex justify-end pt-2">
-              <button
-                type="button"
-                onClick={() => setCurrentRole(null)}
-                className="rounded-md border border-sadu-gold bg-sadu-sand px-4 py-2 text-xs font-bold text-sadu-charcoal hover:bg-sadu-gold/20 cursor-pointer"
-              >
-                Back to Role Selection
-              </button>
-            </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {nominatedArtists.map(artist => (
+                    <div
+                      key={artist.id}
+                      className={`rounded-lg border p-4 text-xs space-y-2 ${
+                        artist.status === 'VETOED'
+                          ? 'border-red-300 bg-red-50/40'
+                          : artist.status === 'APPROVED'
+                          ? 'border-emerald-300 bg-emerald-50/30'
+                          : 'border-sadu-gold/60 bg-white'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <strong className="text-sm font-bold text-sadu-charcoal block">{artist.artistName}</strong>
+                          <span className="text-[11px] text-sadu-muted">{artist.nationality} &middot; {artist.medium}</span>
+                        </div>
+                        <span className={`rounded px-2 py-0.5 text-[9px] font-bold ${
+                          artist.artistCategory === 'Emerging' ? 'bg-amber-100 text-amber-900' : 'bg-sadu-charcoal text-white'
+                        }`}>
+                          {artist.artistCategory}
+                        </span>
+                      </div>
+
+                      <p className="text-[11px] text-sadu-muted italic">"{artist.proposedWorkTitle}"</p>
+
+                      {artist.status === 'VETOED' && (
+                        <div className="rounded bg-red-100/90 p-2 text-red-900 border border-red-300 text-[11px]">
+                          <strong className="block text-red-950 font-bold flex items-center gap-1">
+                            <Ban className="h-3.5 w-3.5 text-red-700" /> Vetoed by Biennial Director
+                          </strong>
+                          <span className="mt-0.5 block">Reason: <strong>{artist.vetoReason}</strong></span>
+                          {artist.vetoNotes && <p className="mt-0.5 text-[10px] text-red-800">Notes: {artist.vetoNotes}</p>}
+                        </div>
+                      )}
+
+                      {artist.status === 'APPROVED' && (
+                        <div className="rounded bg-emerald-100/80 p-2 text-emerald-900 border border-emerald-300 text-[11px] flex items-center justify-between">
+                          <span className="font-semibold flex items-center gap-1">
+                            <CheckCircle2 className="h-3 w-3 text-emerald-700" /> Stage 5 Contract Ready
+                          </span>
+                          <span className="text-[10px] text-emerald-800 font-bold">Approved</span>
+                        </div>
+                      )}
+
+                      {artist.status === 'PENDING_DIRECTOR_REVIEW' && (
+                        <div className="rounded bg-amber-50 p-2 text-amber-900 border border-amber-200 text-[11px] flex items-center gap-1">
+                          <Clock className="h-3 w-3 text-amber-700" />
+                          <span>Awaiting Director Al Qaseer's Balance Review</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
-        {currentRole === 'Biennial Director' && (
-          <div className="mx-auto w-full max-w-5xl rounded-lg border border-sadu-gold bg-sadu-paper p-8 shadow-xs space-y-6">
-            <div className="flex items-center gap-3 border-b border-sadu-gold/40 pb-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-md bg-sadu-brick/15 text-sadu-brick">
-                <ShieldCheck className="h-5 w-5" />
-              </div>
-              <div>
-                <h2 className="font-editorial text-xl font-bold text-sadu-charcoal">
-                  Biennial Director Workspace &middot; Mohammed Al Qaseer
-                </h2>
-                <p className="text-xs text-sadu-muted">
-                  Executive Veto & Oversight &middot; Artist Selection Committee Lead
-                </p>
-              </div>
-            </div>
-
-            <div className="rounded-md border border-sadu-gold/60 bg-white p-5 text-sm space-y-3">
-              {assignedBudget ? (
-                <>
-                  <div className="flex items-center gap-2 text-emerald-800 font-semibold">
-                    <CheckCircle2 className="h-4 w-4" />
-                    <span>Phase 2 Pivot Active &middot; Budget Assigned: AED {assignedBudget.toLocaleString()}</span>
-                  </div>
-                  <p className="text-xs text-sadu-muted leading-relaxed">
-                    Chairman Al Owais has ratified the official theme {ratifiedTheme ? `"${ratifiedTheme.englishName}"` : ''} and assigned the biennial budget.
-                    Mohammed Al Qaseer now heads the committee responsible for <strong>selecting the artists</strong> that fit the funded theme.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <div className="flex items-center gap-2 text-sadu-brick font-semibold">
-                    <Clock className="h-4 w-4" />
-                    <span>Phase 1 Initiation Gate</span>
-                  </div>
-                  <p className="text-xs text-sadu-muted leading-relaxed">
-                    Mohammed Al Qaseer has convened the Preparatory Committee based on the cultural calendar.
-                    Once Chairman Al Owais approves the theme and assigns the budget, Al Qaseer pivots to lead the Artist Selection Committee.
-                  </p>
-                </>
-              )}
-            </div>
-
-            <div className="flex justify-end pt-2">
-              <button
-                type="button"
-                onClick={() => setCurrentRole(null)}
-                className="rounded-md border border-sadu-gold bg-sadu-sand px-4 py-2 text-xs font-bold text-sadu-charcoal hover:bg-sadu-gold/20 cursor-pointer"
-              >
-                Back to Role Selection
-              </button>
-            </div>
-          </div>
-        )}
 
         {currentRole === 'Artist' && (
           <div className="mx-auto w-full max-w-5xl rounded-lg border border-sadu-gold bg-sadu-paper p-8 shadow-xs space-y-6">
@@ -219,11 +405,14 @@ function App() {
                 <User className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="font-editorial text-xl font-bold text-sadu-charcoal">
-                  Artist &middot; Participant Portal
+                <span className="rounded bg-sadu-sand px-2 py-0.5 text-[10px] font-bold text-sadu-ink uppercase tracking-wider border border-sadu-gold/60">
+                  Stage 5 · External Contributor
+                </span>
+                <h2 className="font-editorial text-xl font-bold text-sadu-charcoal mt-0.5">
+                  Artist &middot; Participant Portal (الفنان)
                 </h2>
                 <p className="text-xs text-sadu-muted">
-                  External Access &middot; Archival Verification & Dossier Intake
+                  Contract Terms Approval, Passport Verification & High-Res Artwork Files
                 </p>
               </div>
             </div>
@@ -231,66 +420,23 @@ function App() {
             <div className="rounded-md border border-sadu-gold/60 bg-white p-5 text-sm space-y-3">
               <div className="flex items-center gap-2 text-sadu-ink font-semibold">
                 <User className="h-4 w-4" />
-                <span>Secure Participant Intake</span>
+                <span>Multaqa Artist Intake & Participation Confirmation</span>
               </div>
               <p className="text-xs text-sadu-muted leading-relaxed">
-                Secure portal for invited artists to upload passports, high-res artwork photos,
-                and bilingual bios for international exhibition labeling and publishing.
+                Invited and approved artists review bespoke bilateral contracts (production allowances, shipping terms),
+                confirm participation terms, and securely upload official passports and 300 DPI print-ready artwork files for catalog publishing.
               </p>
-            </div>
 
-            <div className="flex justify-end pt-2">
-              <button
-                type="button"
-                onClick={() => setCurrentRole(null)}
-                className="rounded-md border border-sadu-gold bg-sadu-sand px-4 py-2 text-xs font-bold text-sadu-charcoal hover:bg-sadu-gold/20 cursor-pointer"
-              >
-                Back to Role Selection
-              </button>
-            </div>
-          </div>
-        )}
-
-        {currentRole === 'Finance' && (
-          <div className="mx-auto w-full max-w-5xl rounded-lg border border-sadu-gold bg-sadu-paper p-8 shadow-xs space-y-6">
-            <div className="flex items-center gap-3 border-b border-sadu-gold/40 pb-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-md bg-sadu-ochre/15 text-sadu-ochre">
-                <FileText className="h-5 w-5" />
+              <div className="rounded-md border border-sadu-gold/40 bg-sadu-sand/30 p-3 text-xs">
+                <span className="font-bold text-sadu-charcoal block mb-1">Approved Nominated Artists in Pool:</span>
+                <div className="flex flex-wrap gap-2">
+                  {nominatedArtists.filter(a => a.status === 'APPROVED').map(a => (
+                    <span key={a.id} className="rounded bg-white px-2 py-1 border border-sadu-gold/60 text-sadu-charcoal font-semibold">
+                      {a.artistName} ({a.artistCategory})
+                    </span>
+                  ))}
+                </div>
               </div>
-              <div>
-                <h2 className="font-editorial text-xl font-bold text-sadu-charcoal">
-                  Finance &middot; Contracts & Disbursements
-                </h2>
-                <p className="text-xs text-sadu-muted">
-                  Legal & Budget &middot; Tranche Management & Milestone Clearance
-                </p>
-              </div>
-            </div>
-
-            <div className="rounded-md border border-sadu-gold/60 bg-white p-5 text-sm space-y-3">
-              {assignedBudget ? (
-                <>
-                  <div className="flex items-center gap-2 text-emerald-800 font-semibold">
-                    <CheckCircle2 className="h-4 w-4" />
-                    <span>Budget Appropriated &middot; AED {assignedBudget.toLocaleString()}</span>
-                  </div>
-                  <p className="text-xs text-sadu-muted leading-relaxed">
-                    Official budget clearance granted by Chairman Al Owais. Finance & Contracts is authorized
-                    to generate bespoke bilingual PDF contracts and schedule milestone payment tranches.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <div className="flex items-center gap-2 text-amber-800 font-semibold">
-                    <Lock className="h-4 w-4" />
-                    <span>Contracts Locked &middot; Awaiting Chairman Budget Assignment</span>
-                  </div>
-                  <p className="text-xs text-sadu-muted leading-relaxed">
-                    Departmental contracts and financial disbursements remain locked until Chairman Al Owais ratifies
-                    the official theme and formally assigns the biennial budget.
-                  </p>
-                </>
-              )}
             </div>
 
             <div className="flex justify-end pt-2">
@@ -312,24 +458,96 @@ function App() {
                 <Megaphone className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="font-editorial text-xl font-bold text-sadu-charcoal">
-                  PR & Protocol &middot; Logistics & Media
+                <span className="rounded bg-sadu-sand px-2 py-0.5 text-[10px] font-bold text-sadu-brick uppercase tracking-wider border border-sadu-gold/60">
+                  Stage 5 · Protocol & Logistics
+                </span>
+                <h2 className="font-editorial text-xl font-bold text-sadu-charcoal mt-0.5">
+                  PR & Protocol Workspace (التشريفات)
                 </h2>
                 <p className="text-xs text-sadu-muted">
-                  Catalog Publishing, Flight Coordination & Biennial Hospitality
+                  Passport Verification, Catalog Print Quality & VIP Hospitality
                 </p>
               </div>
             </div>
 
             <div className="rounded-md border border-sadu-gold/60 bg-white p-5 text-sm space-y-3">
               <div className="flex items-center gap-2 text-sadu-brick font-semibold">
-                <Megaphone className="h-4 w-4" />
-                <span>Media & Guest Protocol</span>
+                <FileCheck className="h-4 w-4" />
+                <span>Verification Authority for Approved Artists</span>
               </div>
               <p className="text-xs text-sadu-muted leading-relaxed">
-                Extract artist dossiers for catalogs, manage flight itineraries, and coordinate biennial hospitality
-                for international delegates and VIP delegations.
+                PR (التشريفات) extracts dossier records, verifies passport details for visa facilitation, checks print-ready 300 DPI high-resolution files for exhibition catalog publishing, and coordinates delegation hospitality.
               </p>
+
+              <div className="grid gap-2 sm:grid-cols-2 pt-1 text-xs">
+                {nominatedArtists.filter(a => a.status === 'APPROVED').map(a => (
+                  <div key={a.id} className="rounded border border-emerald-300 bg-emerald-50/60 p-2.5 flex items-center justify-between">
+                    <div>
+                      <strong className="block text-emerald-950 font-bold">{a.artistName}</strong>
+                      <span className="text-[10px] text-emerald-800">{a.nationality} &middot; {a.medium}</span>
+                    </div>
+                    <span className="rounded bg-emerald-700 px-2 py-0.5 text-[9px] font-bold text-white uppercase">
+                      Passport & Print Verified
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setCurrentRole(null)}
+                className="rounded-md border border-sadu-gold bg-sadu-sand px-4 py-2 text-xs font-bold text-sadu-charcoal hover:bg-sadu-gold/20 cursor-pointer"
+              >
+                Back to Role Selection
+              </button>
+            </div>
+          </div>
+        )}
+
+        {currentRole === 'Finance' && (
+          <div className="mx-auto w-full max-w-5xl rounded-lg border border-sadu-gold bg-sadu-paper p-8 shadow-xs space-y-6">
+            <div className="flex items-center gap-3 border-b border-sadu-gold/40 pb-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-md bg-sadu-ochre/15 text-sadu-ochre">
+                <FileText className="h-5 w-5" />
+              </div>
+              <div>
+                <span className="rounded bg-sadu-sand px-2 py-0.5 text-[10px] font-bold text-sadu-ochre uppercase tracking-wider border border-sadu-gold/60">
+                  Stage 5 · Legal & Budget Execution
+                </span>
+                <h2 className="font-editorial text-xl font-bold text-sadu-charcoal mt-0.5">
+                  Finance Workspace (المالية)
+                </h2>
+                <p className="text-xs text-sadu-muted">
+                  Bilateral Contracts Execution & Milestone Tranche Disbursements
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-md border border-sadu-gold/60 bg-white p-5 text-sm space-y-3">
+              {assignedBudget ? (
+                <>
+                  <div className="flex items-center gap-2 text-emerald-800 font-semibold">
+                    <CheckCircle2 className="h-4 w-4" />
+                    <span>Budget Appropriated: AED {assignedBudget.toLocaleString()} (Authority Transferred)</span>
+                  </div>
+                  <p className="text-xs text-sadu-muted leading-relaxed">
+                    Chairman Al Owais has officially authorized the budget. Finance (المالية) is empowered
+                    to generate bespoke bilateral contracts and disburse payment tranches (Advance 30%, Delivery 40%, Installation 30%) for approved artists.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2 text-amber-800 font-semibold">
+                    <Lock className="h-4 w-4" />
+                    <span>Financial Dispatches Locked &middot; Awaiting Chairman Budget Authorization</span>
+                  </div>
+                  <p className="text-xs text-sadu-muted leading-relaxed">
+                    Tranche disbursement remains locked until Chairman Al Owais approves the theme and assigns the overarching budget.
+                  </p>
+                </>
+              )}
             </div>
 
             <div className="flex justify-end pt-2">
