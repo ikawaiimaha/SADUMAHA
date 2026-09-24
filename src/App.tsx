@@ -280,6 +280,20 @@ function App() {
             )}
           </div>
         )}
+        {currentRole === 'Biennial Director' && (
+          <DirectorWorkspace
+            submittedThemes={submittedThemes}
+            onPresentToChairman={handlePresentToChairman}
+            nominatedArtists={nominatedArtists}
+            onVetoArtist={handleVetoArtist}
+            onApproveArtist={handleApproveArtist}
+            assignedBudget={assignedBudget}
+            ratifiedTheme={ratifiedTheme}
+            curatorialBrief={curatorialBrief}
+            onBackToRoles={() => setCurrentRole(null)}
+          />
+        )}
+
 
         {currentRole === 'Chairman' && (
           <ChairmanWorkspace
