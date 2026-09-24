@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import RoleSelection, { AppRole } from './components/RoleSelection';
 import CommitteeThemeWorkspace, { CommitteeThemeDraft } from './components/CommitteeThemeWorkspace';
 import ChairmanWorkspace, { ThemeItem } from './components/ChairmanWorkspace';
-import HIPWorkspace from './components/HIPWorkspace';
+import HIPWorkspace, { TranslationStatus } from './components/HIPWorkspace';
+import EditorialWorkspace from './components/EditorialWorkspace';
 import DirectorWorkspace from './components/DirectorWorkspace';
 import ArtistNominationForm, { NominatedArtistDossier } from './components/ArtistNominationForm';
 import {
@@ -90,7 +91,14 @@ function App() {
   const [assignedBudget, setAssignedBudget] = useState<number | null>(null);
   const [ratifiedTheme, setRatifiedTheme] = useState<ThemeItem | null>(null);
 
-  // Stage 2: HIP State
+  // Stage 2: HIP & Editorial Translation Routing State
+  const [guidelinesArabic, setGuidelinesArabic] = useState<string>(
+    'دليل المعرض التوجيهي لبينالي الشارقة للخط: التأكيد على الحوار الجمالي الرصين بين النسب الفاضلة للخط العربي الأصيل والتجليات المعمارية المعاصرة. يتوجب على كافة الفنانين المرشحين تقديم أعمال تستند إلى أصالة السطر الكوفي والثلث مع استكشاف أبعاد الوسائط الحديثة والفراغية.'
+  );
+  const [guidelinesEnglish, setGuidelinesEnglish] = useState<string>(
+    'Exhibition Curatorial Guidelines: Emphasize the aesthetic dialogue between the sacred proportions of classical calligraphy and contemporary architectural manifestations. All nominated artists must ground their proposals in classical scripts while exploring modern spatial media.'
+  );
+  const [translationStatus, setTranslationStatus] = useState<TranslationStatus>('PENDING_TRANSLATION');
   const [curatorialBrief, setCuratorialBrief] = useState<string>(
     'Sharjah Calligraphy Biennial Curatorial Directive: Emphasize the dialogue between classical proportion and avant-garde architectural manifestation. All nominated artists must balance aesthetic script lineage with rigorous spatial experimentation.'
   );
@@ -110,6 +118,19 @@ function App() {
   const handleBudgetAssigned = (amount: number, theme: ThemeItem) => {
     setAssignedBudget(amount);
     setRatifiedTheme(theme);
+  };
+
+  const handleSubmitToEditorial = (arabicText: string) => {
+    setGuidelinesArabic(arabicText);
+    setTranslationStatus('PENDING_TRANSLATION');
+  };
+
+  const handlePublishBrief = (englishText: string) => {
+    setGuidelinesEnglish(englishText);
+    setTranslationStatus('PUBLISHED');
+    setCuratorialBrief(
+      `${englishText}\n\n[Arabic Original]: ${guidelinesArabic}`
+    );
   };
 
   const handleNominateArtist = (dossier: NominatedArtistDossier) => {
@@ -248,10 +269,25 @@ function App() {
         )}
         {currentRole === 'HIP' && (
           <HIPWorkspace
+            guidelinesArabic={guidelinesArabic}
+            translationStatus={translationStatus}
+            onSubmitToEditorial={handleSubmitToEditorial}
             curatorialBrief={curatorialBrief}
             onUpdateCuratorialBrief={setCuratorialBrief}
             blocklist={blocklist}
             onUpdateBlocklist={setBlocklist}
+            ratifiedTheme={ratifiedTheme}
+            onBackToRoles={() => setCurrentRole(null)}
+          />
+        )}
+
+        {currentRole === 'Editorial' && (
+          <EditorialWorkspace
+            guidelinesArabic={guidelinesArabic}
+            guidelinesEnglish={guidelinesEnglish}
+            translationStatus={translationStatus}
+            onPublishBrief={handlePublishBrief}
+            onUpdateGuidelinesEnglish={setGuidelinesEnglish}
             ratifiedTheme={ratifiedTheme}
             onBackToRoles={() => setCurrentRole(null)}
           />
@@ -298,18 +334,42 @@ function App() {
                 </div>
               </div>
 
-              {/* HIP Curatorial Guidelines Reference */}
-              <div className="mt-4 rounded-md border border-sadu-gold/50 bg-white p-3 text-xs space-y-1">
+              {/* Curatorial Guidelines Status / Published Brief */}
+              <div className="mt-4 rounded-md border border-sadu-gold/50 bg-white p-3 text-xs space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-sadu-charcoal flex items-center gap-1.5">
                     <Globe className="h-3.5 w-3.5 text-sadu-brick" />
-                    HIP Exhibition Directives (Active)
+                    Curatorial Guidelines (Editorial Routing)
                   </span>
-                  <span className="text-[10px] text-red-700 font-bold bg-red-50 px-2 py-0.5 rounded border border-red-200">
-                    {blocklist.length} Blocklist Tags Enforced
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase ${
+                      translationStatus === 'PUBLISHED'
+                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                        : 'bg-amber-100 text-amber-900 border border-amber-300'
+                    }`}>
+                      {translationStatus === 'PUBLISHED' ? 'Bilingual Brief Published' : 'Status: Pending Editorial Translation'}
+                    </span>
+                    <span className="text-[10px] text-red-700 font-bold bg-red-50 px-2 py-0.5 rounded border border-red-200">
+                      {blocklist.length} Blocklist Tags Enforced
+                    </span>
+                  </div>
                 </div>
-                <p className="text-sadu-muted italic leading-relaxed">"{curatorialBrief}"</p>
+
+                {translationStatus === 'PUBLISHED' ? (
+                  <div className="space-y-1.5 pt-1">
+                    <p className="text-sadu-charcoal font-medium leading-relaxed">{guidelinesEnglish}</p>
+                    <p dir="rtl" className="text-sadu-brick text-xs font-semibold leading-relaxed border-t border-sadu-gold/30 pt-1">
+                      {guidelinesArabic}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="rounded bg-amber-50 p-2 text-amber-900 border border-amber-200 text-[11px] flex items-center gap-2">
+                    <Lock className="h-3.5 w-3.5 text-amber-700 shrink-0" />
+                    <span>
+                      The HIP has submitted Arabic guidelines to the Editorial Department. Coordinators will receive the official accredited English translation once published.
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 

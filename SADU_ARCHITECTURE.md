@@ -15,12 +15,17 @@
 * **Biennial Director (Mohammed Al Qaseer / مدير البينالي):** Reviews the candidate proposals, exercises initial veto/curatorial review, and presents the defended themes to the Chairman.
 * **Chairman (H.E. Abdullah Al Owais / رئيس الدائرة):** Approves the final theme ("Approve Theme"), assigns the overarching biennial budget, and formally authorizes the transition of authority back to Mohammed Al Qaseer.
 
-### Stage 2: Curatorial Guidelines & Dynamic Blocklists
+### Stage 2: Curatorial Guidelines & Translation Routing
 * **HIP (Head of International Programs / منسق معرض عام):**
-  * Sets the overarching exhibition guidelines and curatorial brief based on the approved theme.
+  * Drafts the overarching exhibition guidelines exclusively in Arabic based on the approved theme.
+  * **Strict Routing Gate:** Cannot publish directly to Coordinators. Must submit the completed Arabic draft to the Editorial Department for human translation.
   * Manages the **"Dynamic Blocklist"** (an active array of restricted tags, e.g., temporarily restricting certain nationalities or mediums due to real-time political/security directives).
   * **System Invariant:** If a Coordinator or Committee member attempts to submit an artist matching an active blocked tag, the system immediately rejects the submission with an alert:  
     `"Submission blocked by current HIP security/administrative directives."`
+* **Editorial Department (التحرير):**
+  * Receives the locked Arabic draft from the HIP in the Pending Translations Queue.
+  * Responsible for drafting the official, accredited English translation of the curatorial brief adhering to biennial standards.
+  * Holds the final institutional authority to **"Publish"** the bilingual brief, officially unlocking it for the Preparatory Committee and Coordinators.
 
 ### Stage 3: Artist Nomination (The Multaqa Protocol)
 * **Preparatory Committee & Coordinators (اللجنة التحضيرية والمنسقون):** Collaboratively nominate artists.
@@ -44,28 +49,29 @@
 * **PR (التشريفات):** Verifies passports and print-quality images for catalog publishing, delegation logistics, and exhibition wall text.
 * **Finance (المالية):** Executes payment tranches based on the locked contract and Chairman budget allocation.
 
-
 ---
 
-## 2. Institutional Roles Mapping (8 Distinct Roles)
+## 2. Institutional Roles Mapping (9 Distinct Roles)
 
 1. **Chairman** (H.E. Abdullah Al Owais - Executive Gate & Budget Allocation)
 2. **Biennial Director** (Mohammed Al Qaseer - Executive Veto, Balance Review & Artist Selection)
 3. **Preparatory Committee** (Theme Formulation & Artist Nomination)
-4. **HIP** (Head of International Programs / منسق معرض عام - Curatorial Guidelines & Dynamic Blocklists)
-5. **Coordinator** (Program Operations & Dossier Assembly)
-6. **Artist** (External Access - Portfolio & Dossier Intake)
-7. **PR** (التشريفات - Passports & Print Verification)
-8. **Finance** (المالية - Contracts & Tranche Disbursements)
+4. **HIP** (Head of International Programs / منسق معرض عام - Arabic Guidelines Drafting & Dynamic Blocklists)
+5. **Editorial** (التحرير - Bilingual Translation & Institutional Publishing)
+6. **Coordinator** (Program Operations & Dossier Assembly)
+7. **Artist** (External Access - Portfolio & Dossier Intake)
+8. **PR** (التشريفات - Passports & Print Verification)
+9. **Finance** (المالية - Contracts & Tranche Disbursements)
 
 ---
 
 ## 3. System Invariants & Enforcement Gates
 
 1. **Zero Fluff Theme Gate:** Chairman cannot approve until 3 distinct themes have Aesthetic Framework, Contemporary Relevance, and Curatorial Justification.
-2. **Dynamic Blocklist Gate:** Any nomination matching an active HIP blocked tag triggers an immediate system rejection: `"Submission blocked by current HIP security/administrative directives."`
-3. **Dossier Schema Gate:** Submissions missing `artistName`, `artistCategory` ('Emerging'/'Established'), `cvUpload`, `previousWorks`, or `newWorkMockup` are strictly blocked.
-4. **Director Balance & Veto Gate:** The Director's dashboard renders a visual ratio bar of Emerging vs. Established artists. Vetoes require selecting a reason from a dropdown (Budget, Security, Curatorial Mismatch, Administrative Directive) and routes the status back to Coordinators.
-5. **Financial Lock Gate:** Finance cannot execute payment tranches until contracts are locked post-Chairman budget authorization.
+2. **Translation Routing Gate:** HIP drafts exhibition guidelines exclusively in Arabic and cannot publish directly to Coordinators. The draft is locked upon submission to Editorial (التحرير). Only the Editorial Department holds the authority to draft the English translation and publish the official bilingual brief, unlocking it for the Preparatory Committee and Coordinators.
+3. **Dynamic Blocklist Gate:** Any nomination matching an active HIP blocked tag triggers an immediate system rejection: `"Submission blocked by current HIP security/administrative directives."`
+4. **Dossier Schema Gate:** Submissions missing `artistName`, `artistCategory` ('Emerging'/'Established'), `cvUpload`, `previousWorks`, or `newWorkMockup` are strictly blocked.
+5. **Director Balance & Veto Gate:** The Director's dashboard renders a visual ratio bar of Emerging vs. Established artists. Vetoes require selecting a reason from a dropdown (Budget, Security, Curatorial Mismatch, Administrative Directive) and routes the status back to Coordinators.
+6. **Financial Lock Gate:** Finance cannot execute payment tranches until contracts are locked post-Chairman budget authorization.
 
 

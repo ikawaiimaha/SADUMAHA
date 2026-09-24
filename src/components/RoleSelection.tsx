@@ -4,6 +4,7 @@ import {
   ShieldCheck,
   ClipboardList,
   Globe,
+  BookOpen,
   GitMerge,
   User,
   FileText,
@@ -16,6 +17,7 @@ export type AppRole =
   | 'Biennial Director'
   | 'Preparatory Committee'
   | 'HIP'
+  | 'Editorial'
   | 'Coordinator'
   | 'Artist'
   | 'PR'
@@ -71,10 +73,20 @@ const ROLE_OPTIONS: RoleOption[] = [
     key: 'HIP',
     titleEn: 'HIP (Head of Programs)',
     titleAr: 'منسق معرض عام',
-    phaseBadge: 'Curatorial Directives & Blocklists',
+    phaseBadge: 'Arabic Directives & Blocklists',
     description:
-      'Sets overarching curatorial brief and manages the dynamic blocklist to enforce real-time diplomatic and safety directives.',
+      'Drafts exhibition guidelines exclusively in Arabic and manages dynamic blocklists to enforce real-time diplomatic and safety directives.',
     icon: Globe,
+    accentColor: 'text-sadu-brick',
+  },
+  {
+    key: 'Editorial',
+    titleEn: 'Editorial',
+    titleAr: 'التحرير والترجمة',
+    phaseBadge: 'Bilingual Translation & Institutional Publishing',
+    description:
+      'Receives locked Arabic curatorial briefs from HIP, drafts official English translations, and holds sole authority to publish to Coordinators.',
+    icon: BookOpen,
     accentColor: 'text-sadu-brick',
   },
   {
@@ -140,8 +152,8 @@ export const RoleSelection: React.FC<RoleSelectionProps> = ({ onSelectRole, sele
       </div>
 
       {/* Role Selection Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-        {ROLE_OPTIONS.map(role => {
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {ROLE_OPTIONS.map((role, index) => {
           const Icon = role.icon;
           const isSelected = selectedRole === role.key;
 
@@ -153,7 +165,7 @@ export const RoleSelection: React.FC<RoleSelectionProps> = ({ onSelectRole, sele
                 isSelected
                   ? 'border-sadu-brick bg-white ring-2 ring-sadu-brick/30 shadow-md'
                   : 'border-sadu-gold bg-white hover:border-sadu-brick hover:bg-sadu-paper hover:shadow-md'
-              }`}
+              } ${index === 8 ? 'sm:col-span-2 lg:col-span-1' : ''}`}
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
