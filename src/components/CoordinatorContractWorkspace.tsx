@@ -52,24 +52,36 @@ export default function CoordinatorContractWorkspace() {
   const [artists, setArtists] = useState<ApprovedArtist[]>(MOCK_APPROVED_ARTISTS);
   const [selectedArtist, setSelectedArtist] = useState<ApprovedArtist | null>(MOCK_APPROVED_ARTISTS[0]);
   
-  // Contract Terms State per artist ID
+  // Contract Terms State per artist ID (editable grants)
   const [grantsMap, setGrantsMap] = useState<Record<string, number>>({
     'ART-001': 35000,
     'ART-002': 25000
   });
 
-  const [shippingMethod, setShippingMethod] = useState<ShippingMethod>('FINE_ART_COURIER');
-  const [trancheStructure, setTrancheStructure] = useState<TrancheStructure>('STANDARD_SPLIT');
+  // Dispatched / locked commitments separate from editable grants
+  const [dispatchedGrants, setDispatchedGrants] = useState<Record<string, number>>({});
   const [generatedContracts, setGeneratedContracts] = useState<Record<string, boolean>>({});
 
-  const currentProductionGrant = selectedArtist ? (grantsMap[selectedArtist.id] || 30000) : 0;
+  const [shippingMethod, setShippingMethod] = useState<ShippingMethod>('FINE_ART_COURIER');
+  const [trancheStructure, setTrancheStructure] = useState<TrancheStructure>('STANDARD_SPLIT');
 
-  // Dynamically track commitments across all generated agreements
-  const totalCommitted = Object.entries(generatedContracts).reduce((acc, [artistId, isGen]) => {
-    return isGen ? acc + (grantsMap[artistId] || 0) : acc;
+  // Preserve stored zero grant explicitly using !== undefined
+  const currentProductionGrant = selectedArtist 
+    ? (grantsMap[selectedArtist.id] !== undefined ? grantsMap[selectedArtist.id] : 30000) 
+    : 0;
+
+  // Total committed from already dispatched contracts
+  const totalDispatchedCommitted = Object.entries(generatedContracts).reduce((acc, [artistId, isGen]) => {
+    return isGen ? acc + (dispatchedGrants[artistId] ?? grantsMap[artistId] ?? 0) : acc;
   }, 0);
 
-  const isOverBudget = totalCommitted > TOTAL_CHAIRMAN_BUDGET;
+  // Proposed total if current selected artist is dispatched with current grant
+  const isCurrentDispatched = selectedArtist ? !!generatedContracts[selectedArtist.id] : false;
+  const proposedTotalCommitted = isCurrentDispatched 
+    ? totalDispatchedCommitted 
+    : totalDispatchedCommitted + currentProductionGrant;
+
+  const isOverBudget = proposedTotalCommitted > TOTAL_CHAIRMAN_BUDGET;
 
   // Tranche breakdown calculations
   const trancheBreakdown = trancheStructure === 'STANDARD_SPLIT' 
@@ -78,7 +90,7 @@ export default function CoordinatorContractWorkspace() {
 
   const handleGrantChange = (val: number) => {
     if (!selectedArtist) return;
-    const sanitizedVal = Math.max(0, val); // Reject negative production grants
+    const sanitizedVal = Math.max(0, val); // Prevent negative values
     setGrantsMap(prev => ({
       ...prev,
       [selectedArtist.id]: sanitizedVal
@@ -91,11 +103,16 @@ export default function CoordinatorContractWorkspace() {
       alert("Error: Production grant cannot be a negative value.");
       return;
     }
+    if (proposedTotalCommitted > TOTAL_CHAIRMAN_BUDGET) {
+      alert("Error: Proposed commitment exceeds the Chairman's allocated budget ceiling.");
+      return;
+    }
 
-    // Step 1: Execute agreement generation simulation
+    // Snapshot the grant into dispatched commitments
+    setDispatchedGrants(prev => ({ ...prev, [selectedArtist.id]: currentProductionGrant }));
     setGeneratedContracts(prev => ({ ...prev, [selectedArtist.id]: true }));
 
-    // Step 2: Update artist status in roster queue
+    // Update artist status in roster queue
     setArtists(prev => prev.map(a => a.id === selectedArtist.id ? { ...a, status: 'CONTRACT_PENDING_SIGNATURE' } : a));
   };
 
@@ -111,7 +128,7 @@ export default function CoordinatorContractWorkspace() {
           </p>
         </div>
         <div className="bg-white px-4 py-2 rounded-md border border-[#D9D2C5] text-xs font-mono shadow-sm">
-          Allocated Budget: <span className="font-bold text-[#8B4513]">{TOTAL_CHAIRMAN_BUDGET.toLocaleString()} AED</span> | Committed: <span className="font-bold text-[#1A1817]">{totalCommitted.toLocaleString()} AED</span>
+          Allocated Budget: <span className="font-bold text-[#8B4513]">{TOTAL_CHAIRMAN_BUDGET.toLocaleString()} AED</span> | Committed: <span className="font-bold text-[#1A1817]">{totalDispatchedCommitted.toLocaleString()} AED</span>
         </div>
       </header>
 
@@ -181,11 +198,11 @@ export default function CoordinatorContractWorkspace() {
               {/* Form Controls */}
               <div className="space-y-6">
                 
-                {/* Production Grant Input with negative value protection */}
+                {/* Production Grant Input with zero and negative value protection */}
                 <div>
                   <label className="block text-sm font-medium text-[#1A1817] mb-1 flex items-center justify-between">
                     <span>Production Grant Allocation (AED)</span>
-                    <span className="text-xs text-[#8C7A6B]">Values must be non-negative</span>
+                    <span className="text-xs text-[#8C7A6B]">Preserves 0 and non-negative values</span>
                   </label>
                   <div className="relative">
                     <span className="absolute start-3 top-2.5 text-[#8C7A6B] font-mono text-sm">AED</span>
@@ -200,7 +217,7 @@ export default function CoordinatorContractWorkspace() {
                   {isOverBudget && (
                     <div className="mt-2 flex items-center gap-2 text-xs text-red-700 bg-red-50 p-2 rounded border border-red-200">
                       <AlertTriangle className="w-4 h-4 shrink-0" />
-                      <span>Warning: Total commitments across generated agreements exceed the Chairman’s approved budget ceiling!</span>
+                      <span>Warning: Proposed commitment exceeds the Chairman’s approved budget ceiling (250,000 AED)! Dispatch is blocked.</span>
                     </div>
                   )}
                 </div>
@@ -304,7 +321,7 @@ export default function CoordinatorContractWorkspace() {
                 <button
                   type="button"
                   onClick={handleGenerateContract}
-                  disabled={currentProductionGrant <= 0}
+                  disabled={isOverBudget || currentProductionGrant < 0}
                   className="flex items-center gap-2 bg-[#2C2A29] hover:bg-[#1A1817] disabled:bg-[#D9D2C5] text-white py-2.5 px-6 rounded-md text-sm font-medium transition-colors shadow-sm"
                 >
                   <Send className="w-4 h-4" />
