@@ -105,6 +105,15 @@ export interface ArtistDossier {
   mockupsUrl?: string; // Optional if isCommissioned is false (existing work/masterpiece)
 }
 
+export interface ContractTerms {
+  artistId: string;
+  productionGrant: number;
+  shippingMethod: 'FINE_ART_COURIER' | 'AIR_FREIGHT' | 'LOCAL_UAE';
+  trancheStructure: 'STANDARD_SPLIT' | 'SINGLE_DISBURSAL';
+  status: 'DISPATCHED' | 'DISPUTED_BY_ARTIST' | 'SIGNED';
+  amendmentNotes?: string;
+}
+
 // Single Source of Truth for Stage 6 Bilateral Contracts & Auditing
 export * from './types/contractStage6';
 

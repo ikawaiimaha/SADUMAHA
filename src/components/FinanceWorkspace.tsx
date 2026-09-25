@@ -12,8 +12,10 @@ import {
   Receipt,
   Layers,
   ArrowRight,
+  Truck,
 } from 'lucide-react';
 import { BilateralContract, DisbursementRecord } from '../types/contractStage6';
+import FinanceMilestoneTracker from './FinanceMilestoneTracker';
 
 export interface FinanceWorkspaceProps {
   assignedBudget: number | null;
@@ -39,6 +41,12 @@ export const FinanceWorkspace: React.FC<FinanceWorkspaceProps> = ({
     trancheType: 'Advance (30%)' | 'Delivery (40%)' | 'Installation (30%)';
     amount: number;
   } | null>(null);
+
+  // Hardening #3: Physical crate arrival state per contract
+  const [clearedPhysicalCrates, setClearedPhysicalCrates] = useState<Record<string, boolean>>({
+    'contract-dossier-1': true, // Hassan Sharif sample crate cleared
+  });
+  const [activeMilestoneTrackerContract, setActiveMilestoneTrackerContract] = useState<BilateralContract | null>(null);
 
   // Invariant 6: Financial Lock Gate Check
   const isBudgetAuthorized = assignedBudget !== null && assignedBudget > 0;
@@ -354,21 +362,39 @@ export const FinanceWorkspace: React.FC<FinanceWorkspaceProps> = ({
                         <span>{contract.tranches.installationVoucherRef || 'VCH-2026-03'}</span>
                       </div>
                     ) : (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setSelectedDisbursementModal({
-                            contract,
-                            trancheType: 'Installation (30%)',
-                            amount: Math.round(contract.productionCost * 0.3),
-                          })
-                        }
-                        disabled={!canDisburse || !isDeliveryPaid}
-                        className="inline-flex w-full items-center justify-center gap-1.5 rounded bg-sadu-charcoal px-2.5 py-1.5 text-xs font-bold text-white hover:bg-stone-800 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-2xs"
-                      >
-                        {(!canDisburse || !isDeliveryPaid) && <Lock className="h-3 w-3" />}
-                        <span>Disburse Closeout (30%)</span>
-                      </button>
+                      <div className="space-y-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setActiveMilestoneTrackerContract(contract)}
+                          className={`inline-flex w-full items-center justify-center gap-1.5 rounded border px-2 py-1 text-[10px] font-bold transition-colors cursor-pointer ${
+                            clearedPhysicalCrates[contract.id]
+                              ? 'border-emerald-300 bg-emerald-50 text-emerald-900'
+                              : 'border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100'
+                          }`}
+                        >
+                          <Truck className="h-3 w-3" />
+                          <span>
+                            {clearedPhysicalCrates[contract.id]
+                              ? 'Crate Cleared (فحص الصندوق منجز)'
+                              : 'Verify Crate Gate (فحص وصول الصندوق)'}
+                          </span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setSelectedDisbursementModal({
+                              contract,
+                              trancheType: 'Installation (30%)',
+                              amount: Math.round(contract.productionCost * 0.3),
+                            })
+                          }
+                          disabled={!canDisburse || !isDeliveryPaid || !clearedPhysicalCrates[contract.id]}
+                          className="inline-flex w-full items-center justify-center gap-1.5 rounded bg-sadu-charcoal px-2.5 py-1.5 text-xs font-bold text-white hover:bg-stone-800 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-2xs"
+                        >
+                          {(!canDisburse || !isDeliveryPaid || !clearedPhysicalCrates[contract.id]) && <Lock className="h-3 w-3" />}
+                          <span>Disburse Closeout (30%)</span>
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -508,6 +534,44 @@ export const FinanceWorkspace: React.FC<FinanceWorkspaceProps> = ({
                 <span>Confirm &amp; Execute Disbursement</span>
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Hardening #3: Physical Logistics & Financial Milestone Verification Gate */}
+      {activeMilestoneTrackerContract && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="max-w-2xl w-full relative">
+            <button
+              type="button"
+              onClick={() => setActiveMilestoneTrackerContract(null)}
+              className="absolute -top-10 end-0 text-white font-bold text-xs bg-black/50 hover:bg-black/70 rounded px-3 py-1 cursor-pointer"
+            >
+              ✕ Close
+            </button>
+            <FinanceMilestoneTracker
+              artistName={activeMilestoneTrackerContract.artistName}
+              artistStatus={
+                clearedPhysicalCrates[activeMilestoneTrackerContract.id]
+                  ? 'PHYSICAL_ASSET_RECEIVED'
+                  : 'LOGISTICS_PENDING_PR'
+              }
+              onClearPhysicalAsset={() => {
+                setClearedPhysicalCrates(prev => ({
+                  ...prev,
+                  [activeMilestoneTrackerContract.id]: true,
+                }));
+              }}
+              onAuthorizeFinalDisbursal={() => {
+                const contract = activeMilestoneTrackerContract;
+                setActiveMilestoneTrackerContract(null);
+                setSelectedDisbursementModal({
+                  contract,
+                  trancheType: 'Installation (30%)',
+                  amount: Math.round(contract.productionCost * 0.3),
+                });
+              }}
+            />
           </div>
         </div>
       )}
