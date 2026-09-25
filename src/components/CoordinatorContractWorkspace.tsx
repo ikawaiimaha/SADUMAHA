@@ -8,7 +8,8 @@ import {
   ShieldCheck, 
   Send,
   UserCheck,
-  Award
+  Award,
+  Lock
 } from 'lucide-react';
 
 // --- Types ---
@@ -58,7 +59,7 @@ export default function CoordinatorContractWorkspace() {
     'ART-002': 25000
   });
 
-  // Dispatched / locked commitments separate from editable grants
+  // Locked dispatched grants and generated contracts tracking
   const [dispatchedGrants, setDispatchedGrants] = useState<Record<string, number>>({});
   const [generatedContracts, setGeneratedContracts] = useState<Record<string, boolean>>({});
 
@@ -70,14 +71,14 @@ export default function CoordinatorContractWorkspace() {
     ? (grantsMap[selectedArtist.id] !== undefined ? grantsMap[selectedArtist.id] : 30000) 
     : 0;
 
-  // Total committed from already dispatched contracts
-  const totalDispatchedCommitted = Object.entries(generatedContracts).reduce((acc, [artistId, isGen]) => {
-    return isGen ? acc + (dispatchedGrants[artistId] ?? grantsMap[artistId] ?? 0) : acc;
-  }, 0);
+  // Total committed budget strictly from successfully dispatched contracts
+  const totalDispatchedCommitted = Object.values(dispatchedGrants).reduce((acc, val) => acc + val, 0);
 
-  // Proposed total if current selected artist is dispatched with current grant
-  const isCurrentDispatched = selectedArtist ? !!generatedContracts[selectedArtist.id] : false;
-  const proposedTotalCommitted = isCurrentDispatched 
+  // Check if current selected artist is already dispatched
+  const isAlreadyDispatched = selectedArtist ? !!generatedContracts[selectedArtist.id] : false;
+
+  // Proposed total commitment if current artist is dispatched
+  const proposedTotalCommitted = isAlreadyDispatched 
     ? totalDispatchedCommitted 
     : totalDispatchedCommitted + currentProductionGrant;
 
@@ -89,7 +90,7 @@ export default function CoordinatorContractWorkspace() {
     : { adv: 0, freight: 0, final: currentProductionGrant };
 
   const handleGrantChange = (val: number) => {
-    if (!selectedArtist) return;
+    if (!selectedArtist || isAlreadyDispatched) return;
     const sanitizedVal = Math.max(0, val); // Prevent negative values
     setGrantsMap(prev => ({
       ...prev,
@@ -98,17 +99,17 @@ export default function CoordinatorContractWorkspace() {
   };
 
   const handleGenerateContract = () => {
-    if (!selectedArtist) return;
+    if (!selectedArtist || isAlreadyDispatched) return;
     if (currentProductionGrant < 0) {
       alert("Error: Production grant cannot be a negative value.");
       return;
     }
-    if (proposedTotalCommitted > TOTAL_CHAIRMAN_BUDGET) {
+    if (totalDispatchedCommitted + currentProductionGrant > TOTAL_CHAIRMAN_BUDGET) {
       alert("Error: Proposed commitment exceeds the Chairman's allocated budget ceiling.");
       return;
     }
 
-    // Snapshot the grant into dispatched commitments
+    // Lock the grant into dispatched commitments and mark generated
     setDispatchedGrants(prev => ({ ...prev, [selectedArtist.id]: currentProductionGrant }));
     setGeneratedContracts(prev => ({ ...prev, [selectedArtist.id]: true }));
 
@@ -144,6 +145,7 @@ export default function CoordinatorContractWorkspace() {
           <div className="space-y-3 overflow-y-auto max-h-[550px] pe-1">
             {artists.map((artist) => {
               const isSelected = selectedArtist?.id === artist.id;
+              const isDispatched = generatedContracts[artist.id];
               return (
                 <button 
                   key={artist.id}
@@ -157,7 +159,10 @@ export default function CoordinatorContractWorkspace() {
                 >
                   <div className="flex justify-between items-start mb-2">
                     <div>
-                      <h3 className="font-semibold text-sm text-[#1A1817]">{artist.name}</h3>
+                      <h3 className="font-semibold text-sm text-[#1A1817] flex items-center gap-1.5">
+                        {artist.name}
+                        {isDispatched && <Lock className="w-3 h-3 text-[#8B4513]" />}
+                      </h3>
                       <p className="text-xs text-[#8C7A6B] font-serif">{artist.arabicName}</p>
                     </div>
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
@@ -169,8 +174,8 @@ export default function CoordinatorContractWorkspace() {
                   <p className="text-xs text-[#6B635B] mb-2">{artist.medium}</p>
                   <div className="flex justify-between items-center text-[11px] text-[#8C7A6B] border-t border-[#F2ECE1] pt-2">
                     <span>{artist.nationality}</span>
-                    <span className={`font-medium ${artist.status === 'DIRECTOR_APPROVED' ? 'text-amber-700' : 'text-emerald-700'}`}>
-                      {artist.status === 'DIRECTOR_APPROVED' ? 'Ready for Contract' : 'Contract Dispatched'}
+                    <span className={`font-medium ${isDispatched ? 'text-emerald-700' : 'text-amber-700'}`}>
+                      {isDispatched ? 'Contract Dispatched' : 'Ready for Contract'}
                     </span>
                   </div>
                 </button>
@@ -195,10 +200,17 @@ export default function CoordinatorContractWorkspace() {
                 </div>
               </div>
 
+              {isAlreadyDispatched && (
+                <div className="mb-6 bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-md text-xs flex items-center gap-2">
+                  <Lock className="w-4 h-4 shrink-0" />
+                  <span>This contract has already been generated and dispatched. Terms are locked against further modification.</span>
+                </div>
+              )}
+
               {/* Form Controls */}
               <div className="space-y-6">
                 
-                {/* Production Grant Input with zero and negative value protection */}
+                {/* Production Grant Input */}
                 <div>
                   <label className="block text-sm font-medium text-[#1A1817] mb-1 flex items-center justify-between">
                     <span>Production Grant Allocation (AED)</span>
@@ -209,12 +221,15 @@ export default function CoordinatorContractWorkspace() {
                     <input 
                       type="number"
                       min="0"
+                      disabled={isAlreadyDispatched}
                       value={currentProductionGrant}
                       onChange={(e) => handleGrantChange(Number(e.target.value))}
-                      className="w-full ps-14 pe-4 py-2 border border-[#D9D2C5] rounded-md bg-[#FAF8F5] text-sm font-mono focus:ring-1 focus:ring-[#8B4513] focus:border-[#8B4513]"
+                      className={`w-full ps-14 pe-4 py-2 border border-[#D9D2C5] rounded-md bg-[#FAF8F5] text-sm font-mono focus:ring-1 focus:ring-[#8B4513] focus:border-[#8B4513] ${
+                        isAlreadyDispatched ? 'opacity-60 cursor-not-allowed bg-stone-100' : ''
+                      }`}
                     />
                   </div>
-                  {isOverBudget && (
+                  {isOverBudget && !isAlreadyDispatched && (
                     <div className="mt-2 flex items-center gap-2 text-xs text-red-700 bg-red-50 p-2 rounded border border-red-200">
                       <AlertTriangle className="w-4 h-4 shrink-0" />
                       <span>Warning: Proposed commitment exceeds the Chairman’s approved budget ceiling (250,000 AED)! Dispatch is blocked.</span>
@@ -230,8 +245,11 @@ export default function CoordinatorContractWorkspace() {
                   </label>
                   <select 
                     value={shippingMethod}
+                    disabled={isAlreadyDispatched}
                     onChange={(e) => setShippingMethod(e.target.value as ShippingMethod)}
-                    className="w-full p-2.5 border border-[#D9D2C5] rounded-md bg-[#FAF8F5] text-sm"
+                    className={`w-full p-2.5 border border-[#D9D2C5] rounded-md bg-[#FAF8F5] text-sm ${
+                      isAlreadyDispatched ? 'opacity-60 cursor-not-allowed bg-stone-100' : ''
+                    }`}
                   >
                     <option value="FINE_ART_COURIER">Fine Art Courier (Door-to-Door Secured Transit)</option>
                     <option value="AIR_FREIGHT">Air Freight (Airport-to-Airport Logistics)</option>
@@ -246,13 +264,14 @@ export default function CoordinatorContractWorkspace() {
                     Disbursement Tranche Structure
                   </label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <label className={`p-3 border rounded-md cursor-pointer transition-all flex flex-col justify-between ${
-                      trancheStructure === 'STANDARD_SPLIT' ? 'border-[#8B4513] bg-[#FDFBF7]' : 'border-[#D9D2C5]'
-                    }`}>
+                    <label className={`p-3 border rounded-md transition-all flex flex-col justify-between ${
+                      isAlreadyDispatched ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
+                    } ${trancheStructure === 'STANDARD_SPLIT' ? 'border-[#8B4513] bg-[#FDFBF7]' : 'border-[#D9D2C5]'}`}>
                       <div className="flex items-center gap-2 mb-2">
                         <input 
                           type="radio" 
                           name="tranche" 
+                          disabled={isAlreadyDispatched}
                           checked={trancheStructure === 'STANDARD_SPLIT'}
                           onChange={() => setTrancheStructure('STANDARD_SPLIT')}
                           className="text-[#8B4513]"
@@ -262,13 +281,14 @@ export default function CoordinatorContractWorkspace() {
                       <p className="text-[11px] text-[#6B635B]">30% Advance | 40% Freight | 30% Post-Installation</p>
                     </label>
 
-                    <label className={`p-3 border rounded-md cursor-pointer transition-all flex flex-col justify-between ${
-                      trancheStructure === 'SINGLE_DISBURSAL' ? 'border-[#8B4513] bg-[#FDFBF7]' : 'border-[#D9D2C5]'
-                    }`}>
+                    <label className={`p-3 border rounded-md transition-all flex flex-col justify-between ${
+                      isAlreadyDispatched ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
+                    } ${trancheStructure === 'SINGLE_DISBURSAL' ? 'border-[#8B4513] bg-[#FDFBF7]' : 'border-[#D9D2C5]'}`}>
                       <div className="flex items-center gap-2 mb-2">
                         <input 
                           type="radio" 
                           name="tranche" 
+                          disabled={isAlreadyDispatched}
                           checked={trancheStructure === 'SINGLE_DISBURSAL'}
                           onChange={() => setTrancheStructure('SINGLE_DISBURSAL')}
                           className="text-[#8B4513]"
@@ -309,7 +329,7 @@ export default function CoordinatorContractWorkspace() {
 
               {/* Action Footer */}
               <div className="pt-2 border-t border-[#EAE3D9] flex items-center justify-between">
-                {generatedContracts[selectedArtist.id] ? (
+                {isAlreadyDispatched ? (
                   <div className="flex items-center gap-2 text-emerald-800 bg-emerald-50 px-4 py-2 rounded border border-emerald-300 text-xs font-medium">
                     <CheckCircle2 className="w-4 h-4" />
                     <span>Contract Generated & Dispatched to Artist Portal</span>
@@ -321,11 +341,11 @@ export default function CoordinatorContractWorkspace() {
                 <button
                   type="button"
                   onClick={handleGenerateContract}
-                  disabled={isOverBudget || currentProductionGrant < 0}
+                  disabled={isAlreadyDispatched || isOverBudget || currentProductionGrant <= 0}
                   className="flex items-center gap-2 bg-[#2C2A29] hover:bg-[#1A1817] disabled:bg-[#D9D2C5] text-white py-2.5 px-6 rounded-md text-sm font-medium transition-colors shadow-sm"
                 >
                   <Send className="w-4 h-4" />
-                  Generate & Dispatch Agreement
+                  {isAlreadyDispatched ? 'Contract Already Dispatched' : 'Generate & Dispatch Agreement'}
                 </button>
               </div>
 
