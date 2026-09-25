@@ -20,7 +20,8 @@ export interface CoordinatorWorkspaceProps {
   nominatedArtists: NominatedArtistDossier[];
   contracts: BilateralContract[];
   onNominateArtist: (dossier: NominatedArtistDossier) => void;
-  onDispatchContract: (contractId: string, productionCost: number, shippingTerms: string) => void;
+  onDispatchContract: (contractId: string, productionCost: number, shippingTerms: string, resolutionNotes?: string) => void;
+  onStartReviewAmendment?: (contractId: string) => void;
   curatorialBrief?: string;
   blocklist?: string[];
   onBackToRoles?: () => void;
@@ -39,6 +40,7 @@ export const CoordinatorWorkspace: React.FC<CoordinatorWorkspaceProps> = ({
   contracts,
   onNominateArtist,
   onDispatchContract,
+  onStartReviewAmendment,
   curatorialBrief,
   blocklist,
   onBackToRoles,
@@ -51,6 +53,7 @@ export const CoordinatorWorkspace: React.FC<CoordinatorWorkspaceProps> = ({
   const [selectedArtistForContract, setSelectedArtistForContract] = useState<NominatedArtistDossier | null>(null);
   const [productionCostInput, setProductionCostInput] = useState<number>(85000);
   const [shippingTermsInput, setShippingTermsInput] = useState<string>(DEFAULT_SHIPPING_TERMS);
+  const [resolutionNotesInput, setResolutionNotesInput] = useState<string>('');
 
   // Filtered artists for Dossiers tab
   const filteredArtists = nominatedArtists.filter(artist => {
@@ -70,18 +73,23 @@ export const CoordinatorWorkspace: React.FC<CoordinatorWorkspaceProps> = ({
     if (existing && existing.productionCost > 0) {
       setProductionCostInput(existing.productionCost);
       setShippingTermsInput(existing.shippingTerms || DEFAULT_SHIPPING_TERMS);
+      if (existing.status === 'CONTRACT_DISPUTED') {
+        onStartReviewAmendment?.(existing.id);
+      }
     } else {
       setProductionCostInput(artist.artistCategory === 'Established' ? 120000 : 65000);
       setShippingTermsInput(DEFAULT_SHIPPING_TERMS);
     }
+    setResolutionNotesInput('');
   };
 
   const handleDispatch = () => {
     if (!selectedArtistForContract || productionCostInput <= 0) return;
     const existing = contracts.find(c => c.artistId === selectedArtistForContract.id);
     const contractId = existing ? existing.id : `contract-${selectedArtistForContract.id}`;
-    onDispatchContract(contractId, productionCostInput, shippingTermsInput.trim());
+    onDispatchContract(contractId, productionCostInput, shippingTermsInput.trim(), resolutionNotesInput.trim());
     setSelectedArtistForContract(null);
+    setResolutionNotesInput('');
   };
 
   const totalApproved = approvedArtists.length;
@@ -401,16 +409,37 @@ export const CoordinatorWorkspace: React.FC<CoordinatorWorkspaceProps> = ({
 
               {(() => {
                 const existing = contracts.find(c => c.artistId === selectedArtistForContract.id);
-                if (existing?.status === 'CONTRACT_DISPUTED' && existing.amendmentNotes) {
+                const activeRound = existing?.auditTrail?.find(r => !r.resolvedAt) || existing?.auditTrail?.[existing.auditTrail.length - 1];
+                if ((existing?.status === 'CONTRACT_DISPUTED' || existing?.status === 'AMENDMENT_UNDER_REVIEW') && activeRound) {
                   return (
-                    <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-xs space-y-1 text-amber-950">
-                      <div className="flex items-center gap-1.5 font-bold text-amber-900">
-                        <AlertCircle className="h-4 w-4 text-amber-700" />
-                        <span>Artist Requested Negotiation Notes (ملاحظات التعديل):</span>
+                    <div className="rounded-md border border-amber-300 bg-amber-50 p-3.5 text-xs space-y-2.5 text-amber-950">
+                      <div className="flex items-center justify-between font-bold text-amber-900 border-b border-amber-200/70 pb-1.5">
+                        <div className="flex items-center gap-1.5">
+                          <AlertCircle className="h-4 w-4 text-amber-700" />
+                          <span>Active Negotiation Round: {activeRound.disputedCategory.replace(/_/g, ' ')}</span>
+                        </div>
+                        <span className="text-[10px] text-amber-800 font-mono">
+                          Requested: {activeRound.requestedAt}
+                        </span>
                       </div>
-                      <p className="italic bg-white/80 p-2 rounded border border-amber-200 text-stone-800">
-                        "{existing.amendmentNotes}"
-                      </p>
+                      <div className="bg-white/85 p-2.5 rounded border border-amber-200 space-y-1">
+                        <strong className="block text-[10px] uppercase text-amber-900">Artist Formal Justification:</strong>
+                        <p className="italic text-stone-800 leading-relaxed text-[11px]">
+                          "{activeRound.artistJustification}"
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-bold text-amber-950 mb-1">
+                          Coordinator Resolution Notes (ملاحظات تسوية التعديل للمالية المركزية)
+                        </label>
+                        <input
+                          type="text"
+                          value={resolutionNotesInput}
+                          onChange={e => setResolutionNotesInput(e.target.value)}
+                          placeholder="e.g. Budget adjusted to accommodate custom timber crating and dedicated courier transit"
+                          className="w-full rounded border border-amber-300 bg-white p-2 text-xs text-sadu-charcoal focus:outline-none focus:ring-1 focus:ring-sadu-brick"
+                        />
+                      </div>
                     </div>
                   );
                 }
@@ -553,7 +582,9 @@ export const CoordinatorWorkspace: React.FC<CoordinatorWorkspaceProps> = ({
                 const contract = contracts.find(c => c.artistId === artist.id);
                 const isDispatched = contract?.status === 'SENT_TO_ARTIST';
                 const isDisputed = contract?.status === 'CONTRACT_DISPUTED';
+                const isUnderReview = contract?.status === 'AMENDMENT_UNDER_REVIEW';
                 const isSigned = contract?.status === 'ARTIST_APPROVED' || contract?.status === 'LOCKED';
+                const latestRound = contract?.auditTrail?.[contract.auditTrail.length - 1];
 
                 return (
                   <div key={artist.id} className="py-3.5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between text-xs">
@@ -581,10 +612,12 @@ export const CoordinatorWorkspace: React.FC<CoordinatorWorkspaceProps> = ({
                         </div>
                       )}
 
-                      {isDisputed && contract?.amendmentNotes && (
+                      {(isDisputed || isUnderReview) && latestRound && (
                         <p className="text-[11px] text-amber-900 bg-amber-50 rounded border border-amber-200 p-2 mt-1">
-                          <strong className="block text-[10px] uppercase text-amber-800">Artist Requested Modifications:</strong>
-                          "{contract.amendmentNotes}"
+                          <strong className="block text-[10px] uppercase text-amber-800">
+                            Artist Requested ({latestRound.disputedCategory.replace(/_/g, ' ')}):
+                          </strong>
+                          "{latestRound.artistJustification}"
                         </p>
                       )}
                     </div>
@@ -599,7 +632,12 @@ export const CoordinatorWorkspace: React.FC<CoordinatorWorkspaceProps> = ({
                         ) : isDisputed ? (
                           <span className="inline-flex items-center gap-1 rounded bg-amber-100 px-2.5 py-1 text-[10px] font-bold text-amber-900 border border-amber-400">
                             <AlertCircle className="h-3 w-3 text-amber-700" />
-                            Amendment Requested
+                            Dispute Pending Action
+                          </span>
+                        ) : isUnderReview ? (
+                          <span className="inline-flex items-center gap-1 rounded bg-sky-100 px-2.5 py-1 text-[10px] font-bold text-sky-900 border border-sky-400">
+                            <Clock className="h-3 w-3 text-sky-700" />
+                            Amendment Under Revision
                           </span>
                         ) : isDispatched ? (
                           <span className="inline-flex items-center gap-1 rounded bg-amber-100 px-2.5 py-1 text-[10px] font-bold text-amber-800 border border-amber-300">
@@ -623,7 +661,17 @@ export const CoordinatorWorkspace: React.FC<CoordinatorWorkspaceProps> = ({
                         }`}
                       >
                         <FileSignature className="h-3.5 w-3.5" />
-                        <span>{isSigned ? 'View Terms' : isDisputed ? 'Review Amendment' : isDispatched ? 'Update Draft' : 'Draft Contract'}</span>
+                        <span>
+                          {isSigned
+                            ? 'View Terms'
+                            : isDisputed
+                            ? 'Review & Resolve'
+                            : isUnderReview
+                            ? 'Continue Revision'
+                            : isDispatched
+                            ? 'Update Draft'
+                            : 'Draft Contract'}
+                        </span>
                       </button>
                     </div>
                   </div>

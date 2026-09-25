@@ -12,7 +12,7 @@ const STATUS_LABEL: Record<string, string> = {
 // Phase 7: Coordinator-side visibility into signed contracts awaiting Finance disbursement.
 export const FinanceTracker: React.FC = () => {
   const { contracts, nominations, requestMilestoneDisbursement } = useGovernance();
-  const signedContracts = contracts.filter(contract => contract.status === 'SIGNED');
+  const signedContracts = contracts.filter(contract => contract.status === 'ARTIST_APPROVED' || contract.status === 'LOCKED');
 
   if (!signedContracts.length) return null;
 
@@ -28,22 +28,29 @@ export const FinanceTracker: React.FC = () => {
           <thead>
             <tr className="text-start text-xs uppercase tracking-wider text-sadu-muted bg-sadu-sand border-b border-sadu-gold/40">
               <th className="px-4 py-2 font-medium">Artist</th>
-              <th className="px-4 py-2 font-medium">Payment Structure</th>
+              <th className="px-4 py-2 font-medium">Production Cost</th>
               <th className="px-4 py-2 font-medium">Disbursement Status</th>
               <th className="px-4 py-2 font-medium text-end">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-sadu-gold/20">
             {signedContracts.map(contract => {
-              const artistName = nominations.find(nom => nom.id === contract.artistId)?.artistName ?? contract.artistId;
-              const isComplete = contract.financeDisbursementStatus === 'COMPLETED';
+              const artistName = nominations.find(nom => nom.id === contract.artistId)?.artistName ?? contract.artistName ?? contract.artistId;
+              const isComplete = contract.status === 'LOCKED';
+              const nextTranche = contract.tranches.advanceStatus === 'PENDING'
+                ? 'Advance (30%) Pending'
+                : contract.tranches.deliveryStatus === 'PENDING'
+                ? 'Delivery (40%) Pending'
+                : contract.tranches.installationStatus === 'PENDING'
+                ? 'Installation (30%) Pending'
+                : 'Fully Disbursed & Locked';
               return (
                 <tr key={contract.id}>
                   <td className="px-4 py-2 font-medium text-sadu-charcoal">{artistName}</td>
-                  <td className="px-4 py-2 text-sadu-muted">{contract.paymentStructure === 'FULL_UPFRONT' ? 'Full Upfront' : 'Milestone Split'}</td>
+                  <td className="px-4 py-2 text-sadu-muted">AED {contract.productionCost.toLocaleString()}</td>
                   <td className="px-4 py-2">
                     <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${isComplete ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
-                      {STATUS_LABEL[contract.financeDisbursementStatus]}
+                      {nextTranche}
                     </span>
                   </td>
                   <td className="px-4 py-2 text-end">

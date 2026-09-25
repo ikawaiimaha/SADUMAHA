@@ -16,7 +16,7 @@ import {
   Check,
   AlertCircle,
 } from 'lucide-react';
-import { BilateralContract } from '../types/contractStage6';
+import { BilateralContract, NegotiationRound } from '../types/contractStage6';
 import ContractDisputeModal from './ContractDisputeModal';
 
 export interface ArtistPortalWorkspaceProps {
@@ -25,7 +25,11 @@ export interface ArtistPortalWorkspaceProps {
   onUploadPassport: (contractId: string, fileName: string) => void;
   onUploadHighResArtwork: (contractId: string, fileName: string, dpi: number) => void;
   onSaveBio: (contractId: string, bioAr: string, bioEn: string) => void;
-  onRequestAmendment?: (contractId: string, notes: string) => void;
+  onRequestAmendment?: (
+    contractId: string,
+    category: NegotiationRound['disputedCategory'],
+    justification: string
+  ) => void;
   onBackToRoles?: () => void;
 }
 
@@ -193,8 +197,10 @@ export const ArtistPortalWorkspace: React.FC<ArtistPortalWorkspaceProps> = ({
           <span className="text-[11px] text-sadu-muted">
             {isContractSigned
               ? 'Terms Accepted & Locked'
+              : activeContract.status === 'AMENDMENT_UNDER_REVIEW'
+              ? 'Coordinator Revising Terms (Locked)'
               : activeContract.status === 'CONTRACT_DISPUTED'
-              ? 'Amendment Under Review'
+              ? 'Amendment Queued for Review'
               : isContractDispatched
               ? 'Ready for E-Signature'
               : 'Awaiting Coordinator'}
@@ -454,18 +460,81 @@ export const ArtistPortalWorkspace: React.FC<ArtistPortalWorkspaceProps> = ({
                     <span>Amendment Request Submitted (طلب تعديل قيد المراجعة)</span>
                   </div>
                   <span className="rounded bg-amber-200 px-2 py-0.5 text-[10px] font-bold uppercase text-amber-900">
-                    Under Negotiation
+                    Queued for Coordinator
                   </span>
                 </div>
-                {activeContract.amendmentNotes && (
-                  <div className="bg-white/80 rounded border border-amber-200 p-2.5 text-xs text-sadu-charcoal">
-                    <span className="text-[10px] font-bold uppercase text-amber-800 block mb-1">Proposed Modifications:</span>
-                    <p className="italic">{activeContract.amendmentNotes}</p>
+                {activeContract.auditTrail && activeContract.auditTrail.length > 0 && (
+                  <div className="bg-white/90 rounded border border-amber-200 p-2.5 text-xs text-sadu-charcoal space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold uppercase text-amber-800">
+                        Disputed Category: {activeContract.auditTrail[activeContract.auditTrail.length - 1].disputedCategory.replace(/_/g, ' ')}
+                      </span>
+                      <span className="text-[10px] text-sadu-muted">
+                        {activeContract.auditTrail[activeContract.auditTrail.length - 1].requestedAt}
+                      </span>
+                    </div>
+                    <p className="italic text-[11px] text-stone-800">
+                      "{activeContract.auditTrail[activeContract.auditTrail.length - 1].artistJustification}"
+                    </p>
                   </div>
                 )}
                 <p className="text-[11px] text-amber-800">
-                  The General Coordinator is currently reviewing your requested terms. You will receive an updated contract once revisions are evaluated.
+                  The General Coordinator will review your requested parameters. Signatures are locked until revised terms are dispatched.
                 </p>
+              </div>
+            )}
+
+            {activeContract.status === 'AMENDMENT_UNDER_REVIEW' && (
+              <div className="rounded-lg border border-sky-300 bg-sky-50/80 p-4 text-xs space-y-2 text-sky-950">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 font-bold text-sm text-sky-900">
+                    <Clock className="h-4 w-4 text-sky-700" />
+                    <span>Amendment Under Active Revision (تعديل قيد المراجعة والتسوية)</span>
+                  </div>
+                  <span className="rounded bg-sky-200 px-2 py-0.5 text-[10px] font-bold uppercase text-sky-900">
+                    Portal Locked
+                  </span>
+                </div>
+                <p className="text-[11px] text-sky-900 leading-relaxed">
+                  The General Coordinator is currently adjusting contract parameters and tranche disbursements in the Institutional Contract Workspace. The agreement is temporarily locked to prevent concurrent edits. You will receive an updated agreement upon dispatch.
+                </p>
+              </div>
+            )}
+
+            {activeContract.auditTrail && activeContract.auditTrail.length > 0 && (
+              <div className="rounded-lg border border-sadu-gold/50 bg-white p-3.5 space-y-2 text-xs">
+                <div className="flex items-center justify-between border-b border-sadu-gold/30 pb-1.5">
+                  <span className="font-bold text-sadu-charcoal text-xs">
+                    Institutional Audit Trail &middot; Negotiation Rounds (سجل المفاوضات الرسمي)
+                  </span>
+                  <span className="text-[10px] font-mono text-sadu-muted">
+                    {activeContract.auditTrail.length} Round{activeContract.auditTrail.length > 1 ? 's' : ''} Logged
+                  </span>
+                </div>
+                <div className="space-y-2 divide-y divide-sadu-gold/20">
+                  {activeContract.auditTrail.map((round, idx) => (
+                    <div key={round.id || idx} className="pt-2 first:pt-0 space-y-1">
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="font-semibold text-sadu-charcoal">
+                          Round #{idx + 1}: {round.disputedCategory.replace(/_/g, ' ')}
+                        </span>
+                        <span className="text-sadu-muted">{round.requestedAt}</span>
+                      </div>
+                      <p className="text-[11px] text-stone-700 bg-stone-50 p-2 rounded border border-stone-200">
+                        <strong className="text-sadu-muted block text-[10px]">Artist Justification:</strong>
+                        {round.artistJustification}
+                      </p>
+                      {round.coordinatorResolutionNotes && (
+                        <p className="text-[11px] text-emerald-900 bg-emerald-50 p-2 rounded border border-emerald-200">
+                          <strong className="text-emerald-800 block text-[10px]">
+                            Coordinator Resolution ({round.resolvedAt || 'Resolved'}):
+                          </strong>
+                          {round.coordinatorResolutionNotes}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -674,8 +743,8 @@ export const ArtistPortalWorkspace: React.FC<ArtistPortalWorkspaceProps> = ({
         <ContractDisputeModal
           artistName={activeContract.artistName}
           currentGrant={activeContract.productionCost}
-          onSubmitAmendment={(notes) => {
-            onRequestAmendment?.(activeContract.id, notes);
+          onSubmitAmendment={(category, justification) => {
+            onRequestAmendment?.(activeContract.id, category, justification);
             setIsDisputeModalOpen(false);
           }}
           onClose={() => setIsDisputeModalOpen(false)}

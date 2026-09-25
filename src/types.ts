@@ -84,6 +84,7 @@ export type ArtistStatus =
   | 'DIRECTOR_APPROVED'
   | 'CONTRACT_PENDING_SIGNATURE'
   | 'CONTRACT_DISPUTED' // Hardening #2: Contract amendment negotiation loop
+  | 'AMENDMENT_UNDER_REVIEW' // Active coordinator renegotiation loop
   | 'LOGISTICS_PENDING_PR'
   | 'PHYSICAL_ASSET_RECEIVED' // Hardening #3: Physical crate sign-off before final finance release
   | 'CLEARED_FOR_FINANCE';
@@ -104,14 +105,8 @@ export interface ArtistDossier {
   mockupsUrl?: string; // Optional if isCommissioned is false (existing work/masterpiece)
 }
 
-export interface ContractTerms {
-  artistId: string;
-  productionGrant: number;
-  shippingMethod: 'FINE_ART_COURIER' | 'AIR_FREIGHT' | 'LOCAL_UAE';
-  trancheStructure: 'STANDARD_SPLIT' | 'SINGLE_DISBURSAL';
-  status: 'DISPATCHED' | 'DISPUTED_BY_ARTIST' | 'SIGNED';
-  amendmentNotes?: string;
-}
+// Single Source of Truth for Stage 6 Bilateral Contracts & Auditing
+export * from './types/contractStage6';
 
 export interface DynamicBlocklistRule {
   id: string;
@@ -142,21 +137,7 @@ export interface ArtistNomination {
   requestedBudget: number | null;
 }
 
-export type ContractStatus = 'DRAFT' | 'SENT_FOR_SIGNATURE' | 'SIGNED';
 export type PaymentStructure = 'FULL_UPFRONT' | 'MILESTONE_SPLIT';
-export type FinanceDisbursementStatus = 'PENDING_INITIAL' | 'INITIAL_PAID' | 'PENDING_FINAL' | 'COMPLETED';
-export interface Contract {
-  id: string;
-  artistId: string;
-  shippingTerms: string;
-  productionCost: number | null;
-  departmentCancellationClause: boolean;
-  status: ContractStatus;
-  paymentStructure: PaymentStructure;
-  initialPaymentAmount: number | null;
-  finalPaymentAmount: number | null;
-  financeDisbursementStatus: FinanceDisbursementStatus;
-}
 
 export interface ProcurementPackage {
   id: string;

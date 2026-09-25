@@ -12,7 +12,7 @@ import PRWorkspace from './components/PRWorkspace';
 import FinanceWorkspace from './components/FinanceWorkspace';
 import { PresenterDrawer } from './components/PresenterDrawer';
 import { I18nProvider, useI18n } from './context/I18nContext';
-import { BilateralContract, DisbursementRecord } from './types/contractStage6';
+import { BilateralContract, DisbursementRecord, NegotiationRound } from './types/contractStage6';
 import {
   RotateCcw,
   ShieldCheck,
@@ -141,6 +141,7 @@ const INITIAL_CONTRACTS: BilateralContract[] = [
     sentAt: '2026-09-24T11:00:00Z',
     signedAt: '2026-09-24',
     signatureReference: 'REF-SCB-EXEC-0881',
+    auditTrail: [],
   },
   {
     id: 'contract-dossier-3',
@@ -182,6 +183,7 @@ const INITIAL_CONTRACTS: BilateralContract[] = [
     },
     draftedAt: '2026-09-24T12:00:00Z',
     sentAt: '2026-09-24T12:30:00Z',
+    auditTrail: [],
   },
 ];
 
@@ -350,6 +352,7 @@ function SADUApp() {
             highResStatus: 'NOT_UPLOADED',
             catalogBioStatus: 'DRAFT',
           },
+          auditTrail: [],
         },
       ];
     });
@@ -362,7 +365,8 @@ function SADUApp() {
   const handleDispatchContract = (
     contractId: string,
     productionCost: number,
-    shippingTerms: string
+    shippingTerms: string,
+    resolutionNotes?: string
   ) => {
     setContracts(prev => {
       const existing = prev.find(c => c.id === contractId);
@@ -375,6 +379,17 @@ function SADUApp() {
       const installation = productionCost - advance - delivery;
 
       if (existing) {
+        const updatedAuditTrail = (existing.auditTrail || []).map((round, idx) => {
+          if (idx === (existing.auditTrail?.length || 0) - 1 && !round.resolvedAt) {
+            return {
+              ...round,
+              coordinatorResolutionNotes: resolutionNotes || 'Terms adjusted and approved by General Coordinator',
+              resolvedAt: new Date().toISOString().split('T')[0],
+            };
+          }
+          return round;
+        });
+
         return prev.map(c =>
           c.id === contractId
             ? {
@@ -383,6 +398,7 @@ function SADUApp() {
                 shippingTerms,
                 status: 'SENT_TO_ARTIST',
                 sentAt: new Date().toISOString(),
+                auditTrail: updatedAuditTrail,
                 tranches: {
                   ...c.tranches,
                   advanceAmount: advance,
@@ -409,6 +425,7 @@ function SADUApp() {
         cancellationClauseMandatory: true,
         status: 'SENT_TO_ARTIST',
         sentAt: new Date().toISOString(),
+        auditTrail: [],
         tranches: {
           advancePercentage: 30,
           advanceAmount: advance,
@@ -446,15 +463,34 @@ function SADUApp() {
     );
   };
 
-  const handleRequestAmendment = (contractId: string, notes: string) => {
+  const handleRequestAmendment = (
+    contractId: string,
+    category: NegotiationRound['disputedCategory'],
+    justification: string
+  ) => {
+    setContracts(prev =>
+      prev.map(c => {
+        if (c.id !== contractId) return c;
+        const newRound: NegotiationRound = {
+          id: `neg-${Date.now()}`,
+          requestedAt: new Date().toISOString().split('T')[0],
+          disputedCategory: category,
+          artistJustification: justification,
+        };
+        return {
+          ...c,
+          status: 'CONTRACT_DISPUTED',
+          auditTrail: [...(c.auditTrail || []), newRound],
+        };
+      })
+    );
+  };
+
+  const handleStartReviewAmendment = (contractId: string) => {
     setContracts(prev =>
       prev.map(c =>
-        c.id === contractId
-          ? {
-              ...c,
-              status: 'CONTRACT_DISPUTED',
-              amendmentNotes: notes,
-            }
+        c.id === contractId && c.status === 'CONTRACT_DISPUTED'
+          ? { ...c, status: 'AMENDMENT_UNDER_REVIEW' }
           : c
       )
     );
@@ -786,6 +822,7 @@ function SADUApp() {
             contracts={contracts}
             onNominateArtist={handleNominateArtist}
             onDispatchContract={handleDispatchContract}
+            onStartReviewAmendment={handleStartReviewAmendment}
             curatorialBrief={curatorialBrief}
             blocklist={blocklist}
             onBackToRoles={() => setCurrentRole(null)}

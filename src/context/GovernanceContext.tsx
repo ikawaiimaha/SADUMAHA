@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useMemo, useState, ReactNode } from 'react';
-import { ArtistNomination, Contract, NominationSource, ThemeProposal } from '../types';
+import { ArtistNomination, BilateralContract, NominationSource, ThemeProposal, PaymentStructure } from '../types';
 
 const SEED_THEMES: ThemeProposal[] = [
   { id: 'THEME-01', arabicName: 'التوازن', englishName: 'Balance', definition: 'Exploring the interplay of script, space and silence.', status: 'PROPOSED' },
@@ -8,7 +8,7 @@ const SEED_THEMES: ThemeProposal[] = [
 ];
 
 const SEED_NOMINATIONS: ArtistNomination[] = [];
-const SEED_CONTRACTS: Contract[] = [];
+const SEED_CONTRACTS: BilateralContract[] = [];
 
 interface GovernanceContextType {
   themes: ThemeProposal[];
@@ -21,8 +21,8 @@ interface GovernanceContextType {
   approveNomination: (id: string) => void;
   requestRevision: (id: string, note: string) => void;
   markInvitationAccepted: (id: string) => void;
-  contracts: Contract[];
-  generateContract: (input: { artistId: string; shippingTerms: string; paymentStructure: 'FULL_UPFRONT' | 'MILESTONE_SPLIT'; productionCost: number | null; initialPaymentAmount: number | null; finalPaymentAmount: number | null }) => void;
+  contracts: BilateralContract[];
+  generateContract: (input: { artistId: string; shippingTerms: string; paymentStructure?: PaymentStructure; productionCost: number | null; initialPaymentAmount?: number | null; finalPaymentAmount?: number | null }) => void;
   markContractSigned: (id: string) => void;
   requestMilestoneDisbursement: (id: string) => void;
 }
@@ -32,7 +32,7 @@ const GovernanceContext = createContext<GovernanceContextType | undefined>(undef
 export const GovernanceProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [themes, setThemes] = useState<ThemeProposal[]>(SEED_THEMES);
   const [nominations, setNominations] = useState<ArtistNomination[]>(SEED_NOMINATIONS);
-  const [contracts, setContracts] = useState<Contract[]>(SEED_CONTRACTS);
+  const [contracts, setContracts] = useState<BilateralContract[]>(SEED_CONTRACTS);
 
   const proposeTheme: GovernanceContextType['proposeTheme'] = (input) => {
     setThemes(current => {
@@ -71,33 +71,72 @@ export const GovernanceProvider: React.FC<{ children: ReactNode }> = ({ children
   };
 
   const generateContract: GovernanceContextType['generateContract'] = (input) => {
+    const artist = nominations.find(n => n.id === input.artistId);
+    const prodCost = input.productionCost || 50000;
     setContracts(current => [
       ...current,
       {
         id: `CON-${String(current.length + 1).padStart(3, '0')}`,
         artistId: input.artistId,
+        artistName: artist?.artistName || 'Artist Candidate',
+        artistCategory: 'Emerging',
+        nationality: 'United Arab Emirates',
+        medium: 'Classical Calligraphy',
+        proposedWorkTitle: 'Commissioned Artwork',
+        productionCost: prodCost,
         shippingTerms: input.shippingTerms,
-        productionCost: input.productionCost,
-        departmentCancellationClause: true,
-        status: 'SENT_FOR_SIGNATURE',
-        paymentStructure: input.paymentStructure,
-        initialPaymentAmount: input.initialPaymentAmount,
-        finalPaymentAmount: input.finalPaymentAmount,
-        financeDisbursementStatus: 'PENDING_INITIAL',
+        cancellationClauseMandatory: true,
+        status: 'SENT_TO_ARTIST',
+        tranches: {
+          advancePercentage: 30,
+          advanceAmount: Math.round(prodCost * 0.3),
+          advanceStatus: 'PENDING',
+          deliveryPercentage: 40,
+          deliveryAmount: Math.round(prodCost * 0.4),
+          deliveryStatus: 'PENDING',
+          installationPercentage: 30,
+          installationAmount: Math.round(prodCost * 0.3),
+          installationStatus: 'PENDING',
+        },
+        documents: {
+          artworkDpi: 300,
+          passportStatus: 'NOT_UPLOADED',
+          highResStatus: 'NOT_UPLOADED',
+          catalogBioStatus: 'DRAFT',
+        },
+        sentAt: new Date().toISOString(),
+        auditTrail: [],
       },
     ]);
   };
 
   const markContractSigned = (id: string) => {
-    setContracts(current => current.map(contract => contract.id === id ? { ...contract, status: 'SIGNED' } : contract));
+    setContracts(current => current.map(contract => contract.id === id ? { ...contract, status: 'ARTIST_APPROVED', signedAt: new Date().toISOString().split('T')[0] } : contract));
   };
 
-  const DISBURSEMENT_SEQUENCE: Contract['financeDisbursementStatus'][] = ['PENDING_INITIAL', 'INITIAL_PAID', 'PENDING_FINAL', 'COMPLETED'];
   const requestMilestoneDisbursement = (id: string) => {
     setContracts(current => current.map(contract => {
       if (contract.id !== id) return contract;
-      const nextIndex = Math.min(DISBURSEMENT_SEQUENCE.indexOf(contract.financeDisbursementStatus) + 1, DISBURSEMENT_SEQUENCE.length - 1);
-      return { ...contract, financeDisbursementStatus: DISBURSEMENT_SEQUENCE[nextIndex] };
+      if (contract.tranches.advanceStatus === 'PENDING') {
+        return {
+          ...contract,
+          tranches: { ...contract.tranches, advanceStatus: 'DISBURSED', advanceDisbursedAt: new Date().toISOString().split('T')[0] },
+        };
+      }
+      if (contract.tranches.deliveryStatus === 'PENDING') {
+        return {
+          ...contract,
+          tranches: { ...contract.tranches, deliveryStatus: 'DISBURSED', deliveryDisbursedAt: new Date().toISOString().split('T')[0] },
+        };
+      }
+      if (contract.tranches.installationStatus === 'PENDING') {
+        return {
+          ...contract,
+          status: 'LOCKED',
+          tranches: { ...contract.tranches, installationStatus: 'DISBURSED', installationDisbursedAt: new Date().toISOString().split('T')[0] },
+        };
+      }
+      return contract;
     }));
   };
 

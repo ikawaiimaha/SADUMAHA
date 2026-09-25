@@ -148,7 +148,7 @@ export const ContractBuilder: React.FC = () => {
             ) : (
               <div className="space-y-2">
                 <p className="text-xs text-sadu-muted">Contract routed to {nom.artistName}'s secure portal for final e-signature.</p>
-                {contract.status === 'SENT_FOR_SIGNATURE' && (
+                {contract.status === 'SENT_TO_ARTIST' && (
                   <button
                     type="button"
                     onClick={() => markContractSigned(contract.id)}

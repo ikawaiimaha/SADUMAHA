@@ -3,8 +3,18 @@ export type BilateralContractStatus =
   | 'DRAFT'
   | 'SENT_TO_ARTIST'
   | 'CONTRACT_DISPUTED'
+  | 'AMENDMENT_UNDER_REVIEW' // Added state
   | 'ARTIST_APPROVED'
-  | 'LOCKED';
+  | 'LOCKED'; // Moves to Stage 7 Finance
+
+export interface NegotiationRound {
+  id: string;
+  requestedAt: string;
+  disputedCategory: 'PRODUCTION_GRANT' | 'SHIPPING_TERMS' | 'INSTALLATION_DATES' | 'OTHER';
+  artistJustification: string;
+  coordinatorResolutionNotes?: string;
+  resolvedAt?: string;
+}
 
 export interface TrancheSchedule {
   advancePercentage: number;
@@ -63,7 +73,7 @@ export interface BilateralContract {
   sentAt?: string;
   signedAt?: string;
   signatureReference?: string;
-  amendmentNotes?: string;
+  auditTrail: NegotiationRound[]; // Replaces amendmentNotes
 }
 
 export interface DisbursementRecord {
