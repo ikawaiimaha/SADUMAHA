@@ -1,24 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import {
-  BookOpen,
-  CheckCircle2,
+import { 
+  Languages, 
+  BookOpen, 
+  CheckCircle2, 
+  FileText, 
+  Send, 
   Lock,
-  FileText,
-  Clock,
-  Languages,
-  Send,
+  AlertCircle,
+  RotateCcw
 } from 'lucide-react';
 import { ThemeItem } from './ChairmanWorkspace';
 
-export type ThemePolishStatus = 'PENDING_CHAIRMAN_APPROVAL' | 'PENDING_EDITORIAL_POLISH' | 'PUBLISHED';
+export type ThemePolishStatus = 'PENDING_CHAIRMAN_APPROVAL' | 'PENDING_EDITORIAL_POLISH' | 'PUBLISHED' | 'PUBLISHED_OFFICIAL';
+
+type InternalThemeStatus = 'PENDING_EDITORIAL_POLISH' | 'PUBLISHED_OFFICIAL';
+
+interface EditorialDraft {
+  arabicText: string;
+  englishText: string;
+}
 
 export interface EditorialWorkspaceProps {
   guidelinesArabic?: string;
   guidelinesEnglish?: string;
   onPublishOfficialGuidelines?: (englishTranslation: string, arabicSource: string) => void;
-  onPublishOfficialTheme?: (data: any) => void;
+  onPublishOfficialTheme?: (data: {
+    themeEssayArabic: string;
+    themeEssayEnglish: string;
+    approvedTheme?: any;
+  }) => void;
   onPublishBrief?: (englishText: string) => void;
-  approvedTheme?: ThemeItem | null;
+  approvedTheme?: ThemeItem | any;
   themePolishStatus?: ThemePolishStatus;
   assignedBudget?: number | null;
   initialEssayArabic?: string;
@@ -27,13 +39,13 @@ export interface EditorialWorkspaceProps {
   onBackToRoles?: () => void;
 }
 
-const DEFAULT_HIP_ARABIC_DRAFT =
-  'دليل المعرض التوجيهي لبينالي الشارقة للخط: التأكيد على الحوار الجمالي الرصين بين النسب الفاضلة للخط العربي الأصيل والتجليات المعمارية المعاصرة. يتوجب على كافة الفنانين المرشحين تقديم أعمال تستند إلى أصالة السطر الكوفي والثلث مع استكشاف أبعاد الوسائط الحديثة والفراغية، مع الالتزام التام بالمحددات التنسيقية المعتمدة من منسق المعرض العام.';
+const DEFAULT_RAW_CHAIRMAN_THEME =
+  'استكشاف الجذور العميقة للخط العربي وتفاعله مع الفنون المعاصرة في بيئة حضرية متغيرة، مع التركيز على التوازن بين الأصالة والابتكار.';
 
-const DEFAULT_ENGLISH_TRANSLATION =
-  'Official Exhibition Guidelines: Emphasize the rigorous aesthetic dialogue between the sacred proportions of authentic Arabic calligraphy and contemporary architectural manifestations. All nominated artists must ground their proposals in the classical lineage of Kufic and Thuluth scripts while exploring avant-garde spatial media.';
+const DEFAULT_POLISHED_ENGLISH_THEME =
+  'Exploring the profound roots of Arabic calligraphy and its vibrant dialogue with contemporary art within an evolving urban landscape, with an uncompromised balance between classical authenticity and avant-garde innovation.';
 
-export const EditorialWorkspace: React.FC<EditorialWorkspaceProps> = ({
+export default function EditorialWorkspace({
   guidelinesArabic,
   guidelinesEnglish,
   onPublishOfficialGuidelines,
@@ -46,263 +58,208 @@ export const EditorialWorkspace: React.FC<EditorialWorkspaceProps> = ({
   initialEssayEnglish,
   isInitiallyPublished = false,
   onBackToRoles,
-}) => {
-  const [arabicSource] = useState<string>(
-    guidelinesArabic && guidelinesArabic.trim() ? guidelinesArabic : DEFAULT_HIP_ARABIC_DRAFT
-  );
-  const [englishTranslation, setEnglishTranslation] = useState<string>(
-    guidelinesEnglish || initialEssayEnglish || DEFAULT_ENGLISH_TRANSLATION
-  );
-  const [isLocked, setIsLocked] = useState<boolean>(
-    isInitiallyPublished || themePolishStatus === 'PUBLISHED'
+}: EditorialWorkspaceProps = {}) {
+  // Determine raw theme approved by Chairman in Stage 1
+  const rawChairmanTheme = 
+    approvedTheme?.conceptStatementAr || 
+    approvedTheme?.definition || 
+    approvedTheme?.titleAr || 
+    initialEssayArabic || 
+    guidelinesArabic || 
+    DEFAULT_RAW_CHAIRMAN_THEME;
+
+  const [themeStatus, setThemeStatus] = useState<InternalThemeStatus>(
+    (isInitiallyPublished || themePolishStatus === 'PUBLISHED' || themePolishStatus === 'PUBLISHED_OFFICIAL')
+      ? 'PUBLISHED_OFFICIAL'
+      : 'PENDING_EDITORIAL_POLISH'
   );
 
+  const [draft, setDraft] = useState<EditorialDraft>({
+    arabicText: initialEssayArabic || guidelinesArabic || rawChairmanTheme,
+    englishText: initialEssayEnglish || guidelinesEnglish || (themePolishStatus === 'PUBLISHED' ? DEFAULT_POLISHED_ENGLISH_THEME : '')
+  });
+
   useEffect(() => {
-    if (isInitiallyPublished || themePolishStatus === 'PUBLISHED') setIsLocked(true);
+    if (isInitiallyPublished || themePolishStatus === 'PUBLISHED' || themePolishStatus === 'PUBLISHED_OFFICIAL') {
+      setThemeStatus('PUBLISHED_OFFICIAL');
+    }
   }, [isInitiallyPublished, themePolishStatus]);
+
+  const isPublished = themeStatus === 'PUBLISHED_OFFICIAL';
+  const canPublish = draft.arabicText.trim().length > 10 && draft.englishText.trim().length > 10;
 
   const handlePublish = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!englishTranslation.trim() || isLocked) return;
+    if (!canPublish) return;
+    
+    // Locks Stage 2 and unlocks Stage 3 (HIP Curatorial Directives)
+    setThemeStatus('PUBLISHED_OFFICIAL');
 
-    setIsLocked(true);
-
-    onPublishOfficialGuidelines?.(englishTranslation.trim(), arabicSource);
-    onPublishBrief?.(englishTranslation.trim());
     if (onPublishOfficialTheme) {
       onPublishOfficialTheme({
-        themeEssayArabic: arabicSource,
-        themeEssayEnglish: englishTranslation.trim(),
+        themeEssayArabic: draft.arabicText.trim(),
+        themeEssayEnglish: draft.englishText.trim(),
         approvedTheme,
       });
     }
+
+    onPublishOfficialGuidelines?.(draft.englishText.trim(), draft.arabicText.trim());
+    onPublishBrief?.(draft.englishText.trim());
   };
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-6 text-stone-800">
-      {/* 1. Header */}
-      <div className="rounded-xl border border-stone-200 bg-stone-50 p-6 shadow-xs sm:p-8">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-stone-200 pb-5">
-          <div className="flex items-center gap-3.5">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-sadu-brick text-white shadow-xs">
-              <BookOpen className="h-6 w-6" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="rounded bg-stone-200 px-2.5 py-0.5 text-[10px] font-bold text-stone-700 uppercase tracking-wider">
-                  Translation &amp; Publishing Dashboard
-                </span>
-                {isLocked && (
-                  <span className="inline-flex items-center gap-1 rounded bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800 border border-emerald-300">
-                    <CheckCircle2 className="h-3 w-3" />
-                    Status: Published Official Theme
-                  </span>
-                )}
-              </div>
-              <h1 className="font-editorial text-2xl font-bold text-stone-900 sm:text-3xl mt-1">
-                Editorial Dashboard
-              </h1>
-              <p className="text-xs font-semibold text-sadu-brick mt-0.5" dir="rtl">
-                Editorial Department (قسم التحرير)
-              </p>
-            </div>
+    <div className="min-h-screen bg-[#F7F1E6] p-6 text-[#2C2A29] font-sans text-start" dir="ltr">
+      
+      {/* Header */}
+      <header className="mb-8 border-b border-[#D9D2C5] pb-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <span className="text-xs uppercase tracking-widest text-[#8C7A6B] font-semibold">Stage 2 • Editorial &amp; Translation Gate</span>
+          <h1 className="text-3xl font-serif font-bold tracking-tight text-[#1A1817] mt-1">Editorial Workspace</h1>
+          <p className="text-[#6B635B] text-sm mt-1">
+            قسم التحرير — Polish raw curatorial concepts and author the official bilingual publication.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="bg-white px-4 py-2 rounded-md border border-[#D9D2C5] text-xs font-mono shadow-xs flex items-center gap-2">
+            <Languages className="w-4 h-4 text-[#8B4513]" />
+            <span>Bilingual Mandate: <strong className="text-[#1A1817]">Active</strong></span>
           </div>
-
           {onBackToRoles && (
             <button
               type="button"
               onClick={onBackToRoles}
-              className="rounded-md border border-stone-300 bg-white px-3.5 py-2 text-xs font-bold text-stone-700 hover:bg-stone-100 cursor-pointer transition-colors shadow-2xs self-start sm:self-auto"
+              className="inline-flex items-center gap-1.5 rounded-md border border-[#D9D2C5] bg-white px-3 py-2 text-xs font-bold text-[#6B635B] hover:bg-stone-50 cursor-pointer shadow-xs transition-colors"
             >
-              Back to Role Selection
+              <RotateCcw className="h-3.5 w-3.5" />
+              <span>Switch Role</span>
             </button>
           )}
         </div>
+      </header>
 
-        {/* Bureaucratic Context Notice */}
-        <div className="mt-4 rounded-lg border border-stone-200 bg-white p-3.5 text-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div className="flex items-center gap-2 text-stone-700">
-            <Languages className="h-4 w-4 text-sadu-brick shrink-0" />
-            <span>
-              <strong>Linear Bureaucracy Protocol:</strong> Editorial receives the locked Arabic curatorial draft from the HIP. Publishing officially releases the bilingual guidelines and unlocks the downstream workflow for Coordinators.
-            </span>
-          </div>
-          <span className={`w-fit rounded px-2.5 py-1 text-[10px] font-bold uppercase shrink-0 ${
-            isLocked
-              ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-              : 'bg-amber-100 text-amber-900 border border-amber-300'
-          }`}>
-            {isLocked ? 'Status: Published Official Theme' : 'Status: Pending Translation'}
-          </span>
-        </div>
-      </div>
-
-      {/* Main Two-Column Layout */}
-      <form onSubmit={handlePublish} className="space-y-6">
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* 2. Pending Translations Queue (Left Column) */}
-          <div className="rounded-xl border border-stone-200 bg-white p-6 shadow-xs space-y-4">
-            <div className="flex items-center justify-between border-b border-stone-200 pb-3">
-              <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-sadu-brick" />
-                <div>
-                  <h2 className="font-editorial text-lg font-bold text-stone-900">
-                    Pending Translations Queue
-                  </h2>
-                  <p className="text-xs text-stone-500">
-                    Inbox for the HIP's locked directives
-                  </p>
-                </div>
-              </div>
-              <span className="inline-flex items-center gap-1 rounded bg-stone-200 px-2 py-0.5 text-[10px] font-bold text-stone-700">
-                <Lock className="h-3 w-3" /> Locked Source
-              </span>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label
-                  htmlFor="hip-curatorial-draft"
-                  className="block text-xs font-bold text-stone-700 uppercase tracking-wider"
-                >
-                  HIP Curatorial Draft (Source: Arabic)
-                </label>
-                <span className="text-[10px] font-mono text-stone-500">
-                  {arabicSource.length} chars
-                </span>
-              </div>
-
-              <textarea
-                id="hip-curatorial-draft"
-                readOnly
-                disabled
-                dir="rtl"
-                rows={9}
-                value={arabicSource}
-                className="w-full rounded-md border border-stone-300 bg-stone-100 p-3 text-xs leading-relaxed text-stone-700 cursor-not-allowed select-text focus:outline-none shadow-inner"
-              />
-              <p className="text-[11px] text-stone-500" dir="rtl">
-                النص التوجيهي المعتمد من منسق المعرض العام (HIP). غير قابل للتعديل.
-              </p>
-            </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {/* Column 1: Source Material (Read-Only) */}
+        <section className="bg-white p-5 rounded-lg shadow-sm border border-[#D9D2C5] flex flex-col">
+          <div className="flex items-center gap-2 mb-4 border-b border-[#EAE3D9] pb-3">
+            <BookOpen className="w-5 h-5 text-[#8B4513]" />
+            <h2 className="text-base font-semibold font-serif">Chairman Ratified Concept</h2>
           </div>
 
-          {/* 3. Official Translation Input (Right Column) */}
-          <div className="rounded-xl border border-stone-200 bg-white p-6 shadow-xs space-y-4">
-            <div className="flex items-center justify-between border-b border-stone-200 pb-3">
-              <div className="flex items-center gap-2">
-                <Languages className="h-5 w-5 text-sadu-brick" />
-                <div>
-                  <h2 className="font-editorial text-lg font-bold text-stone-900">
-                    Official Translation Input
-                  </h2>
-                  <p className="text-xs text-stone-500">
-                    Accredited English institutional translation
-                  </p>
-                </div>
-              </div>
-              <span className="rounded bg-stone-100 px-2 py-0.5 text-[10px] font-bold text-stone-600 uppercase border border-stone-200">
-                Required Field
-              </span>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label
-                  htmlFor="official-exhibition-guidelines"
-                  className="block text-xs font-bold text-stone-700 uppercase tracking-wider"
-                >
-                  Official Exhibition Guidelines (English) <span className="text-red-600">*</span>
-                </label>
-                <span className="text-[10px] font-mono text-stone-500">
-                  {englishTranslation.length} chars
-                </span>
-              </div>
-
-              <textarea
-                id="official-exhibition-guidelines"
-                required
-                disabled={isLocked}
-                rows={9}
-                value={englishTranslation}
-                onChange={e => setEnglishTranslation(e.target.value)}
-                placeholder="Enter official, accredited English translation of the curatorial guidelines..."
-                className={`w-full rounded-md border p-3 text-xs leading-relaxed transition-colors ${
-                  isLocked
-                    ? 'border-emerald-300 bg-emerald-50/40 text-stone-700 cursor-not-allowed shadow-inner'
-                    : 'border-stone-300 bg-white text-stone-800 focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick'
-                }`}
-              />
-              <p className="text-[11px] text-stone-500">
-                Institutional English translation adhering to biennial terminology and academic standards.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* 4. The Publishing Gate */}
-        <div className="rounded-xl border border-stone-200 bg-stone-50 p-5 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-xs uppercase tracking-wider text-stone-700">
-                Institutional Publishing Action
-              </span>
-              {isLocked ? (
-                <span className="inline-flex items-center gap-1 rounded bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800 border border-emerald-300">
-                  <CheckCircle2 className="h-3 w-3" />
-                  Status: Published Official Theme
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 rounded bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold text-amber-900 border border-amber-300">
-                  <Clock className="h-3 w-3" />
-                  Ready to Publish
-                </span>
+          {approvedTheme?.titleAr && (
+            <div className="mb-3 px-3 py-2 rounded bg-amber-50/60 border border-amber-200/80 text-xs">
+              <span className="text-[10px] uppercase font-bold text-amber-900 block">Ratified Title</span>
+              <strong className="text-amber-950 font-serif text-sm">{approvedTheme.titleAr}</strong>
+              {approvedTheme.titleEn && (
+                <span className="text-stone-600 block text-[11px] mt-0.5">{approvedTheme.titleEn}</span>
               )}
             </div>
-            <p className="text-xs text-stone-600">
-              {isLocked
-                ? 'Workflow officially unlocked for the Coordinators and Preparatory Committee.'
-                : 'Publishing locks the bilingual text and unlocks the operational workflow for Coordinators.'}
+          )}
+
+          <div className="bg-[#FAF8F5] border border-[#EAE3D9] p-4 rounded-md mb-4">
+            <span className="text-[10px] uppercase font-bold text-[#8C7A6B] mb-2 block">Source Text (Raw Arabic)</span>
+            <p className="text-sm text-[#1A1817] leading-relaxed font-serif text-end" dir="rtl">
+              {rawChairmanTheme}
             </p>
           </div>
 
-          <button
-            type="submit"
-            disabled={!englishTranslation.trim() || isLocked}
-            className={`inline-flex items-center justify-center gap-2 rounded-md px-6 py-3 text-xs font-bold transition-all shadow-xs shrink-0 ${
-              isLocked
-                ? 'bg-emerald-700 text-white cursor-not-allowed opacity-90'
-                : 'bg-sadu-brick text-white hover:bg-sadu-brick-dark cursor-pointer'
-            }`}
-          >
-            {isLocked ? (
-              <>
-                <CheckCircle2 className="h-4 w-4" />
-                <span>Status: Published Official Theme</span>
-              </>
-            ) : (
-              <>
-                <Send className="h-4 w-4" />
-                <span>Publish Official Bilingual Guidelines</span>
-              </>
-            )}
-          </button>
-        </div>
-
-        {isLocked && (
-          <div className="rounded-lg border-2 border-emerald-400 bg-emerald-50 p-4 text-xs font-semibold text-emerald-900 flex items-center gap-3">
-            <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
-            <div>
-              <strong className="block font-bold">Guidelines Officially Released!</strong>
-              <span>
-                Status: Published Official Theme. The bilingual guidelines are locked and now accessible to the Coordinators to initiate Stage 3 and Stage 5 contracting.
-              </span>
-            </div>
+          <div className="mt-auto bg-stone-50 border border-stone-200 p-3 rounded-md flex items-start gap-3 text-xs text-stone-600">
+            <AlertCircle className="w-4 h-4 shrink-0 text-[#8B4513] mt-0.5" />
+            <p>
+              This text has been officially ratified by the Chairman. Your mandate is to elevate the prose into formal institutional Arabic and provide an exact, publication-ready English translation.
+            </p>
           </div>
-        )}
-      </form>
+        </section>
+
+        {/* Column 2 & 3: Bilingual Editorial Engine */}
+        <section className="lg:col-span-2 space-y-6">
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-[#D9D2C5]">
+            
+            <div className="flex justify-between items-center mb-6 border-b border-[#EAE3D9] pb-4">
+              <div className="flex items-center gap-2">
+                <FileText className="w-5 h-5 text-[#8B4513]" />
+                <h2 className="text-xl font-serif font-bold text-[#1A1817]">Official Theme Publication</h2>
+              </div>
+              
+              {isPublished ? (
+                <span className="px-3 py-1 bg-emerald-100 text-emerald-800 border border-emerald-200 rounded text-xs font-bold uppercase tracking-wider flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Published Official
+                </span>
+              ) : (
+                <span className="px-3 py-1 bg-amber-100 text-amber-800 border border-amber-200 rounded text-xs font-bold uppercase tracking-wider">
+                  Pending Polish
+                </span>
+              )}
+            </div>
+
+            {isPublished && (
+              <div className="mb-6 bg-emerald-50 border border-emerald-200 p-4 rounded-md flex items-start gap-3">
+                <Lock className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-bold text-emerald-900 text-sm">Theme Locked &amp; Dispatched</h4>
+                  <p className="text-xs text-emerald-800 mt-1">
+                    The official bilingual theme is now published. The Head of International Programs (HIP) and General Coordinators have been unblocked to begin curatorial guidelines and artist scouting.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <form onSubmit={handlePublish} className="space-y-6">
+              
+              {/* Arabic Polish */}
+              <div>
+                <label className="block text-sm font-bold text-[#1A1817] mb-2 flex items-center justify-between">
+                  <span>Institutional Arabic (الصياغة المؤسسية)</span>
+                  <span className="text-[10px] uppercase text-[#8C7A6B]">Required</span>
+                </label>
+                <textarea
+                  dir="rtl"
+                  disabled={isPublished}
+                  rows={4}
+                  value={draft.arabicText}
+                  onChange={(e) => setDraft({...draft, arabicText: e.target.value})}
+                  className="w-full p-4 border border-[#D9D2C5] rounded-md bg-[#FAF8F5] text-sm focus:ring-1 focus:ring-[#8B4513] focus:border-[#8B4513] disabled:opacity-60 disabled:bg-stone-100 outline-hidden resize-none text-end leading-relaxed"
+                />
+              </div>
+
+              {/* English Translation */}
+              <div>
+                <label className="block text-sm font-bold text-[#1A1817] mb-2 flex items-center justify-between">
+                  <span>English Translation</span>
+                  <span className="text-[10px] uppercase text-[#8C7A6B]">Required</span>
+                </label>
+                <textarea
+                  dir="ltr"
+                  disabled={isPublished}
+                  rows={4}
+                  placeholder="Enter the polished English translation..."
+                  value={draft.englishText}
+                  onChange={(e) => setDraft({...draft, englishText: e.target.value})}
+                  className="w-full p-4 border border-[#D9D2C5] rounded-md bg-[#FAF8F5] text-sm focus:ring-1 focus:ring-[#8B4513] focus:border-[#8B4513] disabled:opacity-60 disabled:bg-stone-100 outline-hidden resize-none text-start leading-relaxed"
+                />
+              </div>
+
+              {/* Action Footer */}
+              <div className="pt-4 border-t border-[#EAE3D9] flex justify-end">
+                {!isPublished && (
+                  <button
+                    type="submit"
+                    disabled={!canPublish}
+                    className="flex items-center gap-2 bg-[#8B4513] hover:bg-[#6e350f] disabled:bg-[#D9D2C5] disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-md text-sm font-bold shadow-sm transition-colors cursor-pointer"
+                  >
+                    <Send className="w-4 h-4" />
+                    <span>Publish Official Theme</span>
+                  </button>
+                )}
+              </div>
+
+            </form>
+          </div>
+        </section>
+
+      </div>
     </div>
   );
-};
+}
 
-export default EditorialWorkspace;
+export { EditorialWorkspace };

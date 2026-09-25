@@ -35,7 +35,7 @@ export interface ChairmanWorkspaceProps {
   /** Optional initial approved theme index. */
   initialApprovedIndex?: number | null;
   /** Optional current theme workflow status. */
-  themeStatus?: 'PENDING_CHAIRMAN_APPROVAL' | 'PENDING_EDITORIAL_POLISH' | 'PUBLISHED';
+  themeStatus?: 'PENDING_CHAIRMAN_APPROVAL' | 'PENDING_EDITORIAL_POLISH' | 'PUBLISHED' | 'PUBLISHED_OFFICIAL';
 }
 
 export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
