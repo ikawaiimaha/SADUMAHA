@@ -129,12 +129,24 @@ export const I18nProvider: React.FC<{ children: React.ReactNode; initialLang?: L
   );
 };
 
+const DEFAULT_I18N: I18nContextType = {
+  lang: 'ar',
+  setLang: () => {},
+  toggleLang: () => {},
+  isAr: true,
+  t: (keyPath, fallback) => fallback || keyPath,
+  getBilingual: (item, field) => item[`${field}Ar`] || item[field] || '',
+  formatNumber: (v) => String(v ?? ''),
+  formatCurrency: (amount, currency = 'AED') => `${amount} ${currency}`,
+  formatPercent: (v) => `${v}%`,
+  formatRatio: (num, den) => `${num}/${den}`,
+  formatDate: (d) => String(d),
+  localizeDigits: (v) => String(v ?? ''),
+};
+
 export const useI18n = (): I18nContextType => {
   const context = useContext(I18nContext);
-  if (!context) {
-    throw new Error('useI18n must be used within an I18nProvider');
-  }
-  return context;
+  return context || DEFAULT_I18N;
 };
 
 export const useTranslation = () => {

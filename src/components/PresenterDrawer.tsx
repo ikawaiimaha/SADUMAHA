@@ -2,17 +2,15 @@ import React, { useState } from 'react';
 import { Language } from '../types';
 import { AuthoredBand } from './AuthoredBand';
 import { useI18n } from '../context/I18nContext';
-import {
-  X,
-  ShieldCheck,
-  CheckCircle2,
-  FileText,
-  Info,
-  Compass,
-  Layers,
-  Building2,
-  AlertTriangle,
-  Award,
+import { 
+  X, 
+  ShieldCheck, 
+  CheckCircle2, 
+  FileText, 
+  Compass, 
+  Layers, 
+  Building2, 
+  AlertTriangle 
 } from 'lucide-react';
 
 interface PresenterDrawerProps {
@@ -26,98 +24,182 @@ export const PresenterDrawer: React.FC<PresenterDrawerProps> = ({ isOpen, onClos
   const activeLang = lang ?? i18n.lang;
   const isAr = activeLang === 'ar';
   const { formatNumber } = i18n;
-  const [activeTab, setActiveTab] = useState<'architecture' | 'benchmarks' | 'ux'>('architecture');
+  const [activeTab, setActiveTab] = useState<'architecture' | 'benchmarks'>('architecture');
 
   if (!isOpen) return null;
 
-  const tabClass = (tab: typeof activeTab) => `pb-2.5 px-3 text-xs font-bold transition-all border-b-2 cursor-pointer flex items-center gap-1.5 shrink-0 ${
-    activeTab === tab ? 'border-sadu-brick text-sadu-brick' : 'border-transparent text-sadu-muted hover:text-sadu-charcoal'
-  }`;
-
   return (
-    <div className="fixed inset-0 z-50 bg-sadu-charcoal/50 backdrop-blur-xs flex justify-end">
+    <div className="fixed inset-0 z-50 bg-sadu-charcoal/50 backdrop-blur-xs flex justify-end" dir={isAr ? 'rtl' : 'ltr'}>
       <div className="bg-sadu-linen border-s border-sadu-gold w-full max-w-2xl h-full shadow-2xl overflow-y-auto p-6 sm:p-8 flex flex-col justify-between text-sadu-charcoal">
         <div className="space-y-6">
+          {/* Header */}
           <div className="flex items-center justify-between pb-4 border-b border-sadu-gold">
             <div className="flex items-center gap-2 text-xs font-bold text-sadu-brick uppercase tracking-wider">
               <Compass className="w-4 h-4" />
               <span>{isAr ? 'لوحة الشرح المعماري والمواءمة الحكومية' : 'Presenter Architecture & Strategic Alignment'}</span>
             </div>
-            <button onClick={onClose} className="p-1 rounded-md text-sadu-muted hover:bg-sadu-sand/70 hover:text-sadu-charcoal transition-colors cursor-pointer" aria-label={isAr ? 'إغلاق' : 'Close'}>
+            <button
+              onClick={onClose}
+              className="p-1 rounded-md text-sadu-muted hover:bg-sadu-sand/70 hover:text-sadu-charcoal transition-colors cursor-pointer"
+              aria-label={isAr ? 'إغلاق' : 'Close'}
+            >
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          <AuthoredBand className="my-2" compact />
+          <AuthoredBand compact className="my-2" />
 
-          <div className="flex border-b border-sadu-gold/60 gap-2 overflow-x-auto scrollbar-none">
-            <button type="button" onClick={() => setActiveTab('architecture')} className={tabClass('architecture')}>
+          {/* Tab Switcher */}
+          <div className="flex border-b border-sadu-gold/60 gap-2">
+            <button
+              type="button"
+              onClick={() => setActiveTab('architecture')}
+              className={`pb-2.5 px-3 text-xs font-bold transition-all border-b-2 cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'architecture'
+                  ? 'border-sadu-brick text-sadu-brick'
+                  : 'border-transparent text-sadu-muted hover:text-sadu-charcoal'
+              }`}
+            >
               <Layers className="w-3.5 h-3.5" />
               <span>{isAr ? 'المبادئ المعمارية' : 'Architectural Intent'}</span>
             </button>
-            <button type="button" onClick={() => setActiveTab('benchmarks')} className={tabClass('benchmarks')}>
+            <button
+              type="button"
+              onClick={() => setActiveTab('benchmarks')}
+              className={`pb-2.5 px-3 text-xs font-bold transition-all border-b-2 cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'benchmarks'
+                  ? 'border-sadu-brick text-sadu-brick'
+                  : 'border-transparent text-sadu-muted hover:text-sadu-charcoal'
+              }`}
+            >
               <Building2 className="w-3.5 h-3.5" />
-              <span>{isAr ? 'المقارنات الحكومية' : 'National Benchmarks'}</span>
-            </button>
-            <button type="button" onClick={() => setActiveTab('ux')} className={tabClass('ux')}>
-              <Award className="w-3.5 h-3.5" />
-              <span>{isAr ? 'الابتكار الحكومي وتجربة المستخدم' : 'GovTech & UX Innovation'}</span>
+              <span>{isAr ? 'المقارنات الحكومية (UAE / الشارقة)' : 'National Gov Benchmarks'}</span>
             </button>
           </div>
 
+          {/* TAB 1: ARCHITECTURAL PRINCIPLES */}
           {activeTab === 'architecture' && (
-            <div>
-              <h3 className="text-xl font-editorial font-bold text-sadu-charcoal mb-2">{isAr ? 'مرجع التصميم المعماري والأصل المؤسسي' : 'SADU Architectural Intent & Institutional Model'}</h3>
-              <p className="text-xs text-sadu-muted leading-relaxed mb-6">{isAr ? 'عرض سدو تجريبي لبحث مسارات عمل مقترحة. ليس نظاماً مؤسسياً معتمداً؛ يلزم التحقق من المتطلبات والصلاحيات من مصادرها الأصلية.' : 'SADU demonstrates proposed workflows for review. This is not an approved institutional system; requirements and authority require verification against original sources.'}</p>
-              <div className="space-y-4 text-xs">
-                {[
-                  [CheckCircle2, 'text-sadu-brick', 'Communication vs Decision Authority', 'الفصل الحاسم بين التواصل والسلطة', 'Messages represent Communication Evidence. No conversation can silently approve expenditure, execute a legal contract, or alter Approved Scope without attributable institutional sign-off.', 'أي مراسلة داخل المنصة تُمثّل دليلاً تواصلياً فقط. لا يمكن لمحادثة أن تعتمد إنفاقاً أو تنفذ عقداً أو تغير النطاق المعتمد دون اعتماد مؤسسي قابل للإسناد.'],
-                  [ShieldCheck, 'text-sadu-ink', 'Least Privilege & Privacy Protection', 'مبدأ الصلاحيات الدقيقة والخصوصية', 'Sample views illustrate separation of information. No verified authorization, private document vault or connected travel service is demonstrated.', 'توضح المعاينات التجريبية فصل المعلومات. لا يُعرض تفويض موثق أو خزنة مستندات خاصة أو خدمة سفر متصلة.'],
-                  [FileText, 'text-sadu-brick', 'Sample scope and contract chain', 'سلسلة نطاق وعقد تجريبية', 'Version labels illustrate a proposed scope snapshot. Legacy workspaces are isolated samples; durable versioning is not established.', 'توضح تسميات الإصدارات لقطة نطاق مقترحة. المساحات القديمة أمثلة مستقلة؛ ولم يُثبت حفظ الإصدارات بصورة دائمة.'],
-                  [Info, 'text-sadu-ink', 'Evidence completeness and data notice', 'اكتمال الأدلة وإشعار البيانات', 'Programme states, figures and actions are illustrative. A real name does not establish participation or endorsement.', 'حالات البرامج والأرقام والإجراءات أمثلة تجريبية. ظهور اسم حقيقي لا يثبت المشاركة أو التأييد.'],
-                ].map(([Icon, tone, en, ar, bodyEn, bodyAr], index) => {
-                  const PrincipleIcon = Icon as React.ElementType;
-                  return <div key={en as string} className="p-3.5 bg-sadu-sand rounded-md border border-sadu-gold"><div className={`flex items-center gap-1.5 font-bold ${tone as string} mb-1`}><PrincipleIcon className="w-3.5 h-3.5" /><span>{isAr ? `${formatNumber(index + 1)}. ${ar as string}` : `${index + 1}. ${en as string}`}</span></div><p className="text-sadu-charcoal leading-relaxed">{isAr ? bodyAr as string : bodyEn as string}</p></div>;
-                })}
+            <div className="space-y-4 text-xs animate-in fade-in duration-150">
+              <div className="p-3.5 bg-sadu-sand rounded-md border border-sadu-gold">
+                <div className="flex items-center gap-1.5 font-bold text-sadu-brick mb-1">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>{isAr ? `${formatNumber(1)}. الفصل بين التواصل والقرار` : '1. Communication vs Decision Authority'}</span>
+                </div>
+                <p className="text-sadu-charcoal leading-relaxed mt-1">
+                  {isAr
+                    ? 'المراسلات أدلة تواصل فقط. لا يمكن لرسالة أو محادثة اعتماد ميزانية أو إلزام الإدارة بعقد قانوني دون توقيع نظامي وتثبيت في النطاق المعتمد.'
+                    : 'Messages represent communication evidence only. Conversations cannot approve expenditure, execute contracts, or alter approved scope without institutional sign-off.'}
+                </p>
+              </div>
+
+              <div className="p-3.5 bg-sadu-sand rounded-md border border-sadu-gold">
+                <div className="flex items-center gap-1.5 font-bold text-sadu-ink mb-1">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>{isAr ? `${formatNumber(2)}. الصلاحيات الدقيقة والخصوصية` : '2. Least Privilege & Privacy Protection'}</span>
+                </div>
+                <p className="text-sadu-charcoal leading-relaxed mt-1">
+                  {isAr
+                    ? 'لا توجد صلاحيات مفتوحة. لا يطلع القيم الفني على البيانات المصرفية، ولا تغير الإدارة الهندسية النصوص التقييمية. كل مستخدم يرى فقط ما تقتضيه مهمته.'
+                    : 'No overarching access. Curators cannot view banking data; engineers cannot alter curatorial text. Every role sees only what is required for their specific mandate.'}
+                </p>
+              </div>
+
+              <div className="p-3.5 bg-sadu-sand rounded-md border border-sadu-gold">
+                <div className="flex items-center gap-1.5 font-bold text-sadu-ochre mb-1">
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>{isAr ? `${formatNumber(3)}. الذاكرة المؤسسية الدائمة` : '3. Sovereign Institutional Memory'}</span>
+                </div>
+                <p className="text-sadu-charcoal leading-relaxed mt-1">
+                  {isAr
+                    ? 'تحويل الأفعال الفردية والموافقات إلى سجل حي دائم يحمي حقوق الدائرة وتاريخ إمارة الشارقة الثقافي.'
+                    : 'Converting individual actions and approvals into a permanent living record that protects the Department’s rights and Sharjah’s cultural history.'}
+                </p>
               </div>
             </div>
           )}
 
+          {/* TAB 2: NATIONAL BENCHMARKS & GOV ALIGNMENT */}
           {activeTab === 'benchmarks' && (
-            <div className="space-y-4 text-xs">
-              <h3 className="text-xl font-editorial font-bold text-sadu-charcoal">{isAr ? 'المقارنات الحكومية والجاهزية' : 'Government Benchmarks & Readiness'}</h3>
-              <p className="leading-relaxed text-sadu-muted">{isAr ? 'مؤشرات عرض مقترحة لشرح كيف يمكن مواءمة سدو مع متطلبات الجهات الحكومية المحلية.' : 'Proposed presentation indicators showing how SADU can align with local government requirements.'}</p>
-              {[
-                ['Data sovereignty', 'السيادة على البيانات', 'Local hosting and retention controls can be applied to the approved sovereign environment.', 'يمكن تطبيق ضوابط الاستضافة المحلية والاحتفاظ داخل البيئة السيادية المعتمدة.'],
-                ['Evidence-led decisions', 'قرارات قائمة على الأدلة', 'Each review can remain linked to its source record, responsible role and decision route.', 'يمكن ربط كل مراجعة بمصدرها والدور المسؤول ومسار القرار.'],
-                ['Accessible bilingual service', 'خدمة ثنائية اللغة ميسرة', 'Arabic-first labels, RTL support and clear English equivalents reduce interpretation friction.', 'تقلل التسميات العربية ودعم الاتجاه من اليمين إلى اليسار والمقابلات الإنجليزية الواضحة من صعوبة التفسير.'],
-              ].map(([en, ar, bodyEn, bodyAr]) => <div key={en} className="p-4 bg-sadu-sand rounded-md border border-sadu-gold"><div className="flex items-center gap-2 font-bold text-sadu-ink"><Building2 className="w-4 h-4" /><span>{isAr ? ar : en}</span></div><p className="mt-2 leading-relaxed">{isAr ? bodyAr : bodyEn}</p></div>)}
+            <div className="space-y-5 animate-in fade-in duration-150">
+              
+              {/* Intro/Thesis */}
+              <p className="text-xs text-sadu-charcoal leading-relaxed bg-white p-4 rounded-md border border-sadu-gold shadow-2xs">
+                <strong className="text-sadu-brick block mb-1">{isAr ? 'المسار التشغيلي المتخصص' : 'Vertical Enterprise Operations'}</strong>
+                {isAr 
+                  ? 'سدو ليس بوابة خدمية عامة للمعاملات الأفقية. إنه نظام تشغيل مؤسسي متخصص للدبلوماسية الثقافية، التدقيق التقييمي، والحفظ السيادي، صُمم ليتوافق مع أعلى المعايير الرقمية الوطنية.'
+                  : 'SADU is not a horizontal civic transaction portal. It is a specialized vertical enterprise OS for cultural diplomacy, curatorial vetting, and sovereign preservation, engineered to align with national digital standards.'}
+              </p>
+
+              {/* Benchmark Table */}
+              <div className="border border-sadu-gold rounded-sm overflow-hidden bg-white shadow-2xs">
+                <table className="w-full text-xs text-left rtl:text-right">
+                  <thead className="bg-sadu-sand text-sadu-charcoal font-bold uppercase tracking-wider text-[10px]">
+                    <tr>
+                      <th className="p-2.5 border-b border-sadu-gold/50">{isAr ? 'المعيار الوطني' : 'Benchmark Criterion'}</th>
+                      <th className="p-2.5 border-b border-sadu-gold/50 border-s border-sadu-gold/30">{isAr ? 'المنصات الحكومية' : 'Live Civic Apps'}</th>
+                      <th className="p-2.5 border-b border-sadu-gold/50 border-s border-sadu-gold/30">{isAr ? 'مواءمة وتفوق منصة سدو' : 'SADU Parity & Advantage'}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-[11px] divide-y divide-sadu-gold/30 text-sadu-charcoal">
+                    <tr className="hover:bg-sadu-linen/50 transition-colors">
+                      <td className="p-2.5 font-bold text-sadu-ink">Zero Bureaucracy</td>
+                      <td className="p-2.5 border-s border-sadu-gold/30 text-sadu-muted">Work Bundle<br/>(Baqat Al Amal)</td>
+                      <td className="p-2.5 border-s border-sadu-gold/30">Streamlines cross-department handovers into a continuous state machine.</td>
+                    </tr>
+                    <tr className="hover:bg-sadu-linen/50 transition-colors">
+                      <td className="p-2.5 font-bold text-sadu-ink">Separation of Powers<br/>& PDPL</td>
+                      <td className="p-2.5 border-s border-sadu-gold/30 text-sadu-muted">Dubai Unified License<br/>(DUL)</td>
+                      <td className="p-2.5 border-s border-sadu-gold/30">Strict RBAC across curatorial, financial, and logistics desks.</td>
+                    </tr>
+                    <tr className="hover:bg-sadu-linen/50 transition-colors">
+                      <td className="p-2.5 font-bold text-sadu-ink">Sovereign Residency</td>
+                      <td className="p-2.5 border-s border-sadu-gold/30 text-sadu-muted">Sharjah Digital Cloud<br/>(SDD)</td>
+                      <td className="p-2.5 border-s border-sadu-gold/30">Containerized architecture ready for on-premise Sahab Smart Solutions deployment.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* The Honest Reality Check */}
+              <div className="p-4 bg-amber-50 border-s-4 rtl:border-s-0 rtl:border-e-4 border-amber-500 rounded-sm shadow-2xs mt-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertTriangle className="w-4 h-4 text-amber-600" />
+                  <span className="font-bold text-amber-900 text-xs uppercase tracking-widest">
+                    {isAr ? 'الحدود التقنية: النموذج مقابل إطلاق المرحلة الأولى' : 'Reality Check: Mockup vs. Phase 1 Production'}
+                  </span>
+                </div>
+                <ul className="list-disc list-inside text-[11px] text-amber-800 space-y-1.5 leading-relaxed marker:text-amber-400">
+                  <li>
+                    <strong>{isAr ? 'البيئة التشغيلية: ' : 'Frontend State: '}</strong>
+                    {isAr ? 'يعتمد النموذج على الذاكرة المؤقتة للمتصفح؛ يتطلب المرحلة الأولى للربط بقواعد البيانات السيادية.' : 'Currently runs on React state machines; requires Phase 1 backend provisioning for durability.'}
+                  </li>
+                  <li>
+                    <strong>{isAr ? 'الهوية الرقمية: ' : 'UAE PASS & APIs: '}</strong>
+                    {isAr ? 'واجهات التوقيع مصممة بدقة، وتنتظر مفاتيح الربط الفعلية من الشبكة الاتحادية (GSB).' : 'Biometric signing UI is mapped, awaiting actual PKI integration via federal GSB.'}
+                  </li>
+                  <li>
+                    <strong>{isAr ? 'الإرث التاريخي: ' : 'Historical Ingestion: '}</strong>
+                    {isAr ? 'يعرض بيانات تجريبية لدورة 2026. ترحيل السجلات السابقة يستلزم خطة إدراج متخصصة.' : 'Demonstrates greenfield operations. Deployment requires a batch ingestion pipeline for past Biennial editions.'}
+                  </li>
+                </ul>
+              </div>
             </div>
           )}
 
-          {activeTab === 'ux' && (
-            <div className="space-y-5 text-xs">
-              <div>
-                <div className="flex items-center gap-2 text-sadu-brick"><Award className="w-5 h-5" /><span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em]">GOVTECH_UX_INNOVATION</span></div>
-                <h3 className="mt-2 text-xl font-editorial font-bold text-sadu-charcoal">{isAr ? 'الابتكار الحكومي وتجربة المستخدم' : 'GovTech & UX Innovation'}</h3>
-                <p className="mt-2 leading-relaxed text-sadu-muted">{isAr ? 'توضح هذه الطبقة كيف تقلل بنية البيانات الموحدة الاحتكاك الإداري دون تجاوز الصلاحيات أو المتطلبات الحكومية.' : 'This layer shows how unified data architecture reduces bureaucratic friction without bypassing authority or government requirements.'}</p>
-              </div>
-              <div className="space-y-3">
-                {[
-                  ['Identity Separation', 'فصل الهوية', 'Roles, programme records and personal details remain distinct, so a screen can show the right context without exposing unnecessary information.', 'تبقى الأدوار وسجلات البرامج والبيانات الشخصية منفصلة، فتظهر المعلومات اللازمة دون كشف غير الضروري.'],
-                  ['Chain of Representation', 'سلسلة التمثيل', 'Every handover can identify the responsible role, source record and next action instead of relying on informal forwarding.', 'يمكن لكل تسليم تحديد الدور المسؤول ومصدر السجل والإجراء التالي بدلاً من الاعتماد على الإحالات غير الرسمية.'],
-                  ['Archival File Constraints', 'ضوابط الملف الأرشيفي', 'Record boundaries, source notes and retention expectations make historical material easier to review and govern.', 'تجعل حدود السجل وملاحظات المصدر ومتطلبات الاحتفاظ مراجعة المواد التاريخية وحوكمتها أكثر وضوحاً.'],
-                  ['Zero-Email Handovers', 'تسليمات بلا بريد إلكتروني', 'Structured records keep status, evidence and responsibility together, reducing duplicate requests and lost context across email chains.', 'تحافظ السجلات المنظمة على الحالة والأدلة والمسؤولية معاً، فتقل الطلبات المكررة وضياع السياق بين سلاسل البريد.'],
-                ].map(([en, ar, bodyEn, bodyAr], index) => <div key={en} className="p-4 bg-sadu-sand rounded-md border border-sadu-brick/40"><div className="flex items-center gap-2 font-bold text-sadu-brick"><CheckCircle2 className="w-4 h-4" /><span>{isAr ? `${formatNumber(index + 1)}. ${ar}` : `${index + 1}. ${en}`}</span></div><p className="mt-2 leading-relaxed">{isAr ? bodyAr : bodyEn}</p></div>)}
-              </div>
-              <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-amber-900"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /><span>{isAr ? 'هذه مبادئ تصميم للعرض والمراجعة، وليست اعتماداً لتفويض أو إجراء حكومي.' : 'These are design principles for presentation and review, not approval of a government delegation or procedure.'}</span></div>
-            </div>
-          )}
         </div>
 
-        <div className="mt-8 pt-4 border-t border-sadu-gold flex items-center justify-between">
-          <span className="text-[11px] text-sadu-muted">{isAr ? `دائرة الثقافة — الشارقة ${formatNumber(2026)}` : 'Sharjah Department of Culture 2026'}</span>
-          <button onClick={onClose} className="px-4 py-2 text-xs font-semibold text-white bg-sadu-ink hover:bg-sadu-ink-dark rounded-md transition-colors cursor-pointer">{isAr ? 'فهمت، العودة للمنصة' : 'Close Panel'}</button>
+        {/* Footer */}
+        <div className="mt-8 pt-4 border-t border-sadu-gold/50 flex flex-col gap-2 shrink-0">
+          <div className="text-[10px] text-sadu-muted flex items-center justify-between font-mono">
+            <span>SADU_PRESENTER_MODE_ACTIVE</span>
+            <span>v1.2.0</span>
+          </div>
+          <button 
+            onClick={onClose}
+            className="w-full py-2.5 bg-sadu-ink hover:bg-sadu-ink-dark text-white rounded text-xs font-bold transition-colors cursor-pointer shadow-xs"
+          >
+            {isAr ? 'إغلاق ومتابعة العرض' : 'Close and Resume Presentation'}
+          </button>
         </div>
       </div>
     </div>

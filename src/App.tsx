@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import RoleSelection, { AppRole } from './components/RoleSelection';
 import CommitteeThemeWorkspace, { CommitteeThemeDraft } from './components/CommitteeThemeWorkspace';
 import ChairmanWorkspace, { ThemeItem } from './components/ChairmanWorkspace';
@@ -10,6 +10,8 @@ import CoordinatorWorkspace from './components/CoordinatorWorkspace';
 import ArtistPortalWorkspace from './components/ArtistPortalWorkspace';
 import PRWorkspace from './components/PRWorkspace';
 import FinanceWorkspace from './components/FinanceWorkspace';
+import { PresenterDrawer } from './components/PresenterDrawer';
+import { I18nProvider, useI18n } from './context/I18nContext';
 import { BilateralContract, DisbursementRecord } from './types/contractStage6';
 import {
   RotateCcw,
@@ -27,6 +29,7 @@ import {
   Ban,
   FileCheck,
   AlertTriangle,
+  Compass,
 } from 'lucide-react';
 
 const EVENT_ID = '123e4567-e89b-12d3-a456-426614174000';
@@ -195,7 +198,22 @@ const INITIAL_DISBURSEMENTS: DisbursementRecord[] = [
   },
 ];
 
-function App() {
+function SADUApp() {
+  const { lang } = useI18n();
+  const [isPresenterDrawerOpen, setIsPresenterDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Press 'Ctrl + Shift + P' (or Cmd + Shift + P on Mac) to toggle Presenter Mode
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'p') {
+        e.preventDefault();
+        setIsPresenterDrawerOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const [currentRole, setCurrentRole] = useState<AppRole | null>(null);
   const [submittedThemes, setSubmittedThemes] = useState<CommitteeThemeDraft[] | undefined>(undefined);
   const [assignedBudget, setAssignedBudget] = useState<number | null>(null);
@@ -609,6 +627,20 @@ function App() {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* Subtle presenter mode shortcut button */}
+            <button
+              type="button"
+              onClick={() => setIsPresenterDrawerOpen(prev => !prev)}
+              title="Toggle Presenter Architecture Mode (Ctrl+Shift+P / ⌘⇧P)"
+              className="inline-flex items-center gap-1.5 rounded-md border border-sadu-gold/70 bg-sadu-sand px-2.5 py-1.5 text-xs font-bold text-sadu-charcoal shadow-2xs transition-colors hover:bg-sadu-gold/25 hover:border-sadu-brick cursor-pointer"
+            >
+              <Compass className="h-3.5 w-3.5 text-sadu-brick" />
+              <span className="hidden sm:inline">Presenter</span>
+              <kbd className="hidden lg:inline-block rounded border border-sadu-gold/60 bg-white/80 px-1 py-0.2 text-[9px] font-mono text-sadu-muted">
+                ⌘⇧P
+              </kbd>
+            </button>
+
             {currentRole ? (
               <>
                 <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-sadu-gold/70 bg-sadu-sand px-3 py-1 text-xs font-semibold text-sadu-charcoal">
@@ -780,10 +812,23 @@ function App() {
         )}
 
       </main>
+
+      {/* Presenter Architecture Drawer (Ctrl+Shift+P / ⌘⇧P) */}
+      <PresenterDrawer
+        isOpen={isPresenterDrawerOpen}
+        onClose={() => setIsPresenterDrawerOpen(false)}
+        lang={lang}
+      />
     </div>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <I18nProvider initialLang="ar">
+      <SADUApp />
+    </I18nProvider>
+  );
+}
 
 
