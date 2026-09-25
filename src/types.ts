@@ -66,7 +66,62 @@ export type LpoStatus = 'pending_bids' | 'pending_technical_eval' | 'pending_lpo
 export type EventType = 'FESTIVAL' | 'FORUM';
 export type EventStatus = 'SETUP' | 'PENDING_DIRECTORATE_REVIEW' | 'PRESENTED_TO_CHAIRMAN' | 'THEME_LOCKED';
 
-export type ThemeStatus = 'PROPOSED' | 'APPROVED';
+// --- SADU Master Types & State Enums ---
+
+export type ThemeStatus = 
+  | 'DRAFT'
+  | 'PROPOSED'
+  | 'APPROVED'
+  | 'PENDING_CHAIRMAN_APPROVAL'
+  | 'PENDING_EDITORIAL_POLISH'
+  | 'PUBLISHED_OFFICIAL';
+
+export type ArtistStatus = 
+  | 'INCOMPLETE_DOSSIER'
+  | 'HIP_BLOCKED'
+  | 'PENDING_DIRECTOR_REVIEW'
+  | 'DIRECTOR_VETOED'
+  | 'DIRECTOR_APPROVED'
+  | 'CONTRACT_PENDING_SIGNATURE'
+  | 'CONTRACT_DISPUTED' // Hardening #2: Contract amendment negotiation loop
+  | 'LOGISTICS_PENDING_PR'
+  | 'PHYSICAL_ASSET_RECEIVED' // Hardening #3: Physical crate sign-off before final finance release
+  | 'CLEARED_FOR_FINANCE';
+
+export interface ArtistDossier {
+  id: string;
+  name: string;
+  arabicName: string;
+  category: 'Emerging' | 'Established';
+  nationality: string;
+  medium: string;
+  status: ArtistStatus;
+  
+  // Hardening #1: Dynamic Dossier Schema toggle
+  isCommissioned: boolean; 
+  cvUrl: string;
+  portfolioUrl: string;
+  mockupsUrl?: string; // Optional if isCommissioned is false (existing work/masterpiece)
+}
+
+export interface ContractTerms {
+  artistId: string;
+  productionGrant: number;
+  shippingMethod: 'FINE_ART_COURIER' | 'AIR_FREIGHT' | 'LOCAL_UAE';
+  trancheStructure: 'STANDARD_SPLIT' | 'SINGLE_DISBURSAL';
+  status: 'DISPATCHED' | 'DISPUTED_BY_ARTIST' | 'SIGNED';
+  amendmentNotes?: string;
+}
+
+export interface DynamicBlocklistRule {
+  id: string;
+  parameterType: 'NATIONALITY' | 'MEDIUM' | 'ETHICAL_CRITERIA';
+  value: string;
+  addedBy: string;
+  // Hardening #5: Executive oversight flag for HIP modifications
+  isDirectorApproved: boolean; 
+}
+
 export interface ThemeProposal {
   id: string;
   arabicName: string;

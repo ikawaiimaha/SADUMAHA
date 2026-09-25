@@ -446,6 +446,20 @@ function SADUApp() {
     );
   };
 
+  const handleRequestAmendment = (contractId: string, notes: string) => {
+    setContracts(prev =>
+      prev.map(c =>
+        c.id === contractId
+          ? {
+              ...c,
+              status: 'CONTRACT_DISPUTED',
+              amendmentNotes: notes,
+            }
+          : c
+      )
+    );
+  };
+
   const handleUploadPassport = (contractId: string, fileName: string) => {
     setContracts(prev =>
       prev.map(c =>
@@ -785,6 +799,7 @@ function SADUApp() {
           <ArtistPortalWorkspace
             contracts={contracts}
             onSignContract={handleSignContract}
+            onRequestAmendment={handleRequestAmendment}
             onUploadPassport={handleUploadPassport}
             onUploadHighResArtwork={handleUploadHighResArtwork}
             onSaveBio={handleSaveBio}

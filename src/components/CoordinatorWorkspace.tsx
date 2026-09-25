@@ -10,6 +10,7 @@ import {
   Send,
   Lock,
   RotateCcw,
+  AlertCircle,
 } from 'lucide-react';
 import { NominatedArtistDossier } from './ArtistNominationForm';
 import ArtistNominationForm from './ArtistNominationForm';
@@ -398,6 +399,24 @@ export const CoordinatorWorkspace: React.FC<CoordinatorWorkspaceProps> = ({
                 </button>
               </div>
 
+              {(() => {
+                const existing = contracts.find(c => c.artistId === selectedArtistForContract.id);
+                if (existing?.status === 'CONTRACT_DISPUTED' && existing.amendmentNotes) {
+                  return (
+                    <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-xs space-y-1 text-amber-950">
+                      <div className="flex items-center gap-1.5 font-bold text-amber-900">
+                        <AlertCircle className="h-4 w-4 text-amber-700" />
+                        <span>Artist Requested Negotiation Notes (ملاحظات التعديل):</span>
+                      </div>
+                      <p className="italic bg-white/80 p-2 rounded border border-amber-200 text-stone-800">
+                        "{existing.amendmentNotes}"
+                      </p>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+
               {/* Form Controls */}
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
@@ -533,6 +552,7 @@ export const CoordinatorWorkspace: React.FC<CoordinatorWorkspaceProps> = ({
               {approvedArtists.map(artist => {
                 const contract = contracts.find(c => c.artistId === artist.id);
                 const isDispatched = contract?.status === 'SENT_TO_ARTIST';
+                const isDisputed = contract?.status === 'CONTRACT_DISPUTED';
                 const isSigned = contract?.status === 'ARTIST_APPROVED' || contract?.status === 'LOCKED';
 
                 return (
@@ -560,6 +580,13 @@ export const CoordinatorWorkspace: React.FC<CoordinatorWorkspaceProps> = ({
                           </span>
                         </div>
                       )}
+
+                      {isDisputed && contract?.amendmentNotes && (
+                        <p className="text-[11px] text-amber-900 bg-amber-50 rounded border border-amber-200 p-2 mt-1">
+                          <strong className="block text-[10px] uppercase text-amber-800">Artist Requested Modifications:</strong>
+                          "{contract.amendmentNotes}"
+                        </p>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-3">
@@ -568,6 +595,11 @@ export const CoordinatorWorkspace: React.FC<CoordinatorWorkspaceProps> = ({
                           <span className="inline-flex items-center gap-1 rounded bg-emerald-100 px-2.5 py-1 text-[10px] font-bold text-emerald-800 border border-emerald-300">
                             <CheckCircle2 className="h-3 w-3" />
                             Signed &amp; Locked
+                          </span>
+                        ) : isDisputed ? (
+                          <span className="inline-flex items-center gap-1 rounded bg-amber-100 px-2.5 py-1 text-[10px] font-bold text-amber-900 border border-amber-400">
+                            <AlertCircle className="h-3 w-3 text-amber-700" />
+                            Amendment Requested
                           </span>
                         ) : isDispatched ? (
                           <span className="inline-flex items-center gap-1 rounded bg-amber-100 px-2.5 py-1 text-[10px] font-bold text-amber-800 border border-amber-300">
@@ -591,7 +623,7 @@ export const CoordinatorWorkspace: React.FC<CoordinatorWorkspaceProps> = ({
                         }`}
                       >
                         <FileSignature className="h-3.5 w-3.5" />
-                        <span>{isSigned ? 'View Terms' : isDispatched ? 'Update Draft' : 'Draft Contract'}</span>
+                        <span>{isSigned ? 'View Terms' : isDisputed ? 'Review Amendment' : isDispatched ? 'Update Draft' : 'Draft Contract'}</span>
                       </button>
                     </div>
                   </div>

@@ -2,6 +2,7 @@ export type BilateralContractStatus =
   | 'NOT_DRAFTED'
   | 'DRAFT'
   | 'SENT_TO_ARTIST'
+  | 'CONTRACT_DISPUTED'
   | 'ARTIST_APPROVED'
   | 'LOCKED';
 
@@ -62,6 +63,7 @@ export interface BilateralContract {
   sentAt?: string;
   signedAt?: string;
   signatureReference?: string;
+  amendmentNotes?: string;
 }
 
 export interface DisbursementRecord {

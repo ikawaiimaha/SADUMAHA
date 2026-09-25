@@ -14,8 +14,10 @@ import {
   RotateCcw,
   Eye,
   Check,
+  AlertCircle,
 } from 'lucide-react';
 import { BilateralContract } from '../types/contractStage6';
+import ContractDisputeModal from './ContractDisputeModal';
 
 export interface ArtistPortalWorkspaceProps {
   contracts: BilateralContract[];
@@ -23,6 +25,7 @@ export interface ArtistPortalWorkspaceProps {
   onUploadPassport: (contractId: string, fileName: string) => void;
   onUploadHighResArtwork: (contractId: string, fileName: string, dpi: number) => void;
   onSaveBio: (contractId: string, bioAr: string, bioEn: string) => void;
+  onRequestAmendment?: (contractId: string, notes: string) => void;
   onBackToRoles?: () => void;
 }
 
@@ -32,8 +35,10 @@ export const ArtistPortalWorkspace: React.FC<ArtistPortalWorkspaceProps> = ({
   onUploadPassport,
   onUploadHighResArtwork,
   onSaveBio,
+  onRequestAmendment,
   onBackToRoles,
 }) => {
+  const [isDisputeModalOpen, setIsDisputeModalOpen] = useState(false);
   // If there are no contracts, provide fallback
   const [selectedContractId, setSelectedContractId] = useState<string>(
     contracts[0]?.id || ''
@@ -186,7 +191,13 @@ export const ArtistPortalWorkspace: React.FC<ArtistPortalWorkspaceProps> = ({
           </div>
           <strong className="block text-sadu-charcoal">Bilateral Contract</strong>
           <span className="text-[11px] text-sadu-muted">
-            {isContractSigned ? 'Terms Accepted & Locked' : isContractDispatched ? 'Ready for E-Signature' : 'Awaiting Coordinator'}
+            {isContractSigned
+              ? 'Terms Accepted & Locked'
+              : activeContract.status === 'CONTRACT_DISPUTED'
+              ? 'Amendment Under Review'
+              : isContractDispatched
+              ? 'Ready for E-Signature'
+              : 'Awaiting Coordinator'}
           </span>
         </div>
 
@@ -412,16 +423,50 @@ export const ArtistPortalWorkspace: React.FC<ArtistPortalWorkspaceProps> = ({
                     />
                   </div>
 
-                  <button
-                    type="submit"
-                    disabled={!agreeTerms || !signerName.trim()}
-                    className="inline-flex items-center justify-center gap-1.5 rounded-md bg-sadu-brick px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-sadu-brick-dark disabled:opacity-40 cursor-pointer self-end"
-                  >
-                    <FileSignature className="h-3.5 w-3.5" />
-                    <span>Approve &amp; Sign Bilateral Agreement (توقيع رسمي)</span>
-                  </button>
+                  <div className="flex items-center gap-2 self-end">
+                    <button
+                      type="button"
+                      onClick={() => setIsDisputeModalOpen(true)}
+                      className="inline-flex items-center justify-center gap-1.5 rounded-md border border-amber-600/60 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900 hover:bg-amber-100 cursor-pointer shadow-xs"
+                    >
+                      <AlertCircle className="h-3.5 w-3.5 text-amber-700" />
+                      <span>Request Amendment (طلب تعديل)</span>
+                    </button>
+
+                    <button
+                      type="submit"
+                      disabled={!agreeTerms || !signerName.trim()}
+                      className="inline-flex items-center justify-center gap-1.5 rounded-md bg-sadu-brick px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-sadu-brick-dark disabled:opacity-40 cursor-pointer"
+                    >
+                      <FileSignature className="h-3.5 w-3.5" />
+                      <span>Approve &amp; Sign Bilateral Agreement (توقيع رسمي)</span>
+                    </button>
+                  </div>
                 </div>
               </form>
+            )}
+
+            {activeContract.status === 'CONTRACT_DISPUTED' && (
+              <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-xs space-y-2 text-amber-950">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 font-bold text-sm text-amber-900">
+                    <AlertCircle className="h-4 w-4 text-amber-700" />
+                    <span>Amendment Request Submitted (طلب تعديل قيد المراجعة)</span>
+                  </div>
+                  <span className="rounded bg-amber-200 px-2 py-0.5 text-[10px] font-bold uppercase text-amber-900">
+                    Under Negotiation
+                  </span>
+                </div>
+                {activeContract.amendmentNotes && (
+                  <div className="bg-white/80 rounded border border-amber-200 p-2.5 text-xs text-sadu-charcoal">
+                    <span className="text-[10px] font-bold uppercase text-amber-800 block mb-1">Proposed Modifications:</span>
+                    <p className="italic">{activeContract.amendmentNotes}</p>
+                  </div>
+                )}
+                <p className="text-[11px] text-amber-800">
+                  The General Coordinator is currently reviewing your requested terms. You will receive an updated contract once revisions are evaluated.
+                </p>
+              </div>
             )}
 
             {isContractSigned && (
@@ -624,6 +669,18 @@ export const ArtistPortalWorkspace: React.FC<ArtistPortalWorkspaceProps> = ({
           </form>
         </div>
       </div>
+
+      {isDisputeModalOpen && (
+        <ContractDisputeModal
+          artistName={activeContract.artistName}
+          currentGrant={activeContract.productionCost}
+          onSubmitAmendment={(notes) => {
+            onRequestAmendment?.(activeContract.id, notes);
+            setIsDisputeModalOpen(false);
+          }}
+          onClose={() => setIsDisputeModalOpen(false)}
+        />
+      )}
     </div>
   );
 };

@@ -21,6 +21,7 @@ export interface NominatedArtistDossier {
   nationality: string;
   medium: string;
   proposedWorkTitle: string;
+  isCommissioned?: boolean;
   cvFileName: string;
   previousWorksCount: number;
   mockupCount: number;
@@ -51,6 +52,8 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
   const [nationality, setNationality] = useState('');
   const [medium, setMedium] = useState('');
   const [proposedWorkTitle, setProposedWorkTitle] = useState('');
+  // Hardening #1: Dynamic Dossier Schema toggle
+  const [isCommissioned, setIsCommissioned] = useState<boolean>(true);
 
   // Strict Dossier Schema flags / files
   const [cvFile, setCvFile] = useState<File | null>(null);
@@ -72,7 +75,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
     (artistCategory === 'Emerging' || artistCategory === 'Established') &&
     (cvUploaded || cvFile !== null) &&
     (previousWorksUploaded || previousWorks.length > 0) &&
-    (newWorkMockupUploaded || newWorkMockup.length > 0);
+    (!isCommissioned || newWorkMockupUploaded || newWorkMockup.length > 0);
 
   const checkIsBlocked = () => {
     const normNationality = nationality.trim().toLowerCase();
@@ -122,6 +125,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
       nationality: nationality.trim() || 'Undisclosed',
       medium: medium.trim() || 'Calligraphic Arts',
       proposedWorkTitle: proposedWorkTitle.trim() || 'Untitled Biennial Proposal',
+      isCommissioned,
       cvFileName: cvFileName || (cvFile ? cvFile.name : 'Artist_Curriculum_Vitae.pdf'),
       previousWorksCount: previousWorks.length > 0 ? previousWorks.length : 3,
       mockupCount: newWorkMockup.length > 0 ? newWorkMockup.length : 2,
@@ -360,8 +364,38 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
               2. Strict Dossier Schema Attachments
             </h3>
             <span className="rounded bg-sadu-sand px-2 py-0.5 text-[10px] font-bold text-sadu-muted uppercase">
-              All 3 Files Required
+              {isCommissioned ? 'All 3 Files Required' : '2 Files Required (Mockup Optional)'}
             </span>
+          </div>
+
+          {/* Hardening #1: Dynamic Dossier Schema toggle */}
+          <div className="rounded-lg border border-sadu-gold/50 bg-sadu-sand/30 p-3 text-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <span className="font-bold text-sadu-charcoal block">Work Production Framework</span>
+              <span className="text-[11px] text-sadu-muted">
+                Differentiates newly commissioned productions from existing institutional masterpieces.
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsCommissioned(true)}
+                className={`rounded px-3 py-1 font-semibold text-xs transition-colors cursor-pointer ${
+                  isCommissioned ? 'bg-sadu-brick text-white shadow-xs' : 'bg-white text-sadu-charcoal border border-sadu-gold/50'
+                }`}
+              >
+                Commissioned (Mockup Required)
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsCommissioned(false)}
+                className={`rounded px-3 py-1 font-semibold text-xs transition-colors cursor-pointer ${
+                  !isCommissioned ? 'bg-sadu-brick text-white shadow-xs' : 'bg-white text-sadu-charcoal border border-sadu-gold/50'
+                }`}
+              >
+                Existing Work (Mockup Optional)
+              </button>
+            </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-3">
@@ -429,14 +463,22 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
               )}
             </div>
 
-            {/* Attachment 3: Mockups/Sketches of New Work */}
+            {/* Attachment 3: Mockups/Sketches of New Work (Optional if Existing Work) */}
             <div className={`rounded-lg border p-3 flex flex-col justify-between space-y-2 ${
-              newWorkMockupUploaded || newWorkMockup.length > 0 ? 'border-emerald-400 bg-emerald-50/50' : 'border-sadu-gold/60 bg-sadu-sand/20'
+              newWorkMockupUploaded || newWorkMockup.length > 0
+                ? 'border-emerald-400 bg-emerald-50/50'
+                : !isCommissioned
+                ? 'border-stone-300 bg-stone-50/60'
+                : 'border-sadu-gold/60 bg-sadu-sand/20'
             }`}>
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-sadu-charcoal">New Work Mockups *</span>
+                <span className="text-xs font-bold text-sadu-charcoal">
+                  {isCommissioned ? 'New Work Mockups *' : 'New Work Mockups (Optional)'}
+                </span>
                 {newWorkMockupUploaded || newWorkMockup.length > 0 ? (
                   <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                ) : !isCommissioned ? (
+                  <span className="text-[10px] font-semibold text-stone-600 bg-stone-200 px-1 py-0.5 rounded">Optional</span>
                 ) : (
                   <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-1 py-0.5 rounded">Required</span>
                 )}
@@ -469,11 +511,11 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
           <span className="text-xs text-sadu-muted">
             {isFormValid ? (
               <span className="text-emerald-700 font-semibold flex items-center gap-1.5">
-                <CheckCircle2 className="h-4 w-4" /> All 5 mandatory schema components attached and validated.
+                <CheckCircle2 className="h-4 w-4" /> {isCommissioned ? 'All 5 mandatory schema components attached and validated.' : 'Historical/existing work schema validated (mockup waived).'}
               </span>
             ) : (
               <span className="text-amber-800 font-semibold flex items-center gap-1.5">
-                <AlertTriangle className="h-4 w-4" /> Required: Name, Category tag, CV, Previous Works, and Mockups.
+                <AlertTriangle className="h-4 w-4" /> {isCommissioned ? 'Required: Name, Category tag, CV, Previous Works, and Mockups.' : 'Required: Name, Category tag, CV, and Previous Works.'}
               </span>
             )}
           </span>
