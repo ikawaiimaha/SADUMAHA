@@ -52,25 +52,50 @@ export default function CoordinatorContractWorkspace() {
   const [artists, setArtists] = useState<ApprovedArtist[]>(MOCK_APPROVED_ARTISTS);
   const [selectedArtist, setSelectedArtist] = useState<ApprovedArtist | null>(MOCK_APPROVED_ARTISTS[0]);
   
-  // Contract Terms State
-  const [productionGrant, setProductionGrant] = useState<number>(35000);
+  // Contract Terms State per artist ID
+  const [grantsMap, setGrantsMap] = useState<Record<string, number>>({
+    'ART-001': 35000,
+    'ART-002': 25000
+  });
+
   const [shippingMethod, setShippingMethod] = useState<ShippingMethod>('FINE_ART_COURIER');
   const [trancheStructure, setTrancheStructure] = useState<TrancheStructure>('STANDARD_SPLIT');
-  const [contractGenerated, setContractGenerated] = useState<boolean>(false);
+  const [generatedContracts, setGeneratedContracts] = useState<Record<string, boolean>>({});
 
-  // Computed total commitments across simulated roster
-  const totalCommitted = productionGrant + 45000; // Simulated existing commitments
+  const currentProductionGrant = selectedArtist ? (grantsMap[selectedArtist.id] || 30000) : 0;
+
+  // Dynamically track commitments across all generated agreements
+  const totalCommitted = Object.entries(generatedContracts).reduce((acc, [artistId, isGen]) => {
+    return isGen ? acc + (grantsMap[artistId] || 0) : acc;
+  }, 0);
+
   const isOverBudget = totalCommitted > TOTAL_CHAIRMAN_BUDGET;
 
   // Tranche breakdown calculations
   const trancheBreakdown = trancheStructure === 'STANDARD_SPLIT' 
-    ? { adv: productionGrant * 0.3, freight: productionGrant * 0.4, final: productionGrant * 0.3 }
-    : { adv: 0, freight: 0, final: productionGrant };
+    ? { adv: currentProductionGrant * 0.3, freight: currentProductionGrant * 0.4, final: currentProductionGrant * 0.3 }
+    : { adv: 0, freight: 0, final: currentProductionGrant };
+
+  const handleGrantChange = (val: number) => {
+    if (!selectedArtist) return;
+    const sanitizedVal = Math.max(0, val); // Reject negative production grants
+    setGrantsMap(prev => ({
+      ...prev,
+      [selectedArtist.id]: sanitizedVal
+    }));
+  };
 
   const handleGenerateContract = () => {
     if (!selectedArtist) return;
-    setContractGenerated(true);
-    // Updates status in state / triggers backend PDF generation sync
+    if (currentProductionGrant < 0) {
+      alert("Error: Production grant cannot be a negative value.");
+      return;
+    }
+
+    // Step 1: Execute agreement generation simulation
+    setGeneratedContracts(prev => ({ ...prev, [selectedArtist.id]: true }));
+
+    // Step 2: Update artist status in roster queue
     setArtists(prev => prev.map(a => a.id === selectedArtist.id ? { ...a, status: 'CONTRACT_PENDING_SIGNATURE' } : a));
   };
 
@@ -86,13 +111,13 @@ export default function CoordinatorContractWorkspace() {
           </p>
         </div>
         <div className="bg-white px-4 py-2 rounded-md border border-[#D9D2C5] text-xs font-mono shadow-sm">
-          Allocated Budget Ceiling: <span className="font-bold text-[#8B4513]">{TOTAL_CHAIRMAN_BUDGET.toLocaleString()} AED</span>
+          Allocated Budget: <span className="font-bold text-[#8B4513]">{TOTAL_CHAIRMAN_BUDGET.toLocaleString()} AED</span> | Committed: <span className="font-bold text-[#1A1817]">{totalCommitted.toLocaleString()} AED</span>
         </div>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* Column 1: Approved Artist Ingestion Queue */}
+        {/* Column 1: Approved Artist Ingestion Queue (Keyboard Accessible) */}
         <section className="bg-white p-5 rounded-lg shadow-sm border border-[#D9D2C5] flex flex-col">
           <div className="flex items-center gap-2 mb-4 border-b border-[#EAE3D9] pb-3">
             <UserCheck className="w-5 h-5 text-[#8B4513]" />
@@ -103,10 +128,11 @@ export default function CoordinatorContractWorkspace() {
             {artists.map((artist) => {
               const isSelected = selectedArtist?.id === artist.id;
               return (
-                <div 
+                <button 
                   key={artist.id}
-                  onClick={() => { setSelectedArtist(artist); setContractGenerated(false); }}
-                  className={`p-4 rounded-md border cursor-pointer transition-all ${
+                  type="button"
+                  onClick={() => setSelectedArtist(artist)}
+                  className={`w-full text-start p-4 rounded-md border cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-[#8B4513] ${
                     isSelected 
                       ? 'border-[#8B4513] bg-[#FDFBF7] shadow-sm ring-1 ring-[#8B4513]' 
                       : 'border-[#D9D2C5] bg-white hover:bg-[#FAF8F5]'
@@ -130,7 +156,7 @@ export default function CoordinatorContractWorkspace() {
                       {artist.status === 'DIRECTOR_APPROVED' ? 'Ready for Contract' : 'Contract Dispatched'}
                     </span>
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
@@ -155,25 +181,26 @@ export default function CoordinatorContractWorkspace() {
               {/* Form Controls */}
               <div className="space-y-6">
                 
-                {/* Production Grant Input */}
+                {/* Production Grant Input with negative value protection */}
                 <div>
                   <label className="block text-sm font-medium text-[#1A1817] mb-1 flex items-center justify-between">
                     <span>Production Grant Allocation (AED)</span>
-                    <span className="text-xs text-[#8C7A6B]">Max allowable per institutional scale</span>
+                    <span className="text-xs text-[#8C7A6B]">Values must be non-negative</span>
                   </label>
                   <div className="relative">
                     <span className="absolute start-3 top-2.5 text-[#8C7A6B] font-mono text-sm">AED</span>
                     <input 
                       type="number"
-                      value={productionGrant}
-                      onChange={(e) => setProductionGrant(Number(e.target.value))}
+                      min="0"
+                      value={currentProductionGrant}
+                      onChange={(e) => handleGrantChange(Number(e.target.value))}
                       className="w-full ps-14 pe-4 py-2 border border-[#D9D2C5] rounded-md bg-[#FAF8F5] text-sm font-mono focus:ring-1 focus:ring-[#8B4513] focus:border-[#8B4513]"
                     />
                   </div>
                   {isOverBudget && (
                     <div className="mt-2 flex items-center gap-2 text-xs text-red-700 bg-red-50 p-2 rounded border border-red-200">
                       <AlertTriangle className="w-4 h-4 shrink-0" />
-                      <span>Warning: Total commitments exceed the Chairman’s approved budget ceiling!</span>
+                      <span>Warning: Total commitments across generated agreements exceed the Chairman’s approved budget ceiling!</span>
                     </div>
                   )}
                 </div>
@@ -265,7 +292,7 @@ export default function CoordinatorContractWorkspace() {
 
               {/* Action Footer */}
               <div className="pt-2 border-t border-[#EAE3D9] flex items-center justify-between">
-                {contractGenerated ? (
+                {generatedContracts[selectedArtist.id] ? (
                   <div className="flex items-center gap-2 text-emerald-800 bg-emerald-50 px-4 py-2 rounded border border-emerald-300 text-xs font-medium">
                     <CheckCircle2 className="w-4 h-4" />
                     <span>Contract Generated & Dispatched to Artist Portal</span>
@@ -275,8 +302,9 @@ export default function CoordinatorContractWorkspace() {
                 )}
 
                 <button
+                  type="button"
                   onClick={handleGenerateContract}
-                  disabled={isOverBudget}
+                  disabled={currentProductionGrant <= 0}
                   className="flex items-center gap-2 bg-[#2C2A29] hover:bg-[#1A1817] disabled:bg-[#D9D2C5] text-white py-2.5 px-6 rounded-md text-sm font-medium transition-colors shadow-sm"
                 >
                   <Send className="w-4 h-4" />
