@@ -99,7 +99,14 @@ export default function CoordinatorContractWorkspace() {
   };
 
   const handleGenerateContract = () => {
-    if (!selectedArtist || isAlreadyDispatched) return;
+    if (!selectedArtist) return;
+    
+    // Explicit guard against repeat dispatch
+    if (generatedContracts[selectedArtist.id]) {
+      alert("Error: Contract for this artist has already been dispatched.");
+      return;
+    }
+
     if (currentProductionGrant < 0) {
       alert("Error: Production grant cannot be a negative value.");
       return;
