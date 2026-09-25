@@ -9,11 +9,17 @@ export type BilateralContractStatus =
 
 export interface NegotiationRound {
   id: string;
-  requestedAt: string;
+  requestedAt?: string;
+  createdAt?: string;
+  contractId?: string;
   disputedCategory: 'PRODUCTION_GRANT' | 'SHIPPING_TERMS' | 'INSTALLATION_DATES' | 'OTHER';
-  artistJustification: string;
+  artistJustification?: string;
+  justification?: string;
+  proposedValue?: number;
+  proposedGrant?: number;
   coordinatorResolutionNotes?: string;
   resolvedAt?: string;
+  status?: string;
 }
 
 export interface TrancheSchedule {

@@ -9,8 +9,11 @@ import {
   Send,
   UserCheck,
   Award,
-  Lock
+  Lock,
+  MessageSquareWarning,
+  RefreshCw
 } from 'lucide-react';
+import { NegotiationRound } from '../types';
 
 // --- Types ---
 interface ApprovedArtist {
@@ -20,7 +23,7 @@ interface ApprovedArtist {
   category: 'Emerging' | 'Established';
   nationality: string;
   medium: string;
-  status: 'DIRECTOR_APPROVED' | 'CONTRACT_PENDING_SIGNATURE';
+  status: 'DIRECTOR_APPROVED' | 'CONTRACT_PENDING_SIGNATURE' | 'CONTRACT_DISPUTED';
 }
 
 type TrancheStructure = 'STANDARD_SPLIT' | 'SINGLE_DISBURSAL';
@@ -34,7 +37,7 @@ const MOCK_APPROVED_ARTISTS: ApprovedArtist[] = [
     category: 'Established',
     nationality: 'Jordanian / UAE',
     medium: 'Large-scale Kufic bronze sculpture',
-    status: 'DIRECTOR_APPROVED'
+    status: 'CONTRACT_DISPUTED' // Seeded with an active dispute for demonstration
   },
   {
     id: 'ART-002',
@@ -53,7 +56,7 @@ export default function CoordinatorContractWorkspace() {
   const [artists, setArtists] = useState<ApprovedArtist[]>(MOCK_APPROVED_ARTISTS);
   const [selectedArtist, setSelectedArtist] = useState<ApprovedArtist | null>(MOCK_APPROVED_ARTISTS[0]);
   
-  // Contract Terms State per artist ID (editable grants)
+  // Contract Terms State per artist ID
   const [grantsMap, setGrantsMap] = useState<Record<string, number>>({
     'ART-001': 35000,
     'ART-002': 25000
@@ -63,6 +66,21 @@ export default function CoordinatorContractWorkspace() {
   const [dispatchedGrants, setDispatchedGrants] = useState<Record<string, number>>({});
   const [generatedContracts, setGeneratedContracts] = useState<Record<string, boolean>>({});
 
+  // Active negotiation/dispute log mapping per artist
+  const [disputeLogs, setDisputeLogs] = useState<Record<string, NegotiationRound[]>>({
+    'ART-001': [
+      {
+        id: 'NEG-01',
+        contractId: 'CON-001',
+        disputedCategory: 'PRODUCTION_GRANT',
+        justification: 'Requested an upward adjustment to AED 45,000 due to specialized fine-art bronze foundry expenses in Amman.',
+        proposedValue: 45000,
+        status: 'PENDING_COORDINATOR_REVIEW',
+        createdAt: '2026-09-25T10:00:00Z'
+      }
+    ]
+  });
+
   const [shippingMethod, setShippingMethod] = useState<ShippingMethod>('FINE_ART_COURIER');
   const [trancheStructure, setTrancheStructure] = useState<TrancheStructure>('STANDARD_SPLIT');
 
@@ -71,56 +89,46 @@ export default function CoordinatorContractWorkspace() {
     ? (grantsMap[selectedArtist.id] !== undefined ? grantsMap[selectedArtist.id] : 30000) 
     : 0;
 
-  // Total committed budget strictly from successfully dispatched contracts
+  // Total committed budget strictly from successfully dispatched/updated contracts
   const totalDispatchedCommitted = Object.values(dispatchedGrants).reduce((acc, val) => acc + val, 0);
 
-  // Check if current selected artist is already dispatched
-  const isAlreadyDispatched = selectedArtist ? !!generatedContracts[selectedArtist.id] : false;
+  const isAlreadyDispatched = selectedArtist ? !!generatedContracts[selectedArtist.id] && selectedArtist.status !== 'CONTRACT_DISPUTED' : false;
+  const isDisputed = selectedArtist ? selectedArtist.status === 'CONTRACT_DISPUTED' : false;
 
-  // Proposed total commitment if current artist is dispatched
-  const proposedTotalCommitted = isAlreadyDispatched 
-    ? totalDispatchedCommitted 
-    : totalDispatchedCommitted + currentProductionGrant;
-
+  const proposedTotalCommitted = totalDispatchedCommitted + currentProductionGrant;
   const isOverBudget = proposedTotalCommitted > TOTAL_CHAIRMAN_BUDGET;
 
-  // Tranche breakdown calculations
   const trancheBreakdown = trancheStructure === 'STANDARD_SPLIT' 
     ? { adv: currentProductionGrant * 0.3, freight: currentProductionGrant * 0.4, final: currentProductionGrant * 0.3 }
     : { adv: 0, freight: 0, final: currentProductionGrant };
 
   const handleGrantChange = (val: number) => {
     if (!selectedArtist || isAlreadyDispatched) return;
-    const sanitizedVal = Math.max(0, val); // Prevent negative values
+    const sanitizedVal = Math.max(0, val);
     setGrantsMap(prev => ({
       ...prev,
       [selectedArtist.id]: sanitizedVal
     }));
   };
 
-  const handleGenerateContract = () => {
+  const handleResolveAndRedispatch = () => {
     if (!selectedArtist) return;
-    
-    // Explicit guard against repeat dispatch
-    if (generatedContracts[selectedArtist.id]) {
-      alert("Error: Contract for this artist has already been dispatched.");
-      return;
-    }
-
     if (currentProductionGrant < 0) {
       alert("Error: Production grant cannot be a negative value.");
       return;
     }
-    if (totalDispatchedCommitted + currentProductionGrant > TOTAL_CHAIRMAN_BUDGET) {
-      alert("Error: Proposed commitment exceeds the Chairman's allocated budget ceiling.");
-      return;
-    }
 
-    // Lock the grant into dispatched commitments and mark generated
+    // Resolve active dispute logs for this artist
+    setDisputeLogs(prev => ({
+      ...prev,
+      [selectedArtist.id]: (prev[selectedArtist.id] || []).map(r => ({ ...r, status: 'RESOLVED_BY_COORDINATOR' }))
+    }));
+
+    // Lock updated grant and mark contract re-dispatched
     setDispatchedGrants(prev => ({ ...prev, [selectedArtist.id]: currentProductionGrant }));
     setGeneratedContracts(prev => ({ ...prev, [selectedArtist.id]: true }));
 
-    // Update artist status in roster queue
+    // Update artist status back to pending signature
     setArtists(prev => prev.map(a => a.id === selectedArtist.id ? { ...a, status: 'CONTRACT_PENDING_SIGNATURE' } : a));
   };
 
@@ -129,10 +137,10 @@ export default function CoordinatorContractWorkspace() {
       {/* Header */}
       <header className="mb-8 border-b border-[#D9D2C5] pb-4 flex justify-between items-end">
         <div>
-          <span className="text-xs uppercase tracking-widest text-[#8C7A6B] font-semibold">Stage 6 • Bilateral Contracting</span>
+          <span className="text-xs uppercase tracking-widest text-[#8C7A6B] font-semibold">Stage 6 • Bilateral Contracting & Negotiation</span>
           <h1 className="text-3xl font-serif font-bold tracking-tight text-[#1A1817] mt-1">Coordinator Contract Workspace</h1>
           <p className="text-[#6B635B] text-sm mt-1">
-            المنسق العام — Configure production grants, shipping logistics, and auto-generate binding institutional agreements.
+            المنسق العام — Manage active agreements, review artist dispute requests, and calibrate financial commitments.
           </p>
         </div>
         <div className="bg-white px-4 py-2 rounded-md border border-[#D9D2C5] text-xs font-mono shadow-sm">
@@ -142,17 +150,19 @@ export default function CoordinatorContractWorkspace() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* Column 1: Approved Artist Ingestion Queue (Keyboard Accessible) */}
+        {/* Column 1: Approved Artist Ingestion Queue with Dispute Flags */}
         <section className="bg-white p-5 rounded-lg shadow-sm border border-[#D9D2C5] flex flex-col">
           <div className="flex items-center gap-2 mb-4 border-b border-[#EAE3D9] pb-3">
             <UserCheck className="w-5 h-5 text-[#8B4513]" />
-            <h2 className="text-base font-semibold font-serif">Approved Artists Queue ({artists.length})</h2>
+            <h2 className="text-base font-semibold font-serif">Active Contract Roster ({artists.length})</h2>
           </div>
 
           <div className="space-y-3 overflow-y-auto max-h-[550px] pe-1">
             {artists.map((artist) => {
               const isSelected = selectedArtist?.id === artist.id;
-              const isDispatched = generatedContracts[artist.id];
+              const hasDispute = artist.status === 'CONTRACT_DISPUTED';
+              const isDispatched = artist.status === 'CONTRACT_PENDING_SIGNATURE' && !hasDispute;
+
               return (
                 <button 
                   key={artist.id}
@@ -168,6 +178,7 @@ export default function CoordinatorContractWorkspace() {
                     <div>
                       <h3 className="font-semibold text-sm text-[#1A1817] flex items-center gap-1.5">
                         {artist.name}
+                        {hasDispute && <MessageSquareWarning className="w-4 h-4 text-amber-700 animate-pulse" />}
                         {isDispatched && <Lock className="w-3 h-3 text-[#8B4513]" />}
                       </h3>
                       <p className="text-xs text-[#8C7A6B] font-serif">{artist.arabicName}</p>
@@ -181,8 +192,10 @@ export default function CoordinatorContractWorkspace() {
                   <p className="text-xs text-[#6B635B] mb-2">{artist.medium}</p>
                   <div className="flex justify-between items-center text-[11px] text-[#8C7A6B] border-t border-[#F2ECE1] pt-2">
                     <span>{artist.nationality}</span>
-                    <span className={`font-medium ${isDispatched ? 'text-emerald-700' : 'text-amber-700'}`}>
-                      {isDispatched ? 'Contract Dispatched' : 'Ready for Contract'}
+                    <span className={`font-medium px-2 py-0.5 rounded text-[10px] ${
+                      hasDispute ? 'bg-amber-100 text-amber-800' : isDispatched ? 'bg-emerald-50 text-emerald-700' : 'bg-stone-100 text-stone-700'
+                    }`}>
+                      {hasDispute ? 'Dispute Pending' : isDispatched ? 'Pending Signature' : 'Ready'}
                     </span>
                   </div>
                 </button>
@@ -191,40 +204,65 @@ export default function CoordinatorContractWorkspace() {
           </div>
         </section>
 
-        {/* Column 2 & 3: Bilateral Contract Terms Form & Preview */}
+        {/* Column 2 & 3: Agreement Editor & Active Dispute Queue Panel */}
         <section className="lg:col-span-2 space-y-6">
           {selectedArtist ? (
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-[#D9D2C5]">
+            <div className="space-y-6">
               
-              <div className="flex justify-between items-center mb-6 border-b border-[#EAE3D9] pb-4">
-                <div>
-                  <span className="text-xs text-[#8C7A6B] uppercase font-mono">Configuring Agreement For:</span>
-                  <h2 className="text-xl font-serif font-bold text-[#1A1817]">{selectedArtist.name} ({selectedArtist.arabicName})</h2>
-                </div>
-                <div className="flex items-center gap-2 bg-[#FAF8F5] px-3 py-1.5 rounded border border-[#D9D2C5]">
-                  <Award className="w-4 h-4 text-[#8B4513]" />
-                  <span className="text-xs font-medium">{selectedArtist.category} Tier</span>
-                </div>
-              </div>
-
-              {isAlreadyDispatched && (
-                <div className="mb-6 bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-md text-xs flex items-center gap-2">
-                  <Lock className="w-4 h-4 shrink-0" />
-                  <span>This contract has already been generated and dispatched. Terms are locked against further modification.</span>
+              {/* Active Dispute Notification Banner */}
+              {isDisputed && disputeLogs[selectedArtist.id]?.some(r => r.status === 'PENDING_COORDINATOR_REVIEW') && (
+                <div className="bg-amber-50 border border-amber-300 rounded-lg p-5 shadow-sm space-y-3">
+                  <div className="flex items-center gap-2 text-amber-900 font-serif font-bold text-base">
+                    <MessageSquareWarning className="w-5 h-5 text-amber-700" />
+                    <span>Formal Amendment Requested by Artist (طلب تعديل معلق)</span>
+                  </div>
+                  {disputeLogs[selectedArtist.id].filter(r => r.status === 'PENDING_COORDINATOR_REVIEW').map(round => (
+                    <div key={round.id} className="bg-white p-4 rounded border border-amber-200 text-xs space-y-2 font-sans">
+                      <div className="flex justify-between text-amber-900 font-semibold">
+                        <span>Disputed Category: <span className="font-mono text-[#8B4513]">{round.disputedCategory}</span></span>
+                        {round.proposedValue && (
+                          <span className="bg-amber-100 px-2 py-0.5 rounded font-mono text-amber-950">
+                            Proposed Counter: AED {round.proposedValue.toLocaleString()}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[#5C554E] italic font-serif bg-[#FAF8F5] p-2.5 rounded border border-[#E3DAC9]">
+                        "{round.justification}"
+                      </p>
+                      <p className="text-[10px] text-stone-400">Logged on: {new Date(round.createdAt || '').toLocaleString()}</p>
+                    </div>
+                  ))}
+                  <p className="text-xs text-amber-900">
+                    * Adjust the production grant or terms below to reflect negotiations, then click <strong className="font-semibold">Re-dispatch Agreement</strong> to clear the dispute.
+                  </p>
                 </div>
               )}
 
-              {/* Form Controls */}
-              <div className="space-y-6">
+              {/* Main Contract Configuration Card */}
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-[#D9D2C5]">
                 
-                {/* Production Grant Input */}
-                <div>
-                  <label className="block text-sm font-medium text-[#1A1817] mb-1 flex items-center justify-between">
-                    <span>Production Grant Allocation (AED)</span>
-                    <span className="text-xs text-[#8C7A6B]">Preserves 0 and non-negative values</span>
-                  </label>
-                  <div className="relative">
-                    <span className="absolute start-3 top-2.5 text-[#8C7A6B] font-mono text-sm">AED</span>
+                <div className="flex justify-between items-center mb-6 border-b border-[#EAE3D9] pb-4">
+                  <div>
+                    <span className="text-xs text-[#8C7A6B] uppercase font-mono">Configuring Agreement For:</span>
+                    <h2 className="text-xl font-serif font-bold text-[#1A1817]">{selectedArtist.name} ({selectedArtist.arabicName})</h2>
+                  </div>
+                  <div className="flex items-center gap-2 bg-[#FAF8F5] px-3 py-1.5 rounded border border-[#D9D2C5]">
+                    <Award className="w-4 h-4 text-[#8B4513]" />
+                    <span className="text-xs font-medium">{selectedArtist.category} Tier</span>
+                  </div>
+                </div>
+
+                {/* Form Controls */}
+                <div className="space-y-6">
+                  
+                  {/* Production Grant Input */}
+                  <div>
+                    <label className="block text-sm font-medium text-[#1A1817] mb-1 flex items-center justify-between">
+                      <span>Production Grant Allocation (AED)</span>
+                      <span className="text-xs text-[#8C7A6B]">Adjustable for counter-allocations</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute start-3 top-2.5 text-[#8C7A6B] font-mono text-sm">AED</span>
                     <input 
                       type="number"
                       min="0"
@@ -334,37 +372,34 @@ export default function CoordinatorContractWorkspace() {
                 </p>
               </div>
 
-              {/* Action Footer */}
-              <div className="pt-2 border-t border-[#EAE3D9] flex items-center justify-between">
-                {isAlreadyDispatched ? (
-                  <div className="flex items-center gap-2 text-emerald-800 bg-emerald-50 px-4 py-2 rounded border border-emerald-300 text-xs font-medium">
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>Contract Generated & Dispatched to Artist Portal</span>
-                  </div>
-                ) : (
-                  <div className="text-xs text-[#8C7A6B]">Ready for automated PDF compilation</div>
-                )}
+                  {/* Action Footer */}
+                  <div className="pt-2 border-t border-[#EAE3D9] flex items-center justify-between">
+                    <div className="text-xs text-[#8C7A6B]">
+                      {isDisputed ? 'Resolving active dispute & updating agreement' : 'Ready for automated PDF compilation'}
+                    </div>
 
-                <button
-                  type="button"
-                  onClick={handleGenerateContract}
-                  disabled={isAlreadyDispatched || isOverBudget || currentProductionGrant <= 0}
-                  className="flex items-center gap-2 bg-[#2C2A29] hover:bg-[#1A1817] disabled:bg-[#D9D2C5] text-white py-2.5 px-6 rounded-md text-sm font-medium transition-colors shadow-sm"
-                >
-                  <Send className="w-4 h-4" />
-                  {isAlreadyDispatched ? 'Contract Already Dispatched' : 'Generate & Dispatch Agreement'}
-                </button>
+                    <button
+                      type="button"
+                      onClick={handleResolveAndRedispatch}
+                      disabled={isOverBudget || currentProductionGrant < 0}
+                      className="flex items-center gap-2 bg-[#8B4513] hover:bg-[#6e350f] disabled:bg-[#D9D2C5] text-white py-2.5 px-6 rounded-md text-xs font-bold transition-colors shadow-sm cursor-pointer"
+                    >
+                      {isDisputed ? <RefreshCw className="w-3.5 h-3.5" /> : <Send className="w-3.5 h-3.5" />}
+                      <span>{isDisputed ? 'Resolve Dispute & Re-dispatch Agreement' : 'Generate & Dispatch Agreement'}</span>
+                    </button>
+                  </div>
+
+                </div>
               </div>
 
             </div>
-          </div>
-        ) : (
-          <div className="bg-white p-12 rounded-lg shadow-sm border border-[#D9D2C5] text-center text-[#8C7A6B]">
-            <FileText className="w-12 h-12 mx-auto mb-3 opacity-40" />
-            <p>Select an approved artist from the queue to configure bilateral contract terms.</p>
-          </div>
-        )}
-      </section>
+          ) : (
+            <div className="bg-white p-12 rounded-lg shadow-sm border border-[#D9D2C5] text-center text-[#8C7A6B]">
+              <FileText className="w-12 h-12 mx-auto mb-3 opacity-40" />
+              <p>Select an artist from the roster to view or configure their agreement terms.</p>
+            </div>
+          )}
+        </section>
 
     </div>
   </div>

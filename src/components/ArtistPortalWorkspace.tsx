@@ -28,7 +28,8 @@ export interface ArtistPortalWorkspaceProps {
   onRequestAmendment?: (
     contractId: string,
     category: NegotiationRound['disputedCategory'],
-    justification: string
+    justification: string,
+    proposedGrant?: number
   ) => void;
   onBackToRoles?: () => void;
 }
@@ -743,8 +744,8 @@ export const ArtistPortalWorkspace: React.FC<ArtistPortalWorkspaceProps> = ({
         <ContractDisputeModal
           artistName={activeContract.artistName}
           currentGrant={activeContract.productionCost}
-          onSubmitAmendment={(category, justification) => {
-            onRequestAmendment?.(activeContract.id, category, justification);
+          onSubmitAmendment={(category, justification, proposedGrant) => {
+            onRequestAmendment?.(activeContract.id, category, justification, proposedGrant);
             setIsDisputeModalOpen(false);
           }}
           onClose={() => setIsDisputeModalOpen(false)}

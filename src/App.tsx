@@ -466,7 +466,8 @@ function SADUApp() {
   const handleRequestAmendment = (
     contractId: string,
     category: NegotiationRound['disputedCategory'],
-    justification: string
+    justification: string,
+    proposedGrant?: number
   ) => {
     setContracts(prev =>
       prev.map(c => {
@@ -474,8 +475,14 @@ function SADUApp() {
         const newRound: NegotiationRound = {
           id: `neg-${Date.now()}`,
           requestedAt: new Date().toISOString().split('T')[0],
+          createdAt: new Date().toISOString(),
+          contractId,
           disputedCategory: category,
           artistJustification: justification,
+          justification,
+          proposedValue: proposedGrant,
+          proposedGrant,
+          status: 'PENDING_COORDINATOR_REVIEW',
         };
         return {
           ...c,
