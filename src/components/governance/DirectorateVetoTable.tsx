@@ -31,10 +31,10 @@ export const DirectorateVetoTable: React.FC = () => {
       <div className="rounded border border-sadu-gold/40 overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-xs uppercase tracking-wider text-sadu-muted bg-sadu-sand border-b border-sadu-gold/40">
+            <tr className="text-start text-xs uppercase tracking-wider text-sadu-muted bg-sadu-sand border-b border-sadu-gold/40">
               <th className="px-4 py-2 font-medium">Artist</th>
               <th className="px-4 py-2 font-medium">Source</th>
-              <th className="px-4 py-2 font-medium text-right">Action</th>
+              <th className="px-4 py-2 font-medium text-end">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-sadu-gold/20">
@@ -42,7 +42,7 @@ export const DirectorateVetoTable: React.FC = () => {
               <tr key={nom.id}>
                 <td className="px-4 py-2 font-medium text-sadu-charcoal">{nom.artistName}</td>
                 <td className="px-4 py-2 text-sadu-muted">{nom.nominationSource}</td>
-                <td className="px-4 py-2 text-right space-x-2 rtl:space-x-reverse">
+                <td className="px-4 py-2 text-end space-x-2 rtl:space-x-reverse">
                   <button type="button" onClick={() => approveNomination(nom.id)} className="inline-flex items-center gap-1 rounded bg-emerald-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-800">
                     <CheckCircle2 size={12}/> Approve
                   </button>

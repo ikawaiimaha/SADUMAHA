@@ -380,7 +380,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
               {cvUploaded || cvFile !== null ? (
                 <div className="flex items-center justify-between rounded bg-white p-2 border border-emerald-300 text-xs">
                   <span className="truncate text-emerald-950 font-medium">{cvFileName || cvFile?.name || 'Artist_CV.pdf'}</span>
-                  <button type="button" onClick={() => { setCvFile(null); setCvUploaded(false); setCvFileName(''); }} className="text-red-500 hover:text-red-700 ml-1 cursor-pointer">
+                  <button type="button" onClick={() => { setCvFile(null); setCvUploaded(false); setCvFileName(''); }} className="text-red-500 hover:text-red-700 ms-1 cursor-pointer">
                     <X className="h-3.5 w-3.5" />
                   </button>
                 </div>
@@ -411,7 +411,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
               {previousWorksUploaded || previousWorks.length > 0 ? (
                 <div className="flex items-center justify-between rounded bg-white p-2 border border-emerald-300 text-xs">
                   <span className="text-emerald-950 font-medium">{previousWorks.length > 0 ? `${previousWorks.length} Images Attached` : 'Images Attached'}</span>
-                  <button type="button" onClick={() => { setPreviousWorks([]); setPreviousWorksUploaded(false); }} className="text-red-500 hover:text-red-700 ml-1 cursor-pointer">
+                  <button type="button" onClick={() => { setPreviousWorks([]); setPreviousWorksUploaded(false); }} className="text-red-500 hover:text-red-700 ms-1 cursor-pointer">
                     <X className="h-3.5 w-3.5" />
                   </button>
                 </div>
@@ -444,7 +444,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
               {newWorkMockupUploaded || newWorkMockup.length > 0 ? (
                 <div className="flex items-center justify-between rounded bg-white p-2 border border-emerald-300 text-xs">
                   <span className="text-emerald-950 font-medium">{newWorkMockup.length > 0 ? `${newWorkMockup.length} Mockups Attached` : 'Mockups Attached'}</span>
-                  <button type="button" onClick={() => { setNewWorkMockup([]); setNewWorkMockupUploaded(false); }} className="text-red-500 hover:text-red-700 ml-1 cursor-pointer">
+                  <button type="button" onClick={() => { setNewWorkMockup([]); setNewWorkMockupUploaded(false); }} className="text-red-500 hover:text-red-700 ms-1 cursor-pointer">
                     <X className="h-3.5 w-3.5" />
                   </button>
                 </div>

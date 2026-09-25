@@ -103,13 +103,13 @@ export const RehearsalTeleprompter: React.FC = () => {
   return (
     <>
       <div
-        className="fixed bottom-40 left-0 w-20 h-40 z-[9999] cursor-default"
+        className="fixed bottom-40 start-0 w-20 h-40 z-[9999] cursor-default"
         onClick={handleSecretTap}
         title="Secret Trigger: Triple-Tap here"
       />
 
       {isVisible && (
-        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-3xl z-[9999] shadow-2xl rounded-t-xl overflow-y-auto max-h-[85vh] border-t-2 border-indigo-500 bg-slate-900 text-white font-sans animate-in slide-in-from-bottom-10">
+        <div className="fixed bottom-0 start-1/2 -translate-x-1/2 w-full max-w-3xl z-[9999] shadow-2xl rounded-t-xl overflow-y-auto max-h-[85vh] border-t-2 border-indigo-500 bg-slate-900 text-white font-sans animate-in slide-in-from-bottom-10">
           <div className="bg-indigo-600 px-4 py-2 sm:py-3 flex items-center justify-between sticky top-0 z-10 cursor-move">
             <div className="flex items-center gap-2 font-bold text-xs sm:text-sm">
               <EyeOff className="w-4 h-4 text-indigo-200 shrink-0" />
@@ -125,7 +125,7 @@ export const RehearsalTeleprompter: React.FC = () => {
 
           <div className="p-4 sm:p-5 space-y-4">
             <h2 className="text-base sm:text-lg font-bold text-indigo-300 border-b border-slate-700 pb-2">{REHEARSAL_STEPS[currentStep].title}</h2>
-            <div className="bg-slate-800 rounded p-3 border-l-4 border-amber-400 flex items-start gap-3">
+            <div className="bg-slate-800 rounded p-3 border-s-4 border-amber-400 flex items-start gap-3">
               <MousePointerClick className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
               <div>
                 <span className="text-[10px] uppercase font-bold text-amber-400 tracking-wider block mb-1">What to do (Action)</span>
@@ -134,14 +134,14 @@ export const RehearsalTeleprompter: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="bg-slate-800 rounded p-3 border-l-4 border-emerald-400 flex items-start gap-3">
+              <div className="bg-slate-800 rounded p-3 border-s-4 border-emerald-400 flex items-start gap-3">
                 <Mic className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
                 <div>
                   <span className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider block mb-1">What to say (English)</span>
                   <p className="text-xs sm:text-sm text-slate-200 leading-relaxed">{REHEARSAL_STEPS[currentStep].sayEn}</p>
                 </div>
               </div>
-              <div className="bg-slate-800 rounded p-3 border-r-4 border-sky-400 flex items-start gap-3 text-right" dir="rtl">
+              <div className="bg-slate-800 rounded p-3 border-e-4 border-sky-400 flex items-start gap-3 text-end" dir="rtl">
                 <Mic className="w-5 h-5 text-sky-400 shrink-0 mt-0.5" />
                 <div>
                   <span className="text-[10px] uppercase font-bold text-sky-400 tracking-wider block mb-1">ماذا تقول (العربية)</span>

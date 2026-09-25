@@ -271,10 +271,10 @@ export const HeadOfProgramsView: React.FC = () => {
           </div>
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs uppercase tracking-wider text-slate-400 border-b border-slate-200">
+              <tr className="text-start text-xs uppercase tracking-wider text-slate-400 border-b border-slate-200">
                 <th className="px-6 py-3 font-medium">Artist</th>
                 <th className="px-6 py-3 font-medium">Summary</th>
-                <th className="px-6 py-3 font-medium text-right">Action</th>
+                <th className="px-6 py-3 font-medium text-end">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -282,7 +282,7 @@ export const HeadOfProgramsView: React.FC = () => {
                 <tr key={item.id}>
                   <td className="px-6 py-4 font-medium text-slate-800">{item.artistName}</td>
                   <td className="px-6 py-4 text-slate-500">{item.artistName} - {item.summary}</td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-6 py-4 text-end">
                     <button
                       onClick={() => handleRouteToCommittee(item.id)}
                       disabled={item.routed}

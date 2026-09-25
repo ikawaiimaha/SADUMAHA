@@ -132,7 +132,7 @@ export const PresenterDrawer: React.FC<PresenterDrawerProps> = ({ isOpen, onClos
 
               {/* Benchmark Table */}
               <div className="border border-sadu-gold rounded-sm overflow-hidden bg-white shadow-2xs">
-                <table className="w-full text-xs text-left rtl:text-right">
+                <table className="w-full text-xs text-start rtl:text-end">
                   <thead className="bg-sadu-sand text-sadu-charcoal font-bold uppercase tracking-wider text-[10px]">
                     <tr>
                       <th className="p-2.5 border-b border-sadu-gold/50">{isAr ? 'المعيار الوطني' : 'Benchmark Criterion'}</th>

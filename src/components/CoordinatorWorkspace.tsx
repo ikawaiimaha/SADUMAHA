@@ -145,7 +145,7 @@ export const CoordinatorWorkspace: React.FC<CoordinatorWorkspaceProps> = ({
             >
               <Users className="h-3.5 w-3.5" />
               <span>1. Artist Nomination &amp; Dossier Pool</span>
-              <span className="ml-1 rounded-full bg-white/20 px-1.5 py-0.2 text-[10px]">
+              <span className="ms-1 rounded-full bg-white/20 px-1.5 py-0.2 text-[10px]">
                 {nominatedArtists.length}
               </span>
             </button>
@@ -161,7 +161,7 @@ export const CoordinatorWorkspace: React.FC<CoordinatorWorkspaceProps> = ({
             >
               <FileSignature className="h-3.5 w-3.5" />
               <span>2. Stage 6 Bilateral Contracts Generator</span>
-              <span className="ml-1 rounded-full bg-white/20 px-1.5 py-0.2 text-[10px]">
+              <span className="ms-1 rounded-full bg-white/20 px-1.5 py-0.2 text-[10px]">
                 {approvedArtists.length}
               </span>
             </button>
@@ -185,7 +185,7 @@ export const CoordinatorWorkspace: React.FC<CoordinatorWorkspaceProps> = ({
         <div className="space-y-4">
           {/* Status Filters */}
           <div className="flex flex-wrap items-center gap-2 rounded-lg border border-sadu-gold/50 bg-sadu-sand/40 p-3 text-xs">
-            <span className="font-bold text-sadu-charcoal mr-2">Filter Pool:</span>
+            <span className="font-bold text-sadu-charcoal me-2">Filter Pool:</span>
             <button
               type="button"
               onClick={() => setStatusFilter('ALL')}
@@ -405,12 +405,12 @@ export const CoordinatorWorkspace: React.FC<CoordinatorWorkspaceProps> = ({
                     Production Budget Allowance (AED)
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-2.5 text-xs font-bold text-sadu-muted">AED</span>
+                    <span className="absolute start-3 top-2.5 text-xs font-bold text-sadu-muted">AED</span>
                     <input
                       type="number"
                       value={productionCostInput}
                       onChange={e => setProductionCostInput(Number(e.target.value))}
-                      className="w-full rounded-md border border-sadu-gold/80 pl-12 pr-3 py-2 text-sm font-semibold text-sadu-charcoal focus:border-sadu-brick focus:outline-none"
+                      className="w-full rounded-md border border-sadu-gold/80 ps-12 pe-3 py-2 text-sm font-semibold text-sadu-charcoal focus:border-sadu-brick focus:outline-none"
                     />
                   </div>
                   <span className="text-[10px] text-sadu-muted mt-1 block">

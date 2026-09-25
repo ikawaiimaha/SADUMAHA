@@ -65,7 +65,7 @@ const THREADS: InboxThread[] = [
     ],
   },
   {
-    id: 'pr-visa',
+    id: 'pe-visa',
     subjectEn: 'PR & Protocol — Visa Document Confirmation',
     subjectAr: 'العلاقات العامة والمراسم — تأكيد وثائق التأشيرة',
     previewEn: 'Visa clearance has been confirmed; flight booking token issued.',

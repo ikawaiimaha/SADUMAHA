@@ -26,11 +26,11 @@ export const FinanceTracker: React.FC = () => {
       <div className="rounded border border-sadu-gold/40 overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-xs uppercase tracking-wider text-sadu-muted bg-sadu-sand border-b border-sadu-gold/40">
+            <tr className="text-start text-xs uppercase tracking-wider text-sadu-muted bg-sadu-sand border-b border-sadu-gold/40">
               <th className="px-4 py-2 font-medium">Artist</th>
               <th className="px-4 py-2 font-medium">Payment Structure</th>
               <th className="px-4 py-2 font-medium">Disbursement Status</th>
-              <th className="px-4 py-2 font-medium text-right">Action</th>
+              <th className="px-4 py-2 font-medium text-end">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-sadu-gold/20">
@@ -46,7 +46,7 @@ export const FinanceTracker: React.FC = () => {
                       {STATUS_LABEL[contract.financeDisbursementStatus]}
                     </span>
                   </td>
-                  <td className="px-4 py-2 text-right">
+                  <td className="px-4 py-2 text-end">
                     <button
                       type="button"
                       onClick={() => requestMilestoneDisbursement(contract.id)}

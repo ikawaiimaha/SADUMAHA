@@ -53,7 +53,7 @@ export const DraftingPool: React.FC = () => {
       <div className="rounded border border-sadu-gold/40 overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-xs uppercase tracking-wider text-sadu-muted bg-sadu-sand border-b border-sadu-gold/40">
+            <tr className="text-start text-xs uppercase tracking-wider text-sadu-muted bg-sadu-sand border-b border-sadu-gold/40">
               <th className="px-4 py-2 font-medium"><span className="sr-only">Select</span></th>
               <th className="px-4 py-2 font-medium">Artist</th>
               <th className="px-4 py-2 font-medium">Source</th>

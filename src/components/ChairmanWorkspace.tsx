@@ -201,7 +201,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
 
           {/* Winning Theme Prominent Highlight Card (Rejected themes hidden) */}
           <div className="relative overflow-hidden rounded-xl border-2 border-sadu-gold bg-white p-6 shadow-md">
-            <div className="absolute top-0 right-0 h-24 w-24 translate-x-8 -translate-y-8 rounded-full bg-sadu-gold/20 blur-xl pointer-events-none" />
+            <div className="absolute top-0 end-0 h-24 w-24 translate-x-8 -translate-y-8 rounded-full bg-sadu-gold/20 blur-xl pointer-events-none" />
 
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between border-b border-sadu-gold/40 pb-5">
               <div className="space-y-1">
@@ -217,7 +217,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
                   {winningTheme.englishName}
                 </h4>
               </div>
-              <div className="text-left sm:text-right" dir="rtl">
+              <div className="text-start sm:text-end" dir="rtl">
                 <span className="text-xs font-semibold text-sadu-muted block pb-0.5">
                   الاسم الرسمي المعتمد
                 </span>
@@ -332,7 +332,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
               </div>
 
               <div className="relative">
-                <span className="absolute left-3 top-2.5 text-xs font-bold text-sadu-brick">AED</span>
+                <span className="absolute start-3 top-2.5 text-xs font-bold text-sadu-brick">AED</span>
                 <input
                   id="approved-budget-amount"
                   type="number"
@@ -340,7 +340,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
                   disabled={isBudgetAssigned}
                   value={allocatedBudget}
                   onChange={e => setAllocatedBudget(Number(e.target.value) || 0)}
-                  className={`w-full rounded-md border py-2 pl-12 pr-4 font-mono text-base font-bold focus:outline-none focus:ring-1 ${
+                  className={`w-full rounded-md border py-2 ps-12 pe-4 font-mono text-base font-bold focus:outline-none focus:ring-1 ${
                     isBudgetAssigned
                       ? 'border-emerald-300 bg-emerald-50/50 text-emerald-950 cursor-not-allowed'
                       : 'border-sadu-gold/70 bg-white text-sadu-charcoal focus:border-sadu-brick focus:ring-sadu-brick'

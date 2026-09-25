@@ -412,7 +412,7 @@ export const FinanceWorkspace: React.FC<FinanceWorkspaceProps> = ({
           </div>
         ) : (
           <div className="rounded border border-sadu-gold/50 overflow-hidden bg-white text-xs">
-            <table className="w-full text-left">
+            <table className="w-full text-start">
               <thead className="bg-sadu-sand/60 border-b border-sadu-gold/40 text-[10px] uppercase font-bold text-sadu-muted">
                 <tr>
                   <th className="p-3">Voucher Ref</th>
@@ -420,7 +420,7 @@ export const FinanceWorkspace: React.FC<FinanceWorkspaceProps> = ({
                   <th className="p-3">Tranche Phase</th>
                   <th className="p-3">Disbursed Amount</th>
                   <th className="p-3">Timestamp</th>
-                  <th className="p-3 text-right">Status</th>
+                  <th className="p-3 text-end">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-sadu-gold/20">
@@ -431,7 +431,7 @@ export const FinanceWorkspace: React.FC<FinanceWorkspaceProps> = ({
                     <td className="p-3 text-sadu-muted">{record.trancheType}</td>
                     <td className="p-3 font-bold text-emerald-800">AED {record.amount.toLocaleString()}</td>
                     <td className="p-3 text-sadu-muted text-[11px]">{record.disbursedAt}</td>
-                    <td className="p-3 text-right">
+                    <td className="p-3 text-end">
                       <span className="rounded bg-emerald-100 px-2 py-0.5 text-[9px] font-bold text-emerald-800 border border-emerald-300">
                         Paid &middot; Settled
                       </span>

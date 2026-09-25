@@ -109,7 +109,7 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
           <div>
             <span className="text-[10px] font-bold uppercase text-sadu-muted block">Ratified Biennial Theme Reference</span>
             <span className="font-editorial text-sm font-bold text-sadu-charcoal">{ratifiedTheme.englishName}</span>
-            <span dir="rtl" className="text-xs font-semibold text-sadu-brick ml-2">{ratifiedTheme.arabicName}</span>
+            <span dir="rtl" className="text-xs font-semibold text-sadu-brick ms-2">{ratifiedTheme.arabicName}</span>
           </div>
           <span className="rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
             Chairman Signed Off
@@ -214,7 +214,7 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
           {/* Add Tag */}
           <div className="flex gap-2">
             <div className="relative flex-1">
-              <Tag className="absolute left-3 top-2.5 h-3.5 w-3.5 text-sadu-muted" />
+              <Tag className="absolute start-3 top-2.5 h-3.5 w-3.5 text-sadu-muted" />
               <input
                 type="text"
                 value={newTagInput}
@@ -226,7 +226,7 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
                   }
                 }}
                 placeholder="e.g. Restricted Nationality: Country X"
-                className="w-full rounded-md border border-sadu-gold/60 py-2 pl-9 pr-3 text-xs text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
+                className="w-full rounded-md border border-sadu-gold/60 py-2 ps-9 pe-3 text-xs text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
               />
             </div>
             <button
@@ -286,7 +286,7 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
                     <button
                       type="button"
                       onClick={() => handleRemoveTag(tag)}
-                      className="ml-1 text-red-500 hover:text-red-800 cursor-pointer"
+                      className="ms-1 text-red-500 hover:text-red-800 cursor-pointer"
                       title="Remove restriction"
                     >
                       <Trash2 className="h-3 w-3" />
