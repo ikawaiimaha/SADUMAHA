@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   FileSignature, 
   Send, 
@@ -20,7 +20,7 @@ export interface VettedArtist {
   nationality: string;
   medium: string;
   category: ArtistCategory;
-  status: 'DIRECTOR_APPROVED' | 'CONTRACT_PENDING_SIGNATURE';
+  status: string; 
 }
 
 export interface ContractFormState {
@@ -32,32 +32,24 @@ export interface ContractFormState {
   specialConditions: string;
 }
 
-const INITIAL_APPROVED_ARTISTS: VettedArtist[] = [
-  {
-    id: 'art-001',
-    name_ar: 'يوسف نبيل',
-    name_en: 'Youssef Nabil',
-    nationality: 'Egypt / France',
-    medium: 'Hand-coloured Gelatin Silver Print',
-    category: 'ESTABLISHED',
-    status: 'DIRECTOR_APPROVED'
-  },
-  {
-    id: 'art-002',
-    name_ar: 'نورة المزروعي',
-    name_en: 'Noura Al Mazrouei',
-    nationality: 'United Arab Emirates',
-    medium: 'Bronze Casting & Calligraphic Sculpture',
-    category: 'EMERGING',
-    status: 'DIRECTOR_APPROVED'
-  }
-];
+export interface CoordinatorContractWorkspaceProps {
+  isAr?: boolean;
+  artists: VettedArtist[];
+  onDispatchContract: (artistId: string, contractData: ContractFormState) => void;
+}
 
-export function CoordinatorContractWorkspace({ isAr = true }: { isAr?: boolean }) {
-  const [artists, setArtists] = useState<VettedArtist[]>(INITIAL_APPROVED_ARTISTS);
-  const [selectedArtistId, setSelectedArtistId] = useState<string | null>(
-    INITIAL_APPROVED_ARTISTS[0]?.id ?? null
-  );
+export function CoordinatorContractWorkspace({ 
+  isAr = true, 
+  artists = [], 
+  onDispatchContract 
+}: CoordinatorContractWorkspaceProps) {
+  
+  // Filter incoming global state
+  const pendingArtists = artists.filter(a => a.status === 'DIRECTOR_APPROVED');
+  const dispatchedArtists = artists.filter(a => a.status === 'CONTRACT_PENDING_SIGNATURE');
+
+  const [selectedArtistId, setSelectedArtistId] = useState<string | null>(null);
+  const [dispatchedSuccess, setDispatchedSuccess] = useState<string | null>(null);
 
   const [form, setForm] = useState<ContractFormState>({
     productionGrant: 45000,
@@ -68,57 +60,32 @@ export function CoordinatorContractWorkspace({ isAr = true }: { isAr?: boolean }
     specialConditions: ''
   });
 
-  const [dispatchedSuccess, setDispatchedSuccess] = useState<string | null>(null);
-
-  const pendingArtists = artists.filter(a => a.status === 'DIRECTOR_APPROVED');
-  const dispatchedArtists = artists.filter(a => a.status === 'CONTRACT_PENDING_SIGNATURE');
-  const selectedArtist = artists.find(a => a.id === selectedArtistId);
-
-  const handleSelectArtist = (artistId: string) => {
-    setSelectedArtistId(artistId);
-    const artist = artists.find(a => a.id === artistId);
-    if (artist) {
-      const isLocal = artist.nationality.toLowerCase().includes('emirates') || artist.nationality.toLowerCase().includes('uae');
-      setForm({
-        productionGrant: artist.category === 'ESTABLISHED' ? 65000 : 35000,
-        shippingMethod: isLocal
-          ? (isAr ? 'النقل المباشر للأعمال الفنية (متحف الشارقة للخط)' : 'Local Fine Art Transit (Sharjah Art Museum)')
-          : (isAr ? 'شحن فني متخصص مع تحكم بالمناخ (Fine Art Freight)' : 'Fine Art Dedicated Freight (Climate Controlled)'),
-        advancePercentage: 40,
-        interimPercentage: 30,
-        finalPercentage: 30,
-        specialConditions: artist.category === 'ESTABLISHED'
-          ? (isAr ? 'يتطلب العمل صندوقاً متحفياً مخصصاً مع ضبط حراري ورطوبة دقيقة.' : 'Artist requires dedicated museum crating & humidity control.')
-          : (isAr ? 'يتطلب التركيب إشرافاً فنياً مباشراً في ساحة الخط.' : 'Installation requires on-site technical assistance at Calligraphy Square.')
-      });
+  // Auto-select the first pending artist if none is selected
+  useEffect(() => {
+    if (!selectedArtistId && pendingArtists.length > 0) {
+      setSelectedArtistId(pendingArtists[0].id);
+    } else if (pendingArtists.length === 0) {
+      setSelectedArtistId(null);
     }
-  };
+  }, [pendingArtists, selectedArtistId]);
+
+  const selectedArtist = artists.find(a => a.id === selectedArtistId);
 
   const handleDispatch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedArtistId) return;
 
-    setArtists(prev =>
-      prev.map(a =>
-        a.id === selectedArtistId
-          ? { ...a, status: 'CONTRACT_PENDING_SIGNATURE' }
-          : a
-      )
-    );
-
     const targetArtist = artists.find(a => a.id === selectedArtistId);
+    
+    // 1. Pass the data UP to App.tsx instead of handling it locally
+    onDispatchContract(selectedArtistId, form);
+
+    // 2. Show success message
     setDispatchedSuccess(
       isAr 
         ? `تم إصدار الاتفاقية الثنائية للفنان (${targetArtist?.name_ar}) بنجاح وتحويل حالته إلى CONTRACT_PENDING_SIGNATURE`
         : `Bilateral agreement generated & dispatched for ${targetArtist?.name_en}. Status updated to CONTRACT_PENDING_SIGNATURE.`
     );
-
-    const remaining = pendingArtists.filter(a => a.id !== selectedArtistId);
-    if (remaining.length > 0) {
-      handleSelectArtist(remaining[0].id);
-    } else {
-      setSelectedArtistId(null);
-    }
   };
 
   const totalPercentage = form.advancePercentage + form.interimPercentage + form.finalPercentage;
@@ -161,7 +128,7 @@ export function CoordinatorContractWorkspace({ isAr = true }: { isAr?: boolean }
       </div>
 
       {dispatchedSuccess && (
-        <div className="bg-[#EBF3ED] border border-[#9DC4A7] text-[#1E4A28] px-4 py-3 rounded-lg flex items-center gap-3 text-sm">
+        <div className="bg-[#EBF3ED] border border-[#9DC4A7] text-[#1E4A28] px-4 py-3 rounded-lg flex items-center gap-3 text-sm mb-6">
           <CheckCircle2 className="w-5 h-5 shrink-0 text-[#2D6A3E]" />
           <span>{dispatchedSuccess}</span>
         </div>
@@ -190,7 +157,7 @@ export function CoordinatorContractWorkspace({ isAr = true }: { isAr?: boolean }
                     <button
                       key={artist.id}
                       type="button"
-                      onClick={() => handleSelectArtist(artist.id)}
+                      onClick={() => setSelectedArtistId(artist.id)}
                       className={`w-full p-3 rounded-md border transition-all text-start cursor-pointer ${
                         isSelected
                           ? 'border-[#8B261E] bg-[#F4EDE2] shadow-sm'
@@ -234,7 +201,7 @@ export function CoordinatorContractWorkspace({ isAr = true }: { isAr?: boolean }
                   <div key={a.id} className="py-2 flex items-center justify-between">
                     <span className="text-[#2A2624] font-medium">{isAr ? a.name_ar : a.name_en}</span>
                     <span className="text-[10px] text-[#8B261E] bg-[#F5E6E4] px-1.5 py-0.5 rounded font-mono">
-                      CONTRACT_PENDING_SIGNATURE
+                      CONTRACT_PENDING
                     </span>
                   </div>
                 ))}

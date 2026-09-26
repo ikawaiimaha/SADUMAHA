@@ -29,7 +29,11 @@ import HIPWorkspace, { TranslationStatus } from './components/HIPWorkspace';
 import EditorialWorkspace, { ThemePolishStatus } from './components/EditorialWorkspace';
 import DirectorWorkspace from './components/DirectorWorkspace';
 import ArtistNominationForm, { NominatedArtistDossier } from './components/ArtistNominationForm';
-import { CoordinatorContractWorkspace } from './components/CoordinatorContractWorkspace';
+import { 
+  CoordinatorContractWorkspace, 
+  VettedArtist, 
+  ContractFormState 
+} from './components/CoordinatorContractWorkspace';
 import ArtistPortalWorkspace from './components/ArtistPortalWorkspace';
 import PRWorkspace from './components/PRWorkspace';
 import FinanceWorkspace from './components/FinanceWorkspace';
@@ -173,6 +177,45 @@ const INITIAL_NOMINATIONS: NominatedArtistDossier[] = [
     submittedBy: 'Coordinator',
     submittedAt: '2026-09-24T12:30:00Z',
     status: 'PENDING_DIRECTOR_REVIEW',
+  },
+];
+
+const INITIAL_VETTED_ARTISTS: VettedArtist[] = [
+  {
+    id: 'art-001',
+    name_ar: 'يوسف نبيل',
+    name_en: 'Youssef Nabil',
+    nationality: 'Egypt / France',
+    medium: 'Hand-coloured Gelatin Silver Print',
+    category: 'ESTABLISHED',
+    status: 'DIRECTOR_APPROVED',
+  },
+  {
+    id: 'art-002',
+    name_ar: 'نورة المزروعي',
+    name_en: 'Noura Al Mazrouei',
+    nationality: 'United Arab Emirates',
+    medium: 'Bronze Casting & Calligraphic Sculpture',
+    category: 'EMERGING',
+    status: 'DIRECTOR_APPROVED',
+  },
+  {
+    id: 'dossier-1',
+    name_ar: 'حسن شريف',
+    name_en: 'Hassan Sharif',
+    nationality: 'United Arab Emirates',
+    medium: 'Conceptual Script & Mixed Media',
+    category: 'ESTABLISHED',
+    status: 'DIRECTOR_APPROVED',
+  },
+  {
+    id: 'dossier-3',
+    name_ar: 'محمد زكريا',
+    name_en: 'Mohamed Zakariya',
+    nationality: 'United States',
+    medium: 'Classical Thuluth & Jali Diwani',
+    category: 'ESTABLISHED',
+    status: 'DIRECTOR_APPROVED',
   },
 ];
 
@@ -329,6 +372,7 @@ function SADUApp() {
 
   // Stage 3 & 4: Nominated Artists Pool
   const [nominatedArtists, setNominatedArtists] = useState<NominatedArtistDossier[]>(INITIAL_NOMINATIONS);
+  const [artists, setArtists] = useState<VettedArtist[]>(INITIAL_VETTED_ARTISTS);
   const [isNominationFormOpen, setIsNominationFormOpen] = useState<boolean>(false);
 
   const handlePresentToChairman = (themes: CommitteeThemeDraft[]) => {
@@ -387,12 +431,41 @@ function SADUApp() {
           : artist
       )
     );
+
+    setArtists(prev =>
+      prev.map(artist =>
+        artist.id === id
+          ? { ...artist, status: 'DIRECTOR_VETOED' }
+          : artist
+      )
+    );
   };
 
   const handleApproveArtist = (id: string) => {
     setNominatedArtists(prev =>
       prev.map(artist => (artist.id === id ? { ...artist, status: 'APPROVED' } : artist))
     );
+
+    const target = nominatedArtists.find(a => a.id === id);
+    if (target) {
+      setArtists(prev => {
+        if (prev.some(a => a.id === id)) {
+          return prev.map(a => (a.id === id ? { ...a, status: 'DIRECTOR_APPROVED' } : a));
+        }
+        return [
+          ...prev,
+          {
+            id: target.id,
+            name_ar: target.artistName,
+            name_en: target.artistName,
+            nationality: target.nationality,
+            medium: target.medium,
+            category: (target.artistCategory.toUpperCase() === 'EMERGING' ? 'EMERGING' : 'ESTABLISHED'),
+            status: 'DIRECTOR_APPROVED',
+          },
+        ];
+      });
+    }
 
     setContracts(prev => {
       const existing = prev.find(c => c.artistId === id);
@@ -448,89 +521,107 @@ function SADUApp() {
   const [disbursementHistory, setDisbursementHistory] = useState<DisbursementRecord[]>(INITIAL_DISBURSEMENTS);
 
   const handleDispatchContract = (
-    contractId: string,
-    productionCost: number,
-    shippingTerms: string,
+    artistId: string,
+    contractTerms: any,
+    shippingTermsArg?: string,
     resolutionNotes?: string
   ) => {
-    setContracts(prev => {
-      const existing = prev.find(c => c.id === contractId);
-      const targetArtist = nominatedArtists.find(
-        a => a.id === (existing?.artistId || contractId.replace('contract-', ''))
+    // 1. Update the global artist list to change the status
+    setArtists(prevArtists =>
+      prevArtists.map(artist =>
+        artist.id === artistId || `contract-${artist.id}` === artistId
+          ? { ...artist, status: 'CONTRACT_PENDING_SIGNATURE' }
+          : artist
+      )
+    );
+
+    // Also synchronize nominatedArtists if matching
+    setNominatedArtists(prev =>
+      prev.map(artist =>
+        artist.id === artistId || `contract-${artist.id}` === artistId
+          ? { ...artist, status: 'APPROVED' }
+          : artist
+      )
+    );
+
+    // 2. Push the new contract terms into the global contracts array
+    const cleanArtistId = artistId.startsWith('contract-') ? artistId.replace('contract-', '') : artistId;
+    const targetArtist =
+      artists.find(a => a.id === cleanArtistId || a.id === artistId) ||
+      nominatedArtists.find(a => a.id === cleanArtistId || a.id === artistId);
+
+    const isObjectTerms = typeof contractTerms === 'object' && contractTerms !== null;
+    const productionCost = isObjectTerms
+      ? (contractTerms.productionGrant ?? contractTerms.productionCost ?? 45000)
+      : (typeof contractTerms === 'number' ? contractTerms : 45000);
+    const advancePct = isObjectTerms ? (contractTerms.advancePercentage ?? 40) : 30;
+    const interimPct = isObjectTerms ? (contractTerms.interimPercentage ?? 30) : 40;
+    const finalPct = isObjectTerms ? (contractTerms.finalPercentage ?? 30) : 30;
+    const shippingMethod = isObjectTerms
+      ? (contractTerms.shippingMethod || 'Fine Art Dedicated Freight (Climate Controlled)')
+      : (shippingTermsArg || 'Fine Art Dedicated Freight (Climate Controlled)');
+
+    const advanceAmount = Math.round((productionCost * advancePct) / 100);
+    const deliveryAmount = Math.round((productionCost * interimPct) / 100);
+    const installationAmount = productionCost - advanceAmount - deliveryAmount;
+
+    setContracts(prevContracts => {
+      const existing = prevContracts.find(
+        c => c.artistId === cleanArtistId || c.id === artistId || c.id === `contract-${cleanArtistId}`
       );
 
-      const advance = Math.round(productionCost * 0.3);
-      const delivery = Math.round(productionCost * 0.4);
-      const installation = productionCost - advance - delivery;
+      const contractId = existing?.id || (artistId.startsWith('contract-') ? artistId : `contract-${artistId}`);
 
-      if (existing) {
-        const updatedAuditTrail = (existing.auditTrail || []).map((round, idx) => {
-          if (idx === (existing.auditTrail?.length || 0) - 1 && !round.resolvedAt) {
-            return {
-              ...round,
-              coordinatorResolutionNotes: resolutionNotes || 'Terms adjusted and approved by General Coordinator',
-              resolvedAt: new Date().toISOString().split('T')[0],
-            };
-          }
-          return round;
-        });
-
-        return prev.map(c =>
-          c.id === contractId
-            ? {
-                ...c,
-                productionCost,
-                shippingTerms,
-                status: 'SENT_TO_ARTIST',
-                sentAt: new Date().toISOString(),
-                auditTrail: updatedAuditTrail,
-                tranches: {
-                  ...c.tranches,
-                  advanceAmount: advance,
-                  deliveryAmount: delivery,
-                  installationAmount: installation,
-                },
-              }
-            : c
-        );
-      }
-
-      if (!targetArtist) return prev;
-
-      const newContract: BilateralContract = {
+      const newContractRecord: any = {
         id: contractId,
-        artistId: targetArtist.id,
-        artistName: targetArtist.artistName,
-        artistCategory: targetArtist.artistCategory,
-        nationality: targetArtist.nationality,
-        medium: targetArtist.medium,
-        proposedWorkTitle: targetArtist.proposedWorkTitle,
+        artistId: cleanArtistId,
+        artistName: (targetArtist as any)?.name_en || (targetArtist as any)?.artistName || 'Artist',
+        artistCategory:
+          ((targetArtist as any)?.category === 'ESTABLISHED' || (targetArtist as any)?.artistCategory === 'Established')
+            ? 'Established'
+            : 'Emerging',
+        nationality: targetArtist?.nationality || 'United Arab Emirates',
+        medium: targetArtist?.medium || 'Calligraphic Art',
+        proposedWorkTitle: existing?.proposedWorkTitle || (targetArtist as any)?.proposedWorkTitle || 'Bilateral Exhibition Commission',
         productionCost,
-        shippingTerms,
+        shippingTerms: shippingMethod,
         cancellationClauseMandatory: true,
         status: 'SENT_TO_ARTIST',
+        draftedAt: existing?.draftedAt || new Date().toISOString(),
         sentAt: new Date().toISOString(),
-        auditTrail: [],
         tranches: {
-          advancePercentage: 30,
-          advanceAmount: advance,
-          advanceStatus: 'PENDING',
-          deliveryPercentage: 40,
-          deliveryAmount: delivery,
-          deliveryStatus: 'PENDING',
-          installationPercentage: 30,
-          installationAmount: installation,
-          installationStatus: 'PENDING',
+          advancePercentage: advancePct,
+          advanceAmount,
+          advanceStatus: existing?.tranches?.advanceStatus || 'PENDING',
+          advanceDisbursedAt: existing?.tranches?.advanceDisbursedAt,
+          advanceVoucherRef: existing?.tranches?.advanceVoucherRef,
+          deliveryPercentage: interimPct,
+          deliveryAmount,
+          deliveryStatus: existing?.tranches?.deliveryStatus || 'PENDING',
+          deliveryDisbursedAt: existing?.tranches?.deliveryDisbursedAt,
+          deliveryVoucherRef: existing?.tranches?.deliveryVoucherRef,
+          installationPercentage: finalPct,
+          installationAmount,
+          installationStatus: existing?.tranches?.installationStatus || 'PENDING',
+          installationDisbursedAt: existing?.tranches?.installationDisbursedAt,
+          installationVoucherRef: existing?.tranches?.installationVoucherRef,
         },
-        documents: {
+        documents: existing?.documents || {
           passportStatus: 'NOT_UPLOADED',
           artworkDpi: 300,
           highResStatus: 'NOT_UPLOADED',
           catalogBioStatus: 'DRAFT',
         },
+        auditTrail: existing?.auditTrail || [],
+        terms: contractTerms,
+        createdAt: new Date().toISOString(),
       };
 
-      return [newContract, ...prev];
+      if (existing) {
+        return prevContracts.map(c => (c.id === existing.id ? newContractRecord : c));
+      } else {
+        return [...prevContracts, newContractRecord];
+      }
     });
   };
   const handleSignContract = (contractId: string, signerName: string) => {
@@ -851,7 +942,11 @@ function SADUApp() {
           <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
             {/* Stage 6: Bilateral Contracting Workspace */}
             {activeRole === 'COORDINATOR' && (
-              <CoordinatorContractWorkspace isAr={isRtl} />
+              <CoordinatorContractWorkspace 
+                isAr={isRtl} 
+                artists={artists} 
+                onDispatchContract={handleDispatchContract} 
+              />
             )}
           </div>
         );
