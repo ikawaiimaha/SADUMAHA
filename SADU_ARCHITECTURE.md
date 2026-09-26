@@ -1,3 +1,22 @@
+# 26 September 2026 — Fictional commission remediation (supersedes conflicting rules below)
+
+The owner explicitly revised the Stage 6–7 design. Earlier statements calling this file immutable do not prevent this authorized change. This document is a prototype specification, not an institutional delegation instrument.
+
+- One default commission: Noura Al Mazrouei, **Kufic Horizon: Architectural Bronze & Black Oxide**, 84 kg. All seeded artist/contract views use this identity. Stage 6 begins without a contract; the Coordinator drafts its amount and three percentages (existing illustrative defaults: AED 45,000 and 40/30/30).
+- App owns the local commission reducer. Coordinator, Artist and Finance consume the same agreement. The three milestones are Advance, Delivery and Post-Opening; there is no combined final 70% action.
+- PR records passport/visa evidence only. No imagery, technical review or finance permission follows from PR completion.
+- Technical records the fictional floor-load and mounting-spec checks. Weight alone cannot certify structural safety. These controls simulate a specialist review, not an engineering calculation.
+- Finance alone records advance authorization, guarded in both the UI and reducer. Agreement acceptance plus both recorded evidence gates are required. This prerequisite is an owner-specified demo rule, not a confirmed institutional payment policy.
+- Authorization is not settlement. No money transfer occurs. Delivery and Post-Opening remain individually pending; their evidence workflows are outside this change.
+- Evidence and approval persist across role switches, reset on refresh, and are invalidated when agreement terms change. There is no backend, identity upload or real signing.
+- Technical is a tenth prototype workspace. Local role checks illustrate separation of responsibilities and do not constitute production access control.
+
+Source basis refreshed 26 September: shipping/insurance form (Drive ID `1Uu2DAkNJ476HEFYEipRHA7ZHehnqOr96`, 2026, modified 1 July 2026) supports requested weight, dimensions, handling and installation evidence; Technical Requirements From (ID `155k3SGvlv_9ycW8z1OCCIAE8yUZXoYvA`, 24th Islamic Art Festival, modified 1 July 2021) supports technical item/quantity/description fields. Neither establishes floor capacity, a named reviewer or payment authority. Use the artops source register and Edition 2 role reconciliation for claim limits. The owner's supplied scenario is a design assumption, not evidence derived from the earlier audit screenshots.
+
+The historical specification below remains a record of the earlier design; its conflicting PR/Finance rules are superseded by this section.
+
+---
+
 # SADU Institutional Architecture & AI Governance Ruleset
 
 > **CRITICAL SYSTEM PROMPT INSTRUCTION FOR AI AGENTS:**  

@@ -84,7 +84,6 @@ export type ArtistStatus =
   | 'CONTRACT_PENDING_SIGNATURE'
   | 'CONTRACT_EXECUTED'
   | 'LOGISTICS_PENDING_PR'
-  | 'CLEARED_FOR_FINANCE'
   | 'INCOMPLETE_DOSSIER'
   | 'HIP_BLOCKED'
   | 'PENDING_DIRECTOR_REVIEW'
@@ -107,6 +106,26 @@ export interface ArtistDossier {
   cvUrl: string;
   portfolioUrl: string;
   mockupsUrl?: string; // Optional if isCommissioned is false (existing work/masterpiece)
+}
+
+/** Local fictional commission only; these gates do not establish institutional authority. */
+export interface CommissionEvidence {
+  passportVerified: boolean;
+  visaCleared: boolean;
+  prEvidenceGate: boolean;
+  floorLoadVerified: boolean;
+  mountingVerified: boolean;
+  technicalEvidenceGate: boolean;
+  financeApprovalGate: boolean;
+  prRecordedAt?: string;
+  technicalRecordedAt?: string;
+  advanceAuthorizedAt?: string;
+}
+
+export interface CommissionState {
+  contracts: import('./types/contractStage6').BilateralContract[];
+  agreementRevision: number;
+  evidence: CommissionEvidence;
 }
 
 export interface ContractTerms {

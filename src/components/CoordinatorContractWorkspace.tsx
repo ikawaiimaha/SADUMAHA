@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import type { BilateralContract } from '../types/contractStage6';
+import { AgreementMilestones } from './CommissionSummary';
 import { 
   FileSignature, 
   Send, 
@@ -35,12 +37,14 @@ export interface ContractFormState {
 export interface CoordinatorContractWorkspaceProps {
   isAr?: boolean;
   artists: VettedArtist[];
+  contracts?: BilateralContract[];
   onDispatchContract: (artistId: string, contractData: ContractFormState) => void;
 }
 
 export function CoordinatorContractWorkspace({ 
   isAr = true, 
-  artists = [], 
+  artists = [],
+  contracts = [],
   onDispatchContract 
 }: CoordinatorContractWorkspaceProps) {
   
@@ -73,7 +77,7 @@ export function CoordinatorContractWorkspace({
 
   const handleDispatch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedArtistId) return;
+    if (!selectedArtistId || !isTrancheValid) return;
 
     const targetArtist = artists.find(a => a.id === selectedArtistId);
     
@@ -84,12 +88,12 @@ export function CoordinatorContractWorkspace({
     setDispatchedSuccess(
       isAr 
         ? `تم إصدار الاتفاقية الثنائية للفنان (${targetArtist?.name_ar}) بنجاح وتحويل حالته إلى CONTRACT_PENDING_SIGNATURE`
-        : `Bilateral agreement generated & dispatched for ${targetArtist?.name_en}. Status updated to CONTRACT_PENDING_SIGNATURE.`
+        : `Bilateral agreement generated & dispatched for ${targetArtist?.name_en}. Ready for simulated artist acceptance; nothing was sent externally.`
     );
   };
 
   const totalPercentage = form.advancePercentage + form.interimPercentage + form.finalPercentage;
-  const isTrancheValid = totalPercentage === 100;
+  const isTrancheValid = Math.abs(totalPercentage - 100) < 0.000001 && Number.isFinite(form.productionGrant) && form.productionGrant > 0 && [form.advancePercentage, form.interimPercentage, form.finalPercentage].every(n => Number.isFinite(n) && n > 0 && n <= 100);
 
   return (
     <div className="w-full space-y-6 text-start">
@@ -110,8 +114,8 @@ export function CoordinatorContractWorkspace({
             </h1>
             <p className="text-xs text-[#594F47] mt-1 max-w-2xl">
               {isAr 
-                ? 'استقبال ملفات الفنانين المعتمدين نهائياً من مدير الملتقى وتحديد مخصصات الإنتاج وشروط الشحن وإصدار العقد القانوني الملزم.'
-                : 'Ingest vetted candidates approved by the Biennial Director, set production tranches, and dispatch legal agreements.'}
+                ? 'استقبال ملفات الفنانين المعتمدين نهائياً من مدير الملتقى وتحديد مخصصات الإنتاج وشروط الشحن وإعداد اتفاقية خيالية للعرض فقط.'
+                : 'Ingest vetted candidates approved by the Biennial Director, set production tranches, and prepare a fictional agreement for this demo.'}
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -133,6 +137,8 @@ export function CoordinatorContractWorkspace({
           <span>{dispatchedSuccess}</span>
         </div>
       )}
+
+      {contracts.map(contract => <AgreementMilestones key={contract.id} contract={contract} isAr={isAr} />)}
 
       {/* Main Grid: Queue on one side, Terms Editor on the other */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -229,30 +235,32 @@ export function CoordinatorContractWorkspace({
               {/* Terms Inputs */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-[#4A423D] mb-1">
+                  <label htmlFor="deal-grant" className="block text-xs font-semibold text-[#4A423D] mb-1">
                     {isAr ? 'منحة الإنتاج المعتمدة (AED)' : 'Approved Production Grant (AED)'}
                   </label>
                   <div className="relative">
                     <DollarSign className="w-4 h-4 absolute start-3 top-2.5 text-[#736357]" />
                     <input
                       type="number"
+                      id="deal-grant"
                       value={form.productionGrant}
                       onChange={e => setForm({ ...form, productionGrant: Number(e.target.value) })}
                       className="w-full ps-9 pe-3 py-2 bg-white border border-[#D9CEBA] rounded text-sm text-[#2A2624] focus:outline-none focus:border-[#8B261E]"
                       required
-                      min={0}
+                      min={0.01} step="any"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[#4A423D] mb-1">
+                  <label htmlFor="deal-shipping" className="block text-xs font-semibold text-[#4A423D] mb-1">
                     {isAr ? 'آلية الشحن والتسليم اللوجستي' : 'Shipping & Logistics Method'}
                   </label>
                   <div className="relative">
                     <Truck className="w-4 h-4 absolute start-3 top-2.5 text-[#736357]" />
                     <input
                       type="text"
+                      id="deal-shipping"
                       value={form.shippingMethod}
                       onChange={e => setForm({ ...form, shippingMethod: e.target.value })}
                       className="w-full ps-9 pe-3 py-2 bg-white border border-[#D9CEBA] rounded text-sm text-[#2A2624] focus:outline-none focus:border-[#8B261E]"
@@ -276,41 +284,44 @@ export function CoordinatorContractWorkspace({
 
                 <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-[11px] text-[#736357] mb-1">
+                    <label htmlFor="deal-advance" className="block text-[11px] text-[#736357] mb-1">
                       {isAr ? 'الدفعة 1: مقدماً' : 'Tranche 1: Advance'}
                     </label>
                     <input
                       type="number"
+                      id="deal-advance"
                       value={form.advancePercentage}
                       onChange={e => setForm({ ...form, advancePercentage: Number(e.target.value) })}
                       className="w-full px-2 py-1 bg-white border border-[#D9CEBA] rounded text-xs text-center font-mono"
-                      min={0}
+                      min={0.01} step="any"
                       max={100}
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] text-[#736357] mb-1">
+                    <label htmlFor="deal-delivery" className="block text-[11px] text-[#736357] mb-1">
                       {isAr ? 'الدفعة 2: وصول الشحنة' : 'Tranche 2: Delivery'}
                     </label>
                     <input
                       type="number"
+                      id="deal-delivery"
                       value={form.interimPercentage}
                       onChange={e => setForm({ ...form, interimPercentage: Number(e.target.value) })}
                       className="w-full px-2 py-1 bg-white border border-[#D9CEBA] rounded text-xs text-center font-mono"
-                      min={0}
+                      min={0.01} step="any"
                       max={100}
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] text-[#736357] mb-1">
+                    <label htmlFor="deal-post-opening" className="block text-[11px] text-[#736357] mb-1">
                       {isAr ? 'الدفعة 3: بعد الافتتاح' : 'Tranche 3: Post-Opening'}
                     </label>
                     <input
                       type="number"
+                      id="deal-post-opening"
                       value={form.finalPercentage}
                       onChange={e => setForm({ ...form, finalPercentage: Number(e.target.value) })}
                       className="w-full px-2 py-1 bg-white border border-[#D9CEBA] rounded text-xs text-center font-mono"
-                      min={0}
+                      min={0.01} step="any"
                       max={100}
                     />
                   </div>
@@ -326,11 +337,12 @@ export function CoordinatorContractWorkspace({
 
               {/* Special Conditions */}
               <div>
-                <label className="block text-xs font-semibold text-[#4A423D] mb-1">
+                <label htmlFor="deal-special-conditions" className="block text-xs font-semibold text-[#4A423D] mb-1">
                   {isAr ? 'شروط خاصة أو متطلبات صيانة وتقييم' : 'Special Terms & Institutional Caveats'}
                 </label>
                 <textarea
-                  value={form.specialConditions}
+                  id="deal-special-conditions"
+                      value={form.specialConditions}
                   onChange={e => setForm({ ...form, specialConditions: e.target.value })}
                   placeholder={isAr ? 'مثال: يتعهد الفنان بإرسال دليل التركيب قبل 30 يوماً من موعد الشحن...' : 'e.g., Artist to submit detailed assembly manual...'}
                   rows={3}
@@ -346,7 +358,7 @@ export function CoordinatorContractWorkspace({
                   className="px-5 py-2.5 bg-[#8B261E] hover:bg-[#721F18] text-white text-xs font-semibold rounded-md shadow flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <Send className="w-4 h-4 rtl:rotate-180" />
-                  {isAr ? 'توليد وإرسال الاتفاقية الثنائية' : 'Generate & Dispatch Bilateral Agreement'}
+                  {isAr ? 'إنشاء الاتفاقية التجريبية' : 'Generate Demo Agreement'}
                 </button>
               </div>
             </form>

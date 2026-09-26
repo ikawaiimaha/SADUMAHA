@@ -21,7 +21,7 @@
  * ============================================================================
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useReducer } from 'react';
 import RoleSelection, { AppRole } from './components/RoleSelection';
 import CommitteeThemeWorkspace, { CommitteeThemeDraft } from './components/CommitteeThemeWorkspace';
 import ChairmanWorkspace, { ThemeItem } from './components/ChairmanWorkspace';
@@ -37,6 +37,9 @@ import {
 import ArtistPortalWorkspace from './components/ArtistPortalWorkspace';
 import PRWorkspace from './components/PRWorkspace';
 import FinanceWorkspace from './components/FinanceWorkspace';
+import TechnicalWorkspace from './components/TechnicalWorkspace';
+import { CommissionSummary } from './components/CommissionSummary';
+import { COMMISSION, createCommission, commissionReducer } from './data/commissionScenario';
 import { PresenterDrawer } from './components/PresenterDrawer';
 import { I18nProvider, useI18n } from './context/I18nContext';
 import { BilateralContract, DisbursementRecord, NegotiationRound } from './types/contractStage6';
@@ -75,6 +78,7 @@ export type InstitutionalRole =
   | 'ARTIST' 
   | 'PR_PROTOCOL' 
   | 'FINANCE'
+  | 'TECHNICAL'
   | 'ROLES';
 
 const ROLE_NAME_MAP: Record<AppRole, InstitutionalRole> = {
@@ -87,6 +91,7 @@ const ROLE_NAME_MAP: Record<AppRole, InstitutionalRole> = {
   'Artist': 'ARTIST',
   'PR': 'PR_PROTOCOL',
   'Finance': 'FINANCE',
+  'Technical': 'TECHNICAL',
 };
 
 function RoleButton({ 
@@ -121,210 +126,18 @@ function RoleButton({
 
 const EVENT_ID = '123e4567-e89b-12d3-a456-426614174000';
 
-const INITIAL_NOMINATIONS: NominatedArtistDossier[] = [
-  {
-    id: 'dossier-1',
-    artistName: 'Hassan Sharif',
-    artistCategory: 'Established',
-    nationality: 'United Arab Emirates',
-    medium: 'Conceptual Script & Mixed Media',
-    proposedWorkTitle: 'Calligraphic Repetitions III',
-    cvFileName: 'Hassan_Sharif_CV.pdf',
-    previousWorksCount: 5,
-    mockupCount: 3,
-    submittedBy: 'Preparatory Committee',
-    submittedAt: '2026-09-24T10:00:00Z',
-    status: 'APPROVED',
-  },
-  {
-    id: 'dossier-2',
-    artistName: 'Nour El Hoda',
-    artistCategory: 'Emerging',
-    nationality: 'Egypt',
-    medium: 'Kinetic Light Calligraphy',
-    proposedWorkTitle: 'Luminal Muhaqqaq',
-    cvFileName: 'Nour_ElHoda_Bio.pdf',
-    previousWorksCount: 4,
-    mockupCount: 2,
-    submittedBy: 'Coordinator',
-    submittedAt: '2026-09-24T11:15:00Z',
-    status: 'PENDING_DIRECTOR_REVIEW',
-  },
-  {
-    id: 'dossier-3',
-    artistName: 'Mohamed Zakariya',
-    artistCategory: 'Established',
-    nationality: 'United States',
-    medium: 'Classical Thuluth & Jali Diwani',
-    proposedWorkTitle: 'Sacred Proportions of the Alif',
-    cvFileName: 'Mohamed_Zakariya_Bio.pdf',
-    previousWorksCount: 6,
-    mockupCount: 2,
-    submittedBy: 'Preparatory Committee',
-    submittedAt: '2026-09-24T11:45:00Z',
-    status: 'APPROVED',
-  },
-  {
-    id: 'dossier-4',
-    artistName: 'Zayd Al-Kindi',
-    artistCategory: 'Emerging',
-    nationality: 'Oman',
-    medium: 'Algorithmic Kufic Projection',
-    proposedWorkTitle: 'Fractal Diwani Streams',
-    cvFileName: 'Zayd_AlKindi_CV.pdf',
-    previousWorksCount: 3,
-    mockupCount: 4,
-    submittedBy: 'Coordinator',
-    submittedAt: '2026-09-24T12:30:00Z',
-    status: 'PENDING_DIRECTOR_REVIEW',
-  },
-];
-
-const INITIAL_VETTED_ARTISTS: VettedArtist[] = [
-  {
-    id: 'art-001',
-    name_ar: 'يوسف نبيل',
-    name_en: 'Youssef Nabil',
-    nationality: 'Egypt / France',
-    medium: 'Hand-coloured Gelatin Silver Print',
-    category: 'ESTABLISHED',
-    status: 'DIRECTOR_APPROVED',
-  },
-  {
-    id: 'art-002',
-    name_ar: 'نورة المزروعي',
-    name_en: 'Noura Al Mazrouei',
-    nationality: 'United Arab Emirates',
-    medium: 'Bronze Casting & Calligraphic Sculpture',
-    category: 'EMERGING',
-    status: 'DIRECTOR_APPROVED',
-  },
-  {
-    id: 'dossier-1',
-    name_ar: 'حسن شريف',
-    name_en: 'Hassan Sharif',
-    nationality: 'United Arab Emirates',
-    medium: 'Conceptual Script & Mixed Media',
-    category: 'ESTABLISHED',
-    status: 'DIRECTOR_APPROVED',
-  },
-  {
-    id: 'dossier-3',
-    name_ar: 'محمد زكريا',
-    name_en: 'Mohamed Zakariya',
-    nationality: 'United States',
-    medium: 'Classical Thuluth & Jali Diwani',
-    category: 'ESTABLISHED',
-    status: 'DIRECTOR_APPROVED',
-  },
-];
-
-const INITIAL_CONTRACTS: BilateralContract[] = [
-  {
-    id: 'contract-dossier-1',
-    artistId: 'dossier-1',
-    artistName: 'Hassan Sharif',
-    artistCategory: 'Established',
-    nationality: 'United Arab Emirates',
-    medium: 'Conceptual Script & Mixed Media',
-    proposedWorkTitle: 'Calligraphic Repetitions III',
-    productionCost: 120000,
-    shippingTerms:
-      'The Department of Culture coordinates and covers museum-standard custom wooden crating, international climate-controlled air freight, and comprehensive door-to-door fine art transit insurance to Calligraphy Square & Sharjah Art Museum.',
-    cancellationClauseMandatory: true,
-    status: 'ARTIST_APPROVED',
-    tranches: {
-      advancePercentage: 30,
-      advanceAmount: 36000,
-      advanceStatus: 'DISBURSED',
-      advanceDisbursedAt: '2026-09-24 14:30:00',
-      advanceVoucherRef: 'VCH-2026-001',
-      deliveryPercentage: 40,
-      deliveryAmount: 48000,
-      deliveryStatus: 'PENDING',
-      installationPercentage: 30,
-      installationAmount: 36000,
-      installationStatus: 'PENDING',
-    },
-    documents: {
-      passportFileName: 'Hassan_Sharif_Passport_Official.pdf',
-      passportStatus: 'VERIFIED',
-      passportUploadedAt: '2026-09-24',
-      passportVerifiedAt: '2026-09-24',
-      passportNotes: 'Verified by SDC PR Protocol Desk for UAE delegation badge',
-      highResArtworkFileName: 'Hassan_Sharif_CalligraphicRepetitions_300DPI.tiff',
-      artworkDpi: 300,
-      highResStatus: 'VERIFIED',
-      highResUploadedAt: '2026-09-24',
-      highResVerifiedAt: '2026-09-24',
-      catalogBioArabic:
-        'فنان تشكيلي رائد ومؤسس الفن المفاهيمي المعاصر في الإمارات، يُعد من أبرز المؤثرين في حركة التشكيل والخط في العالم العربي.',
-      catalogBioEnglish:
-        'Pioneering Emirati conceptual artist and theorist whose seminal works bridge structural calligraphy, repetition, and contemporary spatial assemblages.',
-      catalogBioStatus: 'VERIFIED',
-    },
-    draftedAt: '2026-09-24T10:30:00Z',
-    sentAt: '2026-09-24T11:00:00Z',
-    signedAt: '2026-09-24',
-    signatureReference: 'REF-SCB-EXEC-0881',
-    auditTrail: [],
-  },
-  {
-    id: 'contract-dossier-3',
-    artistId: 'dossier-3',
-    artistName: 'Mohamed Zakariya',
-    artistCategory: 'Established',
-    nationality: 'United States',
-    medium: 'Classical Thuluth & Jali Diwani',
-    proposedWorkTitle: 'Sacred Proportions of the Alif',
-    productionCost: 110000,
-    shippingTerms:
-      'Fine art climate-controlled transit with dedicated air-courier accompanied handling from Washington D.C. to Sharjah International Airport, full customs waiver under Department aegis.',
-    cancellationClauseMandatory: true,
-    status: 'SENT_TO_ARTIST',
-    tranches: {
-      advancePercentage: 30,
-      advanceAmount: 33000,
-      advanceStatus: 'PENDING',
-      deliveryPercentage: 40,
-      deliveryAmount: 44000,
-      deliveryStatus: 'PENDING',
-      installationPercentage: 30,
-      installationAmount: 33000,
-      installationStatus: 'PENDING',
-    },
-    documents: {
-      passportFileName: 'Mohamed_Zakariya_Passport_Scan.pdf',
-      passportStatus: 'SUBMITTED',
-      passportUploadedAt: '2026-09-24',
-      highResArtworkFileName: 'Zakariya_SacredProportions_Master_300DPI.tiff',
-      artworkDpi: 300,
-      highResStatus: 'SUBMITTED',
-      highResUploadedAt: '2026-09-24',
-      catalogBioArabic:
-        'أستاذ الخط العربي والثلث الجلي المرموق بالولايات المتحدة الأمريكية، يحمل إجازات رفيعة في الخط العربي وله مساهمات دولية بارزة.',
-      catalogBioEnglish:
-        'Renowned American master calligrapher holding classical Turkish diplomas (ijaza) in Thuluth and Naskh scripts, celebrated worldwide for exacting geometric fidelity.',
-      catalogBioStatus: 'SUBMITTED',
-    },
-    draftedAt: '2026-09-24T12:00:00Z',
-    sentAt: '2026-09-24T12:30:00Z',
-    auditTrail: [],
-  },
-];
-
-const INITIAL_DISBURSEMENTS: DisbursementRecord[] = [
-  {
-    id: 'disb-1',
-    contractId: 'contract-dossier-1',
-    voucherRef: 'VCH-2026-001',
-    artistName: 'Hassan Sharif',
-    trancheType: 'Advance (30%)',
-    amount: 36000,
-    disbursedAt: '2026-09-24 14:30:00',
-    paymentMethod: 'Treasury Wire (Sharjah Finance Dept)',
-  },
-];
+const INITIAL_NOMINATIONS: NominatedArtistDossier[] = [{
+  id: COMMISSION.id, artistName: COMMISSION.artistName, artistCategory: 'Emerging',
+  nationality: 'United Arab Emirates', medium: 'Architectural Bronze & Black Oxide',
+  proposedWorkTitle: COMMISSION.title, cvFileName: 'fictional-noura-cv.pdf',
+  previousWorksCount: 1, mockupCount: 1, submittedBy: 'Preparatory Committee',
+  submittedAt: '2026-09-26T09:00:00Z', status: 'APPROVED',
+}];
+const INITIAL_VETTED_ARTISTS: VettedArtist[] = [{
+  id: COMMISSION.id, name_ar: COMMISSION.artistNameAr, name_en: COMMISSION.artistName,
+  nationality: 'United Arab Emirates', medium: 'Architectural Bronze & Black Oxide — 84 kg',
+  category: 'EMERGING', status: 'DIRECTOR_APPROVED',
+}];
 
 function SADUApp() {
   const { lang, toggleLang, isAr } = useI18n();
@@ -344,7 +157,7 @@ function SADUApp() {
   }, []);
 
   // Executive Prototype State-Based Switcher (offline/tablet zero-latency pitch mode)
-  const [activeRole, setActiveRole] = useState<InstitutionalRole>('BIENNIAL_DIRECTOR');
+  const [activeRole, setActiveRole] = useState<InstitutionalRole>('COORDINATOR');
   const [submittedThemes, setSubmittedThemes] = useState<CommitteeThemeDraft[] | undefined>(undefined);
   const [assignedBudget, setAssignedBudget] = useState<number | null>(null);
   const [ratifiedTheme, setRatifiedTheme] = useState<ThemeItem | null>(null);
@@ -517,8 +330,10 @@ function SADUApp() {
   };
 
   // Stage 6: Bilateral Contracts & Disbursements State
-  const [contracts, setContracts] = useState<BilateralContract[]>(INITIAL_CONTRACTS);
-  const [disbursementHistory, setDisbursementHistory] = useState<DisbursementRecord[]>(INITIAL_DISBURSEMENTS);
+  const [commission, dispatchCommission] = useReducer(commissionReducer, undefined, createCommission);
+  const contracts = commission.contracts;
+  const setContracts = (update: (previous: BilateralContract[]) => BilateralContract[]) =>
+    dispatchCommission({ type: 'contracts', update });
 
   const handleDispatchContract = (
     artistId: string,
@@ -526,6 +341,12 @@ function SADUApp() {
     shippingTermsArg?: string,
     resolutionNotes?: string
   ) => {
+    if (artistId !== COMMISSION.id || activeRole !== 'COORDINATOR') return;
+    const terms = contractTerms as ContractFormState;
+    const percentages = [terms.advancePercentage, terms.interimPercentage, terms.finalPercentage];
+    if (!Number.isFinite(terms.productionGrant) || terms.productionGrant <= 0
+      || percentages.some(value => !Number.isFinite(value) || value <= 0 || value > 100)
+      || Math.abs(percentages.reduce((a, b) => a + b, 0) - 100) > 0.000001) return;
     // 1. Update the global artist list to change the status
     setArtists(prevArtists =>
       prevArtists.map(artist =>
@@ -561,9 +382,9 @@ function SADUApp() {
       ? (contractTerms.shippingMethod || 'Fine Art Dedicated Freight (Climate Controlled)')
       : (shippingTermsArg || 'Fine Art Dedicated Freight (Climate Controlled)');
 
-    const advanceAmount = Math.round((productionCost * advancePct) / 100);
-    const deliveryAmount = Math.round((productionCost * interimPct) / 100);
-    const installationAmount = productionCost - advanceAmount - deliveryAmount;
+    const advanceAmount = Math.round(productionCost * advancePct) / 100;
+    const deliveryAmount = Math.round(productionCost * interimPct) / 100;
+    const installationAmount = Math.round((productionCost - advanceAmount - deliveryAmount) * 100) / 100;
 
     setContracts(prevContracts => {
       const existing = prevContracts.find(
@@ -582,9 +403,10 @@ function SADUApp() {
             : 'Emerging',
         nationality: targetArtist?.nationality || 'United Arab Emirates',
         medium: targetArtist?.medium || 'Calligraphic Art',
-        proposedWorkTitle: existing?.proposedWorkTitle || (targetArtist as any)?.proposedWorkTitle || 'Bilateral Exhibition Commission',
+        proposedWorkTitle: COMMISSION.title,
         productionCost,
         shippingTerms: shippingMethod,
+        specialConditions: terms.specialConditions,
         cancellationClauseMandatory: true,
         status: 'SENT_TO_ARTIST',
         draftedAt: existing?.draftedAt || new Date().toISOString(),
@@ -625,7 +447,9 @@ function SADUApp() {
     });
   };
   const handleSignContract = (contractId?: string, signerName?: string) => {
-    if (!contractId || !signerName) return; // Safety guard for undefined values
+    const target = contracts.find(c => c.id === contractId);
+    if (activeRole !== 'ARTIST' || !target || target.status !== 'SENT_TO_ARTIST' || signerName !== target.artistName) return;
+    setArtists(previous => previous.map(artist => artist.id === target.artistId ? { ...artist, status: 'CONTRACT_EXECUTED' } : artist));
     setContracts(prev =>
       prev.map(c =>
         c.id === contractId
@@ -690,7 +514,7 @@ function SADUApp() {
                 ...c.documents,
                 passportFileName: fileName,
                 passportStatus: 'SUBMITTED',
-                passportUploadedAt: new Date().toISOString().split('T')[0],
+                passportUploadedAt: new Date().toISOString(),
               },
             }
           : c
@@ -734,107 +558,6 @@ function SADUApp() {
       )
     );
   };
-
-  const handleVerifyPassport = (contractId: string, notes?: string) => {
-    setContracts(prev =>
-      prev.map(c =>
-        c.id === contractId
-          ? {
-              ...c,
-              documents: {
-                ...c.documents,
-                passportStatus: 'VERIFIED',
-                passportVerifiedAt: new Date().toISOString().split('T')[0],
-                passportNotes: notes || 'Verified by PR Protocol Desk',
-              },
-            }
-          : c
-      )
-    );
-  };
-
-  const handleVerifyHighResArtwork = (contractId: string, notes?: string) => {
-    setContracts(prev =>
-      prev.map(c =>
-        c.id === contractId
-          ? {
-              ...c,
-              documents: {
-                ...c.documents,
-                highResStatus: 'VERIFIED',
-                highResVerifiedAt: new Date().toISOString().split('T')[0],
-                highResNotes: notes || 'Validated for hardcover catalog printing plate',
-              },
-            }
-          : c
-      )
-    );
-  };
-
-  const handleDisburseTranche = (
-    contractId: string,
-    trancheType: 'Advance (30%)' | 'Delivery (40%)' | 'Installation (30%)',
-    amount: number
-  ) => {
-    const voucherRef = `VCH-2026-00${disbursementHistory.length + 1}`;
-    const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
-
-    setContracts(prev =>
-      prev.map(c => {
-        if (c.id !== contractId) return c;
-        if (trancheType === 'Advance (30%)') {
-          return {
-            ...c,
-            tranches: {
-              ...c.tranches,
-              advanceStatus: 'DISBURSED',
-              advanceDisbursedAt: now,
-              advanceVoucherRef: voucherRef,
-            },
-          };
-        }
-        if (trancheType === 'Delivery (40%)') {
-          return {
-            ...c,
-            tranches: {
-              ...c.tranches,
-              deliveryStatus: 'DISBURSED',
-              deliveryDisbursedAt: now,
-              deliveryVoucherRef: voucherRef,
-            },
-          };
-        }
-        if (trancheType === 'Installation (30%)') {
-          return {
-            ...c,
-            tranches: {
-              ...c.tranches,
-              installationStatus: 'DISBURSED',
-              installationDisbursedAt: now,
-              installationVoucherRef: voucherRef,
-            },
-          };
-        }
-        return c;
-      })
-    );
-
-    const target = contracts.find(c => c.id === contractId);
-    setDisbursementHistory(prev => [
-      {
-        id: `disb-${Date.now()}`,
-        contractId,
-        voucherRef,
-        artistName: target?.artistName || 'Artist',
-        trancheType,
-        amount,
-        disbursedAt: now,
-        paymentMethod: 'Treasury Wire (Sharjah Finance Dept)',
-      },
-      ...prev,
-    ]);
-  };
-
 
   const renderWorkspace = () => {
     switch (activeRole) {
@@ -945,7 +668,8 @@ function SADUApp() {
             {activeRole === 'COORDINATOR' && (
               <CoordinatorContractWorkspace 
                 isAr={isRtl} 
-                artists={artists} 
+                artists={artists}
+                contracts={contracts}
                 onDispatchContract={handleDispatchContract} 
               />
             )}
@@ -956,6 +680,7 @@ function SADUApp() {
         return (
           <ArtistPortalWorkspace
             contracts={contracts}
+            artistArabicName={COMMISSION.artistNameAr}
             onSignContract={handleSignContract}
             onRequestAmendment={handleRequestAmendment}
             onUploadPassport={handleUploadPassport}
@@ -966,25 +691,18 @@ function SADUApp() {
         );
 
       case 'PR_PROTOCOL':
-        return (
-          <PRWorkspace
-            contracts={contracts}
-            onVerifyPassport={handleVerifyPassport}
-            onVerifyHighResArtwork={handleVerifyHighResArtwork}
-            onBackToRoles={() => setActiveRole('ROLES')}
-          />
-        );
+        return <PRWorkspace isAr={isAr} state={commission}
+          onCheck={(field, value) => dispatchCommission({ type: 'pr-check', actor: activeRole, field, value })}
+          onRecord={() => dispatchCommission({ type: 'record-pr', actor: activeRole, at: new Date().toISOString() })} />;
+
+      case 'TECHNICAL':
+        return <TechnicalWorkspace isAr={isAr} state={commission}
+          onCheck={(field, value) => dispatchCommission({ type: 'technical-check', actor: activeRole, field, value })}
+          onRecord={() => dispatchCommission({ type: 'record-technical', actor: activeRole, at: new Date().toISOString() })} />;
 
       case 'FINANCE':
-        return (
-          <FinanceWorkspace
-            assignedBudget={assignedBudget}
-            contracts={contracts}
-            disbursementHistory={disbursementHistory}
-            onDisburseTranche={handleDisburseTranche}
-            onBackToRoles={() => setActiveRole('ROLES')}
-          />
-        );
+        return <FinanceWorkspace isAr={isAr} state={commission}
+          onAuthorizeAdvance={() => dispatchCommission({ type: 'authorize-advance', actor: activeRole, at: new Date().toISOString() })} />;
 
       case 'ROLES':
       default:
@@ -1078,6 +796,8 @@ function SADUApp() {
             icon={<ShieldCheck className="w-3.5 h-3.5" />} 
             label="PR & Protocol" 
           />
+          <RoleButton role="TECHNICAL" current={activeRole} onClick={setActiveRole}
+            icon={<ShieldCheck className="w-3.5 h-3.5" />} label={isAr ? 'الفريق الفني' : 'Technical'} />
           <RoleButton 
             role="FINANCE" 
             current={activeRole} 
@@ -1127,6 +847,9 @@ function SADUApp() {
         The actual Archival Heritage Pop UI renders inside this container.
       */}
       <main className="flex-1 overflow-y-auto relative bg-[#F7F1E6]">
+        {!['PR_PROTOCOL', 'TECHNICAL', 'FINANCE'].includes(activeRole) && <aside className="border-b border-[#D9CEBA] ps-4 pe-4 py-3 text-start" dir={isAr ? 'rtl' : 'ltr'}>
+          <CommissionSummary isAr={isAr} showTechnical={activeRole !== 'PR_PROTOCOL'} />
+        </aside>}
         {renderWorkspace()}
       </main>
 

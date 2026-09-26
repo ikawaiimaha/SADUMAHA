@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useI18n } from '../context/I18nContext';
+import { AgreementMilestones } from './CommissionSummary';
 import { 
   FileText, 
   CheckCircle2, 
@@ -60,6 +62,7 @@ export default function ArtistPortalWorkspace({
   onSubmitDispute,
   onUploadLogistics,
 }: ArtistPortalProps) {
+  const { isAr } = useI18n();
   // Pick active contract from contracts array if available
   const [selectedContractId, setSelectedContractId] = useState<string>(
     contracts?.[0]?.id || ''
@@ -131,8 +134,10 @@ export default function ArtistPortalWorkspace({
     onUploadLogistics?.(type);
   };
 
+  if (contracts && !activeContract) return <p className="ps-6 pe-6 py-6 text-start" dir={isAr ? 'rtl' : 'ltr'}>{isAr ? 'بانتظار إنشاء الاتفاقية في مكتب المنسق.' : 'Waiting for the Coordinator to create the agreement.'}</p>;
+
   return (
-    <div className="min-h-screen bg-[#F7F1E6] p-6 text-[#2C2A29] font-sans text-start" dir="ltr">
+    <div className="min-h-screen bg-[#F7F1E6] p-6 text-[#2C2A29] font-sans text-start" dir={isAr ? 'rtl' : 'ltr'}>
       
       {/* Header */}
       <header className="mb-8 border-b border-[#D9D2C5] pb-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -140,7 +145,7 @@ export default function ArtistPortalWorkspace({
           <span className="text-xs uppercase tracking-widest text-[#8C7A6B] font-semibold">Stage 6 &amp; 7 • External Artist Portal</span>
           <h1 className="text-3xl font-serif font-bold tracking-tight text-[#1A1817] mt-1">Artist Portal Workspace</h1>
           <p className="text-[#6B635B] text-sm mt-1">
-            بوابة الفنان الخارجية — Review agreement terms, execute digital signature, and submit secure logistics files.
+            بوابة الفنان الخارجية — Review agreement terms, accept the fictional agreement and simulate document receipt.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -160,6 +165,8 @@ export default function ArtistPortalWorkspace({
           )}
         </div>
       </header>
+
+      {activeContract && <AgreementMilestones contract={activeContract} isAr={isAr} />}
 
       {/* Contract Switcher if multiple contracts passed */}
       {contracts && contracts.length > 1 && (
@@ -236,7 +243,7 @@ export default function ArtistPortalWorkspace({
                 1. The artist agrees to produce and deliver the commissioned work in strict accordance with the approved curatorial scope and technical guidelines established by the Head of International Programs (HIP).
               </p>
               <p>
-                2. Disbursements shall be executed across standard institutional tranches (30% Advance upon countersignature, 40% upon freight dispatch, and 30% upon successful physical installation and condition clearance in Sharjah).
+                2. The three percentages and amounts are taken from the Coordinator agreement above. In this fictional scenario, advance authorization additionally requires recorded PR and Technical evidence. Delivery and Post-Opening remain separate pending milestones.
               </p>
               <p className="italic text-[#8B4513]">
                 "The Department reserves full administrative authority to modify exhibition terms in alignment with overarching cultural directives. All copyright permissions remain vested with the artist while granting Sharjah Department of Culture reproduction rights for catalog and archival documentation."
@@ -303,7 +310,7 @@ export default function ArtistPortalWorkspace({
                 {isSigned ? (
                   <div className="flex items-center gap-2 text-emerald-800 bg-emerald-50 px-4 py-2 rounded border border-emerald-300 text-xs font-medium">
                     <CheckCircle2 className="w-4 h-4" />
-                    <span>Agreement Countersigned Successfully</span>
+                    <span>Demo agreement accepted — not a legal countersignature</span>
                   </div>
                 ) : (
                   <button
@@ -313,7 +320,7 @@ export default function ArtistPortalWorkspace({
                     className="flex items-center gap-2 bg-[#8B4513] hover:bg-[#6e350f] disabled:opacity-40 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-md text-xs font-bold shadow-xs transition-colors cursor-pointer"
                   >
                     <FileCheck className="w-4 h-4" />
-                    <span>Digitally Sign &amp; Countersign Agreement</span>
+                    <span>Accept Demo Agreement</span>
                   </button>
                 )}
               </div>
@@ -363,11 +370,11 @@ export default function ArtistPortalWorkspace({
           <div className="bg-white p-6 rounded-lg shadow-sm border border-[#D9D2C5]">
             <div className="flex items-center gap-2 mb-4 border-b border-[#EAE3D9] pb-3">
               <ShieldCheck className="w-5 h-5 text-[#8B4513]" />
-              <h3 className="text-base font-semibold font-serif">Secure Logistics Files (مستندات الشحن)</h3>
+              <h3 className="text-base font-semibold font-serif">Demo Document Receipts (مستندات الشحن)</h3>
             </div>
             
             <p className="text-xs text-[#6B635B] mb-5 leading-relaxed">
-              Required for PR &amp; Protocol verification and customs clearance prior to financial release. Files route directly to the encrypted <code className="text-stone-700 bg-stone-100 px-1 py-0.5 rounded text-[11px]">logistics-secure</code> storage bucket.
+              Fictional receipt indicators only. PR reviews identity and travel; artwork imagery is a separate editorial asset. No files are uploaded or verified by these controls.
             </p>
 
             <div className="space-y-4">
@@ -419,7 +426,7 @@ export default function ArtistPortalWorkspace({
             <div className="mt-6 p-3 bg-stone-50 rounded border border-stone-200 text-[11px] text-stone-600 flex items-start gap-2">
               <Lock className="w-4 h-4 text-[#8B4513] shrink-0 mt-0.5" />
               <span>
-                Confidentiality Notice: Uploaded logistics data is restricted exclusively to PR &amp; Protocol, Finance, and authorized curatorial administrators.
+                Confidentiality Notice: This local demonstration stores no real identity files and makes no claim about backend permissions.
               </span>
             </div>
 

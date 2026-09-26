@@ -71,6 +71,7 @@ export interface BilateralContract {
   proposedWorkTitle: string;
   productionCost: number;
   shippingTerms: string;
+  specialConditions?: string;
   cancellationClauseMandatory: boolean;
   status: BilateralContractStatus;
   tranches: TrancheSchedule;

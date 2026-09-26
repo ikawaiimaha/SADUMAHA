@@ -21,7 +21,8 @@ export type AppRole =
   | 'Coordinator'
   | 'Artist'
   | 'Finance'
-  | 'PR';
+  | 'PR'
+  | 'Technical';
 
 export interface RoleSelectionProps {
   onSelectRole: (role: AppRole) => void;
@@ -39,6 +40,12 @@ interface RoleOption {
 }
 
 const ROLE_OPTIONS: RoleOption[] = [
+  {
+    key: 'Technical', titleEn: 'Engineering / Technical', titleAr: 'الفريق الهندسي والفني',
+    phaseBadge: 'Specialist evidence — fictional demo',
+    description: 'Records floor-load and mounting evidence for the 84 kg Kufic Horizon commission. Does not authorize payment.',
+    icon: ShieldCheck, accentColor: 'text-sadu-brick',
+  },
   {
     key: 'Chairman',
     titleEn: 'Chairman',
@@ -115,7 +122,7 @@ const ROLE_OPTIONS: RoleOption[] = [
     titleAr: 'الشؤون المالية',
     phaseBadge: 'Contracts & Tranche Disbursements',
     description:
-      'Executes milestone payment tranches (advances, production, completion) based on locked contracts post-Chairman budget authorization.',
+      'Simulates advance authorization only after agreement acceptance and both PR and Technical evidence gates. Delivery and Post-Opening remain separate.',
     icon: FileText,
     accentColor: 'text-sadu-ochre',
   },
@@ -123,9 +130,9 @@ const ROLE_OPTIONS: RoleOption[] = [
     key: 'PR',
     titleEn: 'PR (التشريفات)',
     titleAr: 'التشريفات والعلاقات',
-    phaseBadge: 'Passports & Print Verification',
+    phaseBadge: 'Identity & Travel Evidence',
     description:
-      'Verifies artist passports, travel logistics, and high-resolution print quality files for catalog publishing and wall texts.',
+      'Records fictional passport and visa checks. Does not review artwork files or authorize payments.',
     icon: Megaphone,
     accentColor: 'text-sadu-brick',
   },
