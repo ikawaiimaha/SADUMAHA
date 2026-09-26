@@ -27,7 +27,7 @@ export interface EditorialWorkspaceProps {
   onPublishOfficialTheme?: (data: {
     themeEssayArabic: string;
     themeEssayEnglish: string;
-    approvedTheme?: any;
+    approvedTheme: any;
   }) => void;
   onPublishBrief?: (englishText: string) => void;
   approvedTheme?: ThemeItem | any;

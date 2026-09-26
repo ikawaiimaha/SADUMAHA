@@ -392,7 +392,7 @@ function SADUApp() {
   }: {
     themeEssayArabic: string;
     themeEssayEnglish: string;
-    approvedTheme: ThemeItem;
+    approvedTheme: any;
   }) => {
     setThemeEssayArabic(essayAr);
     setThemeEssayEnglish(essayEn);
@@ -624,7 +624,8 @@ function SADUApp() {
       }
     });
   };
-  const handleSignContract = (contractId: string, signerName: string) => {
+  const handleSignContract = (contractId?: string, signerName?: string) => {
+    if (!contractId || !signerName) return; // Safety guard for undefined values
     setContracts(prev =>
       prev.map(c =>
         c.id === contractId
