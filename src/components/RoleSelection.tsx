@@ -1,4 +1,6 @@
+import { useMockupText } from '../i18n/useMockupText';
 import React from 'react';
+import { useI18n } from '../context/I18nContext';
 import {
   Award,
   ShieldCheck,
@@ -139,6 +141,8 @@ const ROLE_OPTIONS: RoleOption[] = [
 ];
 
 export const RoleSelection: React.FC<RoleSelectionProps> = ({ onSelectRole, selectedRole }) => {
+  const tr = useMockupText();
+  const { isAr } = useI18n();
   return (
     <div className="mx-auto w-full max-w-6xl space-y-8">
       {/* Portal Header */}
@@ -146,16 +150,9 @@ export const RoleSelection: React.FC<RoleSelectionProps> = ({ onSelectRole, sele
         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-sadu-brick/10 text-sadu-brick">
           <ShieldCheck className="h-6 w-6" />
         </div>
-        <span className="rounded-full border border-sadu-gold/60 bg-sadu-sand px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-sadu-muted">
-          Institutional Governance Portal
-        </span>
-        <h1 className="mt-3 font-editorial text-3xl font-bold text-sadu-charcoal sm:text-4xl">
-          SADU Biennial Operations
-        </h1>
-        <p className="mx-auto mt-2 max-w-2xl text-sm text-sadu-muted leading-relaxed">
-          Please select your institutional role to enter the dedicated governance workspace. Each role
-          has specific responsibilities across theme selection, nomination, and dispatch.
-        </p>
+        <span className="rounded-full border border-sadu-gold/60 bg-sadu-sand px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-sadu-muted"> {tr("Institutional Governance Portal")} </span>
+        <h1 className="mt-3 font-editorial text-3xl font-bold text-sadu-charcoal sm:text-4xl"> {tr("SADU Biennial Operations")} </h1>
+        <p className="mx-auto mt-2 max-w-2xl text-sm text-sadu-muted leading-relaxed"> {tr("Please select your institutional role to enter the dedicated governance workspace. Each role has specific responsibilities across theme selection, nomination, and dispatch.")} </p>
       </div>
 
       {/* Role Selection Grid */}
@@ -182,23 +179,23 @@ export const RoleSelection: React.FC<RoleSelectionProps> = ({ onSelectRole, sele
                     </div>
                     <div>
                       <h2 className="font-editorial text-base font-bold text-sadu-charcoal leading-tight">
-                        {role.titleEn}
+                        {isAr ? role.titleAr : role.titleEn}
                       </h2>
-                      <span dir="rtl" className="text-xs font-semibold text-sadu-brick block">
+                      {!isAr && <span dir="rtl" lang="ar" className="text-xs font-semibold text-sadu-brick block">
                         {role.titleAr}
-                      </span>
+                      </span>}
                     </div>
                   </div>
                 </div>
 
                 <div>
                   <span className="inline-block rounded-md border border-sadu-gold/50 bg-sadu-sand px-2 py-0.5 text-[9px] font-bold text-sadu-muted">
-                    {role.phaseBadge}
+                    {tr(role.phaseBadge)}
                   </span>
                 </div>
 
                 <p className="text-xs text-sadu-muted leading-relaxed min-h-[44px]">
-                  {role.description}
+                  {tr(role.description)}
                 </p>
               </div>
 
@@ -211,7 +208,7 @@ export const RoleSelection: React.FC<RoleSelectionProps> = ({ onSelectRole, sele
                   }}
                   className="inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-sadu-brick px-3 py-2 text-xs font-bold text-white shadow-xs transition-colors hover:bg-sadu-brick-dark cursor-pointer group-hover:shadow"
                 >
-                  <span>Enter as {role.titleEn}</span>
+                  <span>{isAr ? `الدخول بصفة ${role.titleAr}` : `Enter as ${role.titleEn}`}</span>
                   <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
                 </button>
               </div>

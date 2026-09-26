@@ -1,3 +1,5 @@
+import { useMockupText } from '../i18n/useMockupText';
+import { useI18n } from '../context/I18nContext';
 import React, { useState } from 'react';
 import {
   ShieldAlert,
@@ -44,6 +46,8 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
   ratifiedTheme,
   onBackToRoles,
 }) => {
+  const tr = useMockupText();
+  const { isAr } = useI18n();
   const [arabicText, setArabicText] = useState<string>(
     guidelinesArabic || curatorialBrief || ''
   );
@@ -82,11 +86,9 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
               <Globe className="h-6 w-6" />
             </div>
             <div>
-              <span className="rounded bg-sadu-sand px-2 py-0.5 text-[10px] font-bold text-sadu-brick uppercase tracking-wider border border-sadu-gold/60">
-                Stage 3: Curatorial Guidelines & Dynamic Blocklists
-              </span>
+              <span className="rounded bg-sadu-sand px-2 py-0.5 text-[10px] font-bold text-sadu-brick uppercase tracking-wider border border-sadu-gold/60"> {tr("Stage 3: Curatorial Guidelines & Dynamic Blocklists")} </span>
               <h1 className="font-editorial text-2xl font-bold text-sadu-charcoal sm:text-3xl mt-1">
-                Head of International Programs (HIP)
+                {isAr ? 'منسق معرض عام' : 'Head of International Programs (HIP)'}
               </h1>
               <p className="text-xs font-semibold text-sadu-brick" dir="rtl">
                 منسق معرض عام · صياغة الدليل التنسيقي والقائمة المحظورة
@@ -98,22 +100,18 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
               type="button"
               onClick={onBackToRoles}
               className="rounded-md border border-sadu-gold bg-sadu-sand px-3 py-1.5 text-xs font-bold text-sadu-charcoal hover:bg-sadu-gold/20 cursor-pointer"
-            >
-              Back to Role Selection
-            </button>
+            > {tr("Back to Role Selection")} </button>
           )}
         </div>
       </div>
       {ratifiedTheme && (
         <div className="rounded-md border border-sadu-gold/50 bg-white p-3 text-xs flex items-center justify-between">
           <div>
-            <span className="text-[10px] font-bold uppercase text-sadu-muted block">Ratified Biennial Theme Reference</span>
-            <span className="font-editorial text-sm font-bold text-sadu-charcoal">{ratifiedTheme.englishName}</span>
-            <span dir="rtl" className="text-xs font-semibold text-sadu-brick ms-2">{ratifiedTheme.arabicName}</span>
+            <span className="text-[10px] font-bold uppercase text-sadu-muted block">{tr("Ratified Biennial Theme Reference")}</span>
+            <span className="font-editorial text-sm font-bold text-sadu-charcoal">{isAr ? ratifiedTheme.arabicName : ratifiedTheme.englishName}</span>
+            <span hidden={isAr} dir="rtl" className="text-xs font-semibold text-sadu-brick ms-2">{ratifiedTheme.arabicName}</span>
           </div>
-          <span className="rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
-            Chairman Signed Off
-          </span>
+          <span className="rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800"> {tr("Chairman Signed Off")} </span>
         </div>
       )}
 
@@ -124,23 +122,19 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
             <div className="flex items-center gap-2">
               <FileText className="h-5 w-5 text-sadu-brick" />
               <div>
-                <h2 className="font-editorial text-lg font-bold text-sadu-charcoal">Exhibition Guidelines (Arabic)</h2>
-                <p className="text-xs text-sadu-muted">Drafted exclusively in Arabic &middot; Requires Editorial Translation</p>
+                <h2 className="font-editorial text-lg font-bold text-sadu-charcoal">{tr("Exhibition Guidelines (Arabic)")}</h2>
+                <p className="text-xs text-sadu-muted">{tr("Drafted exclusively in Arabic · Requires Editorial Translation")}</p>
               </div>
             </div>
             {isLocked && (
-              <span className="rounded bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-900 border border-amber-300">
-                Status: Pending Editorial Translation
-              </span>
+              <span className="rounded bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-900 border border-amber-300"> {tr("Status: Pending Editorial Translation")} </span>
             )}
           </div>
 
           <form onSubmit={handleSubmitToEditorial} className="space-y-3">
             <label htmlFor="exhibition-guidelines-arabic" className="block text-xs font-semibold text-sadu-charcoal">
-              <span>Exhibition Guidelines (Arabic)</span>
-              <span className="block font-normal text-[11px] text-sadu-muted mt-0.5">
-                HIP must draft the curatorial brief in Arabic before submitting to the Editorial Department.
-              </span>
+              <span>{tr("Exhibition Guidelines (Arabic)")}</span>
+              <span className="block font-normal text-[11px] text-sadu-muted mt-0.5"> {tr("HIP must draft the curatorial brief in Arabic before submitting to the Editorial Department.")} </span>
               <textarea
                 id="exhibition-guidelines-arabic"
                 dir="rtl"
@@ -163,22 +157,20 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
               <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-xs font-semibold text-amber-900 flex items-start gap-2.5">
                 <Lock className="h-4 w-4 text-amber-700 shrink-0 mt-0.5" />
                 <div>
-                  <strong className="block font-bold">Status: Pending Editorial Translation</strong>
-                  <p className="text-[11px] text-amber-800 font-normal mt-0.5">
-                    Draft is locked. The Editorial Department is now authorized to draft the official English translation and publish the bilingual brief.
-                  </p>
+                  <strong className="block font-bold">{tr("Status: Pending Editorial Translation")}</strong>
+                  <p className="text-[11px] text-amber-800 font-normal mt-0.5"> {tr("Draft is locked. The Editorial Department is now authorized to draft the official English translation and publish the bilingual brief.")} </p>
                 </div>
               </div>
             ) : (
               <div className="flex items-center justify-between pt-1">
-                <span className="text-[11px] text-sadu-muted">{arabicText.length} characters (Arabic)</span>
+                <span className="text-[11px] text-sadu-muted">{arabicText.length} {tr("characters (Arabic)")}</span>
                 <button
                   type="submit"
                   disabled={!arabicText.trim()}
                   className="inline-flex items-center gap-1.5 rounded-md bg-sadu-brick px-4 py-2 text-xs font-bold text-white hover:bg-sadu-brick-dark disabled:opacity-50 cursor-pointer shadow-xs"
                 >
                   <Send className="h-3.5 w-3.5" />
-                  <span>Submit to Editorial for Translation</span>
+                  <span>{tr("Submit to Editorial for Translation")}</span>
                 </button>
               </div>
             )}
@@ -191,23 +183,18 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
             <div className="flex items-center gap-2">
               <ShieldAlert className="h-5 w-5 text-sadu-brick" />
               <div>
-                <h2 className="font-editorial text-lg font-bold text-sadu-charcoal">Dynamic Blocklist</h2>
-                <p className="text-xs text-sadu-muted">Restricts nationalities, mediums or real-time directives</p>
+                <h2 className="font-editorial text-lg font-bold text-sadu-charcoal">{tr("Dynamic Blocklist")}</h2>
+                <p className="text-xs text-sadu-muted">{tr("Restricts nationalities, mediums or real-time directives")}</p>
               </div>
             </div>
             <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-800">
-              {blocklist.length} Blocked Tags
-            </span>
+              {blocklist.length} {tr("Blocked Tags")} </span>
           </div>
 
           <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900 leading-relaxed flex items-start gap-2">
             <AlertTriangle className="h-4 w-4 shrink-0 text-amber-700 mt-0.5" />
             <div>
-              <strong className="block font-bold">Enforcement Gate:</strong>
-              If a Coordinator submits an artist matching any active tag below, the system immediately rejects with:
-              <span className="block mt-1 font-mono font-bold text-red-700 bg-white/70 px-2 py-0.5 rounded border border-red-200">
-                "Submission blocked by current HIP security/administrative directives."
-              </span>
+              <strong className="block font-bold">{tr("Enforcement Gate:")}</strong> {tr("If a Coordinator submits an artist matching any active tag below, the system immediately rejects with:")} <span className="block mt-1 font-mono font-bold text-red-700 bg-white/70 px-2 py-0.5 rounded border border-red-200"> {tr("\"Submission blocked by current HIP security/administrative directives.\"")} </span>
             </div>
           </div>
 
@@ -225,7 +212,7 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
                     handleAddTag(newTagInput);
                   }
                 }}
-                placeholder="e.g. Restricted Nationality: Country X"
+                placeholder={tr("e.g. Restricted Nationality: Country X")}
                 className="w-full rounded-md border border-sadu-gold/60 py-2 ps-9 pe-3 text-xs text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
               />
             </div>
@@ -236,13 +223,13 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
               className="inline-flex items-center gap-1 rounded-md bg-sadu-brick px-3.5 py-2 text-xs font-bold text-white hover:bg-sadu-brick-dark disabled:opacity-50 cursor-pointer"
             >
               <Plus className="h-3.5 w-3.5" />
-              <span>Add Tag</span>
+              <span>{tr("Add Tag")}</span>
             </button>
           </div>
 
           {/* Quick Presets */}
           <div>
-            <span className="block text-[11px] font-semibold text-sadu-muted mb-1">Quick Directives:</span>
+            <span className="block text-[11px] font-semibold text-sadu-muted mb-1">{tr("Quick Directives:")}</span>
             <div className="flex flex-wrap gap-1.5">
               {PRESET_DIRECTIVES.map(preset => {
                 const isAdded = blocklist.some(t => t.toLowerCase() === preset.toLowerCase());
@@ -258,7 +245,7 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
                         : 'bg-sadu-sand text-sadu-charcoal border border-sadu-gold/60 hover:bg-sadu-brick hover:text-white cursor-pointer'
                     }`}
                   >
-                    + {preset}
+                    + {tr(preset)}
                   </button>
                 );
               })}
@@ -267,13 +254,10 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
 
           {/* Active Tags */}
           <div className="space-y-1.5">
-            <span className="block text-xs font-bold text-sadu-charcoal uppercase tracking-wider">
-              Active Blocklist Tags ({blocklist.length})
+            <span className="block text-xs font-bold text-sadu-charcoal uppercase tracking-wider"> {tr("Active Blocklist Tags (")}{blocklist.length})
             </span>
             {blocklist.length === 0 ? (
-              <p className="rounded-md border border-dashed border-sadu-gold/60 p-3 text-center text-xs text-sadu-muted">
-                No active restrictions. All compliant nominations will be admitted.
-              </p>
+              <p className="rounded-md border border-dashed border-sadu-gold/60 p-3 text-center text-xs text-sadu-muted"> {tr("No active restrictions. All compliant nominations will be admitted.")} </p>
             ) : (
               <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-1">
                 {blocklist.map(tag => (
@@ -282,12 +266,12 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
                     className="inline-flex items-center gap-1.5 rounded-md border border-red-300 bg-red-50 px-2.5 py-1 text-xs font-bold text-red-900"
                   >
                     <ShieldAlert className="h-3 w-3 text-red-700" />
-                    <span>{tag}</span>
+                    <span>{tr(tag)}</span>
                     <button
                       type="button"
                       onClick={() => handleRemoveTag(tag)}
                       className="ms-1 text-red-500 hover:text-red-800 cursor-pointer"
-                      title="Remove restriction"
+                      title={tr("Remove restriction")}
                     >
                       <Trash2 className="h-3 w-3" />
                     </button>

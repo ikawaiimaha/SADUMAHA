@@ -1,3 +1,5 @@
+import { useMockupText } from '../i18n/useMockupText';
+import { useI18n } from '../context/I18nContext';
 import React, { useMemo, useState } from 'react';
 import {
   ShieldCheck,
@@ -89,6 +91,8 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
   curatorialBrief,
   onBackToRoles,
 }) => {
+  const tr = useMockupText();
+  const { isAr } = useI18n();
   // Tabbed layout: Phase 1 (Theme Ratification Queue) or Phase 2 (Artist Veto & Balance Review)
   const [activeTab, setActiveTab] = useState<'phase1' | 'phase2'>('phase1');
 
@@ -171,13 +175,11 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="rounded bg-sadu-sand px-2 py-0.5 text-[10px] font-bold text-sadu-brick uppercase tracking-wider border border-sadu-gold/60">
-                  Biennial Directorate &middot; Executive Gate
-                </span>
-                <span className="text-xs text-sadu-muted">Stage 1 &amp; Stage 4</span>
+                <span className="rounded bg-sadu-sand px-2 py-0.5 text-[10px] font-bold text-sadu-brick uppercase tracking-wider border border-sadu-gold/60"> {tr("Biennial Directorate · Executive Gate")} </span>
+                <span className="text-xs text-sadu-muted">{tr("Stage 1 & Stage 4")}</span>
               </div>
               <h1 className="font-editorial text-2xl font-bold text-sadu-charcoal sm:text-3xl mt-1">
-                Biennial Director Workspace &middot; Mohammed Al Qaseer
+                {isAr ? 'مساحة عمل مدير البينالي · محمد القصير' : 'Biennial Director Workspace · Mohammed Al Qaseer'}
               </h1>
               <p className="text-xs font-semibold text-sadu-brick" dir="rtl">
                 مدير البينالي · اعتماد مقترحات الثيم ومراجعة توازن الفنانين (حق النقض)
@@ -189,9 +191,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
               type="button"
               onClick={onBackToRoles}
               className="rounded-md border border-sadu-gold bg-sadu-sand px-3 py-1.5 text-xs font-bold text-sadu-charcoal hover:bg-sadu-gold/20 cursor-pointer"
-            >
-              Back to Role Selection
-            </button>
+            > {tr("Back to Role Selection")} </button>
           )}
         </div>
 
@@ -207,12 +207,10 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
             }`}
           >
             <Award className="h-4 w-4" />
-            <span>Phase 1: Theme Ratification Queue (Stage 1)</span>
+            <span>{tr("Phase 1: Theme Ratification Queue (Stage 1)")}</span>
             <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${
               activeTab === 'phase1' ? 'bg-white/20 text-white' : 'bg-sadu-sand text-sadu-brick'
-            }`}>
-              3 Proposals
-            </span>
+            }`}> {tr("3 Proposals")} </span>
           </button>
 
           <button
@@ -225,12 +223,11 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
             }`}
           >
             <PieChart className="h-4 w-4" />
-            <span>Phase 2: Artist Veto &amp; Balance Review (Stage 4)</span>
+            <span>{tr("Phase 2: Artist Veto & Balance Review (Stage 4)")}</span>
             <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${
               activeTab === 'phase2' ? 'bg-white/20 text-white' : 'bg-sadu-sand text-sadu-charcoal'
             }`}>
-              {totalArtists} Dossiers
-            </span>
+              {totalArtists} {tr("Dossiers")} </span>
           </button>
         </div>
       </div>
@@ -243,22 +240,14 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
               <div className="flex items-center gap-2">
                 <Award className="h-5 w-5 text-sadu-brick" />
                 <div>
-                  <h2 className="font-editorial text-lg font-bold text-sadu-charcoal">
-                    Theme Ratification Queue (Stage 1 Directorate Review)
-                  </h2>
-                  <p className="text-xs text-sadu-muted">
-                    Evaluate 3 theme proposals formulated by the Preparatory Committee before formal escalation to the Chairman
-                  </p>
+                  <h2 className="font-editorial text-lg font-bold text-sadu-charcoal"> {tr("Theme Ratification Queue (Stage 1 Directorate Review)")} </h2>
+                  <p className="text-xs text-sadu-muted"> {tr("Evaluate 3 theme proposals formulated by the Preparatory Committee before formal escalation to the Chairman")} </p>
                 </div>
               </div>
-              <span className="rounded-full bg-sadu-sand px-3 py-1 text-xs font-bold text-sadu-brick border border-sadu-gold/60">
-                3 Candidate Themes
-              </span>
+              <span className="rounded-full bg-sadu-sand px-3 py-1 text-xs font-bold text-sadu-brick border border-sadu-gold/60"> {tr("3 Candidate Themes")} </span>
             </div>
 
-            <p className="text-xs text-sadu-muted leading-relaxed">
-              As Biennial Director, Mohammed Al Qaseer reviews the curatorial rigor of the 3 candidate proposals. You may append optional Directorate Notes to each proposal prior to presenting the set to Chairman H.E. Abdullah Al Owais for executive selection and budget locking.
-            </p>
+            <p className="text-xs text-sadu-muted leading-relaxed"> {tr("As Biennial Director, Mohammed Al Qaseer reviews the curatorial rigor of the 3 candidate proposals. You may append optional Directorate Notes to each proposal prior to presenting the set to Chairman H.E. Abdullah Al Owais for executive selection and budget locking.")} </p>
 
             {/* 3 Theme Proposals Cards Grid */}
             <div className="grid gap-6 md:grid-cols-3">
@@ -269,48 +258,39 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
                 >
                   <div className="space-y-3">
                     <div className="flex items-center justify-between border-b border-sadu-gold/30 pb-2">
-                      <span className="rounded bg-sadu-sand px-2 py-0.5 text-[10px] font-bold text-sadu-charcoal">
-                        Proposal Candidate {index + 1}
+                      <span className="rounded bg-sadu-sand px-2 py-0.5 text-[10px] font-bold text-sadu-charcoal"> {tr("Proposal Candidate")} {index + 1}
                       </span>
-                      <span className="rounded bg-emerald-100 text-emerald-800 px-2 py-0.5 text-[9px] font-bold">
-                        Rigorously Defended
-                      </span>
+                      <span className="rounded bg-emerald-100 text-emerald-800 px-2 py-0.5 text-[9px] font-bold"> {tr("Rigorously Defended")} </span>
                     </div>
 
                     <div>
                       <h3 className="font-editorial text-base font-bold text-sadu-charcoal">
-                        {theme.englishName}
+                        {isAr ? theme.arabicName : theme.englishName}
                       </h3>
-                      <p dir="rtl" className="font-editorial text-base font-semibold text-sadu-brick pt-0.5">
+                      <p hidden={isAr} dir="rtl" className="font-editorial text-base font-semibold text-sadu-brick pt-0.5">
                         {theme.arabicName}
                       </p>
                     </div>
 
                     <div className="space-y-2 border-t border-sadu-gold/20 pt-2 text-[11px]">
                       <div>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-sadu-muted block">
-                          Aesthetic Framework
-                        </span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-sadu-muted block"> {tr("Aesthetic Framework")} </span>
                         <p className="text-sadu-charcoal/90 leading-relaxed bg-sadu-paper/50 p-2 rounded border border-sadu-gold/30">
-                          {theme.aestheticFramework}
+                          {tr(theme.aestheticFramework)}
                         </p>
                       </div>
 
                       <div>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-sadu-muted block">
-                          Contemporary Relevance
-                        </span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-sadu-muted block"> {tr("Contemporary Relevance")} </span>
                         <p className="text-sadu-charcoal/90 leading-relaxed bg-sadu-paper/50 p-2 rounded border border-sadu-gold/30">
-                          {theme.contemporaryRelevance}
+                          {tr(theme.contemporaryRelevance)}
                         </p>
                       </div>
 
                       <div>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-sadu-muted block">
-                          Curatorial Justification
-                        </span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-sadu-muted block"> {tr("Curatorial Justification")} </span>
                         <p className="text-sadu-charcoal/90 leading-relaxed bg-sadu-paper/50 p-2 rounded border border-sadu-gold/30">
-                          {theme.curatorialJustification || theme.definition}
+                          {tr(theme.curatorialJustification || theme.definition)}
                         </p>
                       </div>
                     </div>
@@ -321,15 +301,13 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
                     <label
                       htmlFor={`director-note-${index}`}
                       className="block text-[11px] font-bold text-sadu-charcoal"
-                    >
-                      Director's Note (Optional Executive Comment)
-                    </label>
+                    > {tr("Director's Note (Optional Executive Comment)")} </label>
                     <textarea
                       id={`director-note-${index}`}
                       rows={2}
-                      value={directorNotes[index] || ''}
+                      value={tr(directorNotes[index] || '')}
                       onChange={e => setDirectorNotes({ ...directorNotes, [index]: e.target.value })}
-                      placeholder="Add executive remarks for Chairman Al Owais..."
+                      placeholder={tr("Add executive remarks for Chairman Al Owais...")}
                       className="w-full rounded-md border border-sadu-gold/60 bg-sadu-sand/20 p-2 text-xs text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
                     />
                   </div>
@@ -339,9 +317,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
 
             {/* Present to Chairman Action Gate */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-t border-sadu-gold/40 pt-5">
-              <span className="text-xs text-sadu-muted">
-                Presenting will submit all 3 evaluated proposals and Directorate notes directly to Chairman H.E. Abdullah Al Owais's executive workspace.
-              </span>
+              <span className="text-xs text-sadu-muted"> {tr("Presenting will submit all 3 evaluated proposals and Directorate notes directly to Chairman H.E. Abdullah Al Owais's executive workspace.")} </span>
 
               <button
                 type="button"
@@ -349,7 +325,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
                 className="inline-flex items-center justify-center gap-2 rounded-md bg-sadu-brick px-6 py-3 text-xs font-bold text-white shadow-xs transition-colors hover:bg-sadu-brick-dark cursor-pointer shrink-0"
               >
                 <Send className="h-4 w-4" />
-                <span>Present 3 Themes to Chairman</span>
+                <span>{tr("Present 3 Themes to Chairman")}</span>
               </button>
             </div>
 
@@ -357,8 +333,8 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
               <div className="rounded-lg border-2 border-emerald-400 bg-emerald-50 p-4 text-xs font-semibold text-emerald-900 flex items-center gap-2">
                 <CheckCircle className="h-5 w-5 text-emerald-600 shrink-0" />
                 <div>
-                  <strong className="block font-bold">3 Themes Presented to Chairman Successfully!</strong>
-                  <span>The workflow has officially moved to Chairman H.E. Abdullah Al Owais's dashboard for selection and budget locking.</span>
+                  <strong className="block font-bold">{tr("3 Themes Presented to Chairman Successfully!")}</strong>
+                  <span>{tr("The workflow has officially moved to Chairman H.E. Abdullah Al Owais's dashboard for selection and budget locking.")}</span>
                 </div>
               </div>
             )}
@@ -375,19 +351,17 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
           <div className="flex items-center gap-2">
             <Scale className="h-5 w-5 text-sadu-brick" />
             <div>
-              <h2 className="font-editorial text-lg font-bold text-sadu-charcoal">Curatorial Cohort Balance Dashboard</h2>
-              <p className="text-xs text-sadu-muted">Visual ratio of Emerging to Established artists in current candidate pool</p>
+              <h2 className="font-editorial text-lg font-bold text-sadu-charcoal">{tr("Curatorial Cohort Balance Dashboard")}</h2>
+              <p className="text-xs text-sadu-muted">{tr("Visual ratio of Emerging to Established artists in current candidate pool")}</p>
             </div>
           </div>
-          <span className="rounded bg-sadu-sand px-3 py-1 text-xs font-bold text-sadu-charcoal border border-sadu-gold/60">
-            Total Nominated Pool: {totalArtists} Artists
-          </span>
+          <span className="rounded bg-sadu-sand px-3 py-1 text-xs font-bold text-sadu-charcoal border border-sadu-gold/60"> {tr("Total Nominated Pool:")} {totalArtists} {tr("Artists")} </span>
         </div>
 
         {/* Tailwind Grid Summary */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div className="rounded-lg border border-sadu-gold/50 bg-sadu-sand/40 p-3">
-            <span className="text-[10px] font-bold text-sadu-muted uppercase block">Emerging Artists</span>
+            <span className="text-[10px] font-bold text-sadu-muted uppercase block">{tr("Emerging Artists")}</span>
             <div className="mt-1 flex items-baseline gap-1.5">
               <span className="font-editorial text-xl font-bold text-sadu-brick">{emergingCount}</span>
               <span className="text-xs font-semibold text-sadu-muted">({emergingPct}%)</span>
@@ -395,7 +369,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
           </div>
 
           <div className="rounded-lg border border-sadu-gold/50 bg-sadu-sand/40 p-3">
-            <span className="text-[10px] font-bold text-sadu-muted uppercase block">Established Artists</span>
+            <span className="text-[10px] font-bold text-sadu-muted uppercase block">{tr("Established Artists")}</span>
             <div className="mt-1 flex items-baseline gap-1.5">
               <span className="font-editorial text-xl font-bold text-sadu-charcoal">{establishedCount}</span>
               <span className="text-xs font-semibold text-sadu-muted">({establishedPct}%)</span>
@@ -403,18 +377,18 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
           </div>
 
           <div className="rounded-lg border border-emerald-300 bg-emerald-50/60 p-3">
-            <span className="text-[10px] font-bold text-emerald-800 uppercase block">Approved for Scope</span>
+            <span className="text-[10px] font-bold text-emerald-800 uppercase block">{tr("Approved for Scope")}</span>
             <div className="mt-1 flex items-baseline gap-1.5">
               <span className="font-editorial text-xl font-bold text-emerald-900">{approvedCount}</span>
-              <span className="text-xs font-semibold text-emerald-700">active</span>
+              <span className="text-xs font-semibold text-emerald-700">{tr("active")}</span>
             </div>
           </div>
 
           <div className="rounded-lg border border-red-300 bg-red-50/60 p-3">
-            <span className="text-[10px] font-bold text-red-800 uppercase block">Vetoed / Rejected</span>
+            <span className="text-[10px] font-bold text-red-800 uppercase block">{tr("Vetoed / Rejected")}</span>
             <div className="mt-1 flex items-baseline gap-1.5">
               <span className="font-editorial text-xl font-bold text-red-900">{vetoedCount}</span>
-              <span className="text-xs font-semibold text-red-700">returned</span>
+              <span className="text-xs font-semibold text-red-700">{tr("returned")}</span>
             </div>
           </div>
         </div>
@@ -422,9 +396,9 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
         {/* Visual Progress Bar */}
         <div className="space-y-1.5 rounded-lg border border-sadu-gold/40 bg-sadu-paper/60 p-3">
           <div className="flex items-center justify-between text-xs font-bold text-sadu-charcoal">
-            <span className="text-sadu-brick">Emerging: {emergingPct}% ({emergingCount})</span>
-            <span className="text-[10px] text-sadu-muted font-normal">Target: 40% - 60% Balance</span>
-            <span className="text-sadu-charcoal">Established: {establishedPct}% ({establishedCount})</span>
+            <span className="text-sadu-brick">{tr("Emerging:")} {emergingPct}% ({emergingCount})</span>
+            <span className="text-[10px] text-sadu-muted font-normal">{tr("Target: 40% - 60% Balance")}</span>
+            <span className="text-sadu-charcoal">{tr("Established:")} {establishedPct}% ({establishedCount})</span>
           </div>
 
           <div className="h-3.5 w-full overflow-hidden rounded-full bg-sadu-sand border border-sadu-gold/60 flex">
@@ -438,7 +412,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-lg border border-sadu-gold/50 bg-white p-3 text-xs">
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-sadu-muted" />
-          <span className="font-bold text-sadu-charcoal">Category:</span>
+          <span className="font-bold text-sadu-charcoal">{tr("Category:")}</span>
           {(['ALL', 'Emerging', 'Established'] as const).map(cat => (
             <button
               key={cat}
@@ -450,13 +424,13 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
                   : 'bg-sadu-sand text-sadu-charcoal hover:bg-sadu-gold/20'
               }`}
             >
-              {cat === 'ALL' ? 'All' : cat}
+              {tr(cat === 'ALL' ? 'All' : cat)}
             </button>
           ))}
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="font-bold text-sadu-charcoal">Status:</span>
+          <span className="font-bold text-sadu-charcoal">{tr("Status:")}</span>
           {(['ALL', 'PENDING', 'VETOED', 'APPROVED'] as const).map(st => (
             <button
               key={st}
@@ -468,7 +442,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
                   : 'bg-sadu-sand text-sadu-charcoal hover:bg-sadu-gold/20'
               }`}
             >
-              {st === 'ALL' ? 'All' : st === 'PENDING' ? 'Pending' : st === 'VETOED' ? 'Vetoed' : 'Approved'}
+              {st === 'ALL' ? tr('All') : st === 'PENDING' ? tr('Pending') : st === 'VETOED' ? tr('Vetoed') : tr('Approved')}
             </button>
           ))}
         </div>
@@ -479,8 +453,8 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
         {filteredArtists.length === 0 ? (
           <div className="rounded-xl border border-dashed border-sadu-gold/70 bg-white p-8 text-center text-xs text-sadu-muted">
             <UserCheck className="mx-auto h-8 w-8 text-sadu-muted mb-2" />
-            <p className="font-editorial text-base font-bold text-sadu-charcoal">No Candidate Dossiers Match Filters</p>
-            <p className="mt-1">Nominate artists through the Preparatory Committee or Coordinator portal.</p>
+            <p className="font-editorial text-base font-bold text-sadu-charcoal">{tr("No Candidate Dossiers Match Filters")}</p>
+            <p className="mt-1">{tr("Nominate artists through the Preparatory Committee or Coordinator portal.")}</p>
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
@@ -498,9 +472,9 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
                 <div className="space-y-3">
                   <div className="flex items-start justify-between gap-2 border-b border-sadu-gold/20 pb-2">
                     <div>
-                      <h3 className="font-editorial text-lg font-bold text-sadu-charcoal">{artist.artistName}</h3>
+                      <h3 className="font-editorial text-lg font-bold text-sadu-charcoal">{tr(artist.artistName)}</h3>
                       <span className="text-[11px] text-sadu-muted block">
-                        {artist.nationality} &middot; {artist.medium}
+                        {tr(artist.nationality)} &middot; {tr(artist.medium)}
                       </span>
                     </div>
 
@@ -511,13 +485,13 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
                           : 'bg-sadu-charcoal text-white'
                       }`}
                     >
-                      {artist.artistCategory}
+                      {tr(artist.artistCategory)}
                     </span>
                   </div>
 
                   <div className="text-xs space-y-1">
-                    <span className="font-bold text-sadu-charcoal block">Proposed Work:</span>
-                    <p className="text-sadu-muted italic">"{artist.proposedWorkTitle}"</p>
+                    <span className="font-bold text-sadu-charcoal block">{tr("Proposed Work:")}</span>
+                    <p className="text-sadu-muted italic">"{tr(artist.proposedWorkTitle)}"</p>
                   </div>
 
                   {/* Links/Icons to view PDF CV and Mockup Files */}
@@ -530,10 +504,10 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
                         artistName: artist.artistName,
                       })}
                       className="inline-flex items-center gap-1.5 rounded-md border border-sadu-gold/60 bg-sadu-sand/40 px-2.5 py-1 text-[11px] font-semibold text-sadu-charcoal hover:bg-sadu-gold/20 hover:border-sadu-brick cursor-pointer transition-colors"
-                      title="View PDF CV"
+                      title={tr("View PDF CV")}
                     >
                       <FileText className="h-3.5 w-3.5 text-sadu-brick" />
-                      <span>CV (PDF)</span>
+                      <span>{tr("CV (PDF)")}</span>
                       <ExternalLink className="h-3 w-3 text-sadu-muted" />
                     </button>
 
@@ -545,10 +519,10 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
                         artistName: artist.artistName,
                       })}
                       className="inline-flex items-center gap-1.5 rounded-md border border-sadu-gold/60 bg-sadu-sand/40 px-2.5 py-1 text-[11px] font-semibold text-sadu-charcoal hover:bg-sadu-gold/20 hover:border-sadu-brick cursor-pointer transition-colors"
-                      title="View Mockup Files"
+                      title={tr("View Mockup Files")}
                     >
                       <FileCode className="h-3.5 w-3.5 text-sadu-ochre" />
-                      <span>Mockup Files ({artist.mockupCount})</span>
+                      <span>{tr("Mockup Files (")}{artist.mockupCount})</span>
                       <ExternalLink className="h-3 w-3 text-sadu-muted" />
                     </button>
                   </div>
@@ -558,10 +532,9 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
                     <div className="rounded border border-red-300 bg-red-50 p-2.5 text-xs text-red-900 space-y-0.5">
                       <div className="flex items-center gap-1.5 font-bold">
                         <Ban className="h-3.5 w-3.5 text-red-600" />
-                        <span>Director Veto Enacted &mdash; Alerted Coordinator</span>
+                        <span>{tr("Director Veto Enacted — Alerted Coordinator")}</span>
                       </div>
-                      <p className="text-[11px] text-red-800">
-                        Reason: <strong>{artist.vetoReason || 'Administrative Directive'}</strong>
+                      <p className="text-[11px] text-red-800"> {tr("Reason:")} <strong>{tr(artist.vetoReason || 'Administrative Directive')}</strong>
                         {artist.vetoNotes && ` (${artist.vetoNotes})`}
                       </p>
                     </div>
@@ -570,7 +543,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
                   {artist.status === 'APPROVED' && (
                     <div className="rounded border border-emerald-300 bg-emerald-50 p-2 text-xs font-semibold text-emerald-800 flex items-center gap-1.5">
                       <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
-                      <span>Approved by Director &middot; Ready for Stage 5 Contracting</span>
+                      <span>{tr("Approved by Director · Ready for Stage 5 Contracting")}</span>
                     </div>
                   )}
                 </div>
@@ -588,7 +561,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
                     }`}
                   >
                     <CheckCircle className="h-3.5 w-3.5" />
-                    <span>{artist.status === 'APPROVED' ? 'Approved' : 'Approve'}</span>
+                    <span>{artist.status === 'APPROVED' ? tr('Approved') : tr('Approve')}</span>
                   </button>
 
                   <button
@@ -600,7 +573,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
                     className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-md bg-red-700 px-3 py-2 text-xs font-bold text-white shadow-xs hover:bg-red-800 transition-colors cursor-pointer"
                   >
                     <XCircle className="h-3.5 w-3.5" />
-                    <span>{artist.status === 'VETOED' ? 'Edit Veto' : 'Veto / Reject'}</span>
+                    <span>{artist.status === 'VETOED' ? tr('Edit Veto') : tr('Veto / Reject')}</span>
                   </button>
                 </div>
               </div>
@@ -619,8 +592,8 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
               <div className="flex items-center gap-2.5">
                 <FileText className="h-5 w-5 text-sadu-brick" />
                 <div>
-                  <h4 className="font-editorial text-base font-bold text-sadu-charcoal">{previewDoc.title}</h4>
-                  <span className="text-xs text-sadu-muted">Candidate: {previewDoc.artistName}</span>
+                  <h4 className="font-editorial text-base font-bold text-sadu-charcoal">{previewDoc.type === 'cv' ? previewDoc.title : `${tr(previewDoc.artistName)} — ${tr('Sketches & Mockups')}`}</h4>
+                  <span className="text-xs text-sadu-muted">{tr("Candidate:")} {tr(previewDoc.artistName)}</span>
                 </div>
               </div>
               <button
@@ -634,15 +607,11 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
 
             <div className="rounded-lg border border-dashed border-sadu-gold/60 bg-sadu-sand/30 p-8 text-center space-y-2">
               <FileText className="mx-auto h-12 w-12 text-sadu-brick/70" />
-              <p className="font-bold text-xs text-sadu-charcoal">{previewDoc.title}</p>
+              <p className="font-bold text-xs text-sadu-charcoal">{previewDoc.type === 'cv' ? previewDoc.title : `${tr(previewDoc.artistName)} — ${tr('Sketches & Mockups')}`}</p>
               <p className="text-[11px] text-sadu-muted">
-                {previewDoc.type === 'cv'
-                  ? 'Official PDF Curriculum Vitae with verified exhibition history, international collections, and academic credentials.'
-                  : 'High-resolution sketches, 3D spatial renders, and material specifications for the proposed biennial installation.'}
+                {previewDoc.type === 'cv' ? tr('Official PDF Curriculum Vitae with verified exhibition history, international collections, and academic credentials.') : tr('High-resolution sketches, 3D spatial renders, and material specifications for the proposed biennial installation.')}
               </p>
-              <span className="inline-block rounded bg-emerald-100 text-emerald-800 px-2 py-0.5 text-[10px] font-bold">
-                Verified Multaqa Attachment
-              </span>
+              <span className="inline-block rounded bg-emerald-100 text-emerald-800 px-2 py-0.5 text-[10px] font-bold"> {tr("Verified Multaqa Attachment")} </span>
             </div>
 
             <div className="flex justify-end pt-2">
@@ -650,9 +619,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
                 type="button"
                 onClick={() => setPreviewDoc(null)}
                 className="rounded-md bg-sadu-charcoal px-4 py-2 text-xs font-bold text-white hover:bg-black cursor-pointer"
-              >
-                Close Preview
-              </button>
+              > {tr("Close Preview")} </button>
             </div>
           </div>
         </div>
@@ -668,23 +635,16 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
                 <ShieldAlert className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="font-editorial text-lg font-bold text-sadu-charcoal">
-                  Executive Veto Enforcement
-                </h3>
-                <p className="text-xs text-sadu-muted">
-                  Mohammed Al Qaseer &middot; Absolute Directorate Authority
-                </p>
+                <h3 className="font-editorial text-lg font-bold text-sadu-charcoal"> {tr("Executive Veto Enforcement")} </h3>
+                <p className="text-xs text-sadu-muted"> {tr("Mohammed Al Qaseer · Absolute Directorate Authority")} </p>
               </div>
             </div>
 
-            <p className="text-xs text-sadu-muted leading-relaxed">
-              Vetoing an artist candidate immediately flags the dossier as rejected and routes the feedback reason back to the Coordinators.
-            </p>
+            <p className="text-xs text-sadu-muted leading-relaxed"> {tr("Vetoing an artist candidate immediately flags the dossier as rejected and routes the feedback reason back to the Coordinators.")} </p>
 
             <form onSubmit={handleConfirmVeto} className="space-y-4">
               <div>
-                <label htmlFor="veto-reason-select" className="block text-xs font-bold text-sadu-charcoal uppercase tracking-wider mb-1">
-                  Select Veto Reason <span className="text-red-600">*</span>
+                <label htmlFor="veto-reason-select" className="block text-xs font-bold text-sadu-charcoal uppercase tracking-wider mb-1"> {tr("Select Veto Reason")} <span className="text-red-600">*</span>
                 </label>
                 <select
                   id="veto-reason-select"
@@ -695,22 +655,20 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
                 >
                   {VETO_REASONS.map(reason => (
                     <option key={reason} value={reason}>
-                      {reason}
+                      {tr(reason)}
                     </option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label htmlFor="veto-notes-textarea" className="block text-xs font-bold text-sadu-charcoal uppercase tracking-wider mb-1">
-                  Director Directorate Notes (Routed to Coordinator)
-                </label>
+                <label htmlFor="veto-notes-textarea" className="block text-xs font-bold text-sadu-charcoal uppercase tracking-wider mb-1"> {tr("Director Directorate Notes (Routed to Coordinator)")} </label>
                 <textarea
                   id="veto-notes-textarea"
                   rows={3}
                   value={vetoNotes}
                   onChange={e => setVetoNotes(e.target.value)}
-                  placeholder="Provide specific justification (e.g. proposed installation exceeds gallery ceiling thresholds or budget allocation)..."
+                  placeholder={tr("Provide specific justification (e.g. proposed installation exceeds gallery ceiling thresholds or budget allocation)...")}
                   className="w-full rounded-md border border-sadu-gold/60 p-2 text-xs text-sadu-charcoal focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
                 />
               </div>
@@ -723,15 +681,11 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
                     setVetoNotes('');
                   }}
                   className="rounded-md border border-sadu-gold/60 bg-sadu-sand px-3 py-1.5 text-xs font-bold text-sadu-charcoal hover:bg-sadu-gold/20 cursor-pointer"
-                >
-                  Cancel
-                </button>
+                > {tr("Cancel")} </button>
                 <button
                   type="submit"
                   className="rounded-md bg-red-700 px-4 py-1.5 text-xs font-bold text-white hover:bg-red-800 shadow-xs cursor-pointer"
-                >
-                  Confirm Executive Veto
-                </button>
+                > {tr("Confirm Executive Veto")} </button>
               </div>
             </form>
           </div>

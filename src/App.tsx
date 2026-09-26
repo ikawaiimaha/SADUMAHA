@@ -1,3 +1,4 @@
+import { useMockupText } from './i18n/useMockupText';
 /**
  * ============================================================================
  * AI CONTEXT & ARCHITECTURE BRIEF (READ BEFORE EDITING)
@@ -140,6 +141,7 @@ const INITIAL_VETTED_ARTISTS: VettedArtist[] = [{
 }];
 
 function SADUApp() {
+  const tr = useMockupText();
   const { lang, toggleLang, isAr } = useI18n();
   const isRtl = isAr || lang === 'ar';
   const [isPresenterDrawerOpen, setIsPresenterDrawerOpen] = useState(false);
@@ -599,9 +601,7 @@ function SADUApp() {
                     ? 'bg-[#8B4513] text-white shadow-xs'
                     : 'bg-white border border-[#D9D2C5] text-[#2C2A29] hover:bg-stone-50'
                 }`}
-              >
-                1. Theme Formulation Table
-              </button>
+              > {tr("1. Theme Formulation Table")} </button>
               <button
                 type="button"
                 onClick={() => setIsNominationFormOpen(true)}
@@ -610,9 +610,7 @@ function SADUApp() {
                     ? 'bg-[#8B4513] text-white shadow-xs'
                     : 'bg-white border border-[#D9D2C5] text-[#2C2A29] hover:bg-stone-50'
                 }`}
-              >
-                2. Nominate Artist (Multaqa Protocol)
-              </button>
+              > {tr("2. Nominate Artist (Multaqa Protocol)")} </button>
             </div>
 
             {isNominationFormOpen ? (
@@ -730,12 +728,8 @@ function SADUApp() {
         <div className="flex items-center gap-2.5">
           <Settings2 className="w-5 h-5 text-[#8B4513] shrink-0" />
           <div className="flex flex-col">
-            <span className="text-xs font-bold tracking-widest uppercase text-white font-mono">
-              SADU Prototype Control
-            </span>
-            <span className="text-[10px] text-[#A89F91]">
-              Sharjah Calligraphy Biennial • Leadership Demo
-            </span>
+            <span className="text-xs font-bold tracking-widest uppercase text-white font-mono"> {tr("SADU Prototype Control")} </span>
+            <span className="text-[10px] text-[#A89F91]"> {tr("Sharjah Calligraphy Biennial • Leadership Demo")} </span>
           </div>
         </div>
 
@@ -745,56 +739,56 @@ function SADUApp() {
             current={activeRole} 
             onClick={setActiveRole} 
             icon={<Crown className="w-3.5 h-3.5" />} 
-            label="Chairman" 
+            label={isAr ? 'رئيس الدائرة' : 'Chairman'}
           />
           <RoleButton 
             role="BIENNIAL_DIRECTOR" 
             current={activeRole} 
             onClick={setActiveRole} 
             icon={<Briefcase className="w-3.5 h-3.5" />} 
-            label="Director" 
+            label={isAr ? 'مدير البينالي' : 'Director'}
           />
           <RoleButton 
             role="PREP_COMMITTEE" 
             current={activeRole} 
             onClick={setActiveRole} 
             icon={<PenTool className="w-3.5 h-3.5" />} 
-            label="Committee" 
+            label={isAr ? 'اللجنة التحضيرية' : 'Committee'}
           />
           <RoleButton 
             role="EDITORIAL" 
             current={activeRole} 
             onClick={setActiveRole} 
             icon={<Eye className="w-3.5 h-3.5" />} 
-            label="Editorial" 
+            label={isAr ? 'قسم التحرير' : 'Editorial'}
           />
           <RoleButton 
             role="HIP" 
             current={activeRole} 
             onClick={setActiveRole} 
             icon={<Globe className="w-3.5 h-3.5" />} 
-            label="HIP" 
+            label={isAr ? 'منسق معرض عام' : 'HIP'}
           />
           <RoleButton 
             role="COORDINATOR" 
             current={activeRole} 
             onClick={setActiveRole} 
             icon={<GitMerge className="w-3.5 h-3.5" />} 
-            label="Coordinator" 
+            label={isAr ? 'المنسق العام' : 'Coordinator'}
           />
           <RoleButton 
             role="ARTIST" 
             current={activeRole} 
             onClick={setActiveRole} 
             icon={<User className="w-3.5 h-3.5" />} 
-            label="Artist" 
+            label={isAr ? 'الفنان' : 'Artist'}
           />
           <RoleButton 
             role="PR_PROTOCOL" 
             current={activeRole} 
             onClick={setActiveRole} 
             icon={<ShieldCheck className="w-3.5 h-3.5" />} 
-            label="PR & Protocol" 
+            label={isAr ? 'التشريفات والعلاقات' : 'PR & Protocol'}
           />
           <RoleButton role="TECHNICAL" current={activeRole} onClick={setActiveRole}
             icon={<ShieldCheck className="w-3.5 h-3.5" />} label={isAr ? 'الفريق الفني' : 'Technical'} />
@@ -803,7 +797,7 @@ function SADUApp() {
             current={activeRole} 
             onClick={setActiveRole} 
             icon={<Landmark className="w-3.5 h-3.5" />} 
-            label="Finance" 
+            label={isAr ? 'الشؤون المالية' : 'Finance'}
           />
           <div className="h-5 w-px bg-[#2C2A29] mx-1 shrink-0" />
           <RoleButton 
@@ -811,7 +805,7 @@ function SADUApp() {
             current={activeRole} 
             onClick={setActiveRole} 
             icon={<RotateCcw className="w-3.5 h-3.5" />} 
-            label="All Roles" 
+            label={isAr ? 'جميع الأدوار' : 'All Roles'}
           />
         </div>
 
@@ -830,11 +824,11 @@ function SADUApp() {
           <button
             type="button"
             onClick={() => setIsPresenterDrawerOpen(prev => !prev)}
-            title="Toggle Presenter Architecture Mode (Ctrl+Shift+P / ⌘⇧P)"
+            title={tr("Toggle Presenter Architecture Mode (Ctrl+Shift+P / ⌘⇧P)")}
             className="inline-flex items-center gap-1.5 rounded border border-[#2C2A29] bg-[#2C2A29] px-2.5 py-1.5 text-xs font-bold text-[#D9D2C5] shadow-xs transition-colors hover:bg-[#3D3A38] hover:text-white cursor-pointer"
           >
             <Compass className="h-3.5 w-3.5 text-[#8B4513]" />
-            <span className="hidden sm:inline">Presenter Specs</span>
+            <span className="hidden sm:inline">{tr("Presenter Specs")}</span>
             <kbd className="hidden lg:inline-block rounded border border-[#3D3A38] bg-[#1A1817] px-1 py-0.2 text-[9px] font-mono text-[#A89F91]">
               ⌘⇧P
             </kbd>

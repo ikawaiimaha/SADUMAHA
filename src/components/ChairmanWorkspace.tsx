@@ -1,3 +1,5 @@
+import { useMockupText } from '../i18n/useMockupText';
+import { useI18n } from '../context/I18nContext';
 import React, { useState } from 'react';
 import {
   Lock,
@@ -48,6 +50,8 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
   themeStatus,
   onBackToRoles,
 }) => {
+  const tr = useMockupText();
+  const { isAr } = useI18n();
   const [approvedIndex, setApprovedIndex] = useState<number | null>(initialApprovedIndex);
   const [allocatedBudget, setAllocatedBudget] = useState<number>(12500000);
   const [isBudgetAssigned, setIsBudgetAssigned] = useState<boolean>(false);
@@ -86,16 +90,13 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
             <Award className="h-6 w-6 text-sadu-brick" />
             <div>
               <h2 className="font-editorial text-lg font-bold text-sadu-charcoal">
-                Chairman Workspace &middot; H.E. Abdullah Al Owais
+                {isAr ? 'مساحة عمل رئيس الدائرة · معالي عبدالله العويس' : 'Chairman Workspace · H.E. Abdullah Al Owais'}
               </h2>
-              <p className="text-xs text-sadu-muted">
-                Executive review of Preparatory Committee thematic proposals & official budget sign-off.
-              </p>
+              <p className="text-xs text-sadu-muted"> {tr("Executive review of Preparatory Committee thematic proposals & official budget sign-off.")} </p>
             </div>
           </div>
           {eventId && (
-            <span className="w-fit rounded-full border border-sadu-gold/60 bg-sadu-sand px-3 py-1 text-[10px] font-semibold text-sadu-muted">
-              Ref: {eventId}
+            <span className="w-fit rounded-full border border-sadu-gold/60 bg-sadu-sand px-3 py-1 text-[10px] font-semibold text-sadu-muted"> {tr("Ref:")} {eventId}
             </span>
           )}
           {onBackToRoles && (
@@ -105,7 +106,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
               className="inline-flex items-center gap-1.5 rounded-md border border-sadu-gold/70 bg-sadu-sand px-3 py-1.5 text-xs font-bold text-sadu-charcoal hover:bg-sadu-gold/25 cursor-pointer shadow-2xs"
             >
               <RotateCcw className="h-3.5 w-3.5 text-sadu-brick" />
-              <span>Switch Role</span>
+              <span>{isAr ? 'تغيير الدور' : 'Switch Role'}</span>
             </button>
           )}
         </div>
@@ -115,22 +116,14 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
             <Clock className="h-7 w-7" />
           </div>
 
-          <span className="rounded-full border border-sadu-gold/60 bg-sadu-sand px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-sadu-muted">
-            Phase 1 &middot; Executive Review Gate
-          </span>
+          <span className="rounded-full border border-sadu-gold/60 bg-sadu-sand px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-sadu-muted"> {tr("Phase 1 · Executive Review Gate")} </span>
 
-          <h3 className="mt-3 font-editorial text-2xl font-bold text-sadu-charcoal sm:text-3xl">
-            Awaiting Committee Proposals
-          </h3>
+          <h3 className="mt-3 font-editorial text-2xl font-bold text-sadu-charcoal sm:text-3xl"> {tr("Awaiting Committee Proposals")} </h3>
           <p dir="rtl" className="mt-1 font-editorial text-base font-semibold text-sadu-brick">
             في انتظار مقترحات اللجنة التحضيرية
           </p>
 
-          <p className="mt-3 max-w-lg text-xs text-sadu-muted leading-relaxed">
-            The Preparatory Committee (convened by Mohammed Al Qaseer) has not yet submitted theme proposals.
-            Exactly three candidate proposals defended with meticulous artistic criteria must be formulated
-            before Chairman Al Owais can confer official ratification and assign the budget.
-          </p>
+          <p className="mt-3 max-w-lg text-xs text-sadu-muted leading-relaxed"> {tr("The Preparatory Committee (convened by Mohammed Al Qaseer) has not yet submitted theme proposals. Exactly three candidate proposals defended with meticulous artistic criteria must be formulated before Chairman Al Owais can confer official ratification and assign the budget.")} </p>
         </div>
       </section>
     );
@@ -147,29 +140,21 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
           <Award className="h-6 w-6 text-sadu-brick" />
           <div>
             <h2 className="font-editorial text-lg font-bold text-sadu-charcoal">
-              Chairman Workspace &middot; Executive Ratification
+              {isAr ? 'مساحة عمل رئيس الدائرة · المصادقة التنفيذية' : 'Chairman Workspace · Executive Ratification'}
             </h2>
-            <p className="text-xs text-sadu-muted">
-              Executive gate: evaluate candidate proposals presented by the Preparatory Committee
-              and ratify the single official theme.
-            </p>
+            <p className="text-xs text-sadu-muted"> {tr("Executive gate: evaluate candidate proposals presented by the Preparatory Committee and ratify the single official theme.")} </p>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {eventId && (
-            <span className="w-fit rounded-full border border-sadu-gold/60 bg-sadu-sand px-3 py-1 text-[10px] font-semibold text-sadu-muted">
-              Ref: {eventId}
+            <span className="w-fit rounded-full border border-sadu-gold/60 bg-sadu-sand px-3 py-1 text-[10px] font-semibold text-sadu-muted"> {tr("Ref:")} {eventId}
             </span>
           )}
           {winningTheme ? (
             <span className="inline-flex items-center gap-1 rounded-full border border-sadu-brick bg-sadu-brick/10 px-3 py-1 text-[10px] font-bold text-sadu-brick">
-              <Lock className="h-3 w-3" />
-              Official Theme Ratified
-            </span>
+              <Lock className="h-3 w-3" /> {tr("Official Theme Ratified")} </span>
           ) : (
-            <span className="inline-flex items-center gap-1 rounded-full border border-sadu-gold bg-sadu-sand px-3 py-1 text-[10px] font-bold text-sadu-charcoal">
-              3 Candidate Proposals Under Review
-            </span>
+            <span className="inline-flex items-center gap-1 rounded-full border border-sadu-gold bg-sadu-sand px-3 py-1 text-[10px] font-bold text-sadu-charcoal"> {tr("3 Candidate Proposals Under Review")} </span>
           )}
           {onBackToRoles && (
             <button
@@ -178,7 +163,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
               className="inline-flex items-center gap-1.5 rounded-md border border-sadu-gold/70 bg-sadu-sand px-3 py-1.5 text-xs font-bold text-sadu-charcoal hover:bg-sadu-gold/25 cursor-pointer shadow-2xs"
             >
               <RotateCcw className="h-3.5 w-3.5 text-sadu-brick" />
-              <span>Switch Role</span>
+              <span>{isAr ? 'تغيير الدور' : 'Switch Role'}</span>
             </button>
           )}
         </div>
@@ -196,28 +181,16 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="rounded bg-sadu-brick px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
-                    Executive Determination
-                  </span>
-                  <span className="text-[11px] font-semibold text-sadu-muted">
-                    Official Institutional Decree
-                  </span>
+                  <span className="rounded bg-sadu-brick px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white"> {tr("Executive Determination")} </span>
+                  <span className="text-[11px] font-semibold text-sadu-muted"> {tr("Official Institutional Decree")} </span>
                 </div>
-                <h3 className="font-editorial text-2xl sm:text-3xl font-bold text-sadu-charcoal">
-                  Official Theme Ratified
-                </h3>
-                <p className="text-xs text-sadu-muted leading-relaxed max-w-2xl">
-                  The Chairman has officially conferred executive ratification upon this biennial theme.
-                  This determination is now binding across all biennial departments, curatorial commissions,
-                  and open calls.
-                </p>
+                <h3 className="font-editorial text-2xl sm:text-3xl font-bold text-sadu-charcoal"> {tr("Official Theme Ratified")} </h3>
+                <p className="text-xs text-sadu-muted leading-relaxed max-w-2xl"> {tr("The Chairman has officially conferred executive ratification upon this biennial theme. This determination is now binding across all biennial departments, curatorial commissions, and open calls.")} </p>
               </div>
             </div>
             <div className="shrink-0 flex sm:flex-col items-end gap-1">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-600/30 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-800">
-                <ShieldCheck className="h-4 w-4 text-emerald-700" />
-                Theme Locked
-              </span>
+                <ShieldCheck className="h-4 w-4 text-emerald-700" /> {tr("Theme Locked")} </span>
             </div>
           </div>
 
@@ -228,18 +201,14 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between border-b border-sadu-gold/40 pb-5">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="rounded-full bg-sadu-brick px-2.5 py-0.5 text-[10px] font-bold text-white uppercase tracking-wider">
-                    Official Biennial Theme
-                  </span>
-                  <span className="text-xs font-semibold text-sadu-muted">
-                    Candidate #{approvedIndex! + 1} Ratified by H.E. Abdullah Al Owais
-                  </span>
+                  <span className="rounded-full bg-sadu-brick px-2.5 py-0.5 text-[10px] font-bold text-white uppercase tracking-wider"> {tr("Official Biennial Theme")} </span>
+                  <span className="text-xs font-semibold text-sadu-muted"> {tr("Candidate #")}{approvedIndex! + 1} {tr("Ratified by H.E. Abdullah Al Owais")} </span>
                 </div>
                 <h4 className="font-editorial text-2xl font-bold text-sadu-charcoal pt-1">
-                  {winningTheme.englishName}
+                  {isAr ? winningTheme.arabicName : winningTheme.englishName}
                 </h4>
               </div>
-              <div className="text-start sm:text-end" dir="rtl">
+              <div hidden={isAr} className="text-start sm:text-end" dir="rtl">
                 <span className="text-xs font-semibold text-sadu-muted block pb-0.5">
                   الاسم الرسمي المعتمد
                 </span>
@@ -251,29 +220,23 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
 
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
               <div className="rounded-lg border border-sadu-gold/40 bg-sadu-paper/70 p-3">
-                <span className="block text-[10px] font-bold uppercase tracking-wider text-sadu-muted">
-                  Aesthetic Framework
-                </span>
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-sadu-muted"> {tr("Aesthetic Framework")} </span>
                 <p className="mt-1 text-xs text-sadu-charcoal leading-relaxed">
-                  {winningTheme.aestheticFramework || winningTheme.definition || 'Grounded in classical proportions and material inquiry.'}
+                  {tr(winningTheme.aestheticFramework || winningTheme.definition || 'Grounded in classical proportions and material inquiry.')}
                 </p>
               </div>
 
               <div className="rounded-lg border border-sadu-gold/40 bg-sadu-paper/70 p-3">
-                <span className="block text-[10px] font-bold uppercase tracking-wider text-sadu-muted">
-                  Contemporary & Historical Relevance
-                </span>
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-sadu-muted"> {tr("Contemporary & Historical Relevance")} </span>
                 <p className="mt-1 text-xs text-sadu-charcoal leading-relaxed">
-                  {winningTheme.contemporaryRelevance || 'Engages contemporary spatial and experimental calligraphic installation discourses.'}
+                  {tr(winningTheme.contemporaryRelevance || 'Engages contemporary spatial and experimental calligraphic installation discourses.')}
                 </p>
               </div>
 
               <div className="rounded-lg border border-sadu-gold/40 bg-sadu-paper/70 p-3">
-                <span className="block text-[10px] font-bold uppercase tracking-wider text-sadu-muted">
-                  Curatorial Justification
-                </span>
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-sadu-muted"> {tr("Curatorial Justification")} </span>
                 <p className="mt-1 text-xs text-sadu-charcoal leading-relaxed">
-                  {winningTheme.curatorialJustification || winningTheme.definition}
+                  {tr(winningTheme.curatorialJustification || winningTheme.definition)}
                 </p>
               </div>
             </div>
@@ -281,7 +244,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
             <div className="mt-5 flex flex-col items-start justify-between gap-4 border-t border-sadu-gold/30 pt-4 sm:flex-row sm:items-center">
               <div className="flex items-center gap-2 text-xs text-sadu-muted">
                 <ShieldCheck className="h-4 w-4 text-emerald-700" />
-                <span>Executive Sign-Off Confirmed by Chairman Al Owais</span>
+                <span>{tr("Executive Sign-Off Confirmed by Chairman Al Owais")}</span>
               </div>
               <button
                 type="button"
@@ -289,7 +252,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
                 className="inline-flex items-center gap-1.5 rounded-md border border-sadu-gold bg-sadu-sand px-3 py-1.5 text-xs font-bold text-sadu-charcoal transition-colors hover:bg-sadu-gold/30 cursor-pointer"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
-                <span>Unlock / Change Selection</span>
+                <span>{tr("Unlock / Change Selection")}</span>
               </button>
             </div>
           </div>
@@ -301,32 +264,20 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
                   <WalletCards className="h-5 w-5" />
                 </div>
                 <div>
-                  <h4 className="font-editorial text-lg font-bold text-sadu-charcoal">
-                    Official Budget Assignment
-                  </h4>
-                  <p className="text-xs text-sadu-muted">
-                    Conferred by H.E. Abdullah Al Owais &middot; Chairman / CEO
-                  </p>
+                  <h4 className="font-editorial text-lg font-bold text-sadu-charcoal"> {tr("Official Budget Assignment")} </h4>
+                  <p className="text-xs text-sadu-muted"> {tr("Conferred by H.E. Abdullah Al Owais · Chairman / CEO")} </p>
                 </div>
               </div>
-              <span className="rounded bg-sadu-sand px-2.5 py-1 text-[10px] font-bold text-sadu-brick uppercase tracking-wider border border-sadu-gold/60">
-                Phase 2 Delegation
-              </span>
+              <span className="rounded bg-sadu-sand px-2.5 py-1 text-[10px] font-bold text-sadu-brick uppercase tracking-wider border border-sadu-gold/60"> {tr("Phase 2 Delegation")} </span>
             </div>
 
-            <p className="text-xs text-sadu-muted leading-relaxed">
-              Theme ratification unlocks official biennial budget assignment. Authorizing this appropriation locks the budget and formally transfers operational authority to Biennial Director Mohammed Al Qaseer to convene the Artist Selection Committee.
-            </p>
+            <p className="text-xs text-sadu-muted leading-relaxed"> {tr("Theme ratification unlocks official biennial budget assignment. Authorizing this appropriation locks the budget and formally transfers operational authority to Biennial Director Mohammed Al Qaseer to convene the Artist Selection Committee.")} </p>
 
             <div className="space-y-3 rounded-lg border border-sadu-gold/50 bg-sadu-sand/40 p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <label htmlFor="approved-budget-amount" className="block text-xs font-bold text-sadu-charcoal uppercase tracking-wider">
-                    Approved Budget Amount (AED)
-                  </label>
-                  <span className="text-[11px] text-sadu-muted">
-                    Production, artist fees, international freight, and publishing
-                  </span>
+                  <label htmlFor="approved-budget-amount" className="block text-xs font-bold text-sadu-charcoal uppercase tracking-wider"> {tr("Approved Budget Amount (AED)")} </label>
+                  <span className="text-[11px] text-sadu-muted"> {tr("Production, artist fees, international freight, and publishing")} </span>
                 </div>
 
                 {!isBudgetAssigned && (
@@ -346,7 +297,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
                             : 'bg-white border border-sadu-gold/60 text-sadu-charcoal hover:bg-sadu-gold/20'
                         }`}
                       >
-                        {tier.label}
+                        {tr(tier.label)}
                       </button>
                     ))}
                   </div>
@@ -354,7 +305,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
               </div>
 
               <div className="relative">
-                <span className="absolute start-3 top-2.5 text-xs font-bold text-sadu-brick">AED</span>
+                <span className="absolute start-3 top-2.5 text-xs font-bold text-sadu-brick">{tr("AED")}</span>
                 <input
                   id="approved-budget-amount"
                   type="number"
@@ -373,20 +324,20 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
               {/* Tranche Breakdown */}
               <div className="grid grid-cols-2 gap-2 pt-2 sm:grid-cols-4 text-xs">
                 <div className="rounded border border-sadu-gold/40 bg-white p-2 text-center">
-                  <span className="text-[10px] text-sadu-muted block">Commissions (50%)</span>
-                  <span className="font-bold text-sadu-charcoal">AED {(allocatedBudget * 0.5).toLocaleString()}</span>
+                  <span className="text-[10px] text-sadu-muted block">{tr("Commissions (50%)")}</span>
+                  <span className="font-bold text-sadu-charcoal">{tr("AED")} {(allocatedBudget * 0.5).toLocaleString()}</span>
                 </div>
                 <div className="rounded border border-sadu-gold/40 bg-white p-2 text-center">
-                  <span className="text-[10px] text-sadu-muted block">Logistics (25%)</span>
-                  <span className="font-bold text-sadu-charcoal">AED {(allocatedBudget * 0.25).toLocaleString()}</span>
+                  <span className="text-[10px] text-sadu-muted block">{tr("Logistics (25%)")}</span>
+                  <span className="font-bold text-sadu-charcoal">{tr("AED")} {(allocatedBudget * 0.25).toLocaleString()}</span>
                 </div>
                 <div className="rounded border border-sadu-gold/40 bg-white p-2 text-center">
-                  <span className="text-[10px] text-sadu-muted block">Publishing (15%)</span>
-                  <span className="font-bold text-sadu-charcoal">AED {(allocatedBudget * 0.15).toLocaleString()}</span>
+                  <span className="text-[10px] text-sadu-muted block">{tr("Publishing (15%)")}</span>
+                  <span className="font-bold text-sadu-charcoal">{tr("AED")} {(allocatedBudget * 0.15).toLocaleString()}</span>
                 </div>
                 <div className="rounded border border-sadu-gold/40 bg-white p-2 text-center">
-                  <span className="text-[10px] text-sadu-muted block">Protocol (10%)</span>
-                  <span className="font-bold text-sadu-charcoal">AED {(allocatedBudget * 0.1).toLocaleString()}</span>
+                  <span className="text-[10px] text-sadu-muted block">{tr("Protocol (10%)")}</span>
+                  <span className="font-bold text-sadu-charcoal">{tr("AED")} {(allocatedBudget * 0.1).toLocaleString()}</span>
                 </div>
               </div>
             </div>
@@ -400,26 +351,16 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
                       <CheckCircle2 className="h-6 w-6" />
                     </div>
                     <div>
-                      <span className="inline-block rounded bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider mb-1">
-                        Status: Pending Editorial Polish
-                      </span>
-                      <h5 className="font-editorial text-lg font-bold text-emerald-950">
-                        Theme Approved and Budget Locked. Theme routed to Editorial Department for final bilingual phrasing.
-                      </h5>
+                      <span className="inline-block rounded bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider mb-1"> {tr("Status: Pending Editorial Polish")} </span>
+                      <h5 className="font-editorial text-lg font-bold text-emerald-950"> {tr("Theme Approved and Budget Locked. Theme routed to Editorial Department for final bilingual phrasing.")} </h5>
                     </div>
                   </div>
-                  <span className="rounded-full border border-emerald-600 bg-white px-3 py-1 font-mono text-xs font-bold text-emerald-800 shrink-0 shadow-2xs">
-                    AED {allocatedBudget.toLocaleString()} Locked
-                  </span>
+                  <span className="rounded-full border border-emerald-600 bg-white px-3 py-1 font-mono text-xs font-bold text-emerald-800 shrink-0 shadow-2xs"> {tr("AED")} {allocatedBudget.toLocaleString()} {tr("Locked")} </span>
                 </div>
 
                 <div className="rounded-md border border-emerald-200 bg-white/80 p-3 text-xs text-emerald-900 leading-relaxed space-y-1">
-                  <p className="font-bold">
-                    Theme Approved and Budget Locked. Theme routed to Editorial Department for final bilingual phrasing.
-                  </p>
-                  <p className="text-[11px] text-emerald-800">
-                    The theme is not sent directly to the HIP. The Editorial Department will now review the Preparatory Committee's raw curatorial explanation and compose the official bilingual theme essay before Stage 3 unlocks for the HIP and Coordinators.
-                  </p>
+                  <p className="font-bold"> {tr("Theme Approved and Budget Locked. Theme routed to Editorial Department for final bilingual phrasing.")} </p>
+                  <p className="text-[11px] text-emerald-800"> {tr("The theme is not sent directly to the HIP. The Editorial Department will now review the Preparatory Committee's raw curatorial explanation and compose the official bilingual theme essay before Stage 3 unlocks for the HIP and Coordinators.")} </p>
                 </div>
               </div>
             ) : (
@@ -429,7 +370,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
                 className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-sadu-brick px-6 py-3.5 text-xs font-bold text-white shadow-xs transition-colors hover:bg-sadu-brick-dark cursor-pointer"
               >
                 <Banknote className="h-4 w-4" />
-                <span>Authorize Budget & Transfer Authority</span>
+                <span>{tr("Authorize Budget & Transfer Authority")}</span>
                 <ArrowRight className="h-4 w-4" />
               </button>
             )}
@@ -440,12 +381,8 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
         /* CANDIDATE PROPOSALS (3 SIDE-BY-SIDE CARDS) */
         <div className="space-y-4">
           <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-            <span className="text-xs font-semibold text-sadu-muted">
-              Select one candidate proposal to approve and lock as the official biennial theme:
-            </span>
-            <span className="text-xs font-bold text-sadu-charcoal">
-              3 Candidates Under Review
-            </span>
+            <span className="text-xs font-semibold text-sadu-muted"> {tr("Select one candidate proposal to approve and lock as the official biennial theme:")} </span>
+            <span className="text-xs font-bold text-sadu-charcoal"> {tr("3 Candidates Under Review")} </span>
           </div>
 
           <div className="grid gap-6 md:grid-cols-3">
@@ -456,19 +393,16 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between border-b border-sadu-gold/30 pb-2">
-                    <span className="rounded bg-sadu-sand px-2 py-0.5 text-[10px] font-bold text-sadu-charcoal">
-                      Proposal {index + 1}
+                    <span className="rounded bg-sadu-sand px-2 py-0.5 text-[10px] font-bold text-sadu-charcoal"> {tr("Proposal")} {index + 1}
                     </span>
-                    <span className="text-[10px] font-semibold text-sadu-muted">
-                      Candidate Gate
-                    </span>
+                    <span className="text-[10px] font-semibold text-sadu-muted"> {tr("Candidate Gate")} </span>
                   </div>
 
                   <div>
                     <h3 className="font-editorial text-base font-bold text-sadu-charcoal">
-                      {theme.englishName}
+                      {isAr ? theme.arabicName : theme.englishName}
                     </h3>
-                    <p
+                    <p hidden={isAr}
                       dir="rtl"
                       className="font-editorial text-base font-semibold text-sadu-brick pt-0.5"
                     >
@@ -478,29 +412,23 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
 
                   <div className="space-y-2 border-t border-sadu-gold/20 pt-2 text-[11px]">
                     <div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-sadu-muted block">
-                        Aesthetic Framework
-                      </span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-sadu-muted block"> {tr("Aesthetic Framework")} </span>
                       <p className="text-sadu-charcoal/90 leading-relaxed line-clamp-2">
-                        {theme.aestheticFramework || 'Classical calligraphic proportion & material inquiry.'}
+                        {tr(theme.aestheticFramework || 'Classical calligraphic proportion & material inquiry.')}
                       </p>
                     </div>
 
                     <div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-sadu-muted block">
-                        Contemporary & Historical Relevance
-                      </span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-sadu-muted block"> {tr("Contemporary & Historical Relevance")} </span>
                       <p className="text-sadu-charcoal/90 leading-relaxed line-clamp-2">
-                        {theme.contemporaryRelevance || 'International art standards & contemporary discourse.'}
+                        {tr(theme.contemporaryRelevance || 'International art standards & contemporary discourse.')}
                       </p>
                     </div>
 
                     <div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-sadu-muted block">
-                        Curatorial Justification
-                      </span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-sadu-muted block"> {tr("Curatorial Justification")} </span>
                       <p className="text-sadu-charcoal/90 leading-relaxed line-clamp-2">
-                        {theme.curatorialJustification || theme.definition}
+                        {tr(theme.curatorialJustification || theme.definition)}
                       </p>
                     </div>
                   </div>
@@ -512,9 +440,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
                     onClick={() => handleApprove(index)}
                     className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-sadu-brick px-4 py-2.5 text-xs font-bold text-white shadow-xs transition-colors hover:bg-sadu-brick-dark cursor-pointer"
                   >
-                    <CheckCircle2 className="h-4 w-4" />
-                    Approve Theme
-                  </button>
+                    <CheckCircle2 className="h-4 w-4" /> {tr("Approve Theme")} </button>
                 </div>
               </div>
             ))}

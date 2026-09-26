@@ -1,3 +1,4 @@
+import { useMockupText } from '../i18n/useMockupText';
 import React, { useState, useEffect } from 'react';
 import type { BilateralContract } from '../types/contractStage6';
 import { AgreementMilestones } from './CommissionSummary';
@@ -47,6 +48,7 @@ export function CoordinatorContractWorkspace({
   contracts = [],
   onDispatchContract 
 }: CoordinatorContractWorkspaceProps) {
+  const tr = useMockupText(isAr);
   
   // Filter incoming global state
   const pendingArtists = artists.filter(a => a.status === 'DIRECTOR_APPROVED');
@@ -79,18 +81,15 @@ export function CoordinatorContractWorkspace({
     e.preventDefault();
     if (!selectedArtistId || !isTrancheValid) return;
 
-    const targetArtist = artists.find(a => a.id === selectedArtistId);
     
     // 1. Pass the data UP to App.tsx instead of handling it locally
     onDispatchContract(selectedArtistId, form);
 
     // 2. Show success message
-    setDispatchedSuccess(
-      isAr 
-        ? `تم إصدار الاتفاقية الثنائية للفنان (${targetArtist?.name_ar}) بنجاح وتحويل حالته إلى CONTRACT_PENDING_SIGNATURE`
-        : `Bilateral agreement generated & dispatched for ${targetArtist?.name_en}. Ready for simulated artist acceptance; nothing was sent externally.`
-    );
+    setDispatchedSuccess(selectedArtistId);
   };
+
+  const dispatchedArtist = artists.find(a => a.id === dispatchedSuccess);
 
   const totalPercentage = form.advancePercentage + form.interimPercentage + form.finalPercentage;
   const isTrancheValid = Math.abs(totalPercentage - 100) < 0.000001 && Number.isFinite(form.productionGrant) && form.productionGrant > 0 && [form.advancePercentage, form.interimPercentage, form.finalPercentage].every(n => Number.isFinite(n) && n > 0 && n <= 100);
@@ -113,9 +112,7 @@ export function CoordinatorContractWorkspace({
               {isAr ? 'صياغة العقود الثنائية وإبرام الاتفاقيات' : 'Bilateral Contracting & Deal Terms'}
             </h1>
             <p className="text-xs text-[#594F47] mt-1 max-w-2xl">
-              {isAr 
-                ? 'استقبال ملفات الفنانين المعتمدين نهائياً من مدير الملتقى وتحديد مخصصات الإنتاج وشروط الشحن وإعداد اتفاقية خيالية للعرض فقط.'
-                : 'Ingest vetted candidates approved by the Biennial Director, set production tranches, and prepare a fictional agreement for this demo.'}
+              {isAr ? 'استقبال ملفات الفنانين المعتمدين نهائياً من مدير الملتقى وتحديد مخصصات الإنتاج وشروط الشحن وإعداد اتفاقية خيالية للعرض فقط.' : 'Ingest vetted candidates approved by the Biennial Director, set production tranches, and prepare a fictional agreement for this demo.'}
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -134,7 +131,9 @@ export function CoordinatorContractWorkspace({
       {dispatchedSuccess && (
         <div className="bg-[#EBF3ED] border border-[#9DC4A7] text-[#1E4A28] px-4 py-3 rounded-lg flex items-center gap-3 text-sm mb-6">
           <CheckCircle2 className="w-5 h-5 shrink-0 text-[#2D6A3E]" />
-          <span>{dispatchedSuccess}</span>
+          <span>{isAr
+            ? `تم إصدار الاتفاقية الثنائية للفنان (${dispatchedArtist?.name_ar ?? ''}) بنجاح. جاهزة لمحاكاة قبول الفنان؛ لم تُرسل أي مراسلات خارجية.`
+            : `Bilateral agreement generated & dispatched for ${dispatchedArtist?.name_en ?? ''}. Ready for simulated artist acceptance; nothing was sent externally.`}</span>
         </div>
       )}
 
@@ -179,11 +178,11 @@ export function CoordinatorContractWorkspace({
                             ? 'bg-[#E1EAF2] text-[#1E4263]'
                             : 'bg-[#EFE8D6] text-[#6E4B17]'
                         }`}>
-                          {artist.category}
+                          {tr(artist.category)}
                         </span>
                       </div>
                       <div className="text-xs text-[#736357] mt-1">
-                        {artist.nationality} · {artist.medium}
+                        {tr(artist.nationality)} · {tr(artist.medium)}
                       </div>
                     </button>
                   );
@@ -206,9 +205,7 @@ export function CoordinatorContractWorkspace({
                 {dispatchedArtists.map(a => (
                   <div key={a.id} className="py-2 flex items-center justify-between">
                     <span className="text-[#2A2624] font-medium">{isAr ? a.name_ar : a.name_en}</span>
-                    <span className="text-[10px] text-[#8B261E] bg-[#F5E6E4] px-1.5 py-0.5 rounded font-mono">
-                      CONTRACT_PENDING
-                    </span>
+                    <span className="text-[10px] text-[#8B261E] bg-[#F5E6E4] px-1.5 py-0.5 rounded font-mono"> {tr("CONTRACT_PENDING")} </span>
                   </div>
                 ))}
               </div>
@@ -226,7 +223,7 @@ export function CoordinatorContractWorkspace({
                     {isAr ? `تحديد بنود الاتفاقية: ${selectedArtist.name_ar}` : `Draft Deal Terms: ${selectedArtist.name_en}`}
                   </h3>
                   <p className="text-xs text-[#736357]">
-                    {selectedArtist.nationality} · {selectedArtist.medium}
+                    {tr(selectedArtist.nationality)} · {tr(selectedArtist.medium)}
                   </p>
                 </div>
                 <FileSignature className="w-6 h-6 text-[#8B261E]" />
@@ -236,7 +233,7 @@ export function CoordinatorContractWorkspace({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="deal-grant" className="block text-xs font-semibold text-[#4A423D] mb-1">
-                    {isAr ? 'منحة الإنتاج المعتمدة (AED)' : 'Approved Production Grant (AED)'}
+                    {isAr ? 'منحة الإنتاج المعتمدة (درهم)' : 'Approved Production Grant (AED)'}
                   </label>
                   <div className="relative">
                     <DollarSign className="w-4 h-4 absolute start-3 top-2.5 text-[#736357]" />
@@ -261,7 +258,7 @@ export function CoordinatorContractWorkspace({
                     <input
                       type="text"
                       id="deal-shipping"
-                      value={form.shippingMethod}
+                      value={tr(form.shippingMethod)}
                       onChange={e => setForm({ ...form, shippingMethod: e.target.value })}
                       className="w-full ps-9 pe-3 py-2 bg-white border border-[#D9CEBA] rounded text-sm text-[#2A2624] focus:outline-none focus:border-[#8B261E]"
                       required
@@ -275,7 +272,7 @@ export function CoordinatorContractWorkspace({
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-[#2A2624] flex items-center gap-2">
                     <Layers className="w-4 h-4 text-[#8B261E]" />
-                    {isAr ? 'هيكلة الدفعات المالية (Tranches)' : 'Payment Tranche Milestones (%)'}
+                    {isAr ? 'هيكلة الدفعات المالية (٪)' : 'Payment Tranche Milestones (%)'}
                   </span>
                   <span className={`text-xs font-mono font-bold ${isTrancheValid ? 'text-[#2D6A3E]' : 'text-[#8B261E]'}`}>
                     {totalPercentage}% / 100%

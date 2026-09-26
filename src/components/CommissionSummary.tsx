@@ -1,3 +1,4 @@
+import { useMockupText } from '../i18n/useMockupText';
 import React from 'react';
 import { COMMISSION } from '../data/commissionScenario';
 import type { BilateralContract } from '../types/contractStage6';
@@ -16,6 +17,7 @@ export function CommissionSummary({ isAr, showTechnical = true }: { isAr: boolea
 }
 
 export function AgreementMilestones({ contract, isAr }: { contract: BilateralContract; isAr: boolean }) {
+  const tr = useMockupText(isAr);
   const t = contract.tranches;
   const rows = [
     [isAr ? 'مقدّم' : 'Advance', t.advancePercentage, t.advanceAmount],
@@ -24,14 +26,14 @@ export function AgreementMilestones({ contract, isAr }: { contract: BilateralCon
   ];
   return <section className={panel} aria-label={isAr ? 'جدول الاتفاقية' : 'Agreement schedule'}>
     <h2 className="font-serif text-xl font-bold mb-3">{isAr ? 'اتفاقية المنسق — ثلاث دفعات' : 'Coordinator agreement — three tranches'}</h2>
-    <p className="text-sm mb-3">{isAr ? 'الإجمالي' : 'Total'}: <bdi>{contract.productionCost.toLocaleString(isAr ? 'ar-AE' : 'en-AE')} AED</bdi></p>
+    <p className="text-sm mb-3">{isAr ? 'الإجمالي' : 'Total'}: <bdi>{contract.productionCost.toLocaleString(isAr ? 'ar-AE' : 'en-AE')} {isAr ? 'درهم' : 'AED'}</bdi></p>
     <div className="overflow-x-auto"><table className="w-full text-sm text-start">
       <thead><tr>{(isAr ? ['المرحلة', 'النسبة', 'المبلغ (درهم)'] : ['Milestone', 'Percentage', 'Amount (AED)']).map(h => <th key={h} scope="col" className="text-start py-2 pe-4">{h}</th>)}</tr></thead>
       <tbody>{rows.map(([name, percent, amount]) => <tr key={name} className="border-t border-[#D9CEBA]">
         <th scope="row" className="text-start py-3 pe-4">{name}</th><td className="pe-4"><bdi>{percent}%</bdi></td><td><bdi>{Number(amount).toLocaleString(isAr ? 'ar-AE' : 'en-AE')}</bdi></td>
       </tr>)}</tbody>
     </table></div>
-    <p className="mt-3 text-sm">{isAr ? 'شروط الشحن' : 'Shipping terms'}: {contract.shippingTerms}</p>
+    <p className="mt-3 text-sm">{isAr ? 'شروط الشحن' : 'Shipping terms'}: {tr(contract.shippingTerms)}</p>
     {contract.specialConditions && <p className="mt-2 text-sm">{isAr ? 'الشروط الخاصة' : 'Special conditions'}: {contract.specialConditions}</p>}
     <p className="mt-3 text-sm text-[#594F47]">{isAr
       ? 'قاعدة العرض: المقدّم بعد قبول الاتفاقية وتسجيل أدلة العلاقات العامة والفريق الفني. للتسليم وما بعد الافتتاح أدلة مستقلة لم تُسجّل بعد.'

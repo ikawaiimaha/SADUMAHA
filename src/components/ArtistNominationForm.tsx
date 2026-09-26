@@ -1,3 +1,4 @@
+import { useMockupText } from '../i18n/useMockupText';
 import React, { useState } from 'react';
 import {
   FileText,
@@ -47,6 +48,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
   submittedBy = 'Coordinator',
   onCancel,
 }) => {
+  const tr = useMockupText();
   const [artistName, setArtistName] = useState('');
   const [artistCategory, setArtistCategory] = useState<ArtistCategory | ''>('');
   const [nationality, setNationality] = useState('');
@@ -164,15 +166,9 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
               <User className="h-6 w-6" />
             </div>
             <div>
-              <span className="rounded bg-sadu-sand px-2 py-0.5 text-[10px] font-bold text-sadu-brick uppercase tracking-wider border border-sadu-gold/60">
-                Stage 3: The Multaqa Protocol
-              </span>
-              <h2 className="font-editorial text-2xl font-bold text-sadu-charcoal mt-0.5">
-                Artist Nomination Dossier
-              </h2>
-              <p className="text-xs text-sadu-muted">
-                Collaborative Nomination ({submittedBy}) &middot; Strict Dossier Schema Enforced
-              </p>
+              <span className="rounded bg-sadu-sand px-2 py-0.5 text-[10px] font-bold text-sadu-brick uppercase tracking-wider border border-sadu-gold/60"> {tr("Stage 3: The Multaqa Protocol")} </span>
+              <h2 className="font-editorial text-2xl font-bold text-sadu-charcoal mt-0.5"> {tr("Artist Nomination Dossier")} </h2>
+              <p className="text-xs text-sadu-muted"> {tr("Collaborative Nomination (")}{tr(submittedBy)}{tr(") · Strict Dossier Schema Enforced")} </p>
             </div>
           </div>
           {onCancel && (
@@ -180,19 +176,15 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
               type="button"
               onClick={onCancel}
               className="rounded-md border border-sadu-gold bg-sadu-sand px-3 py-1.5 text-xs font-bold text-sadu-charcoal hover:bg-sadu-gold/20 cursor-pointer"
-            >
-              Cancel
-            </button>
+            > {tr("Cancel")} </button>
           )}
         </div>
 
         {curatorialBrief && (
           <div className="mt-4 rounded-lg border border-sadu-gold/50 bg-white p-3 text-xs">
-            <span className="font-bold text-sadu-charcoal block mb-0.5">
-              Active HIP Curatorial Brief Reference:
-            </span>
+            <span className="font-bold text-sadu-charcoal block mb-0.5"> {tr("Active HIP Curatorial Brief Reference:")} </span>
             <p className="text-sadu-muted leading-relaxed line-clamp-2 italic">
-              "{curatorialBrief}"
+              "{tr(curatorialBrief)}"
             </p>
           </div>
         )}
@@ -204,11 +196,9 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
           <div className="flex items-start gap-3">
             <ShieldAlert className="h-6 w-6 text-red-600 shrink-0 mt-0.5" />
             <div className="flex-1">
-              <strong className="text-sm font-bold block mb-1">
-                Institutional Security/Administrative Rejection
-              </strong>
+              <strong className="text-sm font-bold block mb-1"> {tr("Institutional Security/Administrative Rejection")} </strong>
               <p className="font-mono text-xs font-bold text-red-800 bg-white/80 p-2 rounded border border-red-300">
-                {blocklistAlert}
+                {tr(blocklistAlert)}
               </p>
             </div>
             <button type="button" onClick={() => setBlocklistAlert(null)} className="text-red-500 hover:text-red-800 cursor-pointer">
@@ -223,10 +213,9 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
         <div className="rounded-xl border-2 border-emerald-400 bg-emerald-50 p-4 text-emerald-900 shadow-xs flex items-center gap-3">
           <CheckCircle2 className="h-6 w-6 text-emerald-600 shrink-0" />
           <div>
-            <strong className="text-sm font-bold block">Dossier Submitted Successfully to Candidate Pool</strong>
+            <strong className="text-sm font-bold block">{tr("Dossier Submitted Successfully to Candidate Pool")}</strong>
             <p className="text-xs text-emerald-800">
-              {artistName} ({artistCategory} Artist) is now routed to Mohammed Al Qaseer for Stage 4 Director Review.
-            </p>
+              {tr(artistName)} ({tr(artistCategory)} {tr("Artist) is now routed to Mohammed Al Qaseer for Stage 4 Director Review.")} </p>
           </div>
         </div>
       )}
@@ -236,14 +225,11 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
         {/* Section 1: Artist Identity & Strategic Tagging */}
         <div className="space-y-4 border-b border-sadu-gold/30 pb-6">
           <h3 className="font-editorial text-lg font-bold text-sadu-charcoal flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-sadu-brick" />
-            1. Artist Identity & Strategic Tagging
-          </h3>
+            <Sparkles className="h-5 w-5 text-sadu-brick" /> {tr("1. Artist Identity & Strategic Tagging")} </h3>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label htmlFor="nomination-artist-name" className="block text-xs font-bold text-sadu-charcoal uppercase tracking-wider mb-1">
-                Artist Full Name <span className="text-red-600">*</span>
+              <label htmlFor="nomination-artist-name" className="block text-xs font-bold text-sadu-charcoal uppercase tracking-wider mb-1"> {tr("Artist Full Name")} <span className="text-red-600">*</span>
               </label>
               <input
                 id="nomination-artist-name"
@@ -251,21 +237,19 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
                 required
                 value={artistName}
                 onChange={e => setArtistName(e.target.value)}
-                placeholder="e.g. Farhad Moshiri"
+                placeholder={tr("e.g. Farhad Moshiri")}
                 className="w-full rounded-md border border-sadu-gold/60 p-2 text-xs text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
               />
             </div>
 
             <div>
-              <label htmlFor="nomination-artwork-title" className="block text-xs font-bold text-sadu-charcoal uppercase tracking-wider mb-1">
-                Proposed Artwork Title
-              </label>
+              <label htmlFor="nomination-artwork-title" className="block text-xs font-bold text-sadu-charcoal uppercase tracking-wider mb-1"> {tr("Proposed Artwork Title")} </label>
               <input
                 id="nomination-artwork-title"
                 type="text"
                 value={proposedWorkTitle}
                 onChange={e => setProposedWorkTitle(e.target.value)}
-                placeholder="e.g. Resonances of the Kufic Axis"
+                placeholder={tr("e.g. Resonances of the Kufic Axis")}
                 className="w-full rounded-md border border-sadu-gold/60 p-2 text-xs text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
               />
             </div>
@@ -273,8 +257,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
 
           {/* Strategic Tagging */}
           <div className="space-y-2 pt-1">
-            <label className="block text-xs font-bold text-sadu-charcoal uppercase tracking-wider">
-              Strategic Exhibition Category Tag <span className="text-red-600">*</span>
+            <label className="block text-xs font-bold text-sadu-charcoal uppercase tracking-wider"> {tr("Strategic Exhibition Category Tag")} <span className="text-red-600">*</span>
             </label>
             <div className="grid grid-cols-2 gap-4">
               <label
@@ -285,7 +268,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-editorial text-sm font-bold text-sadu-charcoal">Emerging Artist</span>
+                  <span className="font-editorial text-sm font-bold text-sadu-charcoal">{tr("Emerging Artist")}</span>
                   <input
                     type="radio"
                     name="artistCategory"
@@ -295,9 +278,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
                     className="accent-sadu-brick"
                   />
                 </div>
-                <p className="text-[10px] text-sadu-muted mt-1">
-                  Early/mid-career practitioner. Strengthens avant-garde presence.
-                </p>
+                <p className="text-[10px] text-sadu-muted mt-1"> {tr("Early/mid-career practitioner. Strengthens avant-garde presence.")} </p>
               </label>
 
               <label
@@ -308,7 +289,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-editorial text-sm font-bold text-sadu-charcoal">Established Artist</span>
+                  <span className="font-editorial text-sm font-bold text-sadu-charcoal">{tr("Established Artist")}</span>
                   <input
                     type="radio"
                     name="artistCategory"
@@ -318,9 +299,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
                     className="accent-sadu-brick"
                   />
                 </div>
-                <p className="text-[10px] text-sadu-muted mt-1">
-                  Master calligrapher or prominent figure. Grounds institutional prestige.
-                </p>
+                <p className="text-[10px] text-sadu-muted mt-1"> {tr("Master calligrapher or prominent figure. Grounds institutional prestige.")} </p>
               </label>
             </div>
           </div>
@@ -328,28 +307,24 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
           {/* Nationality & Medium */}
           <div className="grid gap-4 sm:grid-cols-2 pt-1">
             <div>
-              <label htmlFor="nomination-nationality" className="block text-xs font-bold text-sadu-charcoal uppercase tracking-wider mb-1">
-                Nationality / Country
-              </label>
+              <label htmlFor="nomination-nationality" className="block text-xs font-bold text-sadu-charcoal uppercase tracking-wider mb-1"> {tr("Nationality / Country")} </label>
               <input
                 id="nomination-nationality"
                 type="text"
                 value={nationality}
                 onChange={e => setNationality(e.target.value)}
-                placeholder="e.g. Iraq, Japan, Egypt"
+                placeholder={tr("e.g. Iraq, Japan, Egypt")}
                 className="w-full rounded-md border border-sadu-gold/60 p-2 text-xs text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
               />
             </div>
             <div>
-              <label htmlFor="nomination-medium" className="block text-xs font-bold text-sadu-charcoal uppercase tracking-wider mb-1">
-                Medium & Materials
-              </label>
+              <label htmlFor="nomination-medium" className="block text-xs font-bold text-sadu-charcoal uppercase tracking-wider mb-1"> {tr("Medium & Materials")} </label>
               <input
                 id="nomination-medium"
                 type="text"
                 value={medium}
                 onChange={e => setMedium(e.target.value)}
-                placeholder="e.g. Ink on Wasli, Bronze Casting"
+                placeholder={tr("e.g. Ink on Wasli, Bronze Casting")}
                 className="w-full rounded-md border border-sadu-gold/60 p-2 text-xs text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
               />
             </div>
@@ -360,21 +335,17 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b border-sadu-gold/30 pb-3">
             <h3 className="font-editorial text-lg font-bold text-sadu-charcoal flex items-center gap-2">
-              <FileCheck className="h-5 w-5 text-sadu-brick" />
-              2. Strict Dossier Schema Attachments
-            </h3>
+              <FileCheck className="h-5 w-5 text-sadu-brick" /> {tr("2. Strict Dossier Schema Attachments")} </h3>
             <span className="rounded bg-sadu-sand px-2 py-0.5 text-[10px] font-bold text-sadu-muted uppercase">
-              {isCommissioned ? 'All 3 Files Required' : '2 Files Required (Mockup Optional)'}
+              {isCommissioned ? tr('All 3 Files Required') : tr('2 Files Required (Mockup Optional)')}
             </span>
           </div>
 
           {/* Hardening #1: Dynamic Dossier Schema toggle */}
           <div className="rounded-lg border border-sadu-gold/50 bg-sadu-sand/30 p-3 text-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
-              <span className="font-bold text-sadu-charcoal block">Work Production Framework</span>
-              <span className="text-[11px] text-sadu-muted">
-                Differentiates newly commissioned productions from existing institutional masterpieces.
-              </span>
+              <span className="font-bold text-sadu-charcoal block">{tr("Work Production Framework")}</span>
+              <span className="text-[11px] text-sadu-muted"> {tr("Differentiates newly commissioned productions from existing institutional masterpieces.")} </span>
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -383,18 +354,14 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
                 className={`rounded px-3 py-1 font-semibold text-xs transition-colors cursor-pointer ${
                   isCommissioned ? 'bg-sadu-brick text-white shadow-xs' : 'bg-white text-sadu-charcoal border border-sadu-gold/50'
                 }`}
-              >
-                Commissioned (Mockup Required)
-              </button>
+              > {tr("Commissioned (Mockup Required)")} </button>
               <button
                 type="button"
                 onClick={() => setIsCommissioned(false)}
                 className={`rounded px-3 py-1 font-semibold text-xs transition-colors cursor-pointer ${
                   !isCommissioned ? 'bg-sadu-brick text-white shadow-xs' : 'bg-white text-sadu-charcoal border border-sadu-gold/50'
                 }`}
-              >
-                Existing Work (Mockup Optional)
-              </button>
+              > {tr("Existing Work (Mockup Optional)")} </button>
             </div>
           </div>
 
@@ -404,11 +371,11 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
               cvUploaded || cvFile !== null ? 'border-emerald-400 bg-emerald-50/50' : 'border-sadu-gold/60 bg-sadu-sand/20'
             }`}>
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-sadu-charcoal">CV (PDF) *</span>
+                <span className="text-xs font-bold text-sadu-charcoal">{tr("CV (PDF) *")}</span>
                 {cvUploaded || cvFile !== null ? (
                   <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                 ) : (
-                  <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-1 py-0.5 rounded">Required</span>
+                  <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-1 py-0.5 rounded">{tr("Required")}</span>
                 )}
               </div>
               {cvUploaded || cvFile !== null ? (
@@ -421,7 +388,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
               ) : (
                 <label className="flex flex-col items-center justify-center rounded border-2 border-dashed border-sadu-gold/70 bg-white p-2.5 text-center cursor-pointer hover:border-sadu-brick">
                   <Upload className="h-4 w-4 text-sadu-muted mb-0.5" />
-                  <span className="text-[10px] font-bold text-sadu-brick">Attach CV (PDF)</span>
+                  <span className="text-[10px] font-bold text-sadu-brick">{tr("Attach CV (PDF)")}</span>
                   <input type="file" accept=".pdf" className="hidden" onChange={e => {
                     const file = e.target.files?.[0];
                     if (file) { setCvFile(file); setCvFileName(file.name); setCvUploaded(true); }
@@ -435,16 +402,16 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
               previousWorksUploaded || previousWorks.length > 0 ? 'border-emerald-400 bg-emerald-50/50' : 'border-sadu-gold/60 bg-sadu-sand/20'
             }`}>
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-sadu-charcoal">Previous Works *</span>
+                <span className="text-xs font-bold text-sadu-charcoal">{tr("Previous Works *")}</span>
                 {previousWorksUploaded || previousWorks.length > 0 ? (
                   <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                 ) : (
-                  <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-1 py-0.5 rounded">Required</span>
+                  <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-1 py-0.5 rounded">{tr("Required")}</span>
                 )}
               </div>
               {previousWorksUploaded || previousWorks.length > 0 ? (
                 <div className="flex items-center justify-between rounded bg-white p-2 border border-emerald-300 text-xs">
-                  <span className="text-emerald-950 font-medium">{previousWorks.length > 0 ? `${previousWorks.length} Images Attached` : 'Images Attached'}</span>
+                  <span className="text-emerald-950 font-medium">{previousWorks.length > 0 ? `${previousWorks.length} ${tr('Images Attached')}` : tr('Images Attached')}</span>
                   <button type="button" onClick={() => { setPreviousWorks([]); setPreviousWorksUploaded(false); }} className="text-red-500 hover:text-red-700 ms-1 cursor-pointer">
                     <X className="h-3.5 w-3.5" />
                   </button>
@@ -452,7 +419,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
               ) : (
                 <label className="flex flex-col items-center justify-center rounded border-2 border-dashed border-sadu-gold/70 bg-white p-2.5 text-center cursor-pointer hover:border-sadu-brick">
                   <ImageIcon className="h-4 w-4 text-sadu-muted mb-0.5" />
-                  <span className="text-[10px] font-bold text-sadu-brick">Attach Images</span>
+                  <span className="text-[10px] font-bold text-sadu-brick">{tr("Attach Images")}</span>
                   <input type="file" multiple accept="image/*" className="hidden" onChange={e => {
                     if (e.target.files && e.target.files.length > 0) {
                       setPreviousWorks(Array.from(e.target.files).map(f => f.name));
@@ -473,19 +440,19 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
             }`}>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-sadu-charcoal">
-                  {isCommissioned ? 'New Work Mockups *' : 'New Work Mockups (Optional)'}
+                  {isCommissioned ? tr('New Work Mockups *') : tr('New Work Mockups (Optional)')}
                 </span>
                 {newWorkMockupUploaded || newWorkMockup.length > 0 ? (
                   <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                 ) : !isCommissioned ? (
-                  <span className="text-[10px] font-semibold text-stone-600 bg-stone-200 px-1 py-0.5 rounded">Optional</span>
+                  <span className="text-[10px] font-semibold text-stone-600 bg-stone-200 px-1 py-0.5 rounded">{tr("Optional")}</span>
                 ) : (
-                  <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-1 py-0.5 rounded">Required</span>
+                  <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-1 py-0.5 rounded">{tr("Required")}</span>
                 )}
               </div>
               {newWorkMockupUploaded || newWorkMockup.length > 0 ? (
                 <div className="flex items-center justify-between rounded bg-white p-2 border border-emerald-300 text-xs">
-                  <span className="text-emerald-950 font-medium">{newWorkMockup.length > 0 ? `${newWorkMockup.length} Mockups Attached` : 'Mockups Attached'}</span>
+                  <span className="text-emerald-950 font-medium">{newWorkMockup.length > 0 ? `${newWorkMockup.length} ${tr('Mockups Attached')}` : tr('Mockups Attached')}</span>
                   <button type="button" onClick={() => { setNewWorkMockup([]); setNewWorkMockupUploaded(false); }} className="text-red-500 hover:text-red-700 ms-1 cursor-pointer">
                     <X className="h-3.5 w-3.5" />
                   </button>
@@ -493,7 +460,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
               ) : (
                 <label className="flex flex-col items-center justify-center rounded border-2 border-dashed border-sadu-gold/70 bg-white p-2.5 text-center cursor-pointer hover:border-sadu-brick">
                   <Upload className="h-4 w-4 text-sadu-muted mb-0.5" />
-                  <span className="text-[10px] font-bold text-sadu-brick">Attach Mockups</span>
+                  <span className="text-[10px] font-bold text-sadu-brick">{tr("Attach Mockups")}</span>
                   <input type="file" multiple accept="image/*,.pdf" className="hidden" onChange={e => {
                     if (e.target.files && e.target.files.length > 0) {
                       setNewWorkMockup(Array.from(e.target.files).map(f => f.name));
@@ -511,11 +478,11 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
           <span className="text-xs text-sadu-muted">
             {isFormValid ? (
               <span className="text-emerald-700 font-semibold flex items-center gap-1.5">
-                <CheckCircle2 className="h-4 w-4" /> {isCommissioned ? 'All 5 mandatory schema components attached and validated.' : 'Historical/existing work schema validated (mockup waived).'}
+                <CheckCircle2 className="h-4 w-4" /> {isCommissioned ? tr('All 5 mandatory schema components attached and validated.') : tr('Historical/existing work schema validated (mockup waived).')}
               </span>
             ) : (
               <span className="text-amber-800 font-semibold flex items-center gap-1.5">
-                <AlertTriangle className="h-4 w-4" /> {isCommissioned ? 'Required: Name, Category tag, CV, Previous Works, and Mockups.' : 'Required: Name, Category tag, CV, and Previous Works.'}
+                <AlertTriangle className="h-4 w-4" /> {isCommissioned ? tr('Required: Name, Category tag, CV, Previous Works, and Mockups.') : tr('Required: Name, Category tag, CV, and Previous Works.')}
               </span>
             )}
           </span>
@@ -526,7 +493,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
             className="inline-flex items-center justify-center gap-2 rounded-md bg-sadu-brick px-6 py-3 text-xs font-bold text-white shadow-xs transition-colors hover:bg-sadu-brick-dark disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             <Upload className="h-4 w-4" />
-            <span>Submit Artist Dossier (Multaqa Gate)</span>
+            <span>{tr("Submit Artist Dossier (Multaqa Gate)")}</span>
           </button>
         </div>
       </form>
