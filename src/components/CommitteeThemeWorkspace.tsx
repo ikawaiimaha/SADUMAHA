@@ -16,6 +16,7 @@ export interface CommitteeThemeWorkspaceProps {
   eventId?: string;
   /** Called with the three completed theme drafts once presented to the Chairman. */
   onPresentToChairman?: (themes: CommitteeThemeDraft[], eventId?: string) => void;
+  onBackToRoles?: () => void;
 }
 
 const EMPTY_THEME: CommitteeThemeDraft = {
@@ -42,6 +43,7 @@ const createEmptyThemes = (): CommitteeThemeDraft[] => [
 const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
   eventId,
   onPresentToChairman,
+  onBackToRoles,
 }) => {
   const [themes, setThemes] = useState<CommitteeThemeDraft[]>(createEmptyThemes());
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -175,11 +177,23 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
             </p>
           </div>
         </div>
-        {eventId ? (
-          <span className="w-fit rounded-full border border-sadu-gold/60 bg-sadu-sand px-3 py-1 text-[10px] font-semibold text-sadu-muted">
-            Event Ref: {eventId}
-          </span>
-        ) : null}
+        <div className="flex items-center gap-2">
+          {eventId ? (
+            <span className="w-fit rounded-full border border-sadu-gold/60 bg-sadu-sand px-3 py-1 text-[10px] font-semibold text-sadu-muted">
+              Event Ref: {eventId}
+            </span>
+          ) : null}
+          {onBackToRoles && (
+            <button
+              type="button"
+              onClick={onBackToRoles}
+              className="inline-flex items-center gap-1.5 rounded-md border border-sadu-gold/70 bg-sadu-sand px-3 py-1.5 text-xs font-bold text-sadu-charcoal hover:bg-sadu-gold/25 cursor-pointer shadow-2xs"
+            >
+              <RotateCcw className="h-3.5 w-3.5 text-sadu-brick" />
+              <span>Switch Role</span>
+            </button>
+          )}
+        </div>
       </div>
       <div className="grid gap-6 md:grid-cols-3">
         {themes.map((theme, index) => {

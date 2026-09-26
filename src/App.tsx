@@ -1,3 +1,26 @@
+/**
+ * ============================================================================
+ * AI CONTEXT & ARCHITECTURE BRIEF (READ BEFORE EDITING)
+ * ============================================================================
+ * TARGET AI: Cursor / Copilot / Claude / Gemini
+ * PROJECT: SADU (Sharjah Calligraphy Biennial Institutional Governance Portal)
+ * CLIENT: Sharjah Department of Culture (Executive Leadership Demo)
+ * 
+ * INTENT: This App.tsx is currently a MOCKUP ROUTER designed for an in-person 
+ * executive pitch to Biennial Director Mohammed Al Qaseer and Chairman H.E. Abdullah Al Owais.
+ * 
+ * ARCHITECTURAL RULES FOR AI:
+ * 1. DO NOT implement `react-router-dom`. We are using a state-based component 
+ *    switcher (`activeRole`) so the presenter can jump between institutional roles 
+ *    instantly without reloading or typing URLs.
+ * 2. DO NOT wire up the Supabase backend yet. Keep all state local to the components 
+ *    to guarantee zero latency during the offline/tablet pitch.
+ * 3. The "Executive Prototype Control Bar" at the top is intentional. It allows the 
+ *    presenter to simulate the 7-stage chain of command by swapping the simulated JWT role.
+ * 4. Design Language: 'Archival Heritage Pop' (Warm Ivory, Deep Ink, Oxide Red, RTL support).
+ * ============================================================================
+ */
+
 import React, { useState, useEffect } from 'react';
 import RoleSelection, { AppRole } from './components/RoleSelection';
 import CommitteeThemeWorkspace, { CommitteeThemeDraft } from './components/CommitteeThemeWorkspace';
@@ -30,7 +53,67 @@ import {
   FileCheck,
   AlertTriangle,
   Compass,
+  Crown,
+  Briefcase,
+  PenTool,
+  Eye,
+  Landmark,
+  Settings2,
 } from 'lucide-react';
+
+export type InstitutionalRole = 
+  | 'CHAIRMAN' 
+  | 'BIENNIAL_DIRECTOR' 
+  | 'PREP_COMMITTEE' 
+  | 'EDITORIAL' 
+  | 'HIP' 
+  | 'COORDINATOR' 
+  | 'ARTIST' 
+  | 'PR_PROTOCOL' 
+  | 'FINANCE'
+  | 'ROLES';
+
+const ROLE_NAME_MAP: Record<AppRole, InstitutionalRole> = {
+  'Chairman': 'CHAIRMAN',
+  'Biennial Director': 'BIENNIAL_DIRECTOR',
+  'Preparatory Committee': 'PREP_COMMITTEE',
+  'Editorial': 'EDITORIAL',
+  'HIP': 'HIP',
+  'Coordinator': 'COORDINATOR',
+  'Artist': 'ARTIST',
+  'PR': 'PR_PROTOCOL',
+  'Finance': 'FINANCE',
+};
+
+function RoleButton({ 
+  role, 
+  current, 
+  onClick, 
+  icon, 
+  label 
+}: { 
+  role: InstitutionalRole; 
+  current: InstitutionalRole; 
+  onClick: (role: InstitutionalRole) => void;
+  icon: React.ReactNode;
+  label: string;
+}) {
+  const isActive = current === role;
+  return (
+    <button
+      type="button"
+      onClick={() => onClick(role)}
+      className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-bold transition-colors whitespace-nowrap cursor-pointer ${
+        isActive 
+          ? 'bg-[#8B4513] text-white shadow-inner ring-1 ring-[#8B4513]' 
+          : 'bg-[#2C2A29] text-[#A89F91] hover:bg-[#3D3A38] hover:text-white'
+      }`}
+    >
+      {icon}
+      <span>{label}</span>
+    </button>
+  );
+}
 
 const EVENT_ID = '123e4567-e89b-12d3-a456-426614174000';
 
@@ -216,7 +299,8 @@ function SADUApp() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const [currentRole, setCurrentRole] = useState<AppRole | null>(null);
+  // Executive Prototype State-Based Switcher (offline/tablet zero-latency pitch mode)
+  const [activeRole, setActiveRole] = useState<InstitutionalRole>('BIENNIAL_DIRECTOR');
   const [submittedThemes, setSubmittedThemes] = useState<CommitteeThemeDraft[] | undefined>(undefined);
   const [assignedBudget, setAssignedBudget] = useState<number | null>(null);
   const [ratifiedTheme, setRatifiedTheme] = useState<ThemeItem | null>(null);
@@ -659,87 +743,45 @@ function SADUApp() {
   };
 
 
-  return (
-    <div className="min-h-screen bg-sadu-sand text-sadu-charcoal flex flex-col">
-      {/* Persistent 'Switch Role' Navigation Bar */}
-      <header className="sticky top-0 z-50 border-b border-sadu-gold/70 bg-sadu-paper/95 backdrop-blur-sm shadow-xs">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-3">
-            <span className="flex h-8 w-8 items-center justify-center rounded-md bg-sadu-brick text-xs font-bold text-white shadow-2xs">
-              S
-            </span>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-editorial text-base font-bold text-sadu-charcoal">
-                  SADU
-                </span>
-                <span className="rounded bg-sadu-sand px-1.5 py-0.2 text-[10px] font-semibold text-sadu-muted">
-                  Sharjah Calligraphy Biennial
-                </span>
-              </div>
-              <p className="text-[11px] text-sadu-muted hidden sm:block">
-                Institutional Governance Portal
-              </p>
-            </div>
-          </div>
+  const renderWorkspace = () => {
+    switch (activeRole) {
+      case 'CHAIRMAN':
+        return (
+          <ChairmanWorkspace
+            eventId={EVENT_ID}
+            themes={submittedThemes}
+            onBudgetAssigned={handleBudgetAssigned}
+            themeStatus={themePolishStatus}
+            onBackToRoles={() => setActiveRole('ROLES')}
+          />
+        );
 
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* Subtle presenter mode shortcut button */}
-            <button
-              type="button"
-              onClick={() => setIsPresenterDrawerOpen(prev => !prev)}
-              title="Toggle Presenter Architecture Mode (Ctrl+Shift+P / ⌘⇧P)"
-              className="inline-flex items-center gap-1.5 rounded-md border border-sadu-gold/70 bg-sadu-sand px-2.5 py-1.5 text-xs font-bold text-sadu-charcoal shadow-2xs transition-colors hover:bg-sadu-gold/25 hover:border-sadu-brick cursor-pointer"
-            >
-              <Compass className="h-3.5 w-3.5 text-sadu-brick" />
-              <span className="hidden sm:inline">Presenter</span>
-              <kbd className="hidden lg:inline-block rounded border border-sadu-gold/60 bg-white/80 px-1 py-0.2 text-[9px] font-mono text-sadu-muted">
-                ⌘⇧P
-              </kbd>
-            </button>
+      case 'BIENNIAL_DIRECTOR':
+        return (
+          <DirectorWorkspace
+            submittedThemes={submittedThemes}
+            onPresentToChairman={handlePresentToChairman}
+            nominatedArtists={nominatedArtists}
+            onVetoArtist={handleVetoArtist}
+            onApproveArtist={handleApproveArtist}
+            assignedBudget={assignedBudget}
+            ratifiedTheme={ratifiedTheme}
+            curatorialBrief={curatorialBrief}
+            onBackToRoles={() => setActiveRole('ROLES')}
+          />
+        );
 
-            {currentRole ? (
-              <>
-                <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-sadu-gold/70 bg-sadu-sand px-3 py-1 text-xs font-semibold text-sadu-charcoal">
-                  <span className="h-2 w-2 rounded-full bg-emerald-600" />
-                  Role: <strong className="font-bold">{currentRole}</strong>
-                </span>
-
-                <button
-                  type="button"
-                  onClick={() => setCurrentRole(null)}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-sadu-gold bg-sadu-sand px-3 py-1.5 text-xs font-bold text-sadu-charcoal shadow-2xs transition-colors hover:bg-sadu-gold/25 hover:border-sadu-brick cursor-pointer"
-                >
-                  <RotateCcw className="h-3.5 w-3.5 text-sadu-brick" />
-                  <span>Switch Role</span>
-                </button>
-              </>
-            ) : (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-sadu-gold/60 bg-sadu-sand px-3 py-1 text-[11px] font-semibold text-sadu-muted">
-                <Users className="h-3.5 w-3.5" />
-                Select Role to Proceed
-              </span>
-            )}
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content Area */}
-      <main className="flex-1 py-10 px-4 sm:px-6 lg:px-8">
-        {!currentRole && (
-          <RoleSelection onSelectRole={role => setCurrentRole(role)} />
-        )}
-
-        {currentRole === 'Preparatory Committee' && (
-          <div className="space-y-6">
-            <div className="mx-auto flex max-w-5xl justify-end gap-2">
+      case 'PREP_COMMITTEE':
+        return (
+          <div className="space-y-6 max-w-6xl mx-auto py-6 px-4 sm:px-6">
+            <div className="flex justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setIsNominationFormOpen(false)}
                 className={`rounded px-3 py-1.5 text-xs font-bold transition-colors cursor-pointer ${
                   !isNominationFormOpen
-                    ? 'bg-sadu-brick text-white shadow-xs'
-                    : 'bg-white border border-sadu-gold/60 text-sadu-charcoal hover:bg-sadu-gold/20'
+                    ? 'bg-[#8B4513] text-white shadow-xs'
+                    : 'bg-white border border-[#D9D2C5] text-[#2C2A29] hover:bg-stone-50'
                 }`}
               >
                 1. Theme Formulation Table
@@ -749,8 +791,8 @@ function SADUApp() {
                 onClick={() => setIsNominationFormOpen(true)}
                 className={`rounded px-3 py-1.5 text-xs font-bold transition-colors cursor-pointer ${
                   isNominationFormOpen
-                    ? 'bg-sadu-brick text-white shadow-xs'
-                    : 'bg-white border border-sadu-gold/60 text-sadu-charcoal hover:bg-sadu-gold/20'
+                    ? 'bg-[#8B4513] text-white shadow-xs'
+                    : 'bg-white border border-[#D9D2C5] text-[#2C2A29] hover:bg-stone-50'
                 }`}
               >
                 2. Nominate Artist (Multaqa Protocol)
@@ -769,35 +811,14 @@ function SADUApp() {
               <CommitteeThemeWorkspace
                 eventId={EVENT_ID}
                 onPresentToChairman={handlePresentToChairman}
+                onBackToRoles={() => setActiveRole('ROLES')}
               />
             )}
           </div>
-        )}
-        {currentRole === 'Biennial Director' && (
-          <DirectorWorkspace
-            submittedThemes={submittedThemes}
-            onPresentToChairman={handlePresentToChairman}
-            nominatedArtists={nominatedArtists}
-            onVetoArtist={handleVetoArtist}
-            onApproveArtist={handleApproveArtist}
-            assignedBudget={assignedBudget}
-            ratifiedTheme={ratifiedTheme}
-            curatorialBrief={curatorialBrief}
-            onBackToRoles={() => setCurrentRole(null)}
-          />
-        )}
+        );
 
-
-        {currentRole === 'Chairman' && (
-          <ChairmanWorkspace
-            eventId={EVENT_ID}
-            themes={submittedThemes}
-            onBudgetAssigned={handleBudgetAssigned}
-            themeStatus={themePolishStatus}
-          />
-        )}
-
-        {currentRole === 'Editorial' && (
+      case 'EDITORIAL':
+        return (
           <EditorialWorkspace
             approvedTheme={ratifiedTheme}
             themePolishStatus={themePolishStatus}
@@ -805,11 +826,12 @@ function SADUApp() {
             assignedBudget={assignedBudget}
             initialEssayArabic={themeEssayArabic}
             initialEssayEnglish={themeEssayEnglish}
-            onBackToRoles={() => setCurrentRole(null)}
+            onBackToRoles={() => setActiveRole('ROLES')}
           />
-        )}
+        );
 
-        {currentRole === 'HIP' && (
+      case 'HIP':
+        return (
           <HIPWorkspace
             guidelinesArabic={guidelinesArabic}
             translationStatus={translationStatus}
@@ -819,11 +841,12 @@ function SADUApp() {
             blocklist={blocklist}
             onUpdateBlocklist={setBlocklist}
             ratifiedTheme={ratifiedTheme}
-            onBackToRoles={() => setCurrentRole(null)}
+            onBackToRoles={() => setActiveRole('ROLES')}
           />
-        )}
+        );
 
-        {currentRole === 'Coordinator' && (
+      case 'COORDINATOR':
+        return (
           <CoordinatorWorkspace
             nominatedArtists={nominatedArtists}
             contracts={contracts}
@@ -832,14 +855,12 @@ function SADUApp() {
             onStartReviewAmendment={handleStartReviewAmendment}
             curatorialBrief={curatorialBrief}
             blocklist={blocklist}
-            onBackToRoles={() => setCurrentRole(null)}
+            onBackToRoles={() => setActiveRole('ROLES')}
           />
-        )}
+        );
 
-
-
-
-        {currentRole === 'Artist' && (
+      case 'ARTIST':
+        return (
           <ArtistPortalWorkspace
             contracts={contracts}
             onSignContract={handleSignContract}
@@ -847,29 +868,162 @@ function SADUApp() {
             onUploadPassport={handleUploadPassport}
             onUploadHighResArtwork={handleUploadHighResArtwork}
             onSaveBio={handleSaveBio}
-            onBackToRoles={() => setCurrentRole(null)}
+            onBackToRoles={() => setActiveRole('ROLES')}
           />
-        )}
+        );
 
-        {currentRole === 'PR' && (
+      case 'PR_PROTOCOL':
+        return (
           <PRWorkspace
             contracts={contracts}
             onVerifyPassport={handleVerifyPassport}
             onVerifyHighResArtwork={handleVerifyHighResArtwork}
-            onBackToRoles={() => setCurrentRole(null)}
+            onBackToRoles={() => setActiveRole('ROLES')}
           />
-        )}
+        );
 
-        {currentRole === 'Finance' && (
+      case 'FINANCE':
+        return (
           <FinanceWorkspace
             assignedBudget={assignedBudget}
             contracts={contracts}
             disbursementHistory={disbursementHistory}
             onDisburseTranche={handleDisburseTranche}
-            onBackToRoles={() => setCurrentRole(null)}
+            onBackToRoles={() => setActiveRole('ROLES')}
           />
-        )}
+        );
 
+      case 'ROLES':
+      default:
+        return (
+          <div className="py-10 px-4 sm:px-6 lg:px-8">
+            <RoleSelection
+              onSelectRole={role => {
+                const mapped = ROLE_NAME_MAP[role];
+                if (mapped) setActiveRole(mapped);
+              }}
+            />
+          </div>
+        );
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#F7F1E6] text-[#2C2A29] flex flex-col font-sans">
+      {/* 
+        EXECUTIVE PROTOTYPE CONTROL BAR 
+        This is strictly for the pitch demo. It acts as a God-mode switcher 
+        so you can prove the chain of command to leadership in real-time.
+      */}
+      <nav className="sticky top-0 bg-[#1A1817] text-[#D9D2C5] border-b border-[#2C2A29] px-4 py-2 flex flex-wrap items-center justify-between gap-3 z-50 shadow-md">
+        <div className="flex items-center gap-2.5">
+          <Settings2 className="w-5 h-5 text-[#8B4513] shrink-0" />
+          <div className="flex flex-col">
+            <span className="text-xs font-bold tracking-widest uppercase text-white font-mono">
+              SADU Prototype Control
+            </span>
+            <span className="text-[10px] text-[#A89F91]">
+              Sharjah Calligraphy Biennial • Leadership Demo
+            </span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
+          <RoleButton 
+            role="CHAIRMAN" 
+            current={activeRole} 
+            onClick={setActiveRole} 
+            icon={<Crown className="w-3.5 h-3.5" />} 
+            label="Chairman" 
+          />
+          <RoleButton 
+            role="BIENNIAL_DIRECTOR" 
+            current={activeRole} 
+            onClick={setActiveRole} 
+            icon={<Briefcase className="w-3.5 h-3.5" />} 
+            label="Director" 
+          />
+          <RoleButton 
+            role="PREP_COMMITTEE" 
+            current={activeRole} 
+            onClick={setActiveRole} 
+            icon={<PenTool className="w-3.5 h-3.5" />} 
+            label="Committee" 
+          />
+          <RoleButton 
+            role="EDITORIAL" 
+            current={activeRole} 
+            onClick={setActiveRole} 
+            icon={<Eye className="w-3.5 h-3.5" />} 
+            label="Editorial" 
+          />
+          <RoleButton 
+            role="HIP" 
+            current={activeRole} 
+            onClick={setActiveRole} 
+            icon={<Globe className="w-3.5 h-3.5" />} 
+            label="HIP" 
+          />
+          <RoleButton 
+            role="COORDINATOR" 
+            current={activeRole} 
+            onClick={setActiveRole} 
+            icon={<GitMerge className="w-3.5 h-3.5" />} 
+            label="Coordinator" 
+          />
+          <RoleButton 
+            role="ARTIST" 
+            current={activeRole} 
+            onClick={setActiveRole} 
+            icon={<User className="w-3.5 h-3.5" />} 
+            label="Artist" 
+          />
+          <RoleButton 
+            role="PR_PROTOCOL" 
+            current={activeRole} 
+            onClick={setActiveRole} 
+            icon={<ShieldCheck className="w-3.5 h-3.5" />} 
+            label="PR & Protocol" 
+          />
+          <RoleButton 
+            role="FINANCE" 
+            current={activeRole} 
+            onClick={setActiveRole} 
+            icon={<Landmark className="w-3.5 h-3.5" />} 
+            label="Finance" 
+          />
+          <div className="h-5 w-px bg-[#2C2A29] mx-1 shrink-0" />
+          <RoleButton 
+            role="ROLES" 
+            current={activeRole} 
+            onClick={setActiveRole} 
+            icon={<RotateCcw className="w-3.5 h-3.5" />} 
+            label="All Roles" 
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsPresenterDrawerOpen(prev => !prev)}
+            title="Toggle Presenter Architecture Mode (Ctrl+Shift+P / ⌘⇧P)"
+            className="inline-flex items-center gap-1.5 rounded border border-[#2C2A29] bg-[#2C2A29] px-2.5 py-1.5 text-xs font-bold text-[#D9D2C5] shadow-xs transition-colors hover:bg-[#3D3A38] hover:text-white cursor-pointer"
+          >
+            <Compass className="h-3.5 w-3.5 text-[#8B4513]" />
+            <span className="hidden sm:inline">Presenter Specs</span>
+            <kbd className="hidden lg:inline-block rounded border border-[#3D3A38] bg-[#1A1817] px-1 py-0.2 text-[9px] font-mono text-[#A89F91]">
+              ⌘⇧P
+            </kbd>
+          </button>
+        </div>
+      </nav>
+
+      {/* 
+        WORKSPACE MOUNT POINT
+        The actual Archival Heritage Pop UI renders inside this container.
+      */}
+      <main className="flex-1 overflow-y-auto relative bg-[#F7F1E6]">
+        {renderWorkspace()}
       </main>
 
       {/* Presenter Architecture Drawer (Ctrl+Shift+P / ⌘⇧P) */}

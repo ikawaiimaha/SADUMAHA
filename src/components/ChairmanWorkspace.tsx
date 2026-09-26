@@ -36,6 +36,7 @@ export interface ChairmanWorkspaceProps {
   initialApprovedIndex?: number | null;
   /** Optional current theme workflow status. */
   themeStatus?: 'PENDING_CHAIRMAN_APPROVAL' | 'PENDING_EDITORIAL_POLISH' | 'PUBLISHED' | 'PUBLISHED_OFFICIAL';
+  onBackToRoles?: () => void;
 }
 
 export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
@@ -45,6 +46,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
   onBudgetAssigned,
   initialApprovedIndex = null,
   themeStatus,
+  onBackToRoles,
 }) => {
   const [approvedIndex, setApprovedIndex] = useState<number | null>(initialApprovedIndex);
   const [allocatedBudget, setAllocatedBudget] = useState<number>(12500000);
@@ -95,6 +97,16 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
             <span className="w-fit rounded-full border border-sadu-gold/60 bg-sadu-sand px-3 py-1 text-[10px] font-semibold text-sadu-muted">
               Ref: {eventId}
             </span>
+          )}
+          {onBackToRoles && (
+            <button
+              type="button"
+              onClick={onBackToRoles}
+              className="inline-flex items-center gap-1.5 rounded-md border border-sadu-gold/70 bg-sadu-sand px-3 py-1.5 text-xs font-bold text-sadu-charcoal hover:bg-sadu-gold/25 cursor-pointer shadow-2xs"
+            >
+              <RotateCcw className="h-3.5 w-3.5 text-sadu-brick" />
+              <span>Switch Role</span>
+            </button>
           )}
         </div>
 
@@ -158,6 +170,16 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
             <span className="inline-flex items-center gap-1 rounded-full border border-sadu-gold bg-sadu-sand px-3 py-1 text-[10px] font-bold text-sadu-charcoal">
               3 Candidate Proposals Under Review
             </span>
+          )}
+          {onBackToRoles && (
+            <button
+              type="button"
+              onClick={onBackToRoles}
+              className="inline-flex items-center gap-1.5 rounded-md border border-sadu-gold/70 bg-sadu-sand px-3 py-1.5 text-xs font-bold text-sadu-charcoal hover:bg-sadu-gold/25 cursor-pointer shadow-2xs"
+            >
+              <RotateCcw className="h-3.5 w-3.5 text-sadu-brick" />
+              <span>Switch Role</span>
+            </button>
           )}
         </div>
       </div>
