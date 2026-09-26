@@ -97,6 +97,7 @@ export interface ArtistDossier {
   nationality: string;
   medium: string;
   status: ArtistStatus;
+  rejectionReason?: string;
   
   // Hardening #1: Dynamic Dossier Schema toggle
   isCommissioned: boolean; 
