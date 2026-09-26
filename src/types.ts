@@ -77,17 +77,20 @@ export type ThemeStatus =
   | 'PUBLISHED_OFFICIAL';
 
 export type ArtistStatus = 
+  | 'NOMINATED'
+  | 'PENDING_VETTING'
+  | 'DIRECTOR_APPROVED'
+  | 'DIRECTOR_VETOED'
+  | 'CONTRACT_PENDING_SIGNATURE'
+  | 'CONTRACT_EXECUTED'
+  | 'LOGISTICS_PENDING_PR'
+  | 'CLEARED_FOR_FINANCE'
   | 'INCOMPLETE_DOSSIER'
   | 'HIP_BLOCKED'
   | 'PENDING_DIRECTOR_REVIEW'
-  | 'DIRECTOR_VETOED'
-  | 'DIRECTOR_APPROVED'
-  | 'CONTRACT_PENDING_SIGNATURE'
   | 'CONTRACT_DISPUTED' // Hardening #2: Contract amendment negotiation loop
   | 'AMENDMENT_UNDER_REVIEW' // Active coordinator renegotiation loop
-  | 'LOGISTICS_PENDING_PR'
-  | 'PHYSICAL_ASSET_RECEIVED' // Hardening #3: Physical crate sign-off before final finance release
-  | 'CLEARED_FOR_FINANCE';
+  | 'PHYSICAL_ASSET_RECEIVED'; // Hardening #3: Physical crate sign-off before final finance release
 
 export interface ArtistDossier {
   id: string;

@@ -29,7 +29,7 @@ import HIPWorkspace, { TranslationStatus } from './components/HIPWorkspace';
 import EditorialWorkspace, { ThemePolishStatus } from './components/EditorialWorkspace';
 import DirectorWorkspace from './components/DirectorWorkspace';
 import ArtistNominationForm, { NominatedArtistDossier } from './components/ArtistNominationForm';
-import CoordinatorWorkspace from './components/CoordinatorWorkspace';
+import { CoordinatorContractWorkspace } from './components/CoordinatorContractWorkspace';
 import ArtistPortalWorkspace from './components/ArtistPortalWorkspace';
 import PRWorkspace from './components/PRWorkspace';
 import FinanceWorkspace from './components/FinanceWorkspace';
@@ -284,7 +284,8 @@ const INITIAL_DISBURSEMENTS: DisbursementRecord[] = [
 ];
 
 function SADUApp() {
-  const { lang } = useI18n();
+  const { lang, toggleLang, isAr } = useI18n();
+  const isRtl = isAr || lang === 'ar';
   const [isPresenterDrawerOpen, setIsPresenterDrawerOpen] = useState(false);
 
   useEffect(() => {
@@ -847,16 +848,12 @@ function SADUApp() {
 
       case 'COORDINATOR':
         return (
-          <CoordinatorWorkspace
-            nominatedArtists={nominatedArtists}
-            contracts={contracts}
-            onNominateArtist={handleNominateArtist}
-            onDispatchContract={handleDispatchContract}
-            onStartReviewAmendment={handleStartReviewAmendment}
-            curatorialBrief={curatorialBrief}
-            blocklist={blocklist}
-            onBackToRoles={() => setActiveRole('ROLES')}
-          />
+          <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            {/* Stage 6: Bilateral Contracting Workspace */}
+            {activeRole === 'COORDINATOR' && (
+              <CoordinatorContractWorkspace isAr={isRtl} />
+            )}
+          </div>
         );
 
       case 'ARTIST':
@@ -1003,6 +1000,17 @@ function SADUApp() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Language Switcher */}
+          <button
+            type="button"
+            onClick={toggleLang}
+            title={isRtl ? 'Switch to English' : 'التحويل إلى العربية'}
+            className="inline-flex items-center gap-1.5 rounded border border-[#2C2A29] bg-[#2C2A29] px-2.5 py-1.5 text-xs font-bold text-[#D9D2C5] shadow-xs transition-colors hover:bg-[#3D3A38] hover:text-white cursor-pointer"
+          >
+            <Globe className="h-3.5 w-3.5 text-[#8B4513]" />
+            <span>{isRtl ? 'English' : 'عربي'}</span>
+          </button>
+
           <button
             type="button"
             onClick={() => setIsPresenterDrawerOpen(prev => !prev)}

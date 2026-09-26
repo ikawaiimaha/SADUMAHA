@@ -74,6 +74,26 @@ export function CoordinatorContractWorkspace({ isAr = true }: { isAr?: boolean }
   const dispatchedArtists = artists.filter(a => a.status === 'CONTRACT_PENDING_SIGNATURE');
   const selectedArtist = artists.find(a => a.id === selectedArtistId);
 
+  const handleSelectArtist = (artistId: string) => {
+    setSelectedArtistId(artistId);
+    const artist = artists.find(a => a.id === artistId);
+    if (artist) {
+      const isLocal = artist.nationality.toLowerCase().includes('emirates') || artist.nationality.toLowerCase().includes('uae');
+      setForm({
+        productionGrant: artist.category === 'ESTABLISHED' ? 65000 : 35000,
+        shippingMethod: isLocal
+          ? (isAr ? 'النقل المباشر للأعمال الفنية (متحف الشارقة للخط)' : 'Local Fine Art Transit (Sharjah Art Museum)')
+          : (isAr ? 'شحن فني متخصص مع تحكم بالمناخ (Fine Art Freight)' : 'Fine Art Dedicated Freight (Climate Controlled)'),
+        advancePercentage: 40,
+        interimPercentage: 30,
+        finalPercentage: 30,
+        specialConditions: artist.category === 'ESTABLISHED'
+          ? (isAr ? 'يتطلب العمل صندوقاً متحفياً مخصصاً مع ضبط حراري ورطوبة دقيقة.' : 'Artist requires dedicated museum crating & humidity control.')
+          : (isAr ? 'يتطلب التركيب إشرافاً فنياً مباشراً في ساحة الخط.' : 'Installation requires on-site technical assistance at Calligraphy Square.')
+      });
+    }
+  };
+
   const handleDispatch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedArtistId) return;
@@ -94,7 +114,11 @@ export function CoordinatorContractWorkspace({ isAr = true }: { isAr?: boolean }
     );
 
     const remaining = pendingArtists.filter(a => a.id !== selectedArtistId);
-    setSelectedArtistId(remaining.length > 0 ? remaining[0].id : null);
+    if (remaining.length > 0) {
+      handleSelectArtist(remaining[0].id);
+    } else {
+      setSelectedArtistId(null);
+    }
   };
 
   const totalPercentage = form.advancePercentage + form.interimPercentage + form.finalPercentage;
@@ -166,7 +190,7 @@ export function CoordinatorContractWorkspace({ isAr = true }: { isAr?: boolean }
                     <button
                       key={artist.id}
                       type="button"
-                      onClick={() => setSelectedArtistId(artist.id)}
+                      onClick={() => handleSelectArtist(artist.id)}
                       className={`w-full p-3 rounded-md border transition-all text-start cursor-pointer ${
                         isSelected
                           ? 'border-[#8B261E] bg-[#F4EDE2] shadow-sm'
@@ -210,7 +234,7 @@ export function CoordinatorContractWorkspace({ isAr = true }: { isAr?: boolean }
                   <div key={a.id} className="py-2 flex items-center justify-between">
                     <span className="text-[#2A2624] font-medium">{isAr ? a.name_ar : a.name_en}</span>
                     <span className="text-[10px] text-[#8B261E] bg-[#F5E6E4] px-1.5 py-0.5 rounded font-mono">
-                      CONTRACT_PENDING
+                      CONTRACT_PENDING_SIGNATURE
                     </span>
                   </div>
                 ))}
