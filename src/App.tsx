@@ -184,6 +184,7 @@ function SADUApp() {
     'Exhibition Curatorial Guidelines: Emphasize the aesthetic dialogue between the sacred proportions of classical calligraphy and contemporary architectural manifestations. All nominated artists must ground their proposals in classical scripts while exploring modern spatial media.'
   );
   const [translationStatus, setTranslationStatus] = useState<TranslationStatus>('DRAFT');
+  const [hipSubmissionTime, setHipSubmissionTime] = useState<string | null>(null);
   const [curatorialBrief, setCuratorialBrief] = useState<string>(
     'Sharjah Calligraphy Biennial Curatorial Directive: Emphasize the dialogue between classical proportion and avant-garde architectural manifestation. All nominated artists must balance aesthetic script lineage with rigorous spatial experimentation.'
   );
@@ -246,6 +247,7 @@ function SADUApp() {
     setGuidelinesArabic(arabicText.trim());
     setGuidelinesEnglish('');
     setTranslationStatus('PENDING_TRANSLATION');
+    setHipSubmissionTime(new Date().toLocaleTimeString('ar-AE'));
   };
 
   const handlePublishBrief = (englishText: string, arabicSource: string) => {
@@ -728,6 +730,7 @@ function SADUApp() {
             themeStatus={themePolishStatus}
             guidelinesArabic={guidelinesArabic}
             translationStatus={translationStatus}
+            hipSubmissionTime={hipSubmissionTime}
             onSubmitToEditorial={handleSubmitToEditorial}
             curatorialBrief={curatorialBrief}
             onUpdateCuratorialBrief={setCuratorialBrief}

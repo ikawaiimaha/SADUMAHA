@@ -24,6 +24,7 @@ export interface HIPWorkspaceProps {
   guidelinesEnglish?: string;
   guidelinesArabic?: string;
   translationStatus?: TranslationStatus;
+  hipSubmissionTime?: string | null;
   onSubmitToEditorial?: (arabicText: string) => void;
   curatorialBrief?: string;
   onUpdateCuratorialBrief?: (brief: string) => void;
@@ -46,6 +47,7 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
   themeEssayEnglish,
   guidelinesEnglish,
   translationStatus,
+  hipSubmissionTime,
   onSubmitToEditorial,
   curatorialBrief,
   onUpdateCuratorialBrief,
@@ -59,7 +61,6 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
   const [arabicText, setArabicText] = useState<string>(
     guidelinesArabic || curatorialBrief || ''
   );
-  const [submittedAt, setSubmittedAt] = useState<Date | null>(null);
   const [newTagInput, setNewTagInput] = useState<string>('');
 
   const handleSubmitToEditorial = (e: React.FormEvent) => {
@@ -67,7 +68,6 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
     if (isLocked || !arabicText.trim() || !onSubmitToEditorial) return;
     onSubmitToEditorial?.(arabicText);
     onUpdateCuratorialBrief?.(arabicText);
-    setSubmittedAt(new Date());
   };
 
   const handleAddTag = (tagToAdd: string) => {
@@ -182,9 +182,9 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
             )}
           </div>
 
-          {submittedAt && <div role="status" className="rounded-lg border border-emerald-300 bg-emerald-50 ps-4 pe-4 py-3 text-start text-emerald-900">
+          {translationStatus === 'PENDING_TRANSLATION' && <div role="status" className="rounded-lg border border-emerald-300 bg-emerald-50 ps-4 pe-4 py-3 text-start text-emerald-900">
             <p className="font-semibold">{isAr ? 'تم الإرسال إلى قسم التحرير بنجاح' : 'Successfully Sent to Editorial'}</p>
-            <time dateTime={submittedAt.toISOString()}>{submittedAt.toLocaleTimeString(isAr ? 'ar-AE' : 'en-AE')}</time>
+            <span>{hipSubmissionTime}</span>
           </div>}
           <form onSubmit={handleSubmitToEditorial} className="space-y-3">
             <label htmlFor="exhibition-guidelines-arabic" className="block text-xs font-semibold text-sadu-charcoal">
@@ -197,7 +197,7 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
                 required
                 disabled={isLocked}
                 value={arabicText}
-                onChange={e => { setArabicText(e.target.value); setSubmittedAt(null); }}
+                onChange={e => setArabicText(e.target.value)}
                 placeholder="اكتب التوجيهات الفنية والمعايير التنسيقية للمعرض باللغة العربية حصراً..."
                 className={`mt-1.5 w-full rounded-md border p-3 text-xs leading-relaxed ${
                   isLocked
