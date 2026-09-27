@@ -177,7 +177,7 @@ function SADUApp() {
   const [guidelinesEnglish, setGuidelinesEnglish] = useState<string>(
     'Exhibition Curatorial Guidelines: Emphasize the aesthetic dialogue between the sacred proportions of classical calligraphy and contemporary architectural manifestations. All nominated artists must ground their proposals in classical scripts while exploring modern spatial media.'
   );
-  const [translationStatus, setTranslationStatus] = useState<TranslationStatus>('PENDING_TRANSLATION');
+  const [translationStatus, setTranslationStatus] = useState<TranslationStatus>('DRAFT');
   const [curatorialBrief, setCuratorialBrief] = useState<string>(
     'Sharjah Calligraphy Biennial Curatorial Directive: Emphasize the dialogue between classical proportion and avant-garde architectural manifestation. All nominated artists must balance aesthetic script lineage with rigorous spatial experimentation.'
   );
@@ -194,6 +194,7 @@ function SADUApp() {
   const handleSubmitCommitteeThemes = (themes: CommitteeThemeDraft[]) => {
     if (ratifiedTheme || !isThemeBatchComplete(themes)) return;
     setDirectorThemes(themes);
+    setSubmittedThemes(undefined);
   };
 
   const handlePresentToChairman = (themes: CommitteeThemeDraft[]) => {
@@ -202,6 +203,7 @@ function SADUApp() {
   };
 
   const handleBudgetAssigned = (amount: number, theme: ThemeItem) => {
+    if (ratifiedTheme || !Number.isFinite(amount) || amount <= 0) return;
     setAssignedBudget(amount);
     setRatifiedTheme(theme);
     setThemeEssayArabic('');
@@ -225,12 +227,16 @@ function SADUApp() {
   };
 
   const handleSubmitToEditorial = (arabicText: string) => {
-    setGuidelinesArabic(arabicText);
+    if (themePolishStatus !== 'PUBLISHED_OFFICIAL' || !arabicText.trim()) return;
+    setGuidelinesArabic(arabicText.trim());
+    setGuidelinesEnglish('');
     setTranslationStatus('PENDING_TRANSLATION');
   };
 
-  const handlePublishBrief = (englishText: string) => {
-    setGuidelinesEnglish(englishText);
+  const handlePublishBrief = (englishText: string, arabicSource: string) => {
+    if (activeRole !== 'EDITORIAL' || themePolishStatus !== 'PUBLISHED_OFFICIAL'
+      || translationStatus !== 'PENDING_TRANSLATION' || arabicSource !== guidelinesArabic || !englishText.trim()) return;
+    setGuidelinesEnglish(englishText.trim());
     setTranslationStatus('PUBLISHED');
     setCuratorialBrief(
       `${englishText}\n\n[Arabic Original]: ${guidelinesArabic}`
@@ -671,6 +677,10 @@ function SADUApp() {
           <EditorialWorkspace
             approvedTheme={ratifiedTheme}
             themePolishStatus={themePolishStatus}
+            guidelinesArabic={guidelinesArabic}
+            guidelinesEnglish={guidelinesEnglish}
+            guidelinesTranslationStatus={translationStatus}
+            onPublishOfficialGuidelines={handlePublishBrief}
             onPublishOfficialTheme={handlePublishOfficialTheme}
             assignedBudget={assignedBudget}
             initialEssayArabic={themeEssayArabic}
@@ -682,6 +692,9 @@ function SADUApp() {
       case 'HIP':
         return (
           <HIPWorkspace
+            themeEssayArabic={themeEssayArabic}
+            themeEssayEnglish={themeEssayEnglish}
+            guidelinesEnglish={guidelinesEnglish}
             themeStatus={themePolishStatus}
             guidelinesArabic={guidelinesArabic}
             translationStatus={translationStatus}

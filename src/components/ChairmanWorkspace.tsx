@@ -72,7 +72,10 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
     }
   };
 
+  const isBudgetValid = Number.isFinite(allocatedBudget) && allocatedBudget > 0;
+
   const handleAssignBudget = () => {
+    if (!isBudgetValid || isBudgetAssigned) return;
     setIsBudgetAssigned(true);
     if (winningTheme && onBudgetAssigned) {
       onBudgetAssigned(allocatedBudget, winningTheme, 'PENDING_EDITORIAL_POLISH');
@@ -314,7 +317,9 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
                 <input
                   id="approved-budget-amount"
                   type="number"
-                  step="500000"
+                  step="any"
+                  min="0.01"
+                  aria-invalid={!isBudgetValid}
                   disabled={isBudgetAssigned}
                   value={allocatedBudget}
                   onChange={e => setAllocatedBudget(Number(e.target.value) || 0)}
@@ -326,6 +331,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
                 />
               </div>
 
+              {!isBudgetValid && <p id="budget-validation" role="alert" className="text-start text-xs text-red-700">{isAr ? 'أدخل ميزانية رقمية أكبر من صفر.' : 'Enter a finite budget greater than zero.'}</p>}
               {/* Tranche Breakdown */}
               <div className="grid grid-cols-2 gap-2 pt-2 sm:grid-cols-4 text-xs">
                 <div className="rounded border border-sadu-gold/40 bg-white p-2 text-center">
@@ -372,6 +378,8 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
               <button
                 type="button"
                 onClick={handleAssignBudget}
+                disabled={!isBudgetValid}
+                aria-describedby="budget-validation"
                 className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-sadu-brick px-6 py-3.5 text-xs font-bold text-white shadow-xs transition-colors hover:bg-sadu-brick-dark cursor-pointer"
               >
                 <Banknote className="h-4 w-4" />

@@ -19,6 +19,9 @@ export type TranslationStatus = 'DRAFT' | 'PENDING_TRANSLATION' | 'PUBLISHED';
 
 export interface HIPWorkspaceProps {
   themeStatus: string;
+  themeEssayArabic?: string;
+  themeEssayEnglish?: string;
+  guidelinesEnglish?: string;
   guidelinesArabic?: string;
   translationStatus?: TranslationStatus;
   onSubmitToEditorial?: (arabicText: string) => void;
@@ -39,6 +42,10 @@ const PRESET_DIRECTIVES = [
 export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
   guidelinesArabic,
   themeStatus,
+  themeEssayArabic,
+  themeEssayEnglish,
+  guidelinesEnglish,
+  translationStatus,
   onSubmitToEditorial,
   curatorialBrief,
   onUpdateCuratorialBrief,
@@ -131,6 +138,17 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
           <span className="rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800"> {tr("Chairman Signed Off")} </span>
         </div>
       )}
+
+      {!isLocked && <section aria-labelledby="published-theme-reference" className="rounded-xl border border-sadu-gold bg-[#F7F1E6] ps-6 pe-6 py-5 text-start space-y-3">
+        <h2 id="published-theme-reference" className="font-editorial text-lg font-bold">{isAr ? 'الثيمة الرسمية المنشورة — مرجع للقراءة فقط' : 'Published Official Theme — Read-only Reference'}</h2>
+        <p dir="rtl" className="whitespace-pre-wrap text-start text-sm">{themeEssayArabic}</p>
+        <p dir="ltr" className="whitespace-pre-wrap text-start text-sm">{themeEssayEnglish}</p>
+      </section>}
+      {translationStatus === 'PUBLISHED' && guidelinesEnglish && <section className="rounded-xl border border-sadu-gold bg-white ps-6 pe-6 py-5 text-start">
+        <h2 className="font-bold">{isAr ? 'الدليل الثنائي اللغة المنشور' : 'Published Bilingual Guidelines'}</h2>
+        <p dir="rtl" className="mt-3 whitespace-pre-wrap text-start">{guidelinesArabic}</p>
+        <p dir="ltr" className="mt-3 whitespace-pre-wrap text-start">{guidelinesEnglish}</p>
+      </section>}
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Curatorial Brief - Arabic Guidelines & Editorial Routing */}

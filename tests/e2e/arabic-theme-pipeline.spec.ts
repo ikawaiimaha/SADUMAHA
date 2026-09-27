@@ -26,7 +26,28 @@ test('Arabic-first theme handoff and verified bilingual release', async ({ page 
   await page.getByRole('button', { name: 'Present 3 Themes to Chairman' }).click();
   await role('Chairman');
   await expect(page.getByText('مراجعة الجدوى الإدارية والفنية', { exact: true })).toBeVisible();
+  // A replacement committee batch invalidates the previous Chairman docket.
+  await role('Committee');
+  for (let i = 0; i < 3; i++) {
+    await page.locator('input[id*="-arabic-"]').nth(i).fill(`ثيمة بديلة ${i + 1}`);
+    for (const field of ['aesthetic', 'contemporary', 'curatorial']) {
+      await page.locator(`textarea[id*="-${field}-"]`).nth(i).fill('صياغة عربية بديلة عن جماليات الخط المعاصر');
+    }
+  }
+  await page.getByRole('button', { name: 'Submit to Biennial Director' }).click();
+  await role('Chairman');
+  await expect(page.getByRole('button', { name: 'Approve Theme' })).toHaveCount(0);
+  await role('Director');
+  await page.getByRole('button', { name: 'Present 3 Themes to Chairman' }).click();
+  await role('Chairman');
   await page.getByRole('button', { name: 'Approve Theme' }).first().click();
+  const authorizeBudget = page.getByRole('button', { name: 'Authorize Budget & Transfer Authority' });
+  for (const invalid of ['', '0', '-500000']) {
+    await page.locator('#approved-budget-amount').fill(invalid);
+    await expect(authorizeBudget).toBeDisabled();
+  }
+  await page.locator('#approved-budget-amount').fill('12500000');
+  await expect(authorizeBudget).toBeEnabled();
   await page.getByRole('button', { name: 'Authorize Budget & Transfer Authority' }).click();
   await role('Committee');
   await expect(page.getByText('Status: Locked - Theme Ratified by Chairman', { exact: true })).toBeVisible();
@@ -66,6 +87,10 @@ test('Arabic-first theme handoff and verified bilingual release', async ({ page 
   await role('HIP');
   await expect(page.locator('#exhibition-guidelines-arabic')).toBeEnabled();
   await expect(page.getByText('Status: Pending Editorial Translation', { exact: true })).toHaveCount(0);
+  await expect(page.getByText(arabic, { exact: true })).toBeVisible();
+  await expect(page.getByText('The verified institutional statement explores the aesthetics of contemporary Arabic calligraphy.', { exact: true })).toBeVisible();
+  const guidelines = 'الدليل التنسيقي الجديد للخط العربي والمعايير الفنية للمعرض';
+  await page.locator('#exhibition-guidelines-arabic').fill(guidelines);
   await page.getByRole('button', { name: 'Submit to Editorial for Translation' }).click();
   await expect(page.locator('#exhibition-guidelines-arabic')).toBeEnabled();
   await expect(page.getByRole('button', { name: 'Submit to Editorial for Translation' })).toBeEnabled();
@@ -73,4 +98,17 @@ test('Arabic-first theme handoff and verified bilingual release', async ({ page 
   await role('Editorial');
   await expect(page.locator('#editorial-english')).toBeDisabled();
   await expect(page.getByText('Theme Locked & Dispatched', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Translation Queue — HIP Guidelines' })).toBeVisible();
+  await expect(page.getByText(guidelines, { exact: true })).toBeVisible();
+  const publishGuidelines = page.getByRole('button', { name: 'Publish Bilingual Guidelines' });
+  await expect(publishGuidelines).toBeDisabled();
+  const guidelinesEnglish = 'New curatorial guidelines for Arabic calligraphy and exhibition artistic standards.';
+  await page.locator('#guidelines-english').fill(guidelinesEnglish);
+  await publishGuidelines.click();
+  await expect(page.getByText('Bilingual guidelines published and returned to HIP.')).toBeVisible();
+  await expect(page.locator('#guidelines-english')).toHaveCount(0);
+  await expect(page.locator('#editorial-english')).toHaveValue('The verified institutional statement explores the aesthetics of contemporary Arabic calligraphy.');
+  await role('HIP');
+  await expect(page.getByRole('heading', { name: 'Published Bilingual Guidelines' })).toBeVisible();
+  await expect(page.getByText(guidelinesEnglish, { exact: true })).toBeVisible();
 });

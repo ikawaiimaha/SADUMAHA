@@ -1,6 +1,6 @@
 import { useMockupText } from '../i18n/useMockupText';
 import { useI18n } from '../context/I18nContext';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Languages, 
   BookOpen, 
@@ -23,6 +23,7 @@ interface EditorialDraft {
 }
 
 export interface EditorialWorkspaceProps {
+  guidelinesTranslationStatus?: 'DRAFT' | 'PENDING_TRANSLATION' | 'PUBLISHED';
   guidelinesArabic?: string;
   guidelinesEnglish?: string;
   onPublishOfficialGuidelines?: (englishTranslation: string, arabicSource: string) => void;
@@ -45,6 +46,7 @@ const DEFAULT_RAW_CHAIRMAN_THEME =
   'استكشاف الجذور العميقة للخط العربي وتفاعله مع الفنون المعاصرة في بيئة حضرية متغيرة، مع التركيز على التوازن بين الأصالة والابتكار.';
 
 export default function EditorialWorkspace({
+  guidelinesTranslationStatus,
   guidelinesArabic,
   guidelinesEnglish,
   onPublishOfficialGuidelines,
@@ -68,7 +70,6 @@ export default function EditorialWorkspace({
     approvedTheme?.arabicName ||
     approvedTheme?.titleAr || 
     initialEssayArabic || 
-    guidelinesArabic || 
     DEFAULT_RAW_CHAIRMAN_THEME;
 
   const [arabicLocked, setArabicLocked] = useState(false);
@@ -76,11 +77,15 @@ export default function EditorialWorkspace({
   const isPublished = publishedLocally || isInitiallyPublished || themePolishStatus === 'PUBLISHED' || themePolishStatus === 'PUBLISHED_OFFICIAL';
 
   const [draft, setDraft] = useState<EditorialDraft>({
-    arabicText: initialEssayArabic || guidelinesArabic || rawChairmanTheme,
-    englishText: initialEssayEnglish || guidelinesEnglish || ''
+    arabicText: initialEssayArabic || rawChairmanTheme,
+    englishText: initialEssayEnglish || ''
   });
 
   const [identityAssets, setIdentityAssets] = useState<{ file: File; attachedAt: string }[]>([]);
+
+  const [guidelinesDraftEnglish, setGuidelinesDraftEnglish] = useState('');
+  useEffect(() => { setGuidelinesDraftEnglish(''); }, [guidelinesArabic, guidelinesTranslationStatus]);
+  const guidelinesPending = isPublished && guidelinesTranslationStatus === 'PENDING_TRANSLATION' && Boolean(guidelinesArabic?.trim());
 
   const [translationVerified, setTranslationVerified] = useState(false);
   const isArabicLocked = arabicLocked || isPublished;
@@ -111,8 +116,7 @@ export default function EditorialWorkspace({
       });
     }
 
-    onPublishOfficialGuidelines?.(draft.englishText.trim(), draft.arabicText.trim());
-    onPublishBrief?.(draft.englishText.trim());
+
   };
 
   return (
@@ -142,6 +146,21 @@ export default function EditorialWorkspace({
           )}
         </div>
       </header>
+
+      {guidelinesPending && <section aria-labelledby="guidelines-queue-heading" className="mb-6 rounded-lg border border-[#D9D2C5] bg-[#F7F1E6] ps-6 pe-6 py-5 text-start">
+        <h2 id="guidelines-queue-heading" className="font-serif text-xl font-bold">{isAr ? 'قائمة الترجمة — دليل منسق المعرض' : 'Translation Queue — HIP Guidelines'}</h2>
+        <p dir="rtl" className="my-4 whitespace-pre-wrap rounded bg-[#EDE4D3] p-4 text-start">{guidelinesArabic}</p>
+        <form className="space-y-3" onSubmit={event => {
+          event.preventDefault();
+          if (!guidelinesPending || !guidelinesDraftEnglish.trim() || !guidelinesArabic) return;
+          onPublishOfficialGuidelines?.(guidelinesDraftEnglish.trim(), guidelinesArabic);
+        }}>
+          <label htmlFor="guidelines-english" className="block text-sm font-bold">{isAr ? 'الترجمة الإنجليزية للدليل' : 'English Guidelines Translation'}</label>
+          <textarea id="guidelines-english" dir="ltr" required rows={5} value={guidelinesDraftEnglish} onChange={event => setGuidelinesDraftEnglish(event.target.value)} className="w-full rounded border border-[#D9D2C5] bg-white ps-3 pe-3 py-3 text-start" />
+          <button type="submit" disabled={!guidelinesDraftEnglish.trim() || !onPublishOfficialGuidelines} className="rounded bg-[#8B261E] ps-4 pe-4 py-2 text-white disabled:opacity-50 disabled:cursor-not-allowed">{isAr ? 'نشر الدليل الثنائي اللغة' : 'Publish Bilingual Guidelines'}</button>
+        </form>
+      </section>}
+      {isPublished && guidelinesTranslationStatus === 'PUBLISHED' && <p role="status" className="mb-6 rounded bg-[#EDE4D3] ps-4 pe-4 py-3 text-start">{isAr ? 'نُشر الدليل الثنائي اللغة وأُعيد إلى منسق المعرض.' : 'Bilingual guidelines published and returned to HIP.'}</p>}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
