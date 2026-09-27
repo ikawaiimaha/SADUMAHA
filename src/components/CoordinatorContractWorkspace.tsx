@@ -23,6 +23,8 @@ export interface VettedArtist {
   nationality: string;
   medium: string;
   category: ArtistCategory;
+  prCleared?: boolean;
+  technicalCleared?: boolean;
   status: string; 
 }
 

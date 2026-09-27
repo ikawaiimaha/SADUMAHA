@@ -4,7 +4,7 @@ import { COMMISSION } from '../data/commissionScenario';
 import type { BilateralContract } from '../types/contractStage6';
 
 export const panel = 'rounded-lg border border-[#D9CEBA] bg-white p-5 shadow-sm text-start';
-export const actionButton = 'rounded-md bg-[#8B4513] ps-5 pe-5 py-3 text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8B4513]';
+export const actionButton = 'rounded-md bg-[#8B261E] ps-5 pe-5 py-3 text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8B261E]';
 
 export function CommissionSummary({ isAr, showTechnical = true }: { isAr: boolean; showTechnical?: boolean }) {
   return <div className="space-y-2 text-start">

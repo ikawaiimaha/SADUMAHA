@@ -346,6 +346,29 @@ function SADUApp() {
   const setContracts = (update: (previous: BilateralContract[]) => BilateralContract[]) =>
     dispatchCommission({ type: 'contracts', update });
 
+  // Clearance mirrors the reducer's recorded evidence, including revocation on revised terms.
+  useEffect(() => {
+    setArtists(current => current.map(artist => artist.id === COMMISSION.id
+      ? { ...artist, prCleared: commission.evidence.prEvidenceGate, technicalCleared: commission.evidence.technicalEvidenceGate }
+      : artist));
+  }, [commission.evidence.prEvidenceGate, commission.evidence.technicalEvidenceGate]);
+
+  const handleClearPR = (artistId: string) => {
+    if (artistId !== COMMISSION.id || activeRole !== 'PR_PROTOCOL') return;
+    const action = { type: 'record-pr', actor: activeRole, at: new Date().toISOString() } as const;
+    if (!commissionReducer(commission, action).evidence.prEvidenceGate) return;
+    dispatchCommission(action);
+    setArtists(current => current.map(artist => artist.id === artistId ? { ...artist, prCleared: true } : artist));
+  };
+
+  const handleClearTechnical = (artistId: string) => {
+    if (artistId !== COMMISSION.id || activeRole !== 'TECHNICAL') return;
+    const action = { type: 'record-technical', actor: activeRole, at: new Date().toISOString() } as const;
+    if (!commissionReducer(commission, action).evidence.technicalEvidenceGate) return;
+    dispatchCommission(action);
+    setArtists(current => current.map(artist => artist.id === artistId ? { ...artist, technicalCleared: true } : artist));
+  };
+
   const handleDispatchContract = (
     artistId: string,
     contractTerms: any,
@@ -703,16 +726,21 @@ function SADUApp() {
       case 'PR_PROTOCOL':
         return <PRWorkspace isAr={isAr} state={commission}
           onCheck={(field, value) => dispatchCommission({ type: 'pr-check', actor: activeRole, field, value })}
-          onRecord={() => dispatchCommission({ type: 'record-pr', actor: activeRole, at: new Date().toISOString() })} />;
+          onClearPR={handleClearPR} />;
 
       case 'TECHNICAL':
         return <TechnicalWorkspace isAr={isAr} state={commission}
           onCheck={(field, value) => dispatchCommission({ type: 'technical-check', actor: activeRole, field, value })}
-          onRecord={() => dispatchCommission({ type: 'record-technical', actor: activeRole, at: new Date().toISOString() })} />;
+          onClearTechnical={handleClearTechnical} />;
 
       case 'FINANCE':
         return <FinanceWorkspace isAr={isAr} state={commission}
-          onAuthorizeAdvance={() => dispatchCommission({ type: 'authorize-advance', actor: activeRole, at: new Date().toISOString() })} />;
+          artist={artists.find(artist => artist.id === contracts[0]?.artistId)}
+          onAuthorizeAdvance={() => {
+            const artist = artists.find(artist => artist.id === contracts[0]?.artistId);
+            if (artist?.prCleared !== true || artist?.technicalCleared !== true) return;
+            dispatchCommission({ type: 'authorize-advance', actor: activeRole, at: new Date().toISOString() });
+          }} />;
 
       case 'ROLES':
       default:
