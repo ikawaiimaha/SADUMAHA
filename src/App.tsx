@@ -1,3 +1,4 @@
+import { StoryMode } from './components/StoryMode';
 import { useMockupText } from './i18n/useMockupText';
 /**
  * ============================================================================
@@ -70,6 +71,7 @@ import {
 } from 'lucide-react';
 
 export type InstitutionalRole = 
+  | 'LANDING'
   | 'CHAIRMAN' 
   | 'BIENNIAL_DIRECTOR' 
   | 'PREP_COMMITTEE' 
@@ -113,7 +115,7 @@ function RoleButton({
     <button
       type="button"
       onClick={() => onClick(role)}
-      className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-bold transition-colors whitespace-nowrap cursor-pointer ${
+      className={`flex shrink-0 items-center gap-1.5 ps-3 pe-3 py-1.5 rounded text-xs font-bold transition-colors whitespace-nowrap cursor-pointer ${
         isActive 
           ? 'bg-[#8B4513] text-white shadow-inner ring-1 ring-[#8B4513]' 
           : 'bg-[#2C2A29] text-[#A89F91] hover:bg-[#3D3A38] hover:text-white'
@@ -159,7 +161,7 @@ function SADUApp() {
   }, []);
 
   // Executive Prototype State-Based Switcher (offline/tablet zero-latency pitch mode)
-  const [activeRole, setActiveRole] = useState<InstitutionalRole>('COORDINATOR');
+  const [activeRole, setActiveRole] = useState<InstitutionalRole>('LANDING');
   const workspaceScrollRef = useRef<HTMLElement>(null);
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -804,6 +806,20 @@ function SADUApp() {
     }
   };
 
+  if (activeRole === 'LANDING') {
+    return <StoryMode showRosterLink={false} lang={lang} onToggleLanguage={toggleLang}
+      onSkipToPlatform={() => setActiveRole('PREP_COMMITTEE')}
+      onSelectManagementView={view => setActiveRole(view === 'DIRECTORATE' ? 'CHAIRMAN' : 'BIENNIAL_DIRECTOR')}
+      onSelectRoleAndExplore={role => {
+        const storyRoles: Record<string, InstitutionalRole> = {
+          DIRECTORATE: 'CHAIRMAN', SDC_COORDINATOR: 'COORDINATOR', COMMITTEE: 'PREP_COMMITTEE',
+          EDITORIAL: 'EDITORIAL', SAF_TECHNICIAN: 'TECHNICAL', PR_PROTOCOL: 'PR_PROTOCOL',
+          FINANCE: 'FINANCE', ARTIST: 'ARTIST',
+        };
+        setActiveRole(storyRoles[role] ?? 'ROLES');
+      }} />;
+  }
+
   return (
     <div className="min-h-screen bg-[#F7F1E6] text-[#2C2A29] flex flex-col font-sans">
       {/* 
@@ -820,7 +836,7 @@ function SADUApp() {
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
+        <div className="flex min-w-0 max-w-full items-center gap-1.5 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-1">
           <RoleButton 
             role="CHAIRMAN" 
             current={activeRole} 
@@ -927,7 +943,7 @@ function SADUApp() {
         WORKSPACE MOUNT POINT
         The actual Archival Heritage Pop UI renders inside this container.
       */}
-      <main ref={workspaceScrollRef} className="flex-1 overflow-y-auto relative bg-[#F7F1E6]">
+      <main id="workspace-scroll" ref={workspaceScrollRef} className="flex-1 overflow-y-auto relative bg-[#F7F1E6]">
         {!['CHAIRMAN', 'BIENNIAL_DIRECTOR', 'EDITORIAL', 'HIP', 'ROLES', 'PR_PROTOCOL', 'TECHNICAL', 'FINANCE'].includes(activeRole) && (activeRole !== 'PREP_COMMITTEE' || isNominationFormOpen) && <aside className="border-b border-[#D9CEBA] ps-4 pe-4 py-3 text-start" dir={isAr ? 'rtl' : 'ltr'}>
           <CommissionSummary isAr={isAr} showTechnical={activeRole !== 'PR_PROTOCOL'} />
         </aside>}

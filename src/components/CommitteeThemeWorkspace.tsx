@@ -1,3 +1,4 @@
+import { scrollWorkspaceToTop } from '../utils/scrollWorkspaceToTop';
 import { useMockupText } from '../i18n/useMockupText';
 import { useI18n } from '../context/I18nContext';
 import React, { useEffect, useRef, useId, useMemo, useState } from 'react';
@@ -125,6 +126,7 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
     onPresentToChairman?.(finalized, eventId);
     setIsSubmitted(true);
     clearTimeout(navigationTimer.current);
+    scrollWorkspaceToTop();
     navigationTimer.current = setTimeout(() => {
       onAutoNavigate?.('DIRECTOR');
     }, 3500);

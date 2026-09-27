@@ -1,3 +1,4 @@
+import { scrollWorkspaceToTop } from '../utils/scrollWorkspaceToTop';
 import { useMockupText } from '../i18n/useMockupText';
 import { useI18n } from '../context/I18nContext';
 import React, { useRef, useState, useEffect } from 'react';
@@ -112,6 +113,7 @@ export default function EditorialWorkspace({
     // Locks Stage 2 and unlocks Stage 3 (HIP Curatorial Directives)
     setPublishedLocally(true);
     clearTimeout(navigationTimer.current);
+    scrollWorkspaceToTop();
     navigationTimer.current = setTimeout(() => {
       onAutoNavigate?.('HIP');
     }, 3500);

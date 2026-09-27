@@ -28,6 +28,7 @@ import {
 
 interface StoryModeProps {
   lang: Language;
+  showRosterLink?: boolean;
   onSelectRoleAndExplore: (role: RoleKey) => void;
   onSelectManagementView: (view: 'DIRECTORATE' | 'MANAGER') => void;
   onSkipToPlatform: () => void;
@@ -36,6 +37,7 @@ interface StoryModeProps {
 
 export const StoryMode: React.FC<StoryModeProps> = ({
   lang,
+  showRosterLink = true,
   onSelectRoleAndExplore,
   onSelectManagementView,
   onSkipToPlatform,
@@ -99,7 +101,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
           </div>
 
           <nav aria-label={isAr ? 'روابط التنقل العامة' : 'Utility navigation'} className="flex flex-wrap items-center gap-2">
-            <RosterNavLink/>
+            {showRosterLink && <RosterNavLink/>}
             <button
               type="button"
               onClick={onToggleLanguage}
@@ -112,7 +114,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
               onClick={onSkipToPlatform}
               className="px-3 py-1.5 text-xs font-semibold text-sadu-brick hover:text-sadu-charcoal hover:bg-sadu-sand/70 rounded-md border border-transparent hover:border-sadu-gold transition-colors flex items-center gap-1 cursor-pointer"
             >
-              <span>{isAr ? 'تخطي إلى المنصة' : 'Skip to Platform'}</span>
+              <span>{isAr ? 'الدخول إلى النظام المؤسسي' : 'Enter Institutional System'}</span>
               <SkipForward className="w-3.5 h-3.5 rtl:rotate-180" />
             </button>
           </nav>

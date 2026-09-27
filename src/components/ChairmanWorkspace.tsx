@@ -1,3 +1,4 @@
+import { scrollWorkspaceToTop } from '../utils/scrollWorkspaceToTop';
 import { useMockupText } from '../i18n/useMockupText';
 import { useI18n } from '../context/I18nContext';
 import React, { useEffect, useRef, useState } from 'react';
@@ -93,6 +94,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
     if (!isBudgetValid || isBudgetAssigned) return;
     setIsBudgetAssigned(true);
     clearTimeout(navigationTimer.current);
+    scrollWorkspaceToTop();
     navigationTimer.current = setTimeout(() => {
       onAutoNavigate?.('EDITORIAL');
     }, 3500);
@@ -414,7 +416,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
                 onClick={handleAssignBudget}
                 disabled={!isBudgetValid}
                 aria-describedby="budget-validation"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-sadu-brick px-6 py-3.5 text-xs font-bold text-white shadow-xs transition-colors hover:bg-sadu-brick-dark cursor-pointer"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-sadu-brick px-6 py-3.5 text-xs font-bold text-white shadow-xs transition-colors enabled:hover:bg-sadu-brick-dark disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 <Banknote className="h-4 w-4" />
                 <span>{tr("Authorize Budget & Transfer Authority")}</span>

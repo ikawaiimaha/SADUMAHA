@@ -1,3 +1,4 @@
+import { scrollWorkspaceToTop } from '../utils/scrollWorkspaceToTop';
 import { useMockupText } from '../i18n/useMockupText';
 import { useI18n } from '../context/I18nContext';
 import React, { useEffect, useRef, useMemo, useState } from 'react';
@@ -149,6 +150,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
     onPresentToChairman?.(updatedThemesWithNotes, directorNotes);
     setThemesPresented(true);
     clearTimeout(navigationTimer.current);
+    scrollWorkspaceToTop();
     navigationTimer.current = setTimeout(() => {
       onAutoNavigate?.('CHAIRMAN');
     }, 3500);
@@ -165,6 +167,15 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6">
+            {themesPresented && (
+              <div className="rounded-lg border-2 border-emerald-400 bg-emerald-50 p-4 text-xs font-semibold text-emerald-900 flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-emerald-600 shrink-0" />
+                <div>
+                  <strong className="block font-bold">{tr("3 Themes Presented to Chairman Successfully!")}</strong>
+                  <span>{tr("The workflow has officially moved to Chairman H.E. Abdullah Al Owais's dashboard for selection and budget locking.")}</span>
+                </div>
+              </div>
+            )}
       {activeTab === 'phase1' && <div className="flex justify-end">
         <button type="button" onClick={handleAutoFillNotes} disabled={!canPresentThemes || themesPresented} className="inline-flex items-center gap-2 rounded-md border border-[#736357]/40 ps-3 pe-3 py-1.5 text-xs font-semibold text-[#736357] hover:border-[#8B261E] hover:text-[#8B261E] disabled:opacity-50 disabled:cursor-not-allowed">
           <Wand2 className="size-3.5" aria-hidden="true" />
@@ -340,15 +351,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
               </div>
             </div>
 
-            {themesPresented && (
-              <div className="rounded-lg border-2 border-emerald-400 bg-emerald-50 p-4 text-xs font-semibold text-emerald-900 flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-emerald-600 shrink-0" />
-                <div>
-                  <strong className="block font-bold">{tr("3 Themes Presented to Chairman Successfully!")}</strong>
-                  <span>{tr("The workflow has officially moved to Chairman H.E. Abdullah Al Owais's dashboard for selection and budget locking.")}</span>
-                </div>
-              </div>
-            )}
+
           </div>
         </div>
       )}
