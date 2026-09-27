@@ -24,7 +24,7 @@ import { useMockupText } from './i18n/useMockupText';
 
 import React, { useState, useEffect, useReducer } from 'react';
 import RoleSelection, { AppRole } from './components/RoleSelection';
-import CommitteeThemeWorkspace, { CommitteeThemeDraft } from './components/CommitteeThemeWorkspace';
+import CommitteeThemeWorkspace, { CommitteeThemeDraft, isThemeBatchComplete } from './components/CommitteeThemeWorkspace';
 import ChairmanWorkspace, { ThemeItem } from './components/ChairmanWorkspace';
 import HIPWorkspace, { TranslationStatus } from './components/HIPWorkspace';
 import EditorialWorkspace, { ThemePolishStatus } from './components/EditorialWorkspace';
@@ -191,8 +191,13 @@ function SADUApp() {
   const [artists, setArtists] = useState<VettedArtist[]>(INITIAL_VETTED_ARTISTS);
   const [isNominationFormOpen, setIsNominationFormOpen] = useState<boolean>(false);
 
+  const handleSubmitCommitteeThemes = (themes: CommitteeThemeDraft[]) => {
+    if (ratifiedTheme || !isThemeBatchComplete(themes)) return;
+    setDirectorThemes(themes);
+  };
+
   const handlePresentToChairman = (themes: CommitteeThemeDraft[]) => {
-    if (ratifiedTheme) return;
+    if (ratifiedTheme || !isThemeBatchComplete(themes)) return;
     setSubmittedThemes(themes);
   };
 
@@ -630,7 +635,8 @@ function SADUApp() {
             ) : (
               <CommitteeThemeWorkspace
                 eventId={EVENT_ID}
-                onPresentToChairman={setDirectorThemes}
+                ratifiedTheme={ratifiedTheme}
+                onPresentToChairman={handleSubmitCommitteeThemes}
                 onBackToRoles={() => setActiveRole('ROLES')}
               />
             )}

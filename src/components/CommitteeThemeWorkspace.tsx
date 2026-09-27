@@ -17,10 +17,20 @@ export interface CommitteeThemeDraft {
 export interface CommitteeThemeWorkspaceProps {
   /** Identifier of the biennial/event these three theme proposals belong to. */
   eventId?: string;
+  ratifiedTheme?: { arabicName: string } | null;
   /** Called with the three completed theme drafts once presented to the Chairman. */
   onPresentToChairman?: (themes: CommitteeThemeDraft[], eventId?: string) => void;
   onBackToRoles?: () => void;
 }
+
+export const isThemeComplete = (theme: CommitteeThemeDraft): boolean =>
+    Boolean(theme.arabicName?.trim()) &&
+    Boolean(theme.aestheticFramework?.trim()) &&
+    Boolean(theme.contemporaryRelevance?.trim()) &&
+    Boolean(theme.curatorialJustification?.trim());
+
+export const isThemeBatchComplete = (themes: CommitteeThemeDraft[]): boolean =>
+  themes.length === 3 && themes.every(isThemeComplete);
 
 const EMPTY_THEME: CommitteeThemeDraft = {
   arabicName: '',
@@ -45,6 +55,7 @@ const createEmptyThemes = (): CommitteeThemeDraft[] => [
  */
 const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
   eventId,
+  ratifiedTheme,
   onPresentToChairman,
   onBackToRoles,
 }) => {
@@ -54,14 +65,8 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
   const [isSubmitted, setIsSubmitted] = useState(false);
   const baseId = useId();
 
-  const isThemeComplete = (theme: CommitteeThemeDraft): boolean =>
-    theme.arabicName.trim() !== '' &&
-    theme.aestheticFramework.trim() !== '' &&
-    theme.contemporaryRelevance.trim() !== '' &&
-    theme.curatorialJustification.trim() !== '';
-
   const allFieldsFilled = useMemo(
-    () => themes.length === 3 && themes.every(isThemeComplete),
+    () => isThemeBatchComplete(themes),
     [themes]
   );
 
@@ -80,7 +85,7 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    if (!allFieldsFilled) return;
+    if (ratifiedTheme || !allFieldsFilled) return;
     const finalized = themes.map(t => ({
       ...t,
       definition: t.curatorialJustification,
@@ -90,9 +95,24 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
   };
 
   const handleStartNewBatch = () => {
+    if (ratifiedTheme) return;
     setThemes(createEmptyThemes());
     setIsSubmitted(false);
   };
+
+  if (ratifiedTheme) {
+    return (
+      <section className="mx-auto w-full max-w-5xl rounded-lg border border-sadu-gold bg-[#F7F1E6] p-6 text-start" dir={isAr ? 'rtl' : 'ltr'}>
+        <p role="status" className="font-bold text-sadu-charcoal">
+          {isAr ? 'الحالة: مقفل — اعتمد رئيس الدائرة الثيمة' : 'Status: Locked - Theme Ratified by Chairman'}
+        </p>
+        <p className="mt-3 text-sadu-muted" dir="rtl">{ratifiedTheme.arabicName}</p>
+        {onBackToRoles && <button type="button" onClick={onBackToRoles} className="mt-4 rounded border border-sadu-gold ps-3 pe-3 py-2 text-sm">
+          {isAr ? 'تغيير الدور' : 'Switch Role'}
+        </button>}
+      </section>
+    );
+  }
 
   if (isSubmitted) {
     return (

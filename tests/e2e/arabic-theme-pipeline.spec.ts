@@ -26,6 +26,11 @@ test('Arabic-first theme handoff and verified bilingual release', async ({ page 
   await expect(page.getByText('مراجعة الجدوى الإدارية والفنية', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Approve Theme' }).first().click();
   await page.getByRole('button', { name: 'Authorize Budget & Transfer Authority' }).click();
+  await role('Committee');
+  await expect(page.getByText('Status: Locked - Theme Ratified by Chairman', { exact: true })).toBeVisible();
+  await expect(page.locator('input[id*="-arabic-"]')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Start New Proposal Set' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Submit to Biennial Director' })).toHaveCount(0);
   await role('Editorial');
   await expect(page.locator('#editorial-english')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Publish Official Theme' })).toHaveCount(0);

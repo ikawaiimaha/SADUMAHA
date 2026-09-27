@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import { NominatedArtistDossier } from './ArtistNominationForm';
 import { ThemeItem } from './ChairmanWorkspace';
-import { CommitteeThemeDraft } from './CommitteeThemeWorkspace';
+import { CommitteeThemeDraft, isThemeBatchComplete } from './CommitteeThemeWorkspace';
 
 export interface DirectorWorkspaceProps {
   /** The 3 theme proposals submitted by the Preparatory Committee */
@@ -56,30 +56,6 @@ export const VETO_REASONS = [
   'Administrative Directive',
 ];
 
-const DEFAULT_CANDIDATE_THEMES: CommitteeThemeDraft[] = [
-  {
-    arabicName: 'تجليات الحرف والهندسة المقدسة',
-    englishName: 'Calligraphic Manifestations & Sacred Geometry',
-    aestheticFramework: 'Classical Ibn Muqla proportional circles, kufic grid balance, and monumental spatial installations.',
-    contemporaryRelevance: 'Engages contemporary avant-garde international art standards while preserving authentic script lineage.',
-    curatorialJustification: 'A rigorous academic and visual inquiry into letterform as transcendent architectural presence.',
-  },
-  {
-    arabicName: 'أصداء القصب: السلالة المادية',
-    englishName: 'Echoes of the Reed: Material Lineage',
-    aestheticFramework: 'Organic carbon ink compounding, raw wasli paper fabrication, and traditional jali script execution.',
-    contemporaryRelevance: 'Presents ecological material discourse against rapid digital abstraction in global biennales.',
-    curatorialJustification: 'Re-establishes physical craft authenticity as a radical contemporary counter-movement.',
-  },
-  {
-    arabicName: 'الحرف الحركي: الخط الرقمي الطليعي',
-    englishName: 'The Kinetic Letter: Digital Calligraphy',
-    aestheticFramework: 'Computational script generation, laser calligraphy projections, and responsive kinetic structures.',
-    contemporaryRelevance: 'Bridges classical calligraphic theory with cutting-edge algorithmic art and media installations.',
-    curatorialJustification: 'Critical forward-looking investigation ensuring Arabic calligraphy leads digital artistic innovation.',
-  },
-];
-
 export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
   submittedThemes,
   onPresentToChairman,
@@ -97,19 +73,9 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
   const [activeTab, setActiveTab] = useState<'phase1' | 'phase2'>('phase1');
 
   // Phase 1 State: Themes & Director's Notes
-  const activeThemes = useMemo(() => {
-    if (submittedThemes && submittedThemes.length === 0) return [];
-    if (submittedThemes && submittedThemes.length === 3 && submittedThemes.some(t => t.arabicName || t.englishName)) {
-      return submittedThemes;
-    }
-    return DEFAULT_CANDIDATE_THEMES;
-  }, [submittedThemes]);
-
-  const [directorNotes, setDirectorNotes] = useState<Record<number, string>>(submittedThemes ? {} : {
-    0: 'Strongest philosophical resonance with Sharjah cultural heritage.',
-    1: 'Requires specialized gallery humidity controls for untreated wasli paper.',
-    2: 'High visual impact for avant-garde international pavilions.',
-  });
+  const activeThemes = submittedThemes ?? [];
+  const canPresentThemes = !ratifiedTheme && isThemeBatchComplete(activeThemes);
+  const [directorNotes, setDirectorNotes] = useState<Record<number, string>>({});
   const [themesPresented, setThemesPresented] = useState<boolean>(false);
 
   // Phase 2 State: Filters, Veto Dialog & Document Preview
@@ -148,7 +114,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
   }, [nominatedArtists, filterCategory, filterStatus]);
 
   const handlePresentThemes = () => {
-    if (activeThemes.length !== 3) return;
+    if (!canPresentThemes) return;
     const updatedThemesWithNotes = activeThemes.map((theme, index) => ({
       ...theme,
       directorNotes: directorNotes[index] || '',
@@ -324,7 +290,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
               <button
                 type="button"
                 onClick={handlePresentThemes}
-                disabled={activeThemes.length !== 3 || Boolean(ratifiedTheme)}
+                disabled={!canPresentThemes}
                 className="inline-flex items-center justify-center gap-2 rounded-md bg-sadu-brick px-6 py-3 text-xs font-bold text-white shadow-xs transition-colors hover:bg-sadu-brick-dark cursor-pointer shrink-0"
               >
                 <Send className="h-4 w-4" />
