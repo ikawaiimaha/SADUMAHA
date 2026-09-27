@@ -9,7 +9,9 @@ import {
   Send, 
   Lock,
   AlertCircle,
-  RotateCcw
+  RotateCcw,
+  UploadCloud,
+  FileCheck
 } from 'lucide-react';
 import { ThemeItem } from './ChairmanWorkspace';
 
@@ -77,6 +79,8 @@ export default function EditorialWorkspace({
     arabicText: initialEssayArabic || guidelinesArabic || rawChairmanTheme,
     englishText: initialEssayEnglish || guidelinesEnglish || ''
   });
+
+  const [identityAssets, setIdentityAssets] = useState<{ file: File; attachedAt: string }[]>([]);
 
   const [translationVerified, setTranslationVerified] = useState(false);
   const isArabicLocked = arabicLocked || isPublished;
@@ -244,6 +248,63 @@ export default function EditorialWorkspace({
                   <span>{isAr ? 'راجعت الترجمة الإنجليزية وتحققت من مطابقتها للنص العربي المعتمد.' : 'I reviewed the English translation and verified it against the certified Arabic statement.'}</span>
                 </label>}
               </div>}
+
+              {isArabicLocked && (
+                <section aria-labelledby="identity-assets-heading" className="rounded-lg border border-[#D9D2C5] border-s-4 border-s-[#8C7A6B] bg-[#F7F1E6] ps-4 pe-4 py-5">
+                  <h3 id="identity-assets-heading" className="flex items-center gap-2 font-serif text-base font-bold text-[#1A1817]">
+                    <FileCheck className="size-5 shrink-0 text-[#8C7A6B]" aria-hidden="true" />
+                    {isAr ? 'سجل المرفقات والهوية البصرية' : 'Visual Identity & Asset Log'}
+                  </h3>
+                  <p id="identity-assets-help" className="mt-2 text-xs leading-relaxed text-[#6B635B]">
+                    {isAr ? 'الشعار الرسمي وملفات الهوية من فريق التصميم الخارجي. سجل تجريبي؛ الملفات المختارة تبقى في هذه الجلسة ولا تُرفع إلى خادم.' : 'Official Shi’aar and identity assets from the external design team. Demo log; selected files stay in this session and are not uploaded to a server.'}
+                  </p>
+                  <label className={`mt-4 block rounded-md border-2 border-dashed border-[#C8BBA6] bg-[#EDE4D3] ps-4 pe-4 py-5 text-start ${isPublished ? 'opacity-60' : 'cursor-pointer focus-within:ring-2 focus-within:ring-[#8C7A6B]'}`}>
+                    <span className="flex items-center gap-2 text-sm font-semibold text-[#2C2A29]">
+                      <UploadCloud className="size-5 shrink-0" aria-hidden="true" />
+                      {isAr ? 'إرفاق الشعار الرسمي وملفات الهوية البصرية' : 'Attach official logo (Shi’aar) & visual identity assets'}
+                    </span>
+                    <input
+                      type="file"
+                      multiple
+                      accept=".svg,.png,.jpg,.jpeg,.pdf"
+                      disabled={isPublished}
+                      aria-describedby="identity-assets-help"
+                      onChange={event => {
+                        if (!isArabicLocked || isPublished) return;
+                        const attachedAt = new Date().toISOString();
+                        const selected = Array.from(event.target.files ?? []).map(file => ({ file, attachedAt }));
+                        setIdentityAssets(current => [...current, ...selected]);
+                        event.target.value = '';
+                      }}
+                      className="mt-3 block w-full min-w-0 text-xs text-[#6B635B] file:me-3 file:rounded file:border file:border-[#C8BBA6] file:bg-[#F7F1E6] file:ps-3 file:pe-3 file:py-2 file:text-[#2C2A29] disabled:cursor-not-allowed"
+                    />
+                    <span className="mt-2 block text-xs text-[#6B635B]">SVG · PNG · JPG · PDF</span>
+                  </label>
+                  <h4 className="mt-5 text-xs font-bold text-[#6B635B]">{isAr ? 'سجل الإرفاق — بيانات نموذجية' : 'Upload log — sample entries'}</h4>
+                  <ul className="mt-2 divide-y divide-[#D9D2C5] text-xs">
+                    {[
+                      { name: 'SADU_12th_Logo_Primary.svg', at: '2026-09-27T09:30:00+04:00' },
+                      { name: 'Theme_Typography_Guidelines.pdf', at: '2026-09-27T09:45:00+04:00' },
+                    ].map(asset => (
+                      <li key={asset.name} className="flex flex-wrap items-center gap-2 py-3">
+                        <FileCheck className="size-4 shrink-0 text-[#736357]" aria-hidden="true" />
+                        <bdi className="min-w-0 flex-1 break-all">{asset.name}</bdi>
+                        <span className="rounded bg-[#EDE4D3] ps-2 pe-2 py-1 text-[#594F47]">{isAr ? 'تم التحقق — نموذج' : 'Verified — sample'}</span>
+                        <time dateTime={asset.at} className="w-full text-[#736357]" dir="ltr">{asset.at.replace('T', ' ')}</time>
+                      </li>
+                    ))}
+                    {identityAssets.map(({ file, attachedAt }, index) => (
+                      <li key={`${attachedAt}-${index}`} className="flex flex-wrap items-center gap-2 py-3">
+                        <FileText className="size-4 shrink-0 text-[#736357]" aria-hidden="true" />
+                        <bdi className="min-w-0 flex-1 break-all">{file.name}</bdi>
+                        <span className="rounded bg-[#EDE4D3] ps-2 pe-2 py-1 text-[#594F47]">{isAr ? 'مرفق محلياً — بانتظار المراجعة' : 'Attached locally — pending review'}</span>
+                        <time dateTime={attachedAt} className="w-full text-[#736357]" dir="ltr">{attachedAt.replace('T', ' ')}</time>
+                      </li>
+                    ))}
+                  </ul>
+                  <p role="status" className="mt-2 text-xs text-[#6B635B]">{isAr ? `الملفات المرفقة محلياً: ${identityAssets.length}` : `Locally attached files: ${identityAssets.length}`}</p>
+                </section>
+              )}
 
               {/* Action Footer */}
               <div className="pt-4 border-t border-[#EAE3D9] flex justify-end">
