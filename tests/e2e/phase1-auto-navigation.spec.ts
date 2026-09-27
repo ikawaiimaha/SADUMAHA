@@ -19,7 +19,12 @@ test('Phase 1 success automatically advances through Director, Chairman, Editori
   await page.getByRole('button', { name: 'Auto-fill Notes', exact: true }).click();
   await expect(page.locator('textarea').first()).toHaveValue('مفهوم قوي يتوافق مع رؤية الدائرة، نوصي بالتركيز على الجانب المعماري في المبررات لتسهيل التخصيص المالي.');
   await page.getByRole('button', { name: 'Present 3 Themes to Chairman' }).click();
+  await page.getByRole('button', { name: 'Auto-fill Executive Directives' }).click();
+  await expect(page.locator('#chairman-directives-0')).toHaveValue('نعتمد هذه الثيمة، ونوصي بتوجيه الميزانية لدعم الأعمال التركيبية الكبرى والمفاهيمية.');
+  const directive = 'توجيه تنفيذي خاص بدعم الأعمال التركيبية الكبرى';
+  await page.locator('#chairman-directives-0').fill(directive);
   await page.getByRole('button', { name: 'Approve Theme' }).first().click();
+  await expect(page.getByText(directive, { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Authorize Budget & Transfer Authority' }).click();
   await expect(page.locator('#editorial-arabic')).toBeVisible();
   await page.getByRole('button', { name: 'Ratify Arabic Text & Route to Translation' }).click();
@@ -28,6 +33,10 @@ test('Phase 1 success automatically advances through Director, Chairman, Editori
   await page.getByRole('button', { name: 'Publish Official Theme', exact: true }).click();
   await expect(page.getByText('Theme Locked & Dispatched', { exact: true })).toBeVisible();
   await expect(page.locator('#exhibition-guidelines-arabic')).toBeEnabled();
+  await page.getByRole('navigation').getByRole('button', { name: 'Chairman', exact: true }).click();
+  await expect(page.getByText(directive, { exact: true })).toBeVisible();
+  await expect(page.locator('#approved-budget-amount')).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Auto-fill Executive Directives' })).toHaveCount(0);
 });
 
 test('starting a new proposal set cancels pending auto-navigation', async ({ page }) => {

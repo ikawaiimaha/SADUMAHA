@@ -620,9 +620,14 @@ function SADUApp() {
             onAutoNavigate={handleAutoNavigate}
             eventId={EVENT_ID}
             themes={submittedThemes}
+            onThemeApproved={(theme, index) => {
+              if (ratifiedTheme) return;
+              setSubmittedThemes(current => current?.map((proposal, proposalIndex) =>
+                proposalIndex === index ? { ...proposal, chairmanNotes: theme.chairmanNotes } : proposal));
+            }}
             onBudgetAssigned={handleBudgetAssigned}
             themeStatus={themePolishStatus}
-            initialApprovedIndex={ratifiedTheme && submittedThemes ? submittedThemes.indexOf(ratifiedTheme as CommitteeThemeDraft) : null}
+            initialApprovedTheme={ratifiedTheme}
             initialBudget={assignedBudget}
             onBackToRoles={() => setActiveRole('ROLES')}
           />

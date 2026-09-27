@@ -2,6 +2,7 @@ import { useMockupText } from '../i18n/useMockupText';
 import { useI18n } from '../context/I18nContext';
 import React, { useEffect, useRef, useState } from 'react';
 import {
+  Wand2,
   Lock,
   ShieldCheck,
   CheckCircle2,
@@ -24,6 +25,7 @@ export type ThemeItem = CommitteeThemeDraft | {
   curatorialJustification?: string;
   definition?: string;
   directorNotes?: string;
+  chairmanNotes?: string;
 };
 
 export interface ChairmanWorkspaceProps {
@@ -32,12 +34,13 @@ export interface ChairmanWorkspaceProps {
   /** Submitted candidate themes from the Preparatory Committee (the 3 drafts). */
   themes?: ThemeItem[];
   /** Callback fired when the Chairman confers official ratification on a theme. */
-  onThemeApproved?: (approvedTheme: ThemeItem) => void;
+  onThemeApproved?: (approvedTheme: ThemeItem, index: number) => void;
   /** Callback fired when the Chairman assigns the official biennial budget. */
   onBudgetAssigned?: (amount: number, theme: ThemeItem, status?: 'PENDING_EDITORIAL_POLISH') => void;
   /** Optional initial approved theme index. */
   initialApprovedIndex?: number | null;
   initialBudget?: number | null;
+  initialApprovedTheme?: ThemeItem | null;
   /** Optional current theme workflow status. */
   themeStatus?: 'PENDING_CHAIRMAN_APPROVAL' | 'PENDING_EDITORIAL_POLISH' | 'PUBLISHED' | 'PUBLISHED_OFFICIAL';
   onAutoNavigate?: (role: string) => void;
@@ -51,10 +54,17 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
   onBudgetAssigned,
   initialApprovedIndex = null,
   initialBudget = null,
+  initialApprovedTheme = null,
   themeStatus,
   onAutoNavigate,
   onBackToRoles,
 }) => {
+  const DEMO_CHAIRMAN_NOTES = [
+    "نعتمد هذه الثيمة، ونوصي بتوجيه الميزانية لدعم الأعمال التركيبية الكبرى والمفاهيمية.",
+    "موافق عليه. يرجى التنسيق مع قسم التحرير لإبراز العمق الفلسفي في البيان الرسمي.",
+    "يعتمد. يتم تحويل الميزانية للإدارة المالية، مع التشديد على استقطاب فنانين دوليين."
+  ];
+  const [chairmanNotes, setChairmanNotes] = useState<Record<number, string>>({});
   const navigationTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => () => { clearTimeout(navigationTimer.current); }, []);
   const tr = useMockupText();
@@ -70,9 +80,10 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
     themes!.some(t => t.arabicName.trim() !== '' || t.englishName.trim() !== '');
 
   const handleApprove = (index: number) => {
+    if (isBudgetAssigned) return;
     setApprovedIndex(index);
     if (onThemeApproved && themes && themes[index]) {
-      onThemeApproved(themes[index]);
+      onThemeApproved({ ...themes[index], chairmanNotes: chairmanNotes[index] ?? themes[index].chairmanNotes ?? '' }, index);
     }
   };
 
@@ -145,7 +156,11 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
   }
 
   const activeThemes = themes!;
-  const winningTheme = approvedIndex !== null ? activeThemes[approvedIndex] : null;
+  const selectedTheme = approvedIndex !== null ? activeThemes[approvedIndex] : null;
+  const winningTheme = initialApprovedTheme ?? (selectedTheme ? {
+    ...selectedTheme,
+    chairmanNotes: chairmanNotes[approvedIndex!] ?? selectedTheme.chairmanNotes ?? '',
+  } : null);
 
   return (
     <section className="mx-auto w-full max-w-5xl space-y-6 rounded-lg border border-sadu-gold bg-sadu-paper p-6 shadow-xs">
@@ -161,6 +176,13 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {!winningTheme && <button type="button" onClick={() => {
+            if (isBudgetAssigned) return;
+            setChairmanNotes(Object.fromEntries(activeThemes.map((_, index) => [index, DEMO_CHAIRMAN_NOTES[index] ?? ''])));
+          }} className="inline-flex items-center gap-2 rounded-md border border-[#736357]/40 ps-3 pe-3 py-1.5 text-xs font-semibold text-[#736357] hover:border-[#8B261E] hover:text-[#8B261E]">
+            <Wand2 className="size-3.5" aria-hidden="true" />
+            {isAr ? 'تعبئة توجيهات رئيس الدائرة' : 'Auto-fill Executive Directives'}
+          </button>}
           {eventId && (
             <span className="w-fit rounded-full border border-sadu-gold/60 bg-sadu-sand px-3 py-1 text-[10px] font-semibold text-sadu-muted"> {tr("Ref:")} {eventId}
             </span>
@@ -188,6 +210,10 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
       {/* LOCKED STATE */}
       {winningTheme ? (
         <div className="space-y-6">
+          {winningTheme.chairmanNotes && <section className="rounded border border-sadu-gold bg-[#F7F1E6] ps-4 pe-4 py-3 text-start">
+            <h3 className="text-sm font-bold">{isAr ? 'توجيهات رئيس الدائرة' : 'Chairman Directives'}</h3>
+            <p dir="auto" className="mt-2 whitespace-pre-wrap text-sm">{winningTheme.chairmanNotes}</p>
+          </section>}
           {/* Large Official Theme Ratified Success Banner */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border-2 border-sadu-brick/40 bg-gradient-to-r from-sadu-brick-light via-sadu-sand to-sadu-paper p-6 shadow-sm">
             <div className="flex items-start sm:items-center gap-4">
@@ -460,6 +486,12 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
                 </div>
 
                 <div className="mt-5 border-t border-sadu-gold/30 pt-4">
+                  <label htmlFor={`chairman-directives-${index}`} className="mb-3 block text-start text-xs font-semibold text-[#736357]">
+                    {isAr ? 'توجيهات رئيس الدائرة (اختياري)' : 'Chairman Directives - Optional'}
+                    <textarea id={`chairman-directives-${index}`} dir="rtl" rows={3} value={chairmanNotes[index] ?? theme.chairmanNotes ?? ''}
+                      onChange={event => setChairmanNotes(current => ({ ...current, [index]: event.target.value }))}
+                      className="mt-2 w-full rounded border border-sadu-gold/60 bg-[#F7F1E6] ps-3 pe-3 py-2 text-start text-sm focus:border-[#8B261E] focus:outline-none focus:ring-1 focus:ring-[#8B261E]" />
+                  </label>
                   <button
                     type="button"
                     onClick={() => handleApprove(index)}

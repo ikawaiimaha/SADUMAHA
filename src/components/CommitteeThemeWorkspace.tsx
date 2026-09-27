@@ -10,6 +10,7 @@ export interface CommitteeThemeDraft {
   contemporaryRelevance: string;
   curatorialJustification: string;
   directorNotes?: string;
+  chairmanNotes?: string;
   /** Backward-compatible legacy alias */
   definition?: string;
 }
