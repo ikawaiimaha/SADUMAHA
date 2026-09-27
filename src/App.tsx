@@ -197,6 +197,14 @@ function SADUApp() {
     setSubmittedThemes(undefined);
   };
 
+  const handleReturnToCommittee = () => {
+    if (activeRole !== 'BIENNIAL_DIRECTOR' || ratifiedTheme) return;
+    setDirectorThemes([]);
+    setSubmittedThemes(undefined);
+    setIsNominationFormOpen(false);
+    setActiveRole('PREP_COMMITTEE');
+  };
+
   const handlePresentToChairman = (themes: CommitteeThemeDraft[]) => {
     if (ratifiedTheme || !isThemeBatchComplete(themes)) return;
     setSubmittedThemes(themes);
@@ -625,6 +633,7 @@ function SADUApp() {
           <DirectorWorkspace
             onAutoNavigate={handleAutoNavigate}
             submittedThemes={directorThemes}
+            onReturnToCommittee={handleReturnToCommittee}
             onPresentToChairman={handlePresentToChairman}
             nominatedArtists={nominatedArtists}
             onVetoArtist={handleVetoArtist}

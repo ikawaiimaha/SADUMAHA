@@ -126,7 +126,7 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
     clearTimeout(navigationTimer.current);
     navigationTimer.current = setTimeout(() => {
       onAutoNavigate?.('DIRECTOR');
-    }, 1500);
+    }, 3500);
   };
 
   const handleAutoFillDemo = () => {

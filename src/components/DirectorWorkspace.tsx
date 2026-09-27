@@ -2,6 +2,7 @@ import { useMockupText } from '../i18n/useMockupText';
 import { useI18n } from '../context/I18nContext';
 import React, { useEffect, useRef, useMemo, useState } from 'react';
 import {
+  Wand2,
   ShieldCheck,
   ShieldAlert,
   CheckCircle,
@@ -32,6 +33,7 @@ export interface DirectorWorkspaceProps {
   /** The 3 theme proposals submitted by the Preparatory Committee */
   submittedThemes?: CommitteeThemeDraft[];
   /** Callback when Director presents the 3 themes (with director's notes) to the Chairman */
+  onReturnToCommittee?: () => void;
   onPresentToChairman?: (themes: CommitteeThemeDraft[], notes?: Record<number, string>) => void;
   /** Nominated artist dossiers from Coordinators/Committee */
   nominatedArtists: NominatedArtistDossier[];
@@ -57,9 +59,16 @@ export const VETO_REASONS = [
   'Administrative Directive',
 ];
 
+const DEMO_DIRECTOR_NOTES = [
+  "مفهوم قوي يتوافق مع رؤية الدائرة، نوصي بالتركيز على الجانب المعماري في المبررات لتسهيل التخصيص المالي.",
+  "فكرة كلاسيكية ممتازة، لكنها تتطلب مساحات عرض تفاعلية لضمان جذب الجمهور الشاب.",
+  "طرح فلسفي عميق ومناسب جداً لاستقطاب فنانين دوليين ذوي توجهات تجريدية معاصرة."
+];
+
 export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
   submittedThemes,
   onPresentToChairman,
+  onReturnToCommittee,
   nominatedArtists,
   onVetoArtist,
   onApproveArtist,
@@ -117,6 +126,20 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
     });
   }, [nominatedArtists, filterCategory, filterStatus]);
 
+  const handleAutoFillNotes = () => {
+    if (!canPresentThemes || themesPresented) return;
+    setDirectorNotes(Object.fromEntries(activeThemes.map((_, index) => [index, DEMO_DIRECTOR_NOTES[index]])));
+  };
+
+  const handleReturnThemes = () => {
+    if (ratifiedTheme || activeThemes.length === 0 || !onReturnToCommittee) return;
+    clearTimeout(navigationTimer.current);
+    navigationTimer.current = undefined;
+    setThemesPresented(false);
+    setDirectorNotes({});
+    onReturnToCommittee();
+  };
+
   const handlePresentThemes = () => {
     if (!canPresentThemes) return;
     const updatedThemesWithNotes = activeThemes.map((theme, index) => ({
@@ -128,7 +151,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
     clearTimeout(navigationTimer.current);
     navigationTimer.current = setTimeout(() => {
       onAutoNavigate?.('CHAIRMAN');
-    }, 1500);
+    }, 3500);
     setTimeout(() => setThemesPresented(false), 5000);
   };
 
@@ -142,6 +165,12 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6">
+      {activeTab === 'phase1' && <div className="flex justify-end">
+        <button type="button" onClick={handleAutoFillNotes} disabled={!canPresentThemes || themesPresented} className="inline-flex items-center gap-2 rounded-md border border-[#736357]/40 ps-3 pe-3 py-1.5 text-xs font-semibold text-[#736357] hover:border-[#8B261E] hover:text-[#8B261E] disabled:opacity-50 disabled:cursor-not-allowed">
+          <Wand2 className="size-3.5" aria-hidden="true" />
+          {isAr ? 'تعبئة ملاحظات الإدارة' : 'Auto-fill Notes'}
+        </button>
+      </div>}
       {/* Executive Header */}
       <div className="rounded-xl border border-sadu-gold bg-sadu-paper p-6 shadow-xs">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-sadu-gold/40 pb-4">
@@ -295,6 +324,10 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-t border-sadu-gold/40 pt-5">
               <span className="text-xs text-sadu-muted"> {tr("Presenting will submit all 3 evaluated proposals and Directorate notes directly to Chairman H.E. Abdullah Al Owais's executive workspace.")} </span>
 
+              <div className="flex flex-wrap items-center gap-2">
+              <button type="button" onClick={handleReturnThemes} disabled={Boolean(ratifiedTheme) || activeThemes.length === 0 || !onReturnToCommittee} className="inline-flex items-center justify-center gap-2 rounded-md border border-[#8B261E] ps-4 pe-4 py-3 text-xs font-bold text-[#8B261E] hover:bg-[#8B261E]/5 disabled:opacity-50 disabled:cursor-not-allowed">
+                {isAr ? 'إعادة المقترحات للجنة التحضيرية' : 'Return to Preparatory Committee'}
+              </button>
               <button
                 type="button"
                 onClick={handlePresentThemes}
@@ -304,6 +337,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
                 <Send className="h-4 w-4" />
                 <span>{tr("Present 3 Themes to Chairman")}</span>
               </button>
+              </div>
             </div>
 
             {themesPresented && (

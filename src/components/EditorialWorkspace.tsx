@@ -114,7 +114,7 @@ export default function EditorialWorkspace({
     clearTimeout(navigationTimer.current);
     navigationTimer.current = setTimeout(() => {
       onAutoNavigate?.('HIP');
-    }, 1500);
+    }, 3500);
 
     if (onPublishOfficialTheme) {
       onPublishOfficialTheme({

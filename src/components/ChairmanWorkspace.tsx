@@ -84,7 +84,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
     clearTimeout(navigationTimer.current);
     navigationTimer.current = setTimeout(() => {
       onAutoNavigate?.('EDITORIAL');
-    }, 1500);
+    }, 3500);
     if (winningTheme && onBudgetAssigned) {
       onBudgetAssigned(allocatedBudget, winningTheme, 'PENDING_EDITORIAL_POLISH');
     }

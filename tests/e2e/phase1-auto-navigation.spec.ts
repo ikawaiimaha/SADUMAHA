@@ -16,6 +16,8 @@ test('Phase 1 success automatically advances through Director, Chairman, Editori
   await expect(page.locator('textarea[id*="-aesthetic-"]').first()).toHaveValue('استكشاف التوازن البصري والروحي في التكوينات الهندسية للخط العربي.');
   await page.getByRole('button', { name: 'Submit to Biennial Director' }).click();
   await expect(page.getByText('Submitted to the Biennial Director', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Auto-fill Notes', exact: true }).click();
+  await expect(page.locator('textarea').first()).toHaveValue('مفهوم قوي يتوافق مع رؤية الدائرة، نوصي بالتركيز على الجانب المعماري في المبررات لتسهيل التخصيص المالي.');
   await page.getByRole('button', { name: 'Present 3 Themes to Chairman' }).click();
   await page.getByRole('button', { name: 'Approve Theme' }).first().click();
   await page.getByRole('button', { name: 'Authorize Budget & Transfer Authority' }).click();
@@ -44,8 +46,32 @@ test('starting a new proposal set cancels pending auto-navigation', async ({ pag
   }
   await page.getByRole('button', { name: 'Submit to Biennial Director' }).click();
   await page.getByRole('button', { name: 'Start New Proposal Set' }).click();
-  await page.clock.runFor(2000);
+  await page.clock.runFor(4000);
   await expect(page.locator('input[id*="-arabic-"]').first()).toHaveValue('');
   await expect(page.getByRole('button', { name: 'Submit to Biennial Director' })).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Present 3 Themes to Chairman' })).toHaveCount(0);
+});
+
+test('Director return clears queues and cancels pending Chairman navigation', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('sadu_lang', 'en');
+    localStorage.setItem('sadu_experience_mode', 'platform');
+  });
+  await page.clock.install();
+  await page.goto('/');
+  const role = (name: string) => page.getByRole('navigation').getByRole('button', { name, exact: true }).click();
+  await role('Committee');
+  await page.getByRole('button', { name: 'Auto-fill for Demo' }).click();
+  await page.getByRole('button', { name: 'Submit to Biennial Director' }).click();
+  await role('Director');
+  await page.getByRole('button', { name: 'Present 3 Themes to Chairman' }).click();
+  await page.getByRole('button', { name: 'Return to Preparatory Committee' }).click();
+  await page.clock.runFor(4000);
+  await expect(page.getByRole('button', { name: 'Auto-fill for Demo' })).toBeVisible();
+  await role('Chairman');
+  await expect(page.getByRole('button', { name: 'Approve Theme' })).toHaveCount(0);
+  await role('Director');
+  await expect(page.locator('textarea')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Present 3 Themes to Chairman' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Auto-fill Notes' })).toBeDisabled();
 });
