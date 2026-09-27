@@ -184,7 +184,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
                 <span className="text-xs text-sadu-muted">{tr("Stage 1 & Stage 4")}</span>
               </div>
               <h1 className="font-editorial text-2xl font-bold text-sadu-charcoal sm:text-3xl mt-1">
-                {isAr ? 'مساحة عمل مدير البينالي · محمد القصير' : 'Biennial Director Workspace · Mohammed Al Qaseer'}
+                {isAr ? 'مساحة عمل مدير الملتقى · الأستاذ محمد إبراهيم القصير' : 'Biennial Director Workspace · Mohammed Al Qaseer'}
               </h1>
               <p className="text-xs font-semibold text-sadu-brick" dir="rtl">
                 مدير البينالي · اعتماد مقترحات الثيم ومراجعة توازن الفنانين (حق النقض)
