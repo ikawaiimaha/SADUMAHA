@@ -1,7 +1,7 @@
 import { useMockupText } from '../i18n/useMockupText';
 import { useI18n } from '../context/I18nContext';
 import React, { useEffect, useRef, useId, useMemo, useState } from 'react';
-import { ClipboardList, Send, CheckCircle2, RotateCcw, Sparkles, BookOpen } from 'lucide-react';
+import { ClipboardList, Wand2, Send, CheckCircle2, RotateCcw, Sparkles, BookOpen } from 'lucide-react';
 
 export interface CommitteeThemeDraft {
   arabicName: string;
@@ -61,6 +61,30 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
   onAutoNavigate,
   onBackToRoles,
 }) => {
+  const DEMO_THEMES: CommitteeThemeDraft[] = [
+    {
+      arabicName: "الميزان",
+      englishName: "Al Mizan - Balance",
+      aestheticFramework: "استكشاف التوازن البصري والروحي في التكوينات الهندسية للخط العربي.",
+      contemporaryRelevance: "ربط مفاهيم التوازن الكلاسيكية بالفنون البصرية المعاصرة والوسائط المتعددة.",
+      curatorialJustification: "يسلط الضوء على جوهر الخط كفن هندسي وروحي متكامل يعكس توازن الكون."
+    },
+    {
+      arabicName: "النقطة",
+      englishName: "Al Nuqta - The Dot",
+      aestheticFramework: "التركيز على النقطة كأساس مرجعي للبناء الهندسي للحرف ووحدة قياس الجمال.",
+      contemporaryRelevance: "تفسير النقطة في سياق الفن التجريدي والمفاهيمي الحديث.",
+      curatorialJustification: "العودة إلى الجذور وبداية التكوين في الفنون الإسلامية كأساس للانطلاق نحو الحداثة."
+    },
+    {
+      arabicName: "تجليات",
+      englishName: "Tajliyat - Manifestations",
+      aestheticFramework: "إبراز الجانب الصوفي والروحي والحرية الحركية في تشكيلات الخط العربي.",
+      contemporaryRelevance: "تقديم الخط العربي كوسيط للتأمل والتواصل الإنساني العابر للثقافات.",
+      curatorialJustification: "يفتح آفاقاً واسعة للفنانين للتعبير عن تجاربهم الباطنية ودمجها مع تقنيات العرض الحديثة."
+    }
+  ];
+
   const navigationTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => () => { clearTimeout(navigationTimer.current); }, []);
   const tr = useMockupText();
@@ -103,6 +127,11 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
     navigationTimer.current = setTimeout(() => {
       onAutoNavigate?.('DIRECTOR');
     }, 1500);
+  };
+
+  const handleAutoFillDemo = () => {
+    if (ratifiedTheme || isSubmitted) return;
+    setThemes(DEMO_THEMES.map(theme => ({ ...theme })));
   };
 
   const handleStartNewBatch = () => {
@@ -202,7 +231,15 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
             <p className="text-xs text-sadu-muted"> {tr("Convened by Mohammed Al Qaseer. Exactly three theme proposals must be defended with rigorous artistic criteria for Chairman Al Owais's review.")} </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={handleAutoFillDemo}
+            className="inline-flex items-center gap-2 rounded-md border border-[#736357]/40 ps-3 pe-3 py-1.5 text-xs font-semibold text-[#736357] transition-colors hover:border-[#8B261E] hover:text-[#8B261E] focus-visible:outline-2 focus-visible:outline-[#8B261E] cursor-pointer"
+          >
+            <Wand2 className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>{isAr ? 'تعبئة تلقائية للعرض' : 'Auto-fill for Demo'}</span>
+          </button>
           {eventId ? (
             <span className="w-fit rounded-full border border-sadu-gold/60 bg-sadu-sand ps-3 pe-3 py-1 text-[10px] font-semibold text-sadu-muted"> {tr("Event Ref:")} {eventId}
             </span>

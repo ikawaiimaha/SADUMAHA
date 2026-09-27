@@ -7,12 +7,13 @@ test('Phase 1 success automatically advances through Director, Chairman, Editori
   });
   await page.goto('/');
   await page.getByRole('navigation').getByRole('button', { name: 'Committee', exact: true }).click();
-  for (let i = 0; i < 3; i++) {
-    await page.locator('input[id*="-arabic-"]').nth(i).fill(`ثيمة عربية ${i + 1}`);
-    for (const field of ['aesthetic', 'contemporary', 'curatorial']) {
-      await page.locator(`textarea[id*="-${field}-"]`).nth(i).fill('بيان عربي عن جماليات الخط والفنون المعاصرة');
-    }
+  await page.getByRole('button', { name: 'Auto-fill for Demo', exact: true }).click();
+  const names = [['الميزان', 'Al Mizan - Balance'], ['النقطة', 'Al Nuqta - The Dot'], ['تجليات', 'Tajliyat - Manifestations']];
+  for (let i = 0; i < names.length; i++) {
+    await expect(page.locator('input[id*="-arabic-"]').nth(i)).toHaveValue(names[i][0]);
+    await expect(page.locator('input[id*="-english-"]').nth(i)).toHaveValue(names[i][1]);
   }
+  await expect(page.locator('textarea[id*="-aesthetic-"]').first()).toHaveValue('استكشاف التوازن البصري والروحي في التكوينات الهندسية للخط العربي.');
   await page.getByRole('button', { name: 'Submit to Biennial Director' }).click();
   await expect(page.getByText('Submitted to the Biennial Director', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Present 3 Themes to Chairman' }).click();
