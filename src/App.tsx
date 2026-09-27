@@ -161,11 +161,12 @@ function SADUApp() {
   // Executive Prototype State-Based Switcher (offline/tablet zero-latency pitch mode)
   const [activeRole, setActiveRole] = useState<InstitutionalRole>('COORDINATOR');
   const [submittedThemes, setSubmittedThemes] = useState<CommitteeThemeDraft[] | undefined>(undefined);
+  const [directorThemes, setDirectorThemes] = useState<CommitteeThemeDraft[]>([]);
   const [assignedBudget, setAssignedBudget] = useState<number | null>(null);
   const [ratifiedTheme, setRatifiedTheme] = useState<ThemeItem | null>(null);
 
   // Stage 1 & 2: Theme Ratification & Editorial Polish State
-  const [themePolishStatus, setThemePolishStatus] = useState<ThemePolishStatus>('PENDING_EDITORIAL_POLISH');
+  const [themePolishStatus, setThemePolishStatus] = useState<ThemePolishStatus>('PENDING_CHAIRMAN_APPROVAL');
   const [themeEssayArabic, setThemeEssayArabic] = useState<string>('');
   const [themeEssayEnglish, setThemeEssayEnglish] = useState<string>('');
 
@@ -191,12 +192,15 @@ function SADUApp() {
   const [isNominationFormOpen, setIsNominationFormOpen] = useState<boolean>(false);
 
   const handlePresentToChairman = (themes: CommitteeThemeDraft[]) => {
+    if (ratifiedTheme) return;
     setSubmittedThemes(themes);
   };
 
   const handleBudgetAssigned = (amount: number, theme: ThemeItem) => {
     setAssignedBudget(amount);
     setRatifiedTheme(theme);
+    setThemeEssayArabic('');
+    setThemeEssayEnglish('');
     setThemePolishStatus('PENDING_EDITORIAL_POLISH');
   };
 
@@ -212,7 +216,7 @@ function SADUApp() {
     setThemeEssayArabic(essayAr);
     setThemeEssayEnglish(essayEn);
     setRatifiedTheme(approvedTheme);
-    setThemePolishStatus('PUBLISHED');
+    setThemePolishStatus('PUBLISHED_OFFICIAL');
   };
 
   const handleSubmitToEditorial = (arabicText: string) => {
@@ -570,6 +574,8 @@ function SADUApp() {
             themes={submittedThemes}
             onBudgetAssigned={handleBudgetAssigned}
             themeStatus={themePolishStatus}
+            initialApprovedIndex={ratifiedTheme && submittedThemes ? submittedThemes.indexOf(ratifiedTheme as CommitteeThemeDraft) : null}
+            initialBudget={assignedBudget}
             onBackToRoles={() => setActiveRole('ROLES')}
           />
         );
@@ -577,7 +583,7 @@ function SADUApp() {
       case 'BIENNIAL_DIRECTOR':
         return (
           <DirectorWorkspace
-            submittedThemes={submittedThemes}
+            submittedThemes={directorThemes}
             onPresentToChairman={handlePresentToChairman}
             nominatedArtists={nominatedArtists}
             onVetoArtist={handleVetoArtist}
@@ -624,7 +630,7 @@ function SADUApp() {
             ) : (
               <CommitteeThemeWorkspace
                 eventId={EVENT_ID}
-                onPresentToChairman={handlePresentToChairman}
+                onPresentToChairman={setDirectorThemes}
                 onBackToRoles={() => setActiveRole('ROLES')}
               />
             )}
@@ -636,6 +642,11 @@ function SADUApp() {
           <EditorialWorkspace
             approvedTheme={ratifiedTheme}
             themePolishStatus={themePolishStatus}
+            onArabicLocked={(arabicText) => {
+              setThemeEssayArabic(arabicText);
+              setThemeEssayEnglish('');
+              setThemePolishStatus('ARABIC_LOCKED');
+            }}
             onPublishOfficialTheme={handlePublishOfficialTheme}
             assignedBudget={assignedBudget}
             initialEssayArabic={themeEssayArabic}

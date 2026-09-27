@@ -23,6 +23,7 @@ export type ThemeItem = CommitteeThemeDraft | {
   contemporaryRelevance?: string;
   curatorialJustification?: string;
   definition?: string;
+  directorNotes?: string;
 };
 
 export interface ChairmanWorkspaceProps {
@@ -36,8 +37,9 @@ export interface ChairmanWorkspaceProps {
   onBudgetAssigned?: (amount: number, theme: ThemeItem, status?: 'PENDING_EDITORIAL_POLISH') => void;
   /** Optional initial approved theme index. */
   initialApprovedIndex?: number | null;
+  initialBudget?: number | null;
   /** Optional current theme workflow status. */
-  themeStatus?: 'PENDING_CHAIRMAN_APPROVAL' | 'PENDING_EDITORIAL_POLISH' | 'PUBLISHED' | 'PUBLISHED_OFFICIAL';
+  themeStatus?: 'PENDING_CHAIRMAN_APPROVAL' | 'PENDING_EDITORIAL_POLISH' | 'ARABIC_LOCKED' | 'PUBLISHED' | 'PUBLISHED_OFFICIAL';
   onBackToRoles?: () => void;
 }
 
@@ -47,14 +49,15 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
   onThemeApproved,
   onBudgetAssigned,
   initialApprovedIndex = null,
+  initialBudget = null,
   themeStatus,
   onBackToRoles,
 }) => {
   const tr = useMockupText();
   const { isAr } = useI18n();
   const [approvedIndex, setApprovedIndex] = useState<number | null>(initialApprovedIndex);
-  const [allocatedBudget, setAllocatedBudget] = useState<number>(12500000);
-  const [isBudgetAssigned, setIsBudgetAssigned] = useState<boolean>(false);
+  const [allocatedBudget, setAllocatedBudget] = useState<number>(initialBudget ?? 12500000);
+  const [isBudgetAssigned, setIsBudgetAssigned] = useState<boolean>(initialBudget !== null);
 
   // Check if 3 submitted theme drafts exist and have content
   const hasSubmittedThemes =
@@ -77,6 +80,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
   };
 
   const handleUnlock = () => {
+    if (isBudgetAssigned) return;
     setApprovedIndex(null);
     setIsBudgetAssigned(false);
   };
@@ -205,7 +209,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
                   <span className="text-xs font-semibold text-sadu-muted"> {tr("Candidate #")}{approvedIndex! + 1} {tr("Ratified by H.E. Abdullah Al Owais")} </span>
                 </div>
                 <h4 className="font-editorial text-2xl font-bold text-sadu-charcoal pt-1">
-                  {isAr ? winningTheme.arabicName : winningTheme.englishName}
+                  {isAr ? winningTheme.arabicName : (winningTheme.englishName || winningTheme.arabicName)}
                 </h4>
               </div>
               <div hidden={isAr} className="text-start sm:text-end" dir="rtl">
@@ -249,6 +253,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
               <button
                 type="button"
                 onClick={handleUnlock}
+                disabled={isBudgetAssigned}
                 className="inline-flex items-center gap-1.5 rounded-md border border-sadu-gold bg-sadu-sand px-3 py-1.5 text-xs font-bold text-sadu-charcoal transition-colors hover:bg-sadu-gold/30 cursor-pointer"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
@@ -400,7 +405,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
 
                   <div>
                     <h3 className="font-editorial text-base font-bold text-sadu-charcoal">
-                      {isAr ? theme.arabicName : theme.englishName}
+                      {isAr ? theme.arabicName : (theme.englishName || theme.arabicName)}
                     </h3>
                     <p hidden={isAr}
                       dir="rtl"
@@ -410,6 +415,10 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
                     </p>
                   </div>
 
+                  {theme.directorNotes && <div className="text-xs">
+                    <strong>{isAr ? 'ملاحظات مدير الملتقى' : 'Director review notes'}</strong>
+                    <p dir="auto">{theme.directorNotes}</p>
+                  </div>}
                   <div className="space-y-2 border-t border-sadu-gold/20 pt-2 text-[11px]">
                     <div>
                       <span className="text-[10px] font-bold uppercase tracking-wider text-sadu-muted block"> {tr("Aesthetic Framework")} </span>

@@ -9,6 +9,7 @@ export interface CommitteeThemeDraft {
   aestheticFramework: string;
   contemporaryRelevance: string;
   curatorialJustification: string;
+  directorNotes?: string;
   /** Backward-compatible legacy alias */
   definition?: string;
 }
@@ -55,7 +56,6 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
 
   const isThemeComplete = (theme: CommitteeThemeDraft): boolean =>
     theme.arabicName.trim() !== '' &&
-    theme.englishName.trim() !== '' &&
     theme.aestheticFramework.trim() !== '' &&
     theme.contemporaryRelevance.trim() !== '' &&
     theme.curatorialJustification.trim() !== '';
@@ -100,7 +100,7 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
         <div className="flex items-center gap-3 rounded-md border border-emerald-300 bg-emerald-50 p-4">
           <CheckCircle2 className="h-6 w-6 shrink-0 text-emerald-700" />
           <div>
-            <p className="font-editorial text-base font-bold text-sadu-charcoal"> {tr("Presented to Chairman H.E. Abdullah Al Owais")} </p>
+            <p className="font-editorial text-base font-bold text-sadu-charcoal"> {isAr ? "أُحيلت المقترحات إلى مدير الملتقى" : "Submitted to the Biennial Director"} </p>
             <p className="text-xs text-sadu-muted"> {tr("All three rigorously formulated theme proposals have been submitted for executive review and budget allocation.")} </p>
           </div>
         </div>
@@ -119,7 +119,7 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
 
               <div>
                 <span className="block font-editorial text-base font-bold text-sadu-charcoal">
-                  {isAr ? theme.arabicName : theme.englishName}
+                  {isAr ? theme.arabicName : (theme.englishName || theme.arabicName)}
                 </span>
                 <span hidden={isAr} dir="rtl" className="block text-sm font-semibold text-sadu-brick">
                   {theme.arabicName}
@@ -222,11 +222,11 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
                 />
               </label>
 
-              <label htmlFor={englishId} className="block text-xs font-semibold text-sadu-charcoal"> {tr("English Name")} <input
+              <label htmlFor={englishId} className="block text-xs font-semibold text-sadu-charcoal"> {isAr ? "الاسم المقترح بالإنجليزية (اختياري / إن وُجد)" : "Proposed English name (optional)"} <input
                   id={englishId}
                   type="text"
-                  required
-                  value={isAr ? theme.arabicName : theme.englishName}
+                  dir="ltr"
+                  value={theme.englishName}
                   onChange={e => updateField(index, 'englishName', e.target.value)}
                   placeholder={tr("e.g. Balance & Harmony")}
                   className="mt-1 w-full rounded-md border border-sadu-gold/60 bg-white px-3 py-2 text-sm text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
@@ -239,6 +239,7 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
                 <span className="block font-normal text-[11px] text-sadu-muted"> {tr("Define the visual and stylistic parameters.")} </span>
                 <textarea
                   id={aestheticId}
+                  dir="rtl"
                   required
                   rows={2}
                   value={theme.aestheticFramework}
@@ -254,6 +255,7 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
                 <span className="block font-normal text-[11px] text-sadu-muted"> {tr("Justify the theme's position within international art standards.")} </span>
                 <textarea
                   id={contemporaryId}
+                  dir="rtl"
                   required
                   rows={2}
                   value={theme.contemporaryRelevance}
@@ -269,6 +271,7 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
                 <span className="block font-normal text-[11px] text-sadu-muted"> {tr("The rigorous defense of why this theme is necessary.")} </span>
                 <textarea
                   id={curatorialId}
+                  dir="rtl"
                   required
                   rows={3}
                   value={theme.curatorialJustification}
@@ -284,13 +287,13 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
 
       <div className="flex flex-col items-center justify-between gap-4 border-t border-sadu-gold/40 pt-4 sm:flex-row">
         <span className="text-xs text-sadu-muted">
-          {filledCount} {tr("of 3 theme proposals fully defended. Every artistic field is mandatory before formal routing to Chairman Al Owais.")} </span>
+          {filledCount} {isAr ? "من 3 مقترحات مكتملة. الحقول العربية إلزامية للإحالة إلى مدير الملتقى؛ الإنجليزية اختيارية." : "of 3 proposals complete. Arabic fields are required for Director review; English is optional."} </span>
         <button
           type="submit"
           disabled={!allFieldsFilled}
           className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-sadu-brick px-6 py-3 text-xs font-bold text-white shadow-xs transition-colors hover:bg-sadu-brick-dark disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto cursor-pointer"
         >
-          <Send className="h-4 w-4" /> {tr("Present to Chairman")} </button>
+          <Send className="h-4 w-4" /> {isAr ? "إحالة إلى مدير الملتقى" : "Submit to Biennial Director"} </button>
       </div>
     </form>
   );

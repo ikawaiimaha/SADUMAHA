@@ -98,13 +98,14 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
 
   // Phase 1 State: Themes & Director's Notes
   const activeThemes = useMemo(() => {
+    if (submittedThemes && submittedThemes.length === 0) return [];
     if (submittedThemes && submittedThemes.length === 3 && submittedThemes.some(t => t.arabicName || t.englishName)) {
       return submittedThemes;
     }
     return DEFAULT_CANDIDATE_THEMES;
   }, [submittedThemes]);
 
-  const [directorNotes, setDirectorNotes] = useState<Record<number, string>>({
+  const [directorNotes, setDirectorNotes] = useState<Record<number, string>>(submittedThemes ? {} : {
     0: 'Strongest philosophical resonance with Sharjah cultural heritage.',
     1: 'Requires specialized gallery humidity controls for untreated wasli paper.',
     2: 'High visual impact for avant-garde international pavilions.',
@@ -147,6 +148,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
   }, [nominatedArtists, filterCategory, filterStatus]);
 
   const handlePresentThemes = () => {
+    if (activeThemes.length !== 3) return;
     const updatedThemesWithNotes = activeThemes.map((theme, index) => ({
       ...theme,
       directorNotes: directorNotes[index] || '',
@@ -265,7 +267,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
 
                     <div>
                       <h3 className="font-editorial text-base font-bold text-sadu-charcoal">
-                        {isAr ? theme.arabicName : theme.englishName}
+                        {isAr ? theme.arabicName : (theme.englishName || theme.arabicName)}
                       </h3>
                       <p hidden={isAr} dir="rtl" className="font-editorial text-base font-semibold text-sadu-brick pt-0.5">
                         {theme.arabicName}
@@ -322,6 +324,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
               <button
                 type="button"
                 onClick={handlePresentThemes}
+                disabled={activeThemes.length !== 3 || Boolean(ratifiedTheme)}
                 className="inline-flex items-center justify-center gap-2 rounded-md bg-sadu-brick px-6 py-3 text-xs font-bold text-white shadow-xs transition-colors hover:bg-sadu-brick-dark cursor-pointer shrink-0"
               >
                 <Send className="h-4 w-4" />
