@@ -682,6 +682,7 @@ function SADUApp() {
       case 'HIP':
         return (
           <HIPWorkspace
+            themeStatus={themePolishStatus}
             guidelinesArabic={guidelinesArabic}
             translationStatus={translationStatus}
             onSubmitToEditorial={handleSubmitToEditorial}

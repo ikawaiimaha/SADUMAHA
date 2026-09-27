@@ -7,6 +7,8 @@ test('Arabic-first theme handoff and verified bilingual release', async ({ page 
   });
   await page.goto('/');
   const role = (name: string) => page.getByRole('navigation').getByRole('button', { name, exact: true }).click();
+  await role('HIP');
+  await expect(page.locator('#exhibition-guidelines-arabic')).toBeDisabled();
   await role('Editorial');
   await expect(page.getByRole('button', { name: 'Ratify Arabic Text & Route to Translation' })).toBeDisabled();
   await role('Committee');
@@ -61,6 +63,12 @@ test('Arabic-first theme handoff and verified bilingual release', async ({ page 
   await expect(verified).not.toBeChecked();
   await verified.check();
   await publish.click();
+  await role('HIP');
+  await expect(page.locator('#exhibition-guidelines-arabic')).toBeEnabled();
+  await expect(page.getByText('Status: Pending Editorial Translation', { exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Submit to Editorial for Translation' }).click();
+  await expect(page.locator('#exhibition-guidelines-arabic')).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'Submit to Editorial for Translation' })).toBeEnabled();
   await role('Director');
   await role('Editorial');
   await expect(page.locator('#editorial-english')).toBeDisabled();

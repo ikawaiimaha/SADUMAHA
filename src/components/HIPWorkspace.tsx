@@ -18,6 +18,7 @@ import { ThemeItem } from './ChairmanWorkspace';
 export type TranslationStatus = 'DRAFT' | 'PENDING_TRANSLATION' | 'PUBLISHED';
 
 export interface HIPWorkspaceProps {
+  themeStatus: string;
   guidelinesArabic?: string;
   translationStatus?: TranslationStatus;
   onSubmitToEditorial?: (arabicText: string) => void;
@@ -37,7 +38,7 @@ const PRESET_DIRECTIVES = [
 
 export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
   guidelinesArabic,
-  translationStatus = 'DRAFT',
+  themeStatus,
   onSubmitToEditorial,
   curatorialBrief,
   onUpdateCuratorialBrief,
@@ -51,13 +52,11 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
   const [arabicText, setArabicText] = useState<string>(
     guidelinesArabic || curatorialBrief || ''
   );
-  const [status, setStatus] = useState<TranslationStatus>(translationStatus);
   const [newTagInput, setNewTagInput] = useState<string>('');
 
   const handleSubmitToEditorial = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!arabicText.trim()) return;
-    setStatus('PENDING_TRANSLATION');
+    if (isLocked || !arabicText.trim()) return;
     onSubmitToEditorial?.(arabicText);
     onUpdateCuratorialBrief?.(arabicText);
   };
@@ -74,7 +73,7 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
     onUpdateBlocklist(blocklist.filter(t => t.toLowerCase() !== tagToRemove.toLowerCase()));
   };
 
-  const isLocked = status === 'PENDING_TRANSLATION' || status === 'PUBLISHED';
+  const isLocked = themeStatus !== 'PUBLISHED_OFFICIAL';
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6">
@@ -166,7 +165,7 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
                 <span className="text-[11px] text-sadu-muted">{arabicText.length} {tr("characters (Arabic)")}</span>
                 <button
                   type="submit"
-                  disabled={!arabicText.trim()}
+                  disabled={isLocked}
                   className="inline-flex items-center gap-1.5 rounded-md bg-sadu-brick px-4 py-2 text-xs font-bold text-white hover:bg-sadu-brick-dark disabled:opacity-50 cursor-pointer shadow-xs"
                 >
                   <Send className="h-3.5 w-3.5" />
