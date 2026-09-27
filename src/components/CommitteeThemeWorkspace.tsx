@@ -114,7 +114,7 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
               <div className="flex items-center justify-between border-b border-sadu-gold/30 pb-2">
                 <span className="text-[10px] font-bold uppercase tracking-wide text-sadu-muted"> {tr("Candidate Proposal")} {index + 1}
                 </span>
-                <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold text-emerald-800"> {tr("Rigorously Defended")} </span>
+                <span className="rounded bg-emerald-100 ps-1.5 pe-1.5 py-0.5 text-[9px] font-bold text-emerald-800"> {tr("Rigorously Defended")} </span>
               </div>
 
               <div>
@@ -147,7 +147,7 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
         <button
           type="button"
           onClick={handleStartNewBatch}
-          className="inline-flex items-center gap-2 rounded-md border border-sadu-gold bg-sadu-sand px-4 py-2 text-xs font-bold text-sadu-charcoal transition-colors hover:bg-sadu-gold/20 cursor-pointer"
+          className="inline-flex items-center gap-2 rounded-md border border-sadu-gold bg-sadu-sand ps-4 pe-4 py-2 text-xs font-bold text-sadu-charcoal transition-colors hover:bg-sadu-gold/20 cursor-pointer"
         >
           <RotateCcw className="h-4 w-4" /> {tr("Start New Proposal Set")} </button>
       </div>
@@ -171,14 +171,14 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
         </div>
         <div className="flex items-center gap-2">
           {eventId ? (
-            <span className="w-fit rounded-full border border-sadu-gold/60 bg-sadu-sand px-3 py-1 text-[10px] font-semibold text-sadu-muted"> {tr("Event Ref:")} {eventId}
+            <span className="w-fit rounded-full border border-sadu-gold/60 bg-sadu-sand ps-3 pe-3 py-1 text-[10px] font-semibold text-sadu-muted"> {tr("Event Ref:")} {eventId}
             </span>
           ) : null}
           {onBackToRoles && (
             <button
               type="button"
               onClick={onBackToRoles}
-              className="inline-flex items-center gap-1.5 rounded-md border border-sadu-gold/70 bg-sadu-sand px-3 py-1.5 text-xs font-bold text-sadu-charcoal hover:bg-sadu-gold/25 cursor-pointer shadow-2xs"
+              className="inline-flex items-center gap-1.5 rounded-md border border-sadu-gold/70 bg-sadu-sand ps-3 pe-3 py-1.5 text-xs font-bold text-sadu-charcoal hover:bg-sadu-gold/25 cursor-pointer shadow-2xs"
             >
               <RotateCcw className="h-3.5 w-3.5 text-sadu-brick" />
               <span>{isAr ? 'تغيير الدور' : 'Switch Role'}</span>
@@ -203,10 +203,10 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
               <div className="flex items-center justify-between border-b border-sadu-gold/30 pb-2">
                 <span className="text-xs font-bold text-sadu-charcoal">{tr("Theme Candidate")} {index + 1}</span>
                 {complete ? (
-                  <span className="inline-flex items-center gap-1 rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
+                  <span className="inline-flex items-center gap-1 rounded bg-emerald-100 ps-2 pe-2 py-0.5 text-[10px] font-bold text-emerald-800">
                     <CheckCircle2 className="h-3 w-3" /> {tr("Fully Defended")} </span>
                 ) : (
-                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800"> {tr("Criteria Incomplete")} </span>
+                  <span className="rounded-full bg-amber-100 ps-2 pe-2 py-0.5 text-[10px] font-bold text-amber-800"> {tr("Criteria Incomplete")} </span>
                 )}
               </div>
 
@@ -218,7 +218,7 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
                   value={theme.arabicName}
                   onChange={e => updateField(index, 'arabicName', e.target.value)}
                   placeholder="مثال: التوازن والانسجام"
-                  className="mt-1 w-full rounded-md border border-sadu-gold/60 bg-white px-3 py-2 text-sm text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
+                  className="mt-1 w-full rounded-md border border-sadu-gold/60 bg-white ps-3 pe-3 py-2 text-sm text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
                 />
               </label>
 
@@ -229,7 +229,7 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
                   value={theme.englishName}
                   onChange={e => updateField(index, 'englishName', e.target.value)}
                   placeholder={tr("e.g. Balance & Harmony")}
-                  className="mt-1 w-full rounded-md border border-sadu-gold/60 bg-white px-3 py-2 text-sm text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
+                  className="mt-1 w-full rounded-md border border-sadu-gold/60 bg-white ps-3 pe-3 py-2 text-sm text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
                 />
               </label>
 
@@ -245,7 +245,7 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
                   value={theme.aestheticFramework}
                   onChange={e => updateField(index, 'aestheticFramework', e.target.value)}
                   placeholder={tr("Define the visual and stylistic parameters...")}
-                  className="mt-1 w-full resize-none rounded-md border border-sadu-gold/60 bg-white px-3 py-1.5 text-xs text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
+                  className="mt-1 w-full resize-none rounded-md border border-sadu-gold/60 bg-white ps-3 pe-3 py-1.5 text-xs text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
                 />
               </label>
 
@@ -261,7 +261,7 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
                   value={theme.contemporaryRelevance}
                   onChange={e => updateField(index, 'contemporaryRelevance', e.target.value)}
                   placeholder={tr("Justify the theme's position within international art standards...")}
-                  className="mt-1 w-full resize-none rounded-md border border-sadu-gold/60 bg-white px-3 py-1.5 text-xs text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
+                  className="mt-1 w-full resize-none rounded-md border border-sadu-gold/60 bg-white ps-3 pe-3 py-1.5 text-xs text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
                 />
               </label>
 
@@ -277,7 +277,7 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
                   value={theme.curatorialJustification}
                   onChange={e => updateField(index, 'curatorialJustification', e.target.value)}
                   placeholder={tr("The rigorous defense of why this theme is necessary...")}
-                  className="mt-1 w-full resize-none rounded-md border border-sadu-gold/60 bg-white px-3 py-1.5 text-xs text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
+                  className="mt-1 w-full resize-none rounded-md border border-sadu-gold/60 bg-white ps-3 pe-3 py-1.5 text-xs text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
                 />
               </label>
             </div>
@@ -291,7 +291,7 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
         <button
           type="submit"
           disabled={!allFieldsFilled}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-sadu-brick px-6 py-3 text-xs font-bold text-white shadow-xs transition-colors hover:bg-sadu-brick-dark disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto cursor-pointer"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-sadu-brick ps-6 pe-6 py-3 text-xs font-bold text-white shadow-xs transition-colors hover:bg-sadu-brick-dark disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto cursor-pointer"
         >
           <Send className="h-4 w-4" /> {isAr ? "إحالة إلى مدير الملتقى" : "Submit to Biennial Director"} </button>
       </div>

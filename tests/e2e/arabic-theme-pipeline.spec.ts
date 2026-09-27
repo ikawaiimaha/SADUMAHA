@@ -28,17 +28,23 @@ test('Arabic-first theme handoff and verified bilingual release', async ({ page 
   await page.getByRole('button', { name: 'Authorize Budget & Transfer Authority' }).click();
   await role('Editorial');
   await expect(page.locator('#editorial-english')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Publish Official Theme' })).toHaveCount(0);
   const arabic = 'البيان الفني المؤسسي المعتمد لاستكشاف جماليات الخط العربي المعاصر';
   await page.locator('#editorial-arabic').fill(arabic);
   await page.getByRole('button', { name: 'Ratify Arabic Text & Route to Translation' }).click();
   await expect(page.locator('#editorial-arabic')).toHaveCount(0);
   await role('Director');
   await role('Editorial');
-  await expect(page.getByText(arabic, { exact: true })).toBeVisible();
+  // The Arabic lock is local: remounting Editorial returns to Step 1.
+  await expect(page.locator('#editorial-arabic')).toBeVisible();
+  await expect(page.locator('#editorial-english')).toHaveCount(0);
   await role('Chairman');
   await expect(page.locator('#approved-budget-amount')).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Unlock / Change Selection' })).toBeDisabled();
   await role('Editorial');
+  await page.locator('#editorial-arabic').fill(arabic);
+  await page.getByRole('button', { name: 'Ratify Arabic Text & Route to Translation' }).click();
+  await expect(page.getByText(arabic, { exact: true })).toBeVisible();
   const publish = page.getByRole('button', { name: 'Publish Official Theme' });
   await expect(publish).toBeDisabled();
   await page.locator('#editorial-english').fill('The institutional artistic statement explores contemporary Arabic calligraphy.');

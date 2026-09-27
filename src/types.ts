@@ -74,7 +74,6 @@ export type ThemeStatus =
   | 'APPROVED'
   | 'PENDING_CHAIRMAN_APPROVAL'
   | 'PENDING_EDITORIAL_POLISH'
-  | 'ARABIC_LOCKED'
   | 'PUBLISHED_OFFICIAL';
 
 export type ArtistStatus = 

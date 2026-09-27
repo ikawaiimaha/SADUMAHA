@@ -39,7 +39,7 @@ export interface ChairmanWorkspaceProps {
   initialApprovedIndex?: number | null;
   initialBudget?: number | null;
   /** Optional current theme workflow status. */
-  themeStatus?: 'PENDING_CHAIRMAN_APPROVAL' | 'PENDING_EDITORIAL_POLISH' | 'ARABIC_LOCKED' | 'PUBLISHED' | 'PUBLISHED_OFFICIAL';
+  themeStatus?: 'PENDING_CHAIRMAN_APPROVAL' | 'PENDING_EDITORIAL_POLISH' | 'PUBLISHED' | 'PUBLISHED_OFFICIAL';
   onBackToRoles?: () => void;
 }
 

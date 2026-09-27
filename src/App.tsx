@@ -642,11 +642,6 @@ function SADUApp() {
           <EditorialWorkspace
             approvedTheme={ratifiedTheme}
             themePolishStatus={themePolishStatus}
-            onArabicLocked={(arabicText) => {
-              setThemeEssayArabic(arabicText);
-              setThemeEssayEnglish('');
-              setThemePolishStatus('ARABIC_LOCKED');
-            }}
             onPublishOfficialTheme={handlePublishOfficialTheme}
             assignedBudget={assignedBudget}
             initialEssayArabic={themeEssayArabic}

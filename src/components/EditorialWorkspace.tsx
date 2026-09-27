@@ -1,6 +1,6 @@
 import { useMockupText } from '../i18n/useMockupText';
 import { useI18n } from '../context/I18nContext';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Languages, 
   BookOpen, 
@@ -13,9 +13,7 @@ import {
 } from 'lucide-react';
 import { ThemeItem } from './ChairmanWorkspace';
 
-export type ThemePolishStatus = 'PENDING_CHAIRMAN_APPROVAL' | 'PENDING_EDITORIAL_POLISH' | 'ARABIC_LOCKED' | 'PUBLISHED' | 'PUBLISHED_OFFICIAL';
-
-type InternalThemeStatus = 'PENDING_EDITORIAL_POLISH' | 'ARABIC_LOCKED' | 'PUBLISHED_OFFICIAL';
+export type ThemePolishStatus = 'PENDING_CHAIRMAN_APPROVAL' | 'PENDING_EDITORIAL_POLISH' | 'PUBLISHED' | 'PUBLISHED_OFFICIAL';
 
 interface EditorialDraft {
   arabicText: string;
@@ -31,7 +29,6 @@ export interface EditorialWorkspaceProps {
     themeEssayEnglish: string;
     approvedTheme: any;
   }) => void;
-  onArabicLocked?: (arabicText: string) => void;
   onPublishBrief?: (englishText: string) => void;
   approvedTheme?: ThemeItem | any;
   themePolishStatus?: ThemePolishStatus;
@@ -51,7 +48,6 @@ export default function EditorialWorkspace({
   onPublishOfficialGuidelines,
   onPublishOfficialTheme,
   onPublishBrief,
-  onArabicLocked,
   approvedTheme,
   themePolishStatus,
   assignedBudget,
@@ -73,30 +69,19 @@ export default function EditorialWorkspace({
     guidelinesArabic || 
     DEFAULT_RAW_CHAIRMAN_THEME;
 
-  const [themeStatus, setThemeStatus] = useState<InternalThemeStatus>(
-    (isInitiallyPublished || themePolishStatus === 'PUBLISHED' || themePolishStatus === 'PUBLISHED_OFFICIAL')
-      ? 'PUBLISHED_OFFICIAL'
-      : themePolishStatus === 'ARABIC_LOCKED' ? 'ARABIC_LOCKED' : 'PENDING_EDITORIAL_POLISH'
-  );
+  const [arabicLocked, setArabicLocked] = useState(false);
+  const [publishedLocally, setPublishedLocally] = useState(false);
+  const isPublished = publishedLocally || isInitiallyPublished || themePolishStatus === 'PUBLISHED' || themePolishStatus === 'PUBLISHED_OFFICIAL';
 
   const [draft, setDraft] = useState<EditorialDraft>({
     arabicText: initialEssayArabic || guidelinesArabic || rawChairmanTheme,
     englishText: initialEssayEnglish || guidelinesEnglish || ''
   });
 
-  useEffect(() => {
-    if (isInitiallyPublished || themePolishStatus === 'PUBLISHED' || themePolishStatus === 'PUBLISHED_OFFICIAL') {
-      setThemeStatus('PUBLISHED_OFFICIAL');
-    } else if (themePolishStatus === 'ARABIC_LOCKED') {
-      setThemeStatus('ARABIC_LOCKED');
-    }
-  }, [isInitiallyPublished, themePolishStatus]);
-
-  const isPublished = themeStatus === 'PUBLISHED_OFFICIAL';
   const [translationVerified, setTranslationVerified] = useState(false);
-  const isArabicLocked = themeStatus === 'ARABIC_LOCKED' || isPublished;
+  const isArabicLocked = arabicLocked || isPublished;
   const canLockArabic = themePolishStatus !== 'PENDING_CHAIRMAN_APPROVAL' && Boolean(approvedTheme) && draft.arabicText.trim().length > 10;
-  const canPublish = themeStatus === 'ARABIC_LOCKED' && draft.arabicText.trim().length > 10 && draft.englishText.trim().length > 10 && translationVerified;
+  const canPublish = arabicLocked && !isPublished && draft.arabicText.trim().length > 10 && draft.englishText.trim().length > 10 && translationVerified;
 
   const handleLockArabic = (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,8 +89,7 @@ export default function EditorialWorkspace({
     const arabicText = draft.arabicText.trim();
     setDraft({ arabicText, englishText: '' });
     setTranslationVerified(false);
-    onArabicLocked?.(arabicText);
-    setThemeStatus('ARABIC_LOCKED');
+    setArabicLocked(true);
   };
 
   const handlePublish = (e: React.FormEvent) => {
@@ -113,7 +97,7 @@ export default function EditorialWorkspace({
     if (!canPublish) return;
     
     // Locks Stage 2 and unlocks Stage 3 (HIP Curatorial Directives)
-    setThemeStatus('PUBLISHED_OFFICIAL');
+    setPublishedLocally(true);
 
     if (onPublishOfficialTheme) {
       onPublishOfficialTheme({
@@ -138,7 +122,7 @@ export default function EditorialWorkspace({
           <p className="text-[#6B635B] text-sm mt-1"> {isAr ? "تنقيح النص العربي وإقراره، ثم إحالته إلى الترجمة المعتمدة." : "Ratify the institutional Arabic text, then hand it over for certified English translation."} </p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="bg-white px-4 py-2 rounded-md border border-[#D9D2C5] text-xs font-mono shadow-xs flex items-center gap-2">
+          <div className="bg-white ps-4 pe-4 py-2 rounded-md border border-[#D9D2C5] text-xs font-mono shadow-xs flex items-center gap-2">
             <Languages className="w-4 h-4 text-[#8B4513]" />
             <span>{isAr ? "النشر الثنائي اللغة:" : "Bilingual release:"} <strong className="text-[#1A1817]">{tr("Active")}</strong></span>
           </div>
@@ -146,7 +130,7 @@ export default function EditorialWorkspace({
             <button
               type="button"
               onClick={onBackToRoles}
-              className="inline-flex items-center gap-1.5 rounded-md border border-[#D9D2C5] bg-white px-3 py-2 text-xs font-bold text-[#6B635B] hover:bg-stone-50 cursor-pointer shadow-xs transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-md border border-[#D9D2C5] bg-white ps-3 pe-3 py-2 text-xs font-bold text-[#6B635B] hover:bg-stone-50 cursor-pointer shadow-xs transition-colors"
             >
               <RotateCcw className="h-3.5 w-3.5" />
               <span>{isAr ? 'تغيير الدور' : 'Switch Role'}</span>
@@ -165,7 +149,7 @@ export default function EditorialWorkspace({
           </div>
 
           {(approvedTheme?.arabicName || approvedTheme?.titleAr) && (
-            <div className="mb-3 px-3 py-2 rounded bg-amber-50/60 border border-amber-200/80 text-xs">
+            <div className="mb-3 ps-3 pe-3 py-2 rounded bg-amber-50/60 border border-amber-200/80 text-xs">
               <span className="text-[10px] uppercase font-bold text-amber-900 block">{tr("Ratified Title")}</span>
               <strong className="text-amber-950 font-serif text-sm">{approvedTheme.arabicName || approvedTheme.titleAr}</strong>
               {!isAr && approvedTheme.titleEn && (
@@ -176,7 +160,7 @@ export default function EditorialWorkspace({
 
           <div className="bg-[#FAF8F5] border border-[#EAE3D9] p-4 rounded-md mb-4">
             <span className="text-[10px] uppercase font-bold text-[#8C7A6B] mb-2 block">{isArabicLocked ? (isAr ? "البيان الفني المؤسسي المجمّد" : "Locked institutional statement") : tr("Source Text (Raw Arabic)")}</span>
-            <p className="text-sm text-[#1A1817] leading-relaxed font-serif text-end" dir="rtl">
+            <p className="text-sm text-[#1A1817] leading-relaxed font-serif text-start" dir="rtl">
               {isArabicLocked ? draft.arabicText : rawChairmanTheme}
             </p>
           </div>
@@ -198,10 +182,10 @@ export default function EditorialWorkspace({
               </div>
               
               {isPublished ? (
-                <span className="px-3 py-1 bg-emerald-100 text-emerald-800 border border-emerald-200 rounded text-xs font-bold uppercase tracking-wider flex items-center gap-1">
+                <span className="ps-3 pe-3 py-1 bg-emerald-100 text-emerald-800 border border-emerald-200 rounded text-xs font-bold uppercase tracking-wider flex items-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5" /> {tr("Published Official")} </span>
               ) : (
-                <span className="px-3 py-1 bg-amber-100 text-amber-800 border border-amber-200 rounded text-xs font-bold uppercase tracking-wider"> {isArabicLocked ? (isAr ? "بانتظار الترجمة المعتمدة" : "Awaiting verified translation") : tr("Pending Polish")} </span>
+                <span className="ps-3 pe-3 py-1 bg-amber-100 text-amber-800 border border-amber-200 rounded text-xs font-bold uppercase tracking-wider"> {isArabicLocked ? (isAr ? "بانتظار الترجمة المعتمدة" : "Awaiting verified translation") : tr("Pending Polish")} </span>
               )}
             </div>
 
@@ -217,7 +201,7 @@ export default function EditorialWorkspace({
 
             <ol className="mb-6 flex flex-wrap gap-4 text-sm" aria-label={isAr ? 'مراحل التحرير' : 'Editorial stages'}>
               <li aria-current={!isArabicLocked ? 'step' : undefined}>{isAr ? '1. التدقيق والتحرير اللغوي (عربي)' : '1. Arabic editorial refinement'} {isArabicLocked && '✓'}</li>
-              <li aria-current={themeStatus === 'ARABIC_LOCKED' ? 'step' : undefined} className={!isArabicLocked ? 'text-stone-400' : ''}>{isAr ? '2. الترجمة الإنجليزية المعتمدة' : '2. Certified English translation'}</li>
+              <li aria-disabled={!isArabicLocked} aria-current={arabicLocked && !isPublished ? 'step' : undefined} className={!isArabicLocked ? 'text-stone-400' : ''}>{isAr ? '2. التعريب والترجمة المعتمدة (English Translation)' : '2. Certified English translation'}</li>
             </ol>
             {!approvedTheme && <p role="status" className="mb-4 text-sm">{isAr ? 'بانتظار اعتماد رئيس الدائرة للثيمة العربية.' : 'Awaiting Chairman ratification of the Arabic theme.'}</p>}
             <form onSubmit={isArabicLocked ? handlePublish : handleLockArabic} className="space-y-6">
@@ -235,7 +219,7 @@ export default function EditorialWorkspace({
                   rows={4}
                   value={draft.arabicText}
                   onChange={(e) => setDraft({...draft, arabicText: e.target.value})}
-                  className="w-full p-4 border border-[#D9D2C5] rounded-md bg-[#FAF8F5] text-sm focus:ring-1 focus:ring-[#8B4513] focus:border-[#8B4513] disabled:opacity-60 disabled:bg-stone-100 outline-hidden resize-none text-end leading-relaxed"
+                  className="w-full p-4 border border-[#D9D2C5] rounded-md bg-[#FAF8F5] text-sm focus:ring-1 focus:ring-[#8B4513] focus:border-[#8B4513] disabled:opacity-60 disabled:bg-stone-100 outline-hidden resize-none text-start leading-relaxed"
                 />
               </div>}
 
@@ -267,7 +251,7 @@ export default function EditorialWorkspace({
                   <button
                     type="submit"
                     disabled={isArabicLocked ? !canPublish : !canLockArabic}
-                    className="flex items-center gap-2 bg-[#8B4513] hover:bg-[#6e350f] disabled:bg-[#D9D2C5] disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-md text-sm font-bold shadow-sm transition-colors cursor-pointer"
+                    className="flex items-center gap-2 bg-[#8B4513] hover:bg-[#6e350f] disabled:bg-[#D9D2C5] disabled:cursor-not-allowed text-white ps-6 pe-6 py-2.5 rounded-md text-sm font-bold shadow-sm transition-colors cursor-pointer"
                   >
                     <Send className="w-4 h-4" />
                     <span>{isArabicLocked ? (isAr ? "نشر وتعميم الثيمة المعتمدة" : "Publish Official Theme") : (isAr ? "إقرار الصياغة العربية وإحالتها للترجمة" : "Ratify Arabic Text & Route to Translation")}</span>
