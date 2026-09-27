@@ -73,10 +73,13 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
   const filledCount = themes.filter(isThemeComplete).length;
 
   const updateField = (index: number, field: keyof CommitteeThemeDraft, value: string) => {
+    const isArabicField = field === 'arabicName' || field === 'aestheticFramework'
+      || field === 'contemporaryRelevance' || field === 'curatorialJustification';
+    const sanitizedValue = isArabicField ? value.replace(/[a-zA-Z]/g, '') : value;
     setThemes(current =>
       current.map((theme, themeIndex) => {
         if (themeIndex !== index) return theme;
-        const updated = { ...theme, [field]: value };
+        const updated = { ...theme, [field]: sanitizedValue };
         updated.definition = `${updated.curatorialJustification} | Aesthetic: ${updated.aestheticFramework} | Relevance: ${updated.contemporaryRelevance}`.trim();
         return updated;
       })
