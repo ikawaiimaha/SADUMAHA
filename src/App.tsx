@@ -22,7 +22,7 @@ import { useMockupText } from './i18n/useMockupText';
  * ============================================================================
  */
 
-import React, { useState, useEffect, useReducer } from 'react';
+import React, { useState, useEffect, useReducer, useRef } from 'react';
 import RoleSelection, { AppRole } from './components/RoleSelection';
 import CommitteeThemeWorkspace, { CommitteeThemeDraft, isThemeBatchComplete } from './components/CommitteeThemeWorkspace';
 import ChairmanWorkspace, { ThemeItem } from './components/ChairmanWorkspace';
@@ -160,6 +160,12 @@ function SADUApp() {
 
   // Executive Prototype State-Based Switcher (offline/tablet zero-latency pitch mode)
   const [activeRole, setActiveRole] = useState<InstitutionalRole>('COORDINATOR');
+  const workspaceScrollRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    workspaceScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [activeRole]);
+
   const [submittedThemes, setSubmittedThemes] = useState<CommitteeThemeDraft[] | undefined>(undefined);
   const [directorThemes, setDirectorThemes] = useState<CommitteeThemeDraft[]>([]);
   const [assignedBudget, setAssignedBudget] = useState<number | null>(null);
@@ -213,7 +219,8 @@ function SADUApp() {
   const handleBudgetAssigned = (amount: number, theme: ThemeItem) => {
     if (ratifiedTheme || !Number.isFinite(amount) || amount <= 0) return;
     setAssignedBudget(amount);
-    setRatifiedTheme(theme);
+    // Preserve the complete executive record, including both sets of notes.
+    setRatifiedTheme({ ...theme });
     setThemeEssayArabic('');
     setThemeEssayEnglish('');
     setThemePolishStatus('PENDING_EDITORIAL_POLISH');
@@ -917,8 +924,8 @@ function SADUApp() {
         WORKSPACE MOUNT POINT
         The actual Archival Heritage Pop UI renders inside this container.
       */}
-      <main className="flex-1 overflow-y-auto relative bg-[#F7F1E6]">
-        {!['PR_PROTOCOL', 'TECHNICAL', 'FINANCE'].includes(activeRole) && <aside className="border-b border-[#D9CEBA] ps-4 pe-4 py-3 text-start" dir={isAr ? 'rtl' : 'ltr'}>
+      <main ref={workspaceScrollRef} className="flex-1 overflow-y-auto relative bg-[#F7F1E6]">
+        {!['CHAIRMAN', 'BIENNIAL_DIRECTOR', 'EDITORIAL', 'HIP', 'ROLES', 'PR_PROTOCOL', 'TECHNICAL', 'FINANCE'].includes(activeRole) && (activeRole !== 'PREP_COMMITTEE' || isNominationFormOpen) && <aside className="border-b border-[#D9CEBA] ps-4 pe-4 py-3 text-start" dir={isAr ? 'rtl' : 'ltr'}>
           <CommissionSummary isAr={isAr} showTechnical={activeRole !== 'PR_PROTOCOL'} />
         </aside>}
         {renderWorkspace()}

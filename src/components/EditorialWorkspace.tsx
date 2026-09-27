@@ -155,6 +155,20 @@ export default function EditorialWorkspace({
         </div>
       </header>
 
+      {approvedTheme && <section aria-labelledby="executive-directives-heading" className="mb-6 rounded-xl border border-[#D9D2C5] bg-[#F7F1E6] ps-6 pe-6 py-5 text-start">
+        <h2 id="executive-directives-heading" className="text-xl font-bold">{isAr ? 'التوجيهات التنفيذية' : 'Executive Directives'}</h2>
+        <dl className="mt-4 space-y-4">
+          <div>
+            <dt className="font-semibold text-[#736357]">{isAr ? 'ملاحظات مدير الملتقى' : 'Director’s Advice'}</dt>
+            <dd dir="auto" className="mt-2 whitespace-pre-wrap text-start text-lg leading-relaxed">{approvedTheme.directorNotes?.trim() || (isAr ? 'لا توجد ملاحظات إضافية.' : 'No additional advice recorded.')}</dd>
+          </div>
+          <div>
+            <dt className="font-semibold text-[#8B261E]">{isAr ? 'توجيهات رئيس الدائرة' : 'Chairman’s Mandate'}</dt>
+            <dd dir="auto" className="mt-2 whitespace-pre-wrap text-start text-lg leading-relaxed">{approvedTheme.chairmanNotes?.trim() || (isAr ? 'لا توجد توجيهات إضافية.' : 'No additional directives recorded.')}</dd>
+          </div>
+        </dl>
+      </section>}
+
       {guidelinesPending && <section aria-labelledby="guidelines-queue-heading" className="mb-6 rounded-lg border border-[#D9D2C5] bg-[#F7F1E6] ps-6 pe-6 py-5 text-start">
         <h2 id="guidelines-queue-heading" className="font-serif text-xl font-bold">{isAr ? 'قائمة الترجمة — دليل منسق المعرض' : 'Translation Queue — HIP Guidelines'}</h2>
         <p dir="rtl" className="my-4 whitespace-pre-wrap rounded bg-[#EDE4D3] p-4 text-start">{guidelinesArabic}</p>
@@ -307,7 +321,8 @@ export default function EditorialWorkspace({
                     />
                     <span className="mt-2 block text-xs text-[#6B635B]">SVG · PNG · JPG · PDF</span>
                   </label>
-                  <h4 className="mt-5 text-xs font-bold text-[#6B635B]">{isAr ? 'سجل الإرفاق — بيانات نموذجية' : 'Upload log — sample entries'}</h4>
+                  <details className="mt-5 rounded border border-[#D9D2C5] bg-[#EDE4D3] ps-3 pe-3 py-3">
+                  <summary className="cursor-pointer text-sm font-bold text-[#6B635B]">{isAr ? 'أمثلة استرشادية' : 'Reference Examples'}</summary>
                   <ul className="mt-2 divide-y divide-[#D9D2C5] text-xs">
                     {[
                       { name: 'SADU_12th_Logo_Primary.svg', at: '2026-09-27T09:30:00+04:00' },
@@ -317,15 +332,20 @@ export default function EditorialWorkspace({
                         <FileCheck className="size-4 shrink-0 text-[#736357]" aria-hidden="true" />
                         <bdi className="min-w-0 flex-1 break-all">{asset.name}</bdi>
                         <span className="rounded bg-[#EDE4D3] ps-2 pe-2 py-1 text-[#594F47]">{isAr ? 'تم التحقق — نموذج' : 'Verified — sample'}</span>
-                        <time dateTime={asset.at} className="w-full text-[#736357]" dir="ltr">{asset.at.replace('T', ' ')}</time>
+                        <time dateTime={asset.at} className="w-full text-[#736357]" dir="ltr">{new Date(asset.at).toLocaleString(isAr ? 'ar-AE' : 'en-AE')}</time>
                       </li>
                     ))}
+                  </ul>
+                  </details>
+                  <h4 className="mt-5 text-sm font-bold text-[#6B635B]">{isAr ? 'سجل المرفقات' : 'Live Upload Log'}</h4>
+                  {identityAssets.length === 0 && <p role="status" className="mt-2 text-sm text-[#736357]">{isAr ? 'لا توجد مرفقات حتى الآن' : 'No attachments yet'}</p>}
+                  <ul className="mt-2 divide-y divide-[#D9D2C5] text-xs">
                     {identityAssets.map(({ file, attachedAt }, index) => (
                       <li key={`${attachedAt}-${index}`} className="flex flex-wrap items-center gap-2 py-3">
                         <FileText className="size-4 shrink-0 text-[#736357]" aria-hidden="true" />
                         <bdi className="min-w-0 flex-1 break-all">{file.name}</bdi>
                         <span className="rounded bg-[#EDE4D3] ps-2 pe-2 py-1 text-[#594F47]">{isAr ? 'مرفق محلياً — بانتظار المراجعة' : 'Attached locally — pending review'}</span>
-                        <time dateTime={attachedAt} className="w-full text-[#736357]" dir="ltr">{attachedAt.replace('T', ' ')}</time>
+                        <time dateTime={attachedAt} className="w-full text-[#736357]" dir="ltr">{new Date(attachedAt).toLocaleString(isAr ? 'ar-AE' : 'en-AE')}</time>
                       </li>
                     ))}
                   </ul>

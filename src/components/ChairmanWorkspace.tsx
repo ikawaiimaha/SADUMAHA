@@ -189,7 +189,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
           )}
           {winningTheme ? (
             <span className="inline-flex items-center gap-1 rounded-full border border-sadu-brick bg-sadu-brick/10 px-3 py-1 text-[10px] font-bold text-sadu-brick">
-              <Lock className="h-3 w-3" /> {tr("Official Theme Ratified")} </span>
+              <Lock className="h-3 w-3" /> {isBudgetAssigned ? tr('Official Theme Ratified') : (isAr ? 'تم الاختيار - بانتظار اعتماد الميزانية' : 'Selected - Pending Budget Ratification')} </span>
           ) : (
             <span className="inline-flex items-center gap-1 rounded-full border border-sadu-gold bg-sadu-sand px-3 py-1 text-[10px] font-bold text-sadu-charcoal"> {tr("3 Candidate Proposals Under Review")} </span>
           )}
@@ -223,15 +223,15 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <span className="rounded bg-sadu-brick px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white"> {tr("Executive Determination")} </span>
-                  <span className="text-[11px] font-semibold text-sadu-muted"> {tr("Official Institutional Decree")} </span>
+                  <span className="text-[11px] font-semibold text-sadu-muted"> {isBudgetAssigned ? tr('Official Institutional Decree') : (isAr ? 'اختيار مبدئي' : 'Provisional Selection')} </span>
                 </div>
-                <h3 className="font-editorial text-2xl sm:text-3xl font-bold text-sadu-charcoal"> {tr("Official Theme Ratified")} </h3>
-                <p className="text-xs text-sadu-muted leading-relaxed max-w-2xl"> {tr("The Chairman has officially conferred executive ratification upon this biennial theme. This determination is now binding across all biennial departments, curatorial commissions, and open calls.")} </p>
+                <h3 className="font-editorial text-2xl sm:text-3xl font-bold text-sadu-charcoal"> {isBudgetAssigned ? tr('Official Theme Ratified') : (isAr ? 'تم الاختيار - بانتظار اعتماد الميزانية' : 'Selected - Pending Budget Ratification')} </h3>
+                <p className="text-xs text-sadu-muted leading-relaxed max-w-2xl"> {isBudgetAssigned ? (isAr ? 'اعتمد رئيس الدائرة الثيمة والميزانية. تُحال الثيمة إلى قسم التحرير لإعداد النص الرسمي قبل النشر.' : 'The Chairman has ratified the theme and budget. Editorial prepares the official text before publication.') : (isAr ? 'تم اختيار المقترح. لا يكتمل الاعتماد إلا بعد اعتماد الميزانية.' : 'The proposal is selected. Ratification requires budget approval.')} </p>
               </div>
             </div>
             <div className="shrink-0 flex sm:flex-col items-end gap-1">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-600/30 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-800">
-                <ShieldCheck className="h-4 w-4 text-emerald-700" /> {tr("Theme Locked")} </span>
+                <ShieldCheck className="h-4 w-4 text-emerald-700" /> {isBudgetAssigned ? tr('Theme Locked') : (isAr ? 'بانتظار الميزانية' : 'Awaiting Budget')} </span>
             </div>
           </div>
 
@@ -242,8 +242,8 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between border-b border-sadu-gold/40 pb-5">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="rounded-full bg-sadu-brick px-2.5 py-0.5 text-[10px] font-bold text-white uppercase tracking-wider"> {tr("Official Biennial Theme")} </span>
-                  <span className="text-xs font-semibold text-sadu-muted"> {tr("Candidate #")}{approvedIndex! + 1} {tr("Ratified by H.E. Abdullah Al Owais")} </span>
+                  <span className="rounded-full bg-sadu-brick px-2.5 py-0.5 text-[10px] font-bold text-white uppercase tracking-wider"> {isBudgetAssigned ? tr('Official Biennial Theme') : (isAr ? 'المقترح المختار' : 'Selected Proposal')} </span>
+                  <span className="text-xs font-semibold text-sadu-muted"> {tr("Candidate #")}{approvedIndex! + 1} {isBudgetAssigned ? tr('Ratified by H.E. Abdullah Al Owais') : (isAr ? 'اختيار رئيس الدائرة' : 'Chairman’s Selection')} </span>
                 </div>
                 <h4 className="font-editorial text-2xl font-bold text-sadu-charcoal pt-1">
                   {isAr ? winningTheme.arabicName : (winningTheme.englishName || winningTheme.arabicName)}
@@ -285,7 +285,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
             <div className="mt-5 flex flex-col items-start justify-between gap-4 border-t border-sadu-gold/30 pt-4 sm:flex-row sm:items-center">
               <div className="flex items-center gap-2 text-xs text-sadu-muted">
                 <ShieldCheck className="h-4 w-4 text-emerald-700" />
-                <span>{tr("Executive Sign-Off Confirmed by Chairman Al Owais")}</span>
+                <span>{isBudgetAssigned ? tr('Executive Sign-Off Confirmed by Chairman Al Owais') : (isAr ? 'يمكن تغيير الاختيار قبل اعتماد الميزانية' : 'Selection can change before budget ratification')}</span>
               </div>
               <button
                 type="button"
@@ -294,7 +294,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
                 className="inline-flex items-center gap-1.5 rounded-md border border-sadu-gold bg-sadu-sand px-3 py-1.5 text-xs font-bold text-sadu-charcoal transition-colors hover:bg-sadu-gold/30 cursor-pointer"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
-                <span>{tr("Unlock / Change Selection")}</span>
+                <span>{isBudgetAssigned ? tr('Theme Locked') : (isAr ? 'تغيير الاختيار' : 'Change Selection')}</span>
               </button>
             </div>
           </div>
@@ -313,7 +313,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
               <span className="rounded bg-sadu-sand px-2.5 py-1 text-[10px] font-bold text-sadu-brick uppercase tracking-wider border border-sadu-gold/60"> {tr("Phase 2 Delegation")} </span>
             </div>
 
-            <p className="text-xs text-sadu-muted leading-relaxed"> {tr("Theme ratification unlocks official biennial budget assignment. Authorizing this appropriation locks the budget and formally transfers operational authority to Biennial Director Mohammed Al Qaseer to convene the Artist Selection Committee.")} </p>
+            <p className="text-xs text-sadu-muted leading-relaxed"> {isAr ? 'اعتماد الميزانية يثبّت اختيار الثيمة ويقفل الميزانية، ثم يحيل الثيمة إلى قسم التحرير للصياغة المؤسسية والترجمة.' : 'Budget ratification finalizes the theme selection and locks the budget, then routes the theme to Editorial for institutional refinement and translation.'} </p>
 
             <div className="space-y-3 rounded-lg border border-sadu-gold/50 bg-sadu-sand/40 p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -428,7 +428,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
         /* CANDIDATE PROPOSALS (3 SIDE-BY-SIDE CARDS) */
         <div className="space-y-4">
           <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-            <span className="text-xs font-semibold text-sadu-muted"> {tr("Select one candidate proposal to approve and lock as the official biennial theme:")} </span>
+            <span className="text-xs font-semibold text-sadu-muted"> {isAr ? 'اختر مقترحاً، ثم اعتمد الميزانية لإتمام الاعتماد:' : 'Select a proposal, then ratify the budget to finalize approval:'} </span>
             <span className="text-xs font-bold text-sadu-charcoal"> {tr("3 Candidates Under Review")} </span>
           </div>
 

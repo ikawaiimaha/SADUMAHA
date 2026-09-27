@@ -59,13 +59,15 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
   const [arabicText, setArabicText] = useState<string>(
     guidelinesArabic || curatorialBrief || ''
   );
+  const [submittedAt, setSubmittedAt] = useState<Date | null>(null);
   const [newTagInput, setNewTagInput] = useState<string>('');
 
   const handleSubmitToEditorial = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isLocked || !arabicText.trim()) return;
+    if (isLocked || !arabicText.trim() || !onSubmitToEditorial) return;
     onSubmitToEditorial?.(arabicText);
     onUpdateCuratorialBrief?.(arabicText);
+    setSubmittedAt(new Date());
   };
 
   const handleAddTag = (tagToAdd: string) => {
@@ -139,6 +141,20 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
         </div>
       )}
 
+      {ratifiedTheme && <section aria-labelledby="executive-directives-heading" className="mb-6 rounded-xl border border-[#D9D2C5] bg-[#F7F1E6] ps-6 pe-6 py-5 text-start">
+        <h2 id="executive-directives-heading" className="text-xl font-bold">{isAr ? 'التوجيهات التنفيذية' : 'Executive Directives'}</h2>
+        <dl className="mt-4 space-y-4">
+          <div>
+            <dt className="font-semibold text-[#736357]">{isAr ? 'ملاحظات مدير الملتقى' : 'Director’s Advice'}</dt>
+            <dd dir="auto" className="mt-2 whitespace-pre-wrap text-start text-lg leading-relaxed">{ratifiedTheme.directorNotes?.trim() || (isAr ? 'لا توجد ملاحظات إضافية.' : 'No additional advice recorded.')}</dd>
+          </div>
+          <div>
+            <dt className="font-semibold text-[#8B261E]">{isAr ? 'توجيهات رئيس الدائرة' : 'Chairman’s Mandate'}</dt>
+            <dd dir="auto" className="mt-2 whitespace-pre-wrap text-start text-lg leading-relaxed">{ratifiedTheme.chairmanNotes?.trim() || (isAr ? 'لا توجد توجيهات إضافية.' : 'No additional directives recorded.')}</dd>
+          </div>
+        </dl>
+      </section>}
+
       {!isLocked && <section aria-labelledby="published-theme-reference" className="rounded-xl border border-sadu-gold bg-[#F7F1E6] ps-6 pe-6 py-5 text-start space-y-3">
         <h2 id="published-theme-reference" className="font-editorial text-lg font-bold">{isAr ? 'الثيمة الرسمية المنشورة — مرجع للقراءة فقط' : 'Published Official Theme — Read-only Reference'}</h2>
         <p dir="rtl" className="whitespace-pre-wrap text-start text-sm">{themeEssayArabic}</p>
@@ -166,6 +182,10 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
             )}
           </div>
 
+          {submittedAt && <div role="status" className="rounded-lg border border-emerald-300 bg-emerald-50 ps-4 pe-4 py-3 text-start text-emerald-900">
+            <p className="font-semibold">{isAr ? 'تم الإرسال إلى قسم التحرير بنجاح' : 'Successfully Sent to Editorial'}</p>
+            <time dateTime={submittedAt.toISOString()}>{submittedAt.toLocaleTimeString(isAr ? 'ar-AE' : 'en-AE')}</time>
+          </div>}
           <form onSubmit={handleSubmitToEditorial} className="space-y-3">
             <label htmlFor="exhibition-guidelines-arabic" className="block text-xs font-semibold text-sadu-charcoal">
               <span>{tr("Exhibition Guidelines (Arabic)")}</span>
@@ -177,7 +197,7 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
                 required
                 disabled={isLocked}
                 value={arabicText}
-                onChange={e => setArabicText(e.target.value)}
+                onChange={e => { setArabicText(e.target.value); setSubmittedAt(null); }}
                 placeholder="اكتب التوجيهات الفنية والمعايير التنسيقية للمعرض باللغة العربية حصراً..."
                 className={`mt-1.5 w-full rounded-md border p-3 text-xs leading-relaxed ${
                   isLocked
