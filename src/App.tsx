@@ -599,11 +599,17 @@ function SADUApp() {
     );
   };
 
+  const handleAutoNavigate = (role: string) => {
+    if (role === 'DIRECTOR') setActiveRole('BIENNIAL_DIRECTOR');
+    else if (role === 'CHAIRMAN' || role === 'EDITORIAL' || role === 'HIP') setActiveRole(role);
+  };
+
   const renderWorkspace = () => {
     switch (activeRole) {
       case 'CHAIRMAN':
         return (
           <ChairmanWorkspace
+            onAutoNavigate={handleAutoNavigate}
             eventId={EVENT_ID}
             themes={submittedThemes}
             onBudgetAssigned={handleBudgetAssigned}
@@ -617,6 +623,7 @@ function SADUApp() {
       case 'BIENNIAL_DIRECTOR':
         return (
           <DirectorWorkspace
+            onAutoNavigate={handleAutoNavigate}
             submittedThemes={directorThemes}
             onPresentToChairman={handlePresentToChairman}
             nominatedArtists={nominatedArtists}
@@ -663,6 +670,7 @@ function SADUApp() {
               />
             ) : (
               <CommitteeThemeWorkspace
+            onAutoNavigate={handleAutoNavigate}
                 eventId={EVENT_ID}
                 ratifiedTheme={ratifiedTheme}
                 onPresentToChairman={handleSubmitCommitteeThemes}
@@ -675,6 +683,7 @@ function SADUApp() {
       case 'EDITORIAL':
         return (
           <EditorialWorkspace
+            onAutoNavigate={handleAutoNavigate}
             approvedTheme={ratifiedTheme}
             themePolishStatus={themePolishStatus}
             guidelinesArabic={guidelinesArabic}

@@ -1,6 +1,6 @@
 import { useMockupText } from '../i18n/useMockupText';
 import { useI18n } from '../context/I18nContext';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Lock,
   ShieldCheck,
@@ -40,6 +40,7 @@ export interface ChairmanWorkspaceProps {
   initialBudget?: number | null;
   /** Optional current theme workflow status. */
   themeStatus?: 'PENDING_CHAIRMAN_APPROVAL' | 'PENDING_EDITORIAL_POLISH' | 'PUBLISHED' | 'PUBLISHED_OFFICIAL';
+  onAutoNavigate?: (role: string) => void;
   onBackToRoles?: () => void;
 }
 
@@ -51,8 +52,11 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
   initialApprovedIndex = null,
   initialBudget = null,
   themeStatus,
+  onAutoNavigate,
   onBackToRoles,
 }) => {
+  const navigationTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => { clearTimeout(navigationTimer.current); }, []);
   const tr = useMockupText();
   const { isAr } = useI18n();
   const [approvedIndex, setApprovedIndex] = useState<number | null>(initialApprovedIndex);
@@ -77,6 +81,10 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
   const handleAssignBudget = () => {
     if (!isBudgetValid || isBudgetAssigned) return;
     setIsBudgetAssigned(true);
+    clearTimeout(navigationTimer.current);
+    navigationTimer.current = setTimeout(() => {
+      onAutoNavigate?.('EDITORIAL');
+    }, 1500);
     if (winningTheme && onBudgetAssigned) {
       onBudgetAssigned(allocatedBudget, winningTheme, 'PENDING_EDITORIAL_POLISH');
     }

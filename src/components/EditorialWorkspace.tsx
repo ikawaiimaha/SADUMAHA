@@ -1,6 +1,6 @@
 import { useMockupText } from '../i18n/useMockupText';
 import { useI18n } from '../context/I18nContext';
-import React, { useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { 
   Languages, 
   BookOpen, 
@@ -39,6 +39,7 @@ export interface EditorialWorkspaceProps {
   initialEssayArabic?: string;
   initialEssayEnglish?: string;
   isInitiallyPublished?: boolean;
+  onAutoNavigate?: (role: string) => void;
   onBackToRoles?: () => void;
 }
 
@@ -58,8 +59,11 @@ export default function EditorialWorkspace({
   initialEssayArabic,
   initialEssayEnglish,
   isInitiallyPublished = false,
+  onAutoNavigate,
   onBackToRoles,
 }: EditorialWorkspaceProps = {}) {
+  const navigationTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => { clearTimeout(navigationTimer.current); }, []);
   const tr = useMockupText();
   const { isAr } = useI18n();
   // Determine raw theme approved by Chairman in Stage 1
@@ -107,6 +111,10 @@ export default function EditorialWorkspace({
     
     // Locks Stage 2 and unlocks Stage 3 (HIP Curatorial Directives)
     setPublishedLocally(true);
+    clearTimeout(navigationTimer.current);
+    navigationTimer.current = setTimeout(() => {
+      onAutoNavigate?.('HIP');
+    }, 1500);
 
     if (onPublishOfficialTheme) {
       onPublishOfficialTheme({

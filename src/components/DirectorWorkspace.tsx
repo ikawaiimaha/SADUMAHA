@@ -1,6 +1,6 @@
 import { useMockupText } from '../i18n/useMockupText';
 import { useI18n } from '../context/I18nContext';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useRef, useMemo, useState } from 'react';
 import {
   ShieldCheck,
   ShieldAlert,
@@ -46,6 +46,7 @@ export interface DirectorWorkspaceProps {
   /** Curatorial brief from HIP */
   curatorialBrief?: string;
   /** Optional callback to return to role selection */
+  onAutoNavigate?: (role: string) => void;
   onBackToRoles?: () => void;
 }
 
@@ -65,8 +66,11 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
   assignedBudget,
   ratifiedTheme,
   curatorialBrief,
+  onAutoNavigate,
   onBackToRoles,
 }) => {
+  const navigationTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => { clearTimeout(navigationTimer.current); }, []);
   const tr = useMockupText();
   const { isAr } = useI18n();
   // Tabbed layout: Phase 1 (Theme Ratification Queue) or Phase 2 (Artist Veto & Balance Review)
@@ -121,6 +125,10 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
     }));
     onPresentToChairman?.(updatedThemesWithNotes, directorNotes);
     setThemesPresented(true);
+    clearTimeout(navigationTimer.current);
+    navigationTimer.current = setTimeout(() => {
+      onAutoNavigate?.('CHAIRMAN');
+    }, 1500);
     setTimeout(() => setThemesPresented(false), 5000);
   };
 

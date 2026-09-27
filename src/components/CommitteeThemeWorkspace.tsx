@@ -1,6 +1,6 @@
 import { useMockupText } from '../i18n/useMockupText';
 import { useI18n } from '../context/I18nContext';
-import React, { useId, useMemo, useState } from 'react';
+import React, { useEffect, useRef, useId, useMemo, useState } from 'react';
 import { ClipboardList, Send, CheckCircle2, RotateCcw, Sparkles, BookOpen } from 'lucide-react';
 
 export interface CommitteeThemeDraft {
@@ -20,6 +20,7 @@ export interface CommitteeThemeWorkspaceProps {
   ratifiedTheme?: { arabicName: string } | null;
   /** Called with the three completed theme drafts once presented to the Chairman. */
   onPresentToChairman?: (themes: CommitteeThemeDraft[], eventId?: string) => void;
+  onAutoNavigate?: (role: string) => void;
   onBackToRoles?: () => void;
 }
 
@@ -57,8 +58,11 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
   eventId,
   ratifiedTheme,
   onPresentToChairman,
+  onAutoNavigate,
   onBackToRoles,
 }) => {
+  const navigationTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => { clearTimeout(navigationTimer.current); }, []);
   const tr = useMockupText();
   const { isAr } = useI18n();
   const [themes, setThemes] = useState<CommitteeThemeDraft[]>(createEmptyThemes());
@@ -95,6 +99,10 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
     }));
     onPresentToChairman?.(finalized, eventId);
     setIsSubmitted(true);
+    clearTimeout(navigationTimer.current);
+    navigationTimer.current = setTimeout(() => {
+      onAutoNavigate?.('DIRECTOR');
+    }, 1500);
   };
 
   const handleStartNewBatch = () => {
