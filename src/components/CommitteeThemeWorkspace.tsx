@@ -106,6 +106,8 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
   };
 
   const handleStartNewBatch = () => {
+    clearTimeout(navigationTimer.current);
+    navigationTimer.current = undefined;
     if (ratifiedTheme) return;
     setThemes(createEmptyThemes());
     setIsSubmitted(false);
