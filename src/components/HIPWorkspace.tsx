@@ -74,6 +74,24 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
   };
 
   const isLocked = themeStatus !== 'PUBLISHED_OFFICIAL';
+  const lockReason = (() => {
+    if (themeStatus === 'ARABIC_LOCKED') {
+      return {
+        title: isAr ? 'الحالة: بانتظار ترجمة قسم التحرير' : 'Status: Pending Editorial Translation',
+        description: isAr ? 'بانتظار إكمال قسم التحرير للترجمة الإنجليزية ونشر الثيمة الرسمية.' : 'Waiting for Editorial to complete the English translation and publish the official theme.',
+      };
+    }
+    if (themeStatus === 'CHAIRMAN_APPROVED' || themeStatus === 'PENDING_EDITORIAL_POLISH') {
+      return {
+        title: isAr ? 'الحالة: بانتظار الصياغة المؤسسية' : 'Status: Pending Editorial Refinement',
+        description: isAr ? 'اعتمد رئيس الدائرة الثيمة. بانتظار قسم التحرير لإتمام الصياغة المؤسسية والنشر.' : 'The Chairman has ratified the theme. Waiting for Editorial to complete institutional refinement and publication.',
+      };
+    }
+    return {
+      title: isAr ? 'الحالة: بانتظار اعتماد ونشر الثيمة الرسمية' : 'Status: Pending Official Theme Ratification & Publication',
+      description: isAr ? 'لم تكتمل إجراءات اعتماد الثيمة ونشرها. يُفتح إعداد الدليل بعد النشر الرسمي.' : 'Theme ratification and publication are not yet complete. Guidelines become available after official publication.',
+    };
+  })();
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6">
@@ -126,7 +144,7 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
               </div>
             </div>
             {isLocked && (
-              <span className="rounded bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-900 border border-amber-300"> {tr("Status: Pending Editorial Translation")} </span>
+              <span className="rounded bg-amber-100 ps-2 pe-2 py-0.5 text-start text-[10px] font-bold text-amber-900 border border-amber-300"> {lockReason.title} </span>
             )}
           </div>
 
@@ -153,11 +171,11 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
 
             {/* Locked Status Badge or Action Button */}
             {isLocked ? (
-              <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-xs font-semibold text-amber-900 flex items-start gap-2.5">
+              <div className="rounded-md border border-amber-300 bg-amber-50 ps-3 pe-3 py-3 text-start text-xs font-semibold text-amber-900 flex items-start gap-2.5">
                 <Lock className="h-4 w-4 text-amber-700 shrink-0 mt-0.5" />
                 <div>
-                  <strong className="block font-bold">{tr("Status: Pending Editorial Translation")}</strong>
-                  <p className="text-[11px] text-amber-800 font-normal mt-0.5"> {tr("Draft is locked. The Editorial Department is now authorized to draft the official English translation and publish the bilingual brief.")} </p>
+                  <strong className="block font-bold">{lockReason.title}</strong>
+                  <p className="text-[11px] text-amber-800 font-normal mt-0.5"> {lockReason.description} </p>
                 </div>
               </div>
             ) : (
