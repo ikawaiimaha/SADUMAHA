@@ -32,12 +32,12 @@ export function ConfirmedAgreementDocument({contract,invitation,isAr}:{contract:
   const [pdf,setPdf] = useState<{url:string;key:string}>();
   const [failed,setFailed] = useState(false);
   const [retry,setRetry] = useState(0);
-  const key=JSON.stringify(contract);
+  const key=JSON.stringify([contract,isAr]);
   useEffect(()=>{
     let cancelled=false;
     let url:string|undefined;
     setFailed(false);
-    import('../utils/rehearsalAgreementPdf').then(module=>module.buildRehearsalAgreement(contract)).then(blob=>{
+    import('../utils/rehearsalAgreementPdf').then(module=>module.buildRehearsalAgreement(contract,isAr)).then(blob=>{
       if(cancelled)return;
       url=URL.createObjectURL(blob);setPdf({url,key});
     }).catch(()=>{if(!cancelled)setFailed(true);});

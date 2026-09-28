@@ -34,9 +34,9 @@ export function validAgreement(contract?: BilateralContract): boolean {
   const t = contract.tranches;
   const percentages = [t.advancePercentage, t.deliveryPercentage, t.installationPercentage];
   const amounts = [t.advanceAmount, t.deliveryAmount, t.installationAmount];
-  return percentages.every(n => Number.isFinite(n) && n > 0 && n <= 100)
+  return percentages.every(n => Number.isFinite(n) && n >= 0 && n <= 100)
     && Math.abs(percentages.reduce((a, b) => a + b, 0) - 100) < 0.000001
-    && amounts.every((n, index) => Number.isFinite(n) && n > 0 && Math.abs(n - contract.productionCost * percentages[index] / 100) <= 1)
+    && amounts.every((n, index) => Number.isFinite(n) && n >= 0 && (percentages[index] === 0 ? n === 0 : n > 0) && Math.abs(n - contract.productionCost * percentages[index] / 100) <= 1)
     && Math.abs(amounts.reduce((a, b) => a + b, 0) - contract.productionCost) < 0.01;
 }
 
@@ -44,7 +44,7 @@ export function advanceEligible(state: CommissionState): boolean {
   if (state.installationStatus === 'EXECUTIVE_IMPOUND' || damageHold(state)) return false;
   const c = state.contracts[0];
   return validAgreement(c) && (c.status === 'ARTIST_APPROVED' || c.status === 'LOCKED')
-    && state.evidence.prEvidenceGate && state.evidence.technicalEvidenceGate
+    && c.tranches.advanceAmount > 0 && state.evidence.prEvidenceGate && state.evidence.technicalEvidenceGate
     && !state.evidence.financeApprovalGate && !state.ledger?.some(row => row.tranche === 'advance');
 }
 
@@ -52,6 +52,7 @@ export function milestoneEligible(state: CommissionState, tranche: 'delivery' | 
   if (state.installationStatus === 'EXECUTIVE_IMPOUND' || damageHold(state)) return false;
   const c = state.contracts[0];
   return validAgreement(c) && (c.status === 'ARTIST_APPROVED' || c.status === 'LOCKED')
+    && (tranche === 'delivery' ? c.tranches.deliveryAmount : c.tranches.installationAmount) > 0
     && !state.ledger?.some(row => row.tranche === tranche)
     && (tranche === 'delivery' ? state.logistics?.status === 'PHYSICAL_ASSET_RECEIVED'
       : Boolean(state.logistics?.closedAt && state.logistics?.returnReference && state.logistics?.reconciliationReference));

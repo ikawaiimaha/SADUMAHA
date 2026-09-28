@@ -1,7 +1,7 @@
 import type { BilateralContract } from '../types/contractStage6';
 
 /** Rasterized browser text preserves international names without substituting glyphs. */
-export async function buildRehearsalAgreement(c:BilateralContract):Promise<Blob> {
+export async function buildRehearsalAgreement(c:BilateralContract, isAr=false):Promise<Blob> {
   const {jsPDF}=await import('jspdf');
   await document.fonts.ready;
   const pdf=new jsPDF({compress:true});
@@ -26,20 +26,27 @@ export async function buildRehearsalAgreement(c:BilateralContract):Promise<Blob>
     'This document is a prototype terms summary, not a signed legal agreement.',
     'Identity confirmation does not authorize payment or substitute for passport verification.',
   ];
+  if(isAr){
+    const labels:Record<string,string>={'Record':'السجل','Generated from terms sent':'تاريخ إرسال الشروط','Artist legal name':'الاسم القانوني للفنان','Nationality':'الجنسية','Work':'العمل الفني','Medium':'الوسيط','Theme':'الثيمة','Scope':'النطاق','Production grant':'منحة الإنتاج','Venue':'الموقع','Venue clearance reference':'مرجع تصريح الموقع','Shipping':'الشحن','Shipping liability':'مسؤولية الشحن','Crate':'الصندوق','Advance':'الدفعة المقدمة','Delivery':'دفعة التسليم','Completion':'دفعة الإكمال','Special conditions':'الشروط الخاصة'};
+    rows[0]='سدو — نموذج اتفاقية تدريبي';rows[1]='سجل خيالي / غير ملزم / لا إرسال خارجي';
+    for(let i=2;i<rows.length-2;i++){const colon=rows[i].indexOf(':');const label=rows[i].slice(0,colon);if(labels[label])rows[i]=labels[label]+rows[i].slice(colon);}
+    rows[rows.length-2]='هذه الوثيقة ملخص تدريبي للشروط وليست اتفاقية قانونية موقعة.';
+    rows[rows.length-1]='تأكيد الاسم لا يجيز الدفع ولا يحل محل التحقق من جواز السفر.';
+  }
   let y=90;
-  const reset=()=>{context.fillStyle='#F7F1E6';context.fillRect(0,0,1240,1754);context.fillStyle='#1A1817';context.font='26px sans-serif';};
+  const reset=()=>{context.fillStyle='#F7F1E6';context.fillRect(0,0,1240,1754);context.fillStyle='#1A1817';context.font='26px sans-serif';context.direction=isAr?'rtl':'ltr';context.textAlign=isAr?'right':'left';};
   const flush=()=>{pdf.addImage(canvas.toDataURL('image/png'),'PNG',0,0,210,297);};
   reset();
   for(const row of rows){
     let line='';
     for(const character of row){
       if(context.measureText(line+character).width>1080){
-        context.fillText(line,80,y);y+=40;line='';
+        context.fillText(line,isAr?1160:80,y);y+=40;line='';
         if(y>1630){flush();pdf.addPage();reset();y=90;}
       }
       line+=character;
     }
-    context.fillText(line,80,y);y+=55;
+    context.fillText(line,isAr?1160:80,y);y+=55;
     if(y>1630){flush();pdf.addPage();reset();y=90;}
   }
   flush();return pdf.output('blob');

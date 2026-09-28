@@ -406,7 +406,7 @@ function SADUApp() {
     shippingTermsArg?: string,
     resolutionNotes?: string
   ) => {
-    if (!agreementPipelineReady(themePolishStatus, translationStatus, isIsolatedRehearsalMode)) return;
+    if (damageHold(commission) || ['ARCHIVED_CLOSED','EXECUTIVE_IMPOUND'].includes(commission.installationStatus ?? '') || !agreementPipelineReady(themePolishStatus, translationStatus, isIsolatedRehearsalMode)) return;
     const terms = contractTerms as ContractFormState;
     if (!['ARTIST','DEPARTMENT'].includes(terms.shippingLiability ?? '') || !validCrate(terms.crate) || commission.installationStatus === 'EXECUTIVE_IMPOUND') return;
     const approvedDossier = nominatedArtists.find(d => d.id === artistId);
@@ -416,7 +416,7 @@ function SADUApp() {
     if (!['DEPARTMENT', 'HOUSE_OF_WISDOM', 'SHARJAH_ART_MUSEUM'].includes(terms.venue) || (terms.venue !== 'DEPARTMENT' && !terms.venueClearanceReference?.trim()) || commission.ledger?.length) return;
     const percentages = [terms.advancePercentage, terms.interimPercentage, terms.finalPercentage];
     if (!Number.isFinite(terms.productionGrant) || terms.productionGrant <= 0
-      || percentages.some(value => !Number.isFinite(value) || value <= 0 || value > 100)
+      || percentages.some(value => !Number.isFinite(value) || value < 0 || value > 100)
       || Math.abs(percentages.reduce((a, b) => a + b, 0) - 100) > 0.000001) return;
     if (commission.invitation?.status === 'INVITATION_DISPATCHED' || (contracts[0] && !['CONTRACT_DISPUTED','AMENDMENT_UNDER_REVIEW'].includes(contracts[0].status))) return;
     const cleanArtistId = artistId.startsWith('contract-') ? artistId.replace('contract-', '') : artistId;
@@ -514,7 +514,7 @@ function SADUApp() {
     if (!invitation) return;
     setArtists(previous => previous.map(a => a.id === invitation.artistId ? {...a,
       name_en:invitation.legalName ?? a.name_en,
-      status:invitation.status === 'INVITATION_DISPATCHED' ? 'INVITATION_DISPATCHED' : 'CONTRACT_PENDING_SIGNATURE'} : a));
+      status:'CONTRACT_PENDING_SIGNATURE'} : a));
     if (invitation.legalName) setNominatedArtists(previous => previous.map(d => d.id === invitation.artistId ? {...d,artistName:invitation.legalName!} : d));
   }, [commission.invitation]);
   const handleConfirmIdentity = (legalName:string) => {
@@ -525,7 +525,7 @@ function SADUApp() {
   };
   const handleSignContract = (contractId?: string, signerName?: string) => {
     const target = contracts.find(c => c.id === contractId);
-    if (activeRole !== 'ARTIST' || !target || target.status !== 'SENT_TO_ARTIST' || signerName !== target.artistName) return;
+    if (damageHold(commission) || ['ARCHIVED_CLOSED','EXECUTIVE_IMPOUND'].includes(commission.installationStatus ?? '') || activeRole !== 'ARTIST' || !target || target.status !== 'SENT_TO_ARTIST' || signerName !== target.artistName) return;
     setArtists(previous => previous.map(artist => artist.id === target.artistId ? { ...artist, status: 'CONTRACT_EXECUTED' } : artist));
     setContracts(prev =>
       prev.map(c =>
@@ -548,8 +548,8 @@ function SADUApp() {
     proposedGrant?: number
   ) => {
     const target = contracts.find(c => c.id === contractId);
-    if (activeRole !== 'ARTIST' || !target || target.status !== 'SENT_TO_ARTIST' || !justification.trim() || commission.ledger?.length) return;
-    setArtists(rows => rows.map(row => row.id === target.artistId ? {...row, status: 'DIRECTOR_APPROVED'} : row));
+    if (damageHold(commission) || ['ARCHIVED_CLOSED','EXECUTIVE_IMPOUND'].includes(commission.installationStatus ?? '') || activeRole !== 'ARTIST' || !target || target.status !== 'SENT_TO_ARTIST' || !justification.trim() || commission.ledger?.length) return;
+    setArtists(rows => rows.map(row => row.id === target.artistId ? {...row, status: 'CONTRACT_DISPUTED'} : row));
     dispatchCommission({ type: 'CONTRACT_DISPUTED', actor: activeRole, contractId,
       round: { id: `neg-${Date.now()}`, contractId, requestedAt: new Date().toISOString(),
         disputedCategory: category, artistJustification: justification, justification,

@@ -12,7 +12,8 @@ import { AgreementMilestones } from './CommissionSummary';
 import { 
   FileSignature, 
   Send, 
-  DollarSign, 
+  DollarSign,
+  Calculator,
   Truck, 
   Layers, 
   CheckCircle2, 
@@ -76,6 +77,8 @@ export function CoordinatorContractWorkspace({
   
   // Filter incoming global state
   const pendingArtists = artists.filter(a => a.status === 'DIRECTOR_APPROVED');
+  const amendmentArtists = artists.filter(a => a.status === 'CONTRACT_DISPUTED');
+  const editableArtists = [...pendingArtists, ...amendmentArtists];
   const dispatchedArtists = artists.filter(a => ['CONTRACT_PENDING_SIGNATURE','INVITATION_DISPATCHED'].includes(a.status));
 
   const [selectedArtistId, setSelectedArtistId] = useState<string | null>(null);
@@ -97,12 +100,12 @@ export function CoordinatorContractWorkspace({
 
   // Auto-select the first pending artist if none is selected
   useEffect(() => {
-    if (!selectedArtistId && pendingArtists.length > 0) {
-      setSelectedArtistId(pendingArtists[0].id);
-    } else if (pendingArtists.length === 0) {
+    if (!editableArtists.some(a => a.id === selectedArtistId) && editableArtists.length > 0) {
+      setSelectedArtistId(editableArtists[0].id);
+    } else if (editableArtists.length === 0) {
       setSelectedArtistId(null);
     }
-  }, [pendingArtists, selectedArtistId]);
+  }, [artists, selectedArtistId]);
 
   const selectedArtist = artists.find(a => a.id === selectedArtistId);
 
@@ -117,7 +120,7 @@ export function CoordinatorContractWorkspace({
 
   const handleDispatch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!pipelineReady || !form.shippingLiability || !selectedArtistId || !validCrate(form.crate) || !isTrancheValid || !venueReady || !validParticipationScope(form) || form.participationCategory !== 'SINGLE_WORK') return;
+    if (dispatchedSuccess === selectedArtistId || !editableArtists.some(a => a.id === selectedArtistId) || !pipelineReady || !form.shippingMethod.trim() || !form.shippingLiability || !selectedArtistId || !validCrate(form.crate) || !isTrancheValid || !venueReady || !validParticipationScope(form) || form.participationCategory !== 'SINGLE_WORK') return;
 
     
     // 1. Pass the data UP to App.tsx instead of handling it locally
@@ -131,7 +134,7 @@ export function CoordinatorContractWorkspace({
 
   const venueReady = ['DEPARTMENT', 'HOUSE_OF_WISDOM', 'SHARJAH_ART_MUSEUM'].includes(form.venue) && (form.venue === 'DEPARTMENT' || Boolean(form.venueClearanceReference.trim()));
   const totalPercentage = form.advancePercentage + form.interimPercentage + form.finalPercentage;
-  const isTrancheValid = Math.abs(totalPercentage - 100) < 0.000001 && Number.isFinite(form.productionGrant) && form.productionGrant > 0 && [form.advancePercentage, form.interimPercentage, form.finalPercentage].every(n => Number.isFinite(n) && n > 0 && n <= 100);
+  const isTrancheValid = Math.abs(totalPercentage - 100) < 0.000001 && Number.isFinite(form.productionGrant) && form.productionGrant > 0 && [form.advancePercentage, form.interimPercentage, form.finalPercentage].every(n => Number.isFinite(n) && n >= 0 && n <= 100);
 
   return (
     <div className="w-full space-y-6 text-start">
@@ -247,6 +250,10 @@ export function CoordinatorContractWorkspace({
             )}
           </div>
 
+          {amendmentArtists.length > 0 && <section className="rounded border border-[#8B261E] bg-[#F7F1E6] ps-4 pe-4 py-4 space-y-3">
+            <h2>{isAr ? 'طلبات تعديل الاتفاقيات' : 'Agreement Amendment Queue'}</h2>
+            {amendmentArtists.map(artist=><button key={artist.id} type="button" onClick={()=>setSelectedArtistId(artist.id)} aria-pressed={selectedArtistId===artist.id} className="block w-full rounded border ps-3 pe-3 py-3 text-start">{isAr?artist.name_ar:artist.name_en} · CONTRACT_DISPUTED</button>)}
+          </section>}
           {/* Recently Dispatched Queue */}
           <div className="bg-[#FAF7F2] border border-[#D9CEBA] rounded-lg p-4">
             <h2 className="text-xs font-semibold text-[#736357] uppercase tracking-wider mb-2">
@@ -261,7 +268,7 @@ export function CoordinatorContractWorkspace({
                 {dispatchedArtists.map(a => (
                   <div key={a.id} className="py-2 flex items-center justify-between">
                     <span className="text-[#2A2624] font-medium">{isAr ? a.name_ar : a.name_en}</span>
-                    <span className="text-[10px] text-[#8B261E] bg-[#F5E6E4] px-1.5 py-0.5 rounded font-mono"> {a.status === 'INVITATION_DISPATCHED' ? (isAr ? 'بانتظار تأكيد الاسم' : 'AWAITING_IDENTITY') : tr('CONTRACT_PENDING')} </span>
+                    <span className="text-[10px] text-[#8B261E] bg-[#F5E6E4] px-1.5 py-0.5 rounded font-mono"> {invitation?.artistId === a.id && invitation.status === 'INVITATION_DISPATCHED' ? (isAr ? 'بانتظار تأكيد الاسم' : 'AWAITING_IDENTITY') : tr('CONTRACT_PENDING')} </span>
                   </div>
                 ))}
               </div>
@@ -321,14 +328,14 @@ export function CoordinatorContractWorkspace({
                   </label>
                   <div className="relative">
                     <Truck className="w-4 h-4 absolute start-3 top-2.5 text-[#736357]" />
-                    <input
-                      type="text"
-                      id="deal-shipping"
-                      value={tr(form.shippingMethod)}
-                      onChange={e => setForm({ ...form, shippingMethod: e.target.value })}
-                      className="w-full ps-9 pe-3 py-2 bg-white border border-[#D9CEBA] rounded text-sm text-[#2A2624] focus:outline-none focus:border-[#8B261E]"
-                      required
-                    />
+                    <select id="deal-shipping" value={form.shippingMethod} required
+                      onChange={e => setForm({...form, shippingMethod:e.target.value})}
+                      className="w-full ps-9 pe-3 py-2 bg-white border border-[#D9CEBA] rounded text-sm">
+                      <option value="Fine Art Dedicated Freight (Climate Controlled)">{isAr ? 'شحن فني متخصص — منظم من الدائرة' : 'Fine Art Dedicated Freight — SDC Arranged'}</option>
+                      <option value="Air Freight - SDC Covered">{isAr ? 'شحن جوي — على نفقة الدائرة' : 'Air Freight - SDC Covered'}</option>
+                      <option value="Artist Arranged">{isAr ? 'الشحن بترتيب الفنان' : 'Artist Arranged'}</option>
+                      {!['Fine Art Dedicated Freight (Climate Controlled)','Air Freight - SDC Covered','Artist Arranged'].includes(form.shippingMethod) && <option value={form.shippingMethod}>{form.shippingMethod}</option>}
+                    </select>
                   </div>
                 </div>
               </div>
@@ -346,6 +353,16 @@ export function CoordinatorContractWorkspace({
                   </span>
                 </div>
 
+                <label className="block text-sm"><span className="flex gap-2"><Calculator size={18}/>{isAr ? 'نموذج الدفعات' : 'Tranche Structure'}</span>
+                  <select className="mt-2 w-full rounded border bg-white ps-3 pe-3 py-2" value={`${form.advancePercentage}/${form.interimPercentage}/${form.finalPercentage}`}
+                    onChange={e => {if(e.target.value==='custom')return;const [advancePercentage,interimPercentage,finalPercentage]=e.target.value.split('/').map(Number);setForm({...form,advancePercentage,interimPercentage,finalPercentage});}}>
+                    <option value="custom">{isAr ? 'نسب مخصصة' : 'Custom percentages'}</option>
+                    <option value="30/70/0">30% Advance / 70% Post-Delivery</option>
+                    <option value="30/40/30">30% Advance / 40% Delivery / 30% Completion</option>
+                    <option value="50/30/20">50% Advance / 30% Delivery / 20% Completion</option>
+                    {!['30/70/0','30/40/30','50/30/20'].includes(`${form.advancePercentage}/${form.interimPercentage}/${form.finalPercentage}`) && <option value={`${form.advancePercentage}/${form.interimPercentage}/${form.finalPercentage}`}>{isAr ? 'نسب مخصصة' : 'Custom percentages'}</option>}
+                  </select>
+                </label>
                 <div className="grid grid-cols-3 gap-3">
                   <div>
                     <label htmlFor="deal-advance" className="block text-[11px] text-[#736357] mb-1">
@@ -357,7 +374,7 @@ export function CoordinatorContractWorkspace({
                       value={form.advancePercentage}
                       onChange={e => setForm({ ...form, advancePercentage: Number(e.target.value) })}
                       className="w-full px-2 py-1 bg-white border border-[#D9CEBA] rounded text-xs text-center font-mono"
-                      min={0.01} step="any"
+                      min={0} step="any"
                       max={100}
                     />
                   </div>
@@ -371,7 +388,7 @@ export function CoordinatorContractWorkspace({
                       value={form.interimPercentage}
                       onChange={e => setForm({ ...form, interimPercentage: Number(e.target.value) })}
                       className="w-full px-2 py-1 bg-white border border-[#D9CEBA] rounded text-xs text-center font-mono"
-                      min={0.01} step="any"
+                      min={0} step="any"
                       max={100}
                     />
                   </div>
@@ -385,7 +402,7 @@ export function CoordinatorContractWorkspace({
                       value={form.finalPercentage}
                       onChange={e => setForm({ ...form, finalPercentage: Number(e.target.value) })}
                       className="w-full px-2 py-1 bg-white border border-[#D9CEBA] rounded text-xs text-center font-mono"
-                      min={0.01} step="any"
+                      min={0} step="any"
                       max={100}
                     />
                   </div>
@@ -428,11 +445,11 @@ export function CoordinatorContractWorkspace({
               <div className="pt-2 flex items-center justify-end gap-3 border-t border-[#D9CEBA]">
                 <button
                   type="submit"
-                  disabled={!pipelineReady || !form.shippingLiability || !validCrate(form.crate) || !isTrancheValid || !venueReady || !validParticipationScope(form) || form.participationCategory !== 'SINGLE_WORK'}
-                  className="px-5 py-2.5 bg-[#8B261E] hover:bg-[#721F18] text-white text-xs font-semibold rounded-md shadow flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  disabled={dispatchedSuccess === selectedArtistId || !pipelineReady || !form.shippingMethod.trim() || !form.shippingLiability || !validCrate(form.crate) || !isTrancheValid || !venueReady || !validParticipationScope(form) || form.participationCategory !== 'SINGLE_WORK'}
+                  className="ps-5 pe-5 py-2.5 bg-[#8B261E] enabled:hover:bg-[#721F18] text-white text-xs font-semibold rounded-md shadow flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <Send className="w-4 h-4 rtl:rotate-180" />
-                  {existingAgreement ? (isAr ? 'إرسال الاتفاقية المعدلة' : 'Dispatch Revised Agreement') : (isAr ? 'إرسال رابط البوابة الآمن (محاكاة)' : 'Dispatch Secure Portal Link (Rehearsal)')}
+                  {existingAgreement ? (isAr ? 'إرسال الاتفاقية المعدلة' : 'Dispatch Revised Agreement') : (isAr ? 'توليد العقد وإرسال رابط البوابة (محاكاة)' : 'Generate Contract & Dispatch Portal Link (Rehearsal)')}
                 </button>
               </div>
             </form>

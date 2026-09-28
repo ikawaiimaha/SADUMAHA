@@ -992,3 +992,30 @@ test('Coordinator boundaries gate renders a waiting state, then the exact publis
  const published=publishBoundaries(null,'HIP','PUBLISHED_OFFICIAL','PUBLISHED','دليل','Guide',['Restricted Medium: Abstract Ink'],false,[true,true,true],at);
  const html=renderToStaticMarkup(createElement(CuratorialBoundaries,{isAr:false,published}));assert.match(html,/Active Curatorial Boundaries/);assert.match(html,/Restricted Medium: Abstract Ink/);assert.match(html,/None declared/);
 });
+
+
+test('two-tranche 30/70 agreements cannot disburse a zero completion milestone', () => {
+ const two={...contract,tranches:{...contract.tranches,deliveryPercentage:70,deliveryAmount:7000,installationPercentage:0,installationAmount:0}};
+ assert.equal(validAgreement(two),true);
+ let state=reduce(createCommission(),{type:'contracts',update:()=>[two]});
+ state={...state,logistics:{status:'PHYSICAL_ASSET_RECEIVED',receivedAt:at,reference:'receipt',closedAt:at,returnReference:'return',reconciliationReference:'condition'}};
+ assert.equal(milestoneEligible(state,'delivery'),true);
+ assert.equal(milestoneEligible(state,'completion'),false);
+ assert.equal(reduce(state,{type:'record-tranche',actor:'FINANCE',tranche:'completion',at}),state);
+ assert.equal(validAgreement({...two,tranches:{...two.tranches,installationAmount:0.5,deliveryAmount:6999.5}}),false);
+ assert.equal(validAgreement({...two,tranches:{...two.tranches,advancePercentage:-1,deliveryPercentage:101}}),false);
+});
+
+
+import {CoordinatorContractWorkspace} from '../src/components/CoordinatorContractWorkspace';
+import {ContractSecureIntake} from '../src/components/ContractSecureIntake';
+test('contract queues distinguish Director-approved intake from disputed amendments',()=>{
+ const base={name_ar:'فنان',name_en:'Approved Test',nationality:'Test',medium:'Test',category:'EMERGING' as const};
+ const html=renderToStaticMarkup(createElement(CoordinatorContractWorkspace,{isAr:false,artists:[{...base,id:'a',status:'DIRECTOR_APPROVED'},{...base,id:'b',name_en:'Amendment Test',status:'CONTRACT_DISPUTED'},{...base,id:'c',name_en:'Unreviewed Test',status:'PENDING_COMMITTEE_REVIEW'}],onDispatchContract:()=>false}));
+ assert.match(html,/Approved Test/);assert.match(html,/Agreement Amendment Queue/);assert.match(html,/Amendment Test/);assert.doesNotMatch(html,/Unreviewed Test/);
+});
+test('secure intake never offers unauthenticated uploads',()=>{
+ const html=renderToStaticMarkup(createElement(ContractSecureIntake));
+ assert.equal((html.match(/type="file" disabled=""/g)??[]).length,2);
+ assert.match(html,/Sign in at \/pilot/);
+});

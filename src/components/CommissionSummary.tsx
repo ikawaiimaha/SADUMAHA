@@ -24,11 +24,11 @@ export function AgreementMilestones({ contract, isAr }: { contract: BilateralCon
   ];
   return <section className={panel} aria-label={isAr ? 'جدول الاتفاقية' : 'Agreement schedule'}>
     <p className="mb-3 text-base">{isAr ? 'الثيمة المنشورة عند إعداد الاتفاقية:' : 'Published theme when drafted:'} <bdi>{contract.themeArabic ?? (isAr ? 'لم تُنشر بعد' : 'Not published yet')}</bdi></p>
-    <h2 className="font-serif text-xl font-bold mb-3">{isAr ? 'اتفاقية المنسق — ثلاث دفعات' : 'Coordinator agreement — three tranches'}</h2>
+    <h2 className="font-serif text-xl font-bold mb-3">{isAr ? 'اتفاقية المنسق — جدول الدفعات' : 'Coordinator agreement — payment schedule'}</h2>
     <p className="text-sm mb-3">{isAr ? 'الإجمالي' : 'Total'}: <bdi>{contract.productionCost.toLocaleString(isAr ? 'ar-AE' : 'en-AE')} {isAr ? 'درهم' : 'AED'}</bdi></p>
     <div className="overflow-x-auto"><table className="w-full text-sm text-start">
       <thead><tr>{(isAr ? ['المرحلة', 'النسبة', 'المبلغ (درهم)'] : ['Milestone', 'Percentage', 'Amount (AED)']).map(h => <th key={h} scope="col" className="text-start py-2 pe-4">{h}</th>)}</tr></thead>
-      <tbody>{rows.map(([name, percent, amount]) => <tr key={name} className="border-t border-[#D9CEBA]">
+      <tbody>{rows.filter(([,percent])=>Number(percent)>0).map(([name, percent, amount]) => <tr key={name} className="border-t border-[#D9CEBA]">
         <th scope="row" className="text-start py-3 pe-4">{name}</th><td className="pe-4"><bdi>{percent}%</bdi></td><td><bdi>{Number(amount).toLocaleString(isAr ? 'ar-AE' : 'en-AE')}</bdi></td>
       </tr>)}</tbody>
     </table></div>

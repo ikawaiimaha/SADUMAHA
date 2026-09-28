@@ -1,3 +1,4 @@
+import {ContractSecureIntake} from './ContractSecureIntake';
 import {ExhibitionScenario} from './LazyExhibitionScenario';
 import {PaymentReceiptSync,ArtworkFreightOrigins} from './BankingFreightBridge';
 import { LegalIdentityGate, ConfirmedAgreementDocument } from './LegalIdentityGate';
@@ -125,7 +126,7 @@ export default function ArtistPortalWorkspace({
     : isSignedInternal;
 
   const isDisputed = activeContract
-    ? (activeContract.status === 'CONTRACT_DISPUTED' || disputeSubmittedInternal)
+    ? activeContract.status === 'CONTRACT_DISPUTED'
     : disputeSubmittedInternal;
 
   const isUnderReview = activeContract
@@ -211,7 +212,7 @@ export default function ArtistPortalWorkspace({
       {activeContract && <p className="my-3 text-start">{isAr ? 'مسؤولية التأمين أثناء النقل' : 'Transit insurance liability'}: {activeContract.shippingLiability ?? (isAr ? 'غير مسجلة' : 'Not recorded')}</p>}
       {activeContract && conditionState && onSubmitCatalog && <ArtistExecutionBridge key={activeContract.id} state={conditionState} actor="ARTIST" onAction={onSubmitCatalog}/>}
       {activeContract && conditionState && onSubmitCatalog && <CollectionCloseout state={conditionState} actor="ARTIST" onAction={onSubmitCatalog}/>}
-      {activeContract && isSigned && conditionState && onSubmitCatalog && <><ExhibitionScenario/><ArtistAdministrationForm key={activeContract.id} state={conditionState} onAction={onSubmitCatalog}/><PaymentReceiptSync state={conditionState} actor="ARTIST"/><ArtworkFreightOrigins state={conditionState} actor="ARTIST" onAction={onSubmitCatalog}/></>}
+      {activeContract && isSigned && conditionState && onSubmitCatalog && <><ContractSecureIntake/><ExhibitionScenario/><ArtistAdministrationForm key={activeContract.id} state={conditionState} onAction={onSubmitCatalog}/><PaymentReceiptSync state={conditionState} actor="ARTIST"/><ArtworkFreightOrigins state={conditionState} actor="ARTIST" onAction={onSubmitCatalog}/></>}
       {activeContract && conditionState && onSubmitCatalog && <ExhibitionMetadata key={`${activeContract.id}:${conditionState.agreementRevision}`} state={conditionState} contract={activeContract} isAr={isAr} onSubmit={onSubmitCatalog} />}
       {activeContract && isSigned && conditionState && metadataUnlocked(conditionState) && <ArtworkRosterBuilder artistId={activeContract.artistId} isAr={isAr}/>}
       <OfficialPressKit status={activeContract?.status} isAr={isAr} />
@@ -284,7 +285,7 @@ export default function ArtistPortalWorkspace({
             {activeContract?.participationCategory !== 'SOLO_EXHIBITION' && <div className="border border-[#D9D2C5] rounded-md p-5 bg-stone-50/50 mb-6 font-serif text-xs leading-relaxed space-y-3 text-[#5C554E]">
               <p className="font-bold text-[#1A1817] font-sans uppercase tracking-wider text-[11px]">{tr("Key Terms & Conditions Summary:")}</p>
               <p> {tr("1. The artist agrees to produce and deliver the commissioned work in strict accordance with the approved curatorial scope and technical guidelines established by the Head of International Programs (HIP).")} </p>
-              <p> {tr("2. The three percentages and amounts are taken from the Coordinator agreement above. In this fictional scenario, advance authorization additionally requires recorded PR and Technical evidence. Delivery requires a Logistics receipt; Completion requires closure, safe return and condition reconciliation.")} </p>
+              <p> {tr("2. The scheduled percentages and amounts are taken from the Coordinator agreement above. In this fictional scenario, advance authorization additionally requires recorded PR and Technical evidence. Delivery requires a Logistics receipt; Completion requires closure, safe return and condition reconciliation.")} </p>
               <p className="italic text-[#8B4513]"> {tr("\"The Department reserves full administrative authority to modify exhibition terms in alignment with overarching cultural directives. All copyright permissions remain vested with the artist while granting Sharjah Department of Culture reproduction rights for catalog and archival documentation.\"")} </p>
             </div>}
 
@@ -421,10 +422,11 @@ export default function ArtistPortalWorkspace({
                 ) : (
                   <button
                     type="button"
+                    disabled={!isSigned}
                     onClick={() => handleUpload('artwork')}
                     className="flex items-center gap-1.5 bg-[#2C2A29] hover:bg-[#1A1817] text-white px-3.5 py-1.5 rounded text-xs font-medium transition-colors cursor-pointer"
                   >
-                    <Upload className="w-3.5 h-3.5" /> {tr("Upload Imagery")} </button>
+                    <Upload className="w-3.5 h-3.5" /> {tr("Simulate Imagery Receipt")} </button>
                 )}
               </div>
 
@@ -432,7 +434,7 @@ export default function ArtistPortalWorkspace({
 
             <div className="mt-6 p-3 bg-stone-50 rounded border border-stone-200 text-[11px] text-stone-600 flex items-start gap-2">
               <Lock className="w-4 h-4 text-[#8B4513] shrink-0 mt-0.5" />
-              <span> {tr("Confidentiality Notice: This local demonstration stores no real identity files and makes no claim about backend permissions.")} </span>
+              <span> {tr("Rehearsal receipts remain session-only. The separate authenticated intake uploads real files to private Supabase storage; use fictional files for this pilot.")} </span>
             </div>
 
           </div>

@@ -1,3 +1,10 @@
+# 28 September 2026 — Stage 6 configuration and secure intake
+
+Director-approved candidates and disputed agreements have separate Coordinator queues. Dispatch puts the artist in CONTRACT_PENDING_SIGNATURE while the invitation record separately retains the identity-confirmation prerequisite. The legal name remains required before generating the localized, watermarked rehearsal PDF. Amendments preserve Director approval, name and history and return through CONTRACT_DISPUTED; accepted terms are not silently editable.
+
+Shipping presets and 30/70, 30/40/30 and 50/30/20 schedules are available. Zero-value milestones cannot be disbursed. The accepted Artist view reveals private passport/imagery intake using owned, accepted database contracts and Supabase RLS. Rehearsal acceptance does not create or authorize a database agreement. Local schema: supabase/local/contract-intake.sql. No hosted deployment, email dispatch or legally binding signature is implemented. See docs/audits/stage6-contract-intake-2026-09-28.md.
+
+---
 # 28 September 2026 — Stage 3 master-boundaries gate
 
 HIP publishes an immutable CURATORIAL_DIRECTIVES_PUBLISHED snapshot only after theme and bilingual guideline publication, review of medium/style/nationality categories and resolution of Director restriction sign-off. No restrictions is a valid explicit category declaration. Coordinator dashboards and nomination entry remain closed until publication. Committee scouting submissions also require publication. Coordinators see the exact active snapshot; Committee retains nomination decision authority. This gate is session-only and does not claim backend authorization.
