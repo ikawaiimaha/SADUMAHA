@@ -1,3 +1,4 @@
+import { GovernanceDesk, DelegatedRoleGate } from './components/VenueGovernance';
 import { CollectionCloseout } from './components/CollectionCloseout';
 import { MissingDeliverables, FabricationLedger } from './components/DeliverableRouting';
 import { damageHold } from './data/conditionReporting';
@@ -938,6 +939,8 @@ function SADUApp() {
         {!['CHAIRMAN', 'BIENNIAL_DIRECTOR', 'EDITORIAL', 'HIP', 'ROLES', 'PR_PROTOCOL', 'TECHNICAL', 'FINANCE'].includes(activeRole) && (activeRole !== 'PREP_COMMITTEE' || isNominationFormOpen) && (activeRole !== 'COORDINATOR' || activeCoordinatorId === commissionCoordinatorId) && <aside className="border-b border-[#D9CEBA] ps-4 pe-4 py-3 text-start" dir={isAr ? 'rtl' : 'ltr'}>
           <CommissionSummary isAr={isAr} showTechnical={activeRole !== 'PR_PROTOCOL'} />
         </aside>}
+        <GovernanceDesk role={activeRole} pending={activeRole==='PR_PROTOCOL'&&!commission.evidence.prEvidenceGate?['Identity & Travel approval']:activeRole==='HIP'?nominatedArtists.filter(d=>!culturalCleared(d)).map(d=>`Cultural review: ${d.artistName}`):activeRole==='BIENNIAL_DIRECTOR'?nominatedArtists.filter(d=>d.status==='PENDING_DIRECTOR_REVIEW').map(d=>`Director decision: ${d.artistName}`):[]} blockedArtistIds={damageHold(commission)||['ARCHIVED_CLOSED','EXECUTIVE_IMPOUND'].includes(commission.installationStatus??'')?[COMMISSION.id]:[]}/>
+        <DelegatedRoleGate role={activeRole}>
         {renderWorkspace()}
         {commission.installationStatus==='ARCHIVED_CLOSED'&&['COORDINATOR','BIENNIAL_DIRECTOR','HIP'].includes(activeRole)&&<CollectionCloseout state={commission} actor={activeRole}/>}
         {activeRole === 'BIENNIAL_DIRECTOR' && <ExecutiveContractSummary dossiers={nominatedArtists.filter(d=>commission.installationStatus!=='ARCHIVED_CLOSED'||d.id!==COMMISSION.id)} contracts={contracts} isAr={isAr} />}
@@ -962,6 +965,7 @@ function SADUApp() {
             onDispatch={id=>setNominatedArtists(rows=>rows.map(d=>d.id===id&&!(id===COMMISSION.id&&commission.installationStatus==='ARCHIVED_CLOSED')?recordDossierDispatch(d,activeRole,themePolishStatus==='PUBLISHED_OFFICIAL'&&translationStatus==='PUBLISHED',new Date().toISOString()):d))}/>
         </>}
         {Object.hasOwn(ESCALATION_DEPARTMENTS, activeRole) && <EscalationSubmission key={activeRole} actor={activeRole} isAr={isAr} records={executiveEscalations} onSubmit={input => setExecutiveEscalations(rows => submitEscalation(rows, input, activeRole, new Date().toISOString()))} />}
+        </DelegatedRoleGate>
       </main>
 
       {/* Presenter Architecture Drawer (Ctrl+Shift+P / ⌘⇧P) */}

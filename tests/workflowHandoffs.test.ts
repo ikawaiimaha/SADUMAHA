@@ -831,3 +831,23 @@ test('submitted production instructions remain immutable during authorized amend
  assert.equal(edited.history[0].items[0].printingFraming,'Original paper');
  assert.equal(edited.items[0].printingFraming,'Changed');
 });
+import { assignee, clearVenue, emptyGovernance, setDelegation, type Governance } from '../src/data/venueGovernance';
+test('leave routing requires a backup and preserves same-role authority',()=>{
+ assert.equal(setDelegation(emptyGovernance,'HIP',true,''),emptyGovernance);
+ const delegated=setDelegation(emptyGovernance,'HIP',true,'Sample backup');
+ assert.equal(assignee('HIP',delegated.delegations),'HIP:backup');
+ assert.equal(assignee('PR_PROTOCOL',delegated.delegations),'PR_PROTOCOL:primary');
+ assert.equal(assignee('HIP',setDelegation(delegated,'HIP',false,'Sample backup').delegations),'HIP:primary');
+});
+test('venue clearance enforces designated host, readiness, delegated reviewer and idempotent notifications',()=>{
+ const s:Governance={delegations:{},tickets:{one:{id:'one',artistId:'a1',title:'Plinth',venueId:'SHARJAH_ART_MUSEUM',authority:'Museum Curator',coordinator:'Coordinator',vendor:'Sample Vendor',constraints:['Floor protection'],blocked:false,status:'PENDING_VENUE_APPROVAL'}}};
+ assert.equal(clearVenue(s,'one','TECHNICAL:primary',at),s);
+ assert.equal(clearVenue(s,'one','VENUE:HOUSE_OF_WISDOM:primary',at),s);
+ const blocked={...s,tickets:{one:{...s.tickets.one,blocked:true}}};assert.equal(clearVenue(blocked,'one','VENUE:SHARJAH_ART_MUSEUM:primary',at),blocked);
+ const leave=setDelegation(s,'VENUE:SHARJAH_ART_MUSEUM',true,'Backup host');
+ assert.equal(clearVenue(leave,'one','VENUE:SHARJAH_ART_MUSEUM:primary',at),leave);
+ const approved=clearVenue(leave,'one','VENUE:SHARJAH_ART_MUSEUM:backup',at);
+ assert.equal(approved.tickets.one.status,'APPROVED_FOR_INSTALLATION');assert.equal(approved.tickets.one.notifications?.length,2);
+ assert.equal(clearVenue(approved,'one','VENUE:SHARJAH_ART_MUSEUM:backup',at),approved);
+ assert.equal(s.tickets.one.status,'PENDING_VENUE_APPROVAL');
+});
