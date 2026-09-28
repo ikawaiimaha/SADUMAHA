@@ -1,3 +1,4 @@
+import { ArtworkRosterQueue } from './ArtworkRoster';
 import { MissingDeliverables } from './DeliverableRouting';
 import { LiveCatalogAggregator } from './CatalogMetadata';
 import type { CommissionState } from '../types';
@@ -125,6 +126,7 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6">
+      <ArtworkRosterQueue isAr={isAr}/>
       {catalogState && <LiveCatalogAggregator state={catalogState} isAr={isAr}/>}
       <MasterDirectory isAr={isAr} />
       <SharedSpatialLedger isAr={isAr} />

@@ -1,3 +1,4 @@
+import { ArtworkRosterQueue } from './ArtworkRoster';
 import { EditorialAssetLog } from './EditorialAssetLog';
 import { useLocalDraft, isText } from '../hooks/useLocalDraft';
 import { scrollWorkspaceToTop } from '../utils/scrollWorkspaceToTop';
@@ -127,6 +128,7 @@ export default function EditorialWorkspace({
     <div className="min-h-screen bg-[#F7F1E6] p-6 text-[#2C2A29] font-sans text-start" dir={isAr ? 'rtl' : 'ltr'}>
       
       {/* Header */}
+      <ArtworkRosterQueue isAr={isAr}/>
       <header className="mb-8 border-b border-[#D9D2C5] pb-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <span role="status" className="block text-sm text-[#736357]">{draftSaveFailed || guidelineSaveFailed ? (isAr ? 'تعذر حفظ المسودة محلياً' : 'Local draft save failed') : (isAr ? 'المسودات محفوظة في هذا المتصفح فقط' : 'Drafts saved in this browser only')}</span><span className="text-xs uppercase tracking-widest text-[#8C7A6B] font-semibold">{isAr ? 'المرحلة 2 · التحرير والنشر' : 'Stage 2 · Editorial and publication'}</span>

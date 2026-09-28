@@ -717,3 +717,25 @@ test('visa submission is role-bound, idempotent and revokes PR on replacement wi
  assert.equal(changed.visaIntakes?.length,2);
  assert.equal(cleared.evidence.prEvidenceGate,true);
 });
+import { rosterTransition, validArtwork, type ArtworkRoster, type ArtworkLabel } from '../src/data/artworkRoster';
+const label = ():ArtworkLabel => ({id:'a1',titleAr:'ميزان',titleEn:'Balance',year:'2026',medium:'Bronze',height:'10',width:'20',depth:'1',image:new File(['sample'],'sample.png',{type:'image/png'})});
+test('artwork roster enforces bilingual complete labels and image constraints',()=>{
+ const a=label();assert.equal(validArtwork(a),true);
+ for(const patch of [{titleAr:'English'},{titleEn:'ميزان'},{year:'9999'},{height:'0'},{depth:'NaN'},{medium:' '},{image:undefined},{image:new File(['x'],'photo.jpg',{type:'image/jpeg'})}])assert.equal(validArtwork({...a,...patch}),false);
+});
+test('artwork revisions lock atomically and only assigned Coordinator unlocks requested amendments',()=>{
+ const draft:ArtworkRoster={artistId:'artist',status:'DRAFT',items:[label()],history:[],events:[]};
+ assert.equal(rosterTransition({...draft,items:[]},{type:'submit',at},'ARTIST').status,'DRAFT');
+ const locked=rosterTransition(draft,{type:'submit',at},'ARTIST');
+ assert.equal(locked.status,'LOCKED_PENDING_REVIEW');
+ assert.equal(rosterTransition(locked,{type:'submit',at},'ARTIST'),locked);
+ assert.equal(rosterTransition(locked,{type:'edit',items:[]},'ARTIST'),locked);
+ assert.equal(rosterTransition(locked,{type:'unlock',at},'COORDINATOR',true),locked);
+ const requested=rosterTransition(locked,{type:'request',at},'ARTIST');
+ assert.equal(rosterTransition(requested,{type:'unlock',at},'ARTIST',true),requested);
+ assert.equal(rosterTransition(requested,{type:'unlock',at},'COORDINATOR',false),requested);
+ const unlocked=rosterTransition(requested,{type:'unlock',at},'COORDINATOR',true);
+ const edited=rosterTransition(unlocked,{type:'edit',items:[{...label(),titleEn:'Revised'}]},'ARTIST');
+ const revised=rosterTransition(edited,{type:'submit',at},'ARTIST');
+ assert.equal(revised.history.length,2);assert.equal(revised.history[0].items[0].titleEn,'Balance');assert.equal(revised.history[1].items[0].titleEn,'Revised');
+});

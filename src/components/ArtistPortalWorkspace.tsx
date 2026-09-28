@@ -1,3 +1,4 @@
+import { ArtworkRosterBuilder } from './ArtworkRoster';
 import { VisaIntakeForm } from './VisaIntake';
 import type { VisaIntake } from '../data/visaIntake';
 import { MissingDeliverables } from './DeliverableRouting';
@@ -195,6 +196,7 @@ export default function ArtistPortalWorkspace({
 
       {activeContract && <p className="my-3 text-start">{isAr ? 'مسؤولية التأمين أثناء النقل' : 'Transit insurance liability'}: {activeContract.shippingLiability ?? (isAr ? 'غير مسجلة' : 'Not recorded')}</p>}
       {activeContract && conditionState && onSubmitCatalog && <ExhibitionMetadata key={`${activeContract.id}:${conditionState.agreementRevision}`} state={conditionState} contract={activeContract} isAr={isAr} onSubmit={onSubmitCatalog} />}
+      {activeContract && isSigned && <ArtworkRosterBuilder artistId={activeContract.artistId} isAr={isAr}/>}
       <OfficialPressKit status={activeContract?.status} isAr={isAr} />
 
       {activeContract && <AgreementMilestones contract={activeContract} isAr={isAr} />}
