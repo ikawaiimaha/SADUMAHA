@@ -1,3 +1,4 @@
+import {ExhibitionChecklistQueue} from './components/LazyExhibitionScenario';
 import { GovernanceDesk, DelegatedRoleGate } from './components/VenueGovernance';
 import { CollectionCloseout } from './components/CollectionCloseout';
 import { MissingDeliverables, FabricationLedger } from './components/DeliverableRouting';
@@ -961,7 +962,7 @@ function SADUApp() {
         </aside>}
         <GovernanceDesk role={activeRole} pending={activeRole==='PR_PROTOCOL'&&!commission.evidence.prEvidenceGate?['Identity & Travel approval']:activeRole==='BIENNIAL_DIRECTOR'?nominatedArtists.filter(d=>d.status==='PENDING_DIRECTOR_REVIEW').map(d=>`Director decision: ${d.artistName}`):[]} blockedArtistIds={damageHold(commission)||['ARCHIVED_CLOSED','EXECUTIVE_IMPOUND'].includes(commission.installationStatus??'')?[COMMISSION.id]:[]}/>
         <DelegatedRoleGate role={activeRole}>
-        {renderWorkspace()}
+        {renderWorkspace()}{['COORDINATOR','LOGISTICS'].includes(activeRole)&&<ExhibitionChecklistQueue/>}
         {activeRole==='EDITORIAL'&&<LiveCatalogAggregator state={commission} isAr={isAr}/>}
         {commission.installationStatus==='ARCHIVED_CLOSED'&&['COORDINATOR','BIENNIAL_DIRECTOR'].includes(activeRole)&&<CollectionCloseout state={commission} actor={activeRole}/>}
         {activeRole === 'BIENNIAL_DIRECTOR' && <ExecutiveContractSummary dossiers={nominatedArtists.filter(d=>commission.installationStatus!=='ARCHIVED_CLOSED'||d.id!==COMMISSION.id)} contracts={contracts} isAr={isAr} />}

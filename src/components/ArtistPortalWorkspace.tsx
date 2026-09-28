@@ -1,3 +1,4 @@
+import {ExhibitionScenario} from './LazyExhibitionScenario';
 import {PaymentReceiptSync,ArtworkFreightOrigins} from './BankingFreightBridge';
 import { LegalIdentityGate, ConfirmedAgreementDocument } from './LegalIdentityGate';
 import type { PortalInvitation } from '../data/portalInvitation';
@@ -210,7 +211,7 @@ export default function ArtistPortalWorkspace({
       {activeContract && <p className="my-3 text-start">{isAr ? 'مسؤولية التأمين أثناء النقل' : 'Transit insurance liability'}: {activeContract.shippingLiability ?? (isAr ? 'غير مسجلة' : 'Not recorded')}</p>}
       {activeContract && conditionState && onSubmitCatalog && <ArtistExecutionBridge key={activeContract.id} state={conditionState} actor="ARTIST" onAction={onSubmitCatalog}/>}
       {activeContract && conditionState && onSubmitCatalog && <CollectionCloseout state={conditionState} actor="ARTIST" onAction={onSubmitCatalog}/>}
-      {activeContract && isSigned && conditionState && onSubmitCatalog && <><ArtistAdministrationForm key={activeContract.id} state={conditionState} onAction={onSubmitCatalog}/><PaymentReceiptSync state={conditionState} actor="ARTIST"/><ArtworkFreightOrigins state={conditionState} actor="ARTIST" onAction={onSubmitCatalog}/></>}
+      {activeContract && isSigned && conditionState && onSubmitCatalog && <><ExhibitionScenario/><ArtistAdministrationForm key={activeContract.id} state={conditionState} onAction={onSubmitCatalog}/><PaymentReceiptSync state={conditionState} actor="ARTIST"/><ArtworkFreightOrigins state={conditionState} actor="ARTIST" onAction={onSubmitCatalog}/></>}
       {activeContract && conditionState && onSubmitCatalog && <ExhibitionMetadata key={`${activeContract.id}:${conditionState.agreementRevision}`} state={conditionState} contract={activeContract} isAr={isAr} onSubmit={onSubmitCatalog} />}
       {activeContract && isSigned && conditionState && metadataUnlocked(conditionState) && <ArtworkRosterBuilder artistId={activeContract.artistId} isAr={isAr}/>}
       <OfficialPressKit status={activeContract?.status} isAr={isAr} />

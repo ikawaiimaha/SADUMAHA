@@ -1,3 +1,8 @@
+# 28 September 2026 — Authenticated exhibition scenarios
+
+The Artist declares spatial zones and print/video requirements against an accepted, owned database contract. The artwork_checklist JSON is submitted only when private logistics-secure objects exist for every declared zone/category. Submitted records are immutable. Assigned Coordinators and Logistics read structured checklists under RLS. Demo role selection never supplies database authority. Local SQL and rollback tests are retained under supabase/local/exhibition-scenarios.sql and supabase/tests/exhibition-scenarios.sql; no hosted migration was applied. The 50 MB/file pilot limit, authentication requirement and incomplete HTTP upload verification are documented in the audit.
+
+---
 # 28 September 2026 — Committee nomination authority (executive correction)
 
 This correction supersedes earlier HIP nomination/cultural clearance gates. HIP is limited to Stage 3 guidelines and confidential dynamic restriction proposals; activation still requires Director sign-off. Complete Coordinator proposals and Committee scouting submissions enter PENDING_COMMITTEE_REVIEW automatically. The Committee records collective endorsement to PENDING_DIRECTOR_REVIEW or COMMITTEE_REJECTED with mandatory rejection minutes. Recorded decisions are immutable within the session, and assigned Coordinators can read the outcome and minutes.

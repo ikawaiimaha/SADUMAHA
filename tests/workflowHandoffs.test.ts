@@ -927,3 +927,29 @@ test('banking and freight views render dated receipts and per-artwork origin wit
  assert.match(logistics,/Artist must provide/);assert.doesNotMatch(logistics,/Fictional country/);
  assert.match(renderToStaticMarkup(createElement(PaymentReceiptSync,{state:s,actor:'FINANCE'})),/Transaction date/);
 });
+
+import {completeScenario,mediaContentType,type SpatialZone,type ScenarioMedia} from '../src/data/exhibitionScenario';
+test('scenario requires every declared media category for each distinct complete zone',()=>{
+ const zone:SpatialZone={id:'zone1',name:'Wall 1',artworkCount:2,medium:'Print and video',displaySpecifications:'Matte glass',printRequired:true,avRequired:true,darkRoom:true};
+ const print:ScenarioMedia={object_name:'print',scenario_id:'s',zone_id:'zone1',category:'PRINT',file_name:'a.png'};
+ assert.equal(completeScenario([],[]),false);assert.equal(completeScenario([zone],[print]),false);
+ const av={...print,object_name:'video',category:'AV' as const};
+ assert.equal(completeScenario([zone],[print,av]),true);
+ assert.equal(completeScenario([zone,{...zone,id:'zone2'}],[print,av]),false);
+ assert.equal(completeScenario([zone,zone],[print,av]),false);
+ assert.equal(completeScenario([{...zone,displaySpecifications:' '}],[print,av]),false);
+ assert.equal(completeScenario([{...zone,artworkCount:1.5}],[print,av]),false);
+});
+test('scenario media checks category, extension, file header and empty payloads',async()=>{
+ assert.equal(await mediaContentType(new File(['fake'],'forged.png'),'PRINT'),null);
+ assert.equal(await mediaContentType(new File([new Uint8Array([137,80,78,71,13,10,26,10,0])],'sample.png'),'PRINT'),'image/png');
+ assert.equal(await mediaContentType(new File([new Uint8Array([137,80,78,71,13,10,26,10,0])],'sample.png'),'AV'),null);
+ assert.equal(await mediaContentType(new File([],'video.mov'),'AV'),null);
+ assert.equal(await mediaContentType(new File([new Uint8Array([0,0,0,20,102,116,121,112,113,116,32,32])],'sample.mov'),'AV'),'video/quicktime');
+});
+
+import {ExhibitionScenario} from '../src/components/ExhibitionScenario';
+test('scenario submission stays disabled without configured authenticated storage',()=>{
+ const html=renderToStaticMarkup(createElement(ExhibitionScenario));
+ assert.match(html,/Submission is locked/);assert.match(html,/disabled=""[^>]*>إرسال الملفات النهائية/);
+});
