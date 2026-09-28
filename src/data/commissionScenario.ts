@@ -35,30 +35,69 @@ export function advanceEligible(state: CommissionState): boolean {
   const c = state.contracts[0];
   return validAgreement(c) && (c.status === 'ARTIST_APPROVED' || c.status === 'LOCKED')
     && state.evidence.prEvidenceGate && state.evidence.technicalEvidenceGate
-    && !state.evidence.financeApprovalGate;
+    && !state.evidence.financeApprovalGate && !state.ledger?.some(row => row.tranche === 'advance');
+}
+
+export function milestoneEligible(state: CommissionState, tranche: 'delivery' | 'completion'): boolean {
+  const c = state.contracts[0];
+  return validAgreement(c) && (c.status === 'ARTIST_APPROVED' || c.status === 'LOCKED')
+    && !state.ledger?.some(row => row.tranche === tranche)
+    && (tranche === 'delivery' ? state.logistics?.status === 'PHYSICAL_ASSET_RECEIVED'
+      : Boolean(state.logistics?.closedAt && state.logistics?.returnReference && state.logistics?.reconciliationReference));
 }
 
 type Actor = 'PR_PROTOCOL' | 'TECHNICAL' | 'FINANCE' | string;
 export type CommissionAction =
+  | { type: 'receive-asset'; actor: Actor; at: string; reference: string }
+  | { type: 'close-exhibition'; actor: Actor; at: string; returnReference: string; reconciliationReference: string }
+  | { type: 'request-saf'; actor: Actor; at: string; technicians: number; hours: number; rationale: string }
+  | { type: 'record-tranche'; actor: Actor; at: string; tranche: 'delivery' | 'completion' }
   | { type: 'contracts'; update: (contracts: BilateralContract[]) => BilateralContract[] }
   | { type: 'pr-check'; actor: Actor; field: 'passportVerified' | 'visaCleared'; value: boolean }
   | { type: 'technical-check'; actor: Actor; field: 'floorLoadVerified' | 'mountingVerified'; value: boolean }
   | { type: 'record-pr' | 'record-technical' | 'authorize-advance'; actor: Actor; at: string };
 
 function termsKey(c?: BilateralContract): string {
-  return JSON.stringify(c && [c.id, c.productionCost, c.shippingTerms, c.specialConditions,
+  return JSON.stringify(c && [c.id, c.productionCost, c.shippingTerms, c.specialConditions, c.venue, c.venueClearanceReference,
     c.tranches.advancePercentage, c.tranches.advanceAmount, c.tranches.deliveryPercentage,
     c.tranches.deliveryAmount, c.tranches.installationPercentage, c.tranches.installationAmount]);
+}
+
+function recordLedger(state: CommissionState, tranche: 'advance' | 'delivery' | 'completion', at: string): CommissionState {
+  const contract = state.contracts[0];
+  const prefix = tranche === 'completion' ? 'installation' : tranche;
+  const amount = contract.tranches[`${prefix}Amount`];
+  return { ...state,
+    ledger: [...(state.ledger || []), { tranche, amount, at, revision: state.agreementRevision }],
+    contracts: [{ ...contract, tranches: { ...contract.tranches, [`${prefix}Status`]: 'DISBURSED', [`${prefix}DisbursedAt`]: at } }]
+  };
 }
 
 /** Shared transition guard. UI locks are not the only checks; this remains a local demo, not RBAC. */
 export function commissionReducer(state: CommissionState, action: CommissionAction): CommissionState {
   const e = state.evidence;
+  const c = state.contracts[0];
+  const accepted = c?.status === 'ARTIST_APPROVED' || c?.status === 'LOCKED';
+  if (action.type === 'receive-asset' && action.actor === 'LOGISTICS' && accepted && action.reference.trim() && !state.logistics) {
+    return { ...state, logistics: { status: 'PHYSICAL_ASSET_RECEIVED', reference: action.reference.trim(), receivedAt: action.at } };
+  }
+  if (action.type === 'close-exhibition' && action.actor === 'LOGISTICS' && accepted && state.logistics && !state.logistics.closedAt
+    && action.returnReference.trim() && action.reconciliationReference.trim()) {
+    return { ...state, logistics: { ...state.logistics, closedAt: action.at, returnReference: action.returnReference.trim(), reconciliationReference: action.reconciliationReference.trim() } };
+  }
+  if (action.type === 'request-saf' && action.actor === 'TECHNICAL' && c && !state.safRequest
+    && Number.isInteger(action.technicians) && action.technicians > 0 && Number.isFinite(action.hours) && action.hours > 0 && action.rationale.trim()) {
+    return { ...state, safRequest: { technicians: action.technicians, hours: action.hours, rationale: action.rationale.trim(), requestedAt: action.at } };
+  }
+  if (action.type === 'record-tranche' && action.actor === 'FINANCE' && milestoneEligible(state, action.tranche)) {
+    return recordLedger(state, action.tranche, action.at);
+  }
   if (action.type === 'contracts') {
     const contracts = action.update(state.contracts).filter(c => c.artistId === COMMISSION.id).slice(0, 1);
     const before = state.contracts[0];
     const after = contracts[0];
     if (termsKey(before) !== termsKey(after)) {
+      if (state.ledger?.length) return state;
       return { contracts, agreementRevision: state.agreementRevision + 1, evidence: emptyEvidence() };
     }
     const passportChanged = before?.documents.passportUploadedAt !== after?.documents.passportUploadedAt
@@ -86,7 +125,7 @@ export function commissionReducer(state: CommissionState, action: CommissionActi
     return { ...state, evidence: { ...e, technicalEvidenceGate: true, technicalRecordedAt: action.at } };
   }
   if (action.type === 'authorize-advance' && action.actor === 'FINANCE' && advanceEligible(state)) {
-    return { ...state, evidence: { ...e, financeApprovalGate: true, advanceAuthorizedAt: action.at } };
+    return recordLedger({ ...state, evidence: { ...e, financeApprovalGate: true, advanceAuthorizedAt: action.at } }, 'advance', action.at);
   }
   return state;
 }

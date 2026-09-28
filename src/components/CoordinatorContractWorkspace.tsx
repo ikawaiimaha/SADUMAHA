@@ -29,6 +29,8 @@ export interface VettedArtist {
 }
 
 export interface ContractFormState {
+  venue: string;
+  venueClearanceReference: string;
   productionGrant: number;
   shippingMethod: string;
   advancePercentage: number;
@@ -60,10 +62,12 @@ export function CoordinatorContractWorkspace({
   const [dispatchedSuccess, setDispatchedSuccess] = useState<string | null>(null);
 
   const [form, setForm] = useState<ContractFormState>({
+    venue: '',
+    venueClearanceReference: '',
     productionGrant: 45000,
     shippingMethod: 'Fine Art Dedicated Freight (Climate Controlled)',
-    advancePercentage: 40,
-    interimPercentage: 30,
+    advancePercentage: 30,
+    interimPercentage: 40,
     finalPercentage: 30,
     specialConditions: ''
   });
@@ -79,9 +83,19 @@ export function CoordinatorContractWorkspace({
 
   const selectedArtist = artists.find(a => a.id === selectedArtistId);
 
+  const existingAgreement = contracts.find(c => c.artistId === selectedArtistId);
+  useEffect(() => {
+    if (existingAgreement?.status !== 'CONTRACT_DISPUTED') return;
+    setForm({ productionGrant: existingAgreement.productionCost, shippingMethod: existingAgreement.shippingTerms,
+      advancePercentage: existingAgreement.tranches.advancePercentage, interimPercentage: existingAgreement.tranches.deliveryPercentage,
+      finalPercentage: existingAgreement.tranches.installationPercentage, specialConditions: existingAgreement.specialConditions || '',
+      venue: existingAgreement.venue || '', venueClearanceReference: existingAgreement.venueClearanceReference || '' });
+    setDispatchedSuccess(null);
+  }, [selectedArtistId, existingAgreement?.status]);
+
   const handleDispatch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedArtistId || !isTrancheValid) return;
+    if (!selectedArtistId || !isTrancheValid || !venueReady) return;
 
     
     // 1. Pass the data UP to App.tsx instead of handling it locally
@@ -93,6 +107,7 @@ export function CoordinatorContractWorkspace({
 
   const dispatchedArtist = artists.find(a => a.id === dispatchedSuccess);
 
+  const venueReady = ['DEPARTMENT', 'HOUSE_OF_WISDOM', 'SHARJAH_ART_MUSEUM'].includes(form.venue) && (form.venue === 'DEPARTMENT' || Boolean(form.venueClearanceReference.trim()));
   const totalPercentage = form.advancePercentage + form.interimPercentage + form.finalPercentage;
   const isTrancheValid = Math.abs(totalPercentage - 100) < 0.000001 && Number.isFinite(form.productionGrant) && form.productionGrant > 0 && [form.advancePercentage, form.interimPercentage, form.finalPercentage].every(n => Number.isFinite(n) && n > 0 && n <= 100);
 
@@ -312,7 +327,7 @@ export function CoordinatorContractWorkspace({
                   </div>
                   <div>
                     <label htmlFor="deal-post-opening" className="block text-[11px] text-[#736357] mb-1">
-                      {isAr ? 'الدفعة 3: بعد الافتتاح' : 'Tranche 3: Post-Opening'}
+                      {isAr ? 'الدفعة 3: الإكمال والإعادة' : 'Tranche 3: Completion & Return'}
                     </label>
                     <input
                       type="number"
@@ -349,11 +364,21 @@ export function CoordinatorContractWorkspace({
                 />
               </div>
 
+              <section className="rounded border border-[#D9CEBA] bg-[#F7F1E6] ps-4 pe-4 py-4 space-y-3">
+                <label className="block">{isAr ? 'مكان العرض والجهة المسؤولة' : 'Venue and responsible entity'}
+                  <select value={form.venue} onChange={e => setForm({...form, venue: e.target.value, venueClearanceReference: ''})} className="block w-full border ps-3 pe-3 py-2">
+                    <option value="">{isAr ? 'اختر المكان' : 'Select venue'}</option><option value="DEPARTMENT">{isAr ? 'موقع تابع للدائرة' : 'Department venue'}</option><option value="HOUSE_OF_WISDOM">House of Wisdom · Shurooq</option><option value="SHARJAH_ART_MUSEUM">Sharjah Art Museum · Sharjah Museums Authority</option>
+                  </select>
+                </label>
+                {form.venue && form.venue !== 'DEPARTMENT' && <label className="block">{isAr ? 'مرجع موافقة الجهة الخارجية — خيالي' : 'External venue clearance reference — fictional'}<input value={form.venueClearanceReference} onChange={e => setForm({...form, venueClearanceReference: e.target.value})} className="block w-full border ps-3 pe-3 py-2" /></label>}
+                <p>{isAr ? 'لا يمكن إنشاء الاتفاقية لموقع خارجي قبل تسجيل مرجع الموافقة التجريبية.' : 'External venues require a recorded rehearsal clearance before agreement generation.'}</p>
+              </section>
+              {existingAgreement?.status === 'CONTRACT_DISPUTED' && <div className="rounded border border-[#8B261E] ps-4 pe-4 py-3"><h3>{isAr ? 'طلب تعديل الفنان' : 'Artist amendment request'}</h3><p>{existingAgreement.auditTrail.at(-1)?.artistJustification}</p></div>}
               {/* Action Gate Button */}
               <div className="pt-2 flex items-center justify-end gap-3 border-t border-[#D9CEBA]">
                 <button
                   type="submit"
-                  disabled={!isTrancheValid}
+                  disabled={!isTrancheValid || !venueReady}
                   className="px-5 py-2.5 bg-[#8B261E] hover:bg-[#721F18] text-white text-xs font-semibold rounded-md shadow flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <Send className="w-4 h-4 rtl:rotate-180" />

@@ -22,7 +22,7 @@ export function AgreementMilestones({ contract, isAr }: { contract: BilateralCon
   const rows = [
     [isAr ? 'مقدّم' : 'Advance', t.advancePercentage, t.advanceAmount],
     [isAr ? 'التسليم' : 'Delivery', t.deliveryPercentage, t.deliveryAmount],
-    [isAr ? 'بعد الافتتاح' : 'Post-Opening', t.installationPercentage, t.installationAmount],
+    [isAr ? 'الإكمال والإعادة' : 'Completion & Return', t.installationPercentage, t.installationAmount],
   ];
   return <section className={panel} aria-label={isAr ? 'جدول الاتفاقية' : 'Agreement schedule'}>
     <h2 className="font-serif text-xl font-bold mb-3">{isAr ? 'اتفاقية المنسق — ثلاث دفعات' : 'Coordinator agreement — three tranches'}</h2>
@@ -34,9 +34,10 @@ export function AgreementMilestones({ contract, isAr }: { contract: BilateralCon
       </tr>)}</tbody>
     </table></div>
     <p className="mt-3 text-sm">{isAr ? 'شروط الشحن' : 'Shipping terms'}: {tr(contract.shippingTerms)}</p>
+    {contract.venue && <p className="mt-2 text-sm">{isAr ? 'موقع العرض ومرجع الموافقة' : 'Venue and clearance'}: {contract.venue} · {contract.venueClearanceReference || (isAr ? 'موقع تابع للدائرة' : 'Department venue')}</p>}
     {contract.specialConditions && <p className="mt-2 text-sm">{isAr ? 'الشروط الخاصة' : 'Special conditions'}: {contract.specialConditions}</p>}
     <p className="mt-3 text-sm text-[#594F47]">{isAr
-      ? 'قاعدة العرض: المقدّم بعد قبول الاتفاقية وتسجيل أدلة العلاقات العامة والفريق الفني. للتسليم وما بعد الافتتاح أدلة مستقلة لم تُسجّل بعد.'
-      : 'Demo rule: advance follows agreement acceptance and recorded PR and Technical evidence. Delivery and Post-Opening require separate evidence, not yet recorded.'}</p>
+      ? 'قاعدة العرض: المقدّم بعد قبول الاتفاقية وتسجيل أدلة العلاقات العامة والفريق الفني. يتطلب التسليم الاستلام الفعلي؛ ويتطلب الإكمال إغلاق المعرض والإعادة الآمنة وتسوية الحالة.'
+      : 'Demo rule: advance follows agreement acceptance and recorded PR and Technical evidence. Delivery requires physical receipt. Completion requires exhibition closure, safe return and condition reconciliation.'}</p>
   </section>;
 }

@@ -32,6 +32,8 @@ import { ThemeItem } from './ChairmanWorkspace';
 import { CommitteeThemeDraft, isThemeBatchComplete } from './CommitteeThemeWorkspace';
 
 export interface DirectorWorkspaceProps {
+  restrictionProposal?: { tags: string[]; reason: string } | null;
+  onReviewRestrictions?: (approved: boolean) => void;
   /** The 3 theme proposals submitted by the Preparatory Committee */
   submittedThemes?: CommitteeThemeDraft[];
   /** Callback when Director presents the 3 themes (with director's notes) to the Chairman */
@@ -68,6 +70,8 @@ const DEMO_DIRECTOR_NOTES = [
 ];
 
 export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
+  restrictionProposal,
+  onReviewRestrictions,
   submittedThemes,
   onPresentToChairman,
   onReturnToCommittee,
@@ -98,20 +102,21 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
   const [filterStatus, setFilterStatus] = useState<'ALL' | 'PENDING' | 'VETOED' | 'APPROVED'>('ALL');
 
   const [activeVetoArtistId, setActiveVetoArtistId] = useState<string | null>(null);
-  const [selectedVetoReason, setSelectedVetoReason] = useState<string>(VETO_REASONS[0]);
+  const [selectedVetoReason, setSelectedVetoReason] = useState<string>('');
   const [vetoNotes, setVetoNotes] = useState<string>('');
   const [previewDoc, setPreviewDoc] = useState<{ title: string; type: 'cv' | 'mockup'; artistName: string } | null>(null);
 
   // Visual Analytics: Ratio calculation
-  const totalArtists = nominatedArtists.length;
-  const emergingArtists = nominatedArtists.filter(a => a.artistCategory === 'Emerging');
-  const establishedArtists = nominatedArtists.filter(a => a.artistCategory === 'Established');
+  const activeCohort = nominatedArtists.filter(a => a.status !== 'VETOED');
+  const totalArtists = activeCohort.length;
+  const emergingArtists = activeCohort.filter(a => a.artistCategory === 'Emerging');
+  const establishedArtists = activeCohort.filter(a => a.artistCategory === 'Established');
 
   const emergingCount = emergingArtists.length;
   const establishedCount = establishedArtists.length;
 
-  const emergingPct = totalArtists > 0 ? Math.round((emergingCount / totalArtists) * 100) : 50;
-  const establishedPct = totalArtists > 0 ? Math.round((establishedCount / totalArtists) * 100) : 50;
+  const emergingPct = totalArtists > 0 ? Math.round((emergingCount / totalArtists) * 100) : 0;
+  const establishedPct = totalArtists > 0 ? Math.round((establishedCount / totalArtists) * 100) : 0;
 
   const approvedCount = nominatedArtists.filter(a => a.status === 'APPROVED').length;
   const vetoedCount = nominatedArtists.filter(a => a.status === 'VETOED').length;
@@ -161,6 +166,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
   const handleConfirmVeto = (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeVetoArtistId) return;
+    if (!VETO_REASONS.includes(selectedVetoReason)) return;
     onVetoArtist(activeVetoArtistId, selectedVetoReason, vetoNotes);
     setActiveVetoArtistId(null);
     setVetoNotes('');
@@ -193,7 +199,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <span className="rounded bg-sadu-sand px-2 py-0.5 text-[10px] font-bold text-sadu-brick uppercase tracking-wider border border-sadu-gold/60"> {tr("Biennial Directorate · Executive Gate")} </span>
-                <span className="text-xs text-sadu-muted">{tr("Stage 1 & Stage 4")}</span>
+                <span className="text-xs text-sadu-muted">{isAr ? 'المرحلتان 1 و5' : 'Stages 1 & 5'}</span>
               </div>
               <p role="status" className="text-sm text-[#736357]">{notesSaveFailed ? (isAr ? 'تعذر حفظ الملاحظات محلياً' : 'Local notes save failed') : (isAr ? 'مسودة الملاحظات محفوظة في هذا المتصفح فقط' : 'Draft notes saved in this browser only')}</p><h1 className="font-editorial text-2xl font-bold text-sadu-charcoal sm:text-3xl mt-1">
                 {isAr ? 'مساحة عمل مدير الملتقى · الأستاذ محمد إبراهيم القصير' : 'Biennial Director Workspace · Mohammed Al Qaseer'}
@@ -212,6 +218,11 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
           )}
         </div>
 
+        {restrictionProposal && <section className="rounded border border-[#D9CEBA] bg-[#F7F1E6] ps-5 pe-5 py-5 text-start">
+          <h2 className="text-xl font-semibold">{isAr ? 'المرحلة 3 · اعتماد تعديل القيود' : 'Stage 3 · Restriction change approval'}</h2><p>{restrictionProposal.reason}</p><p>{restrictionProposal.tags.join(' · ') || (isAr ? 'إزالة القيود الديناميكية' : 'Remove dynamic restrictions')}</p>
+          <button className="mt-3 rounded bg-[#8B261E] text-white ps-4 pe-4 py-2" onClick={() => onReviewRestrictions?.(true)}>{isAr ? 'اعتماد التعديل' : 'Approve change'}</button>
+          <button className="ms-3 rounded border ps-4 pe-4 py-2" onClick={() => onReviewRestrictions?.(false)}>{isAr ? 'رفض التعديل' : 'Reject change'}</button>
+        </section>}
         {/* Operational Phase Tabs */}
         <div className="mt-4 flex flex-wrap gap-2">
           <button
@@ -240,7 +251,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
             }`}
           >
             <PieChart className="h-4 w-4" />
-            <span>{isAr ? 'المرحلة 4 · مراجعة ترشيحات الفنانين' : 'Stage 4 · Artist nomination review'}</span>
+            <span>{isAr ? 'المرحلة 5 · مراجعة ترشيحات الفنانين' : 'Stage 5 · Artist nomination review'}</span>
             <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${
               activeTab === 'phase2' ? 'bg-white/20 text-white' : 'bg-sadu-sand text-sadu-charcoal'
             }`}>
@@ -367,7 +378,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
             <Scale className="h-5 w-5 text-sadu-brick" />
             <div>
               <h2 className="font-editorial text-lg font-bold text-sadu-charcoal">{tr("Curatorial Cohort Balance Dashboard")}</h2>
-              <p className="text-xs text-sadu-muted">{tr("Visual ratio of Emerging to Established artists in current candidate pool")}</p>
+              <p className="text-xs text-sadu-muted">{isAr ? 'نسبة إرشادية للمرشحين النشطين؛ تستبعد حالات الرفض ولا تفرض حصة إلزامية.' : 'Informational ratio of active candidates; excludes vetoed dossiers and imposes no quota.'}</p>
             </div>
           </div>
           <span className="rounded bg-sadu-sand px-3 py-1 text-xs font-bold text-sadu-charcoal border border-sadu-gold/60"> {tr("Total Nominated Pool:")} {totalArtists} {tr("Artists")} </span>
@@ -583,7 +594,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
                     type="button"
                     onClick={() => {
                       setActiveVetoArtistId(artist.id);
-                      setSelectedVetoReason(VETO_REASONS[0]);
+                      setSelectedVetoReason('');
                     }}
                     className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-md bg-red-700 px-3 py-2 text-xs font-bold text-white shadow-xs hover:bg-red-800 transition-colors cursor-pointer"
                   >
@@ -668,6 +679,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
                   onChange={e => setSelectedVetoReason(e.target.value)}
                   className="w-full rounded-md border border-sadu-gold/70 bg-white p-2 text-xs font-semibold text-sadu-charcoal focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
                 >
+                  <option value="">{isAr ? 'اختر سبب الرفض' : 'Select rejection reason'}</option>
                   {VETO_REASONS.map(reason => (
                     <option key={reason} value={reason}>
                       {tr(reason)}
@@ -699,7 +711,8 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
                 > {tr("Cancel")} </button>
                 <button
                   type="submit"
-                  className="rounded-md bg-red-700 px-4 py-1.5 text-xs font-bold text-white hover:bg-red-800 shadow-xs cursor-pointer"
+                  disabled={!VETO_REASONS.includes(selectedVetoReason)}
+                  className="disabled:opacity-50 disabled:cursor-not-allowed rounded-md bg-red-700 ps-4 pe-4 py-1.5 text-xs font-bold text-white hover:bg-red-800 shadow-xs cursor-pointer"
                 > {tr("Confirm Executive Veto")} </button>
               </div>
             </form>

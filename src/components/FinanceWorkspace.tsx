@@ -2,7 +2,7 @@ import React from 'react';
 import { Lock } from 'lucide-react';
 import type { VettedArtist } from './CoordinatorContractWorkspace';
 import type { CommissionState } from '../types';
-import { advanceEligible } from '../data/commissionScenario';
+import { advanceEligible, milestoneEligible } from '../data/commissionScenario';
 import { AgreementMilestones, CommissionSummary, panel, actionButton } from './CommissionSummary';
 
 export interface FinanceWorkspaceProps {
@@ -10,9 +10,10 @@ export interface FinanceWorkspaceProps {
   state: CommissionState;
   artist?: Pick<VettedArtist, 'id' | 'prCleared' | 'technicalCleared'>;
   onAuthorizeAdvance: () => void;
+  onRecordTranche: (tranche: 'delivery' | 'completion') => void;
 }
 
-export default function FinanceWorkspace({ isAr, state, artist, onAuthorizeAdvance }: FinanceWorkspaceProps) {
+export default function FinanceWorkspace({ isAr, state, artist, onAuthorizeAdvance, onRecordTranche }: FinanceWorkspaceProps) {
   const c = state.contracts[0];
   const e = state.evidence;
   const prCleared = artist?.id === c?.artistId && artist?.prCleared === true && e.prEvidenceGate;
@@ -35,13 +36,17 @@ export default function FinanceWorkspace({ isAr, state, artist, onAuthorizeAdvan
       <p id="advance-help" className="my-4 text-sm">{isAr ? 'قاعدة هذا السيناريو: يلزم تسجيل أدلة العلاقات العامة والفريق الفني معاً. تسجيل الأدلة لا يعتمد المقدّم تلقائياً.' : 'This scenario requires both PR and Technical evidence. Recording evidence never automatically authorizes the advance.'}</p>
       {waitingOn && <p role="status" className="mb-4 rounded border border-[#8B261E]/30 bg-[#F7F1E6] p-3 text-[#8B261E]">{isAr ? `بانتظار اعتماد ${waitingOn}. صرف المقدّم مقفل.` : `Waiting on ${waitingOn} clearance. Advance payment is locked.`}</p>}
       <button className={`${actionButton} inline-flex items-center gap-2`} aria-describedby="advance-help" disabled={!canRelease} onClick={() => { if (canRelease) onAuthorizeAdvance(); }}>
-        {!canRelease && <Lock className="size-4" aria-hidden="true" />}{isAr ? 'صرف الدفعة المقدّمة — محاكاة' : 'Release Advance Payment — simulated'}</button>
+        {!canRelease && <Lock className="size-4" aria-hidden="true" />}{isAr ? 'تسجيل المقدّم في السجل' : 'Record Advance Disbursement in Ledger'}</button>
       <p role="status" className="mt-3 text-sm">{e.financeApprovalGate ? (isAr ? 'سُجّل اعتماد المقدّم في العرض المحلي فقط. لا تحويل مالي.' : 'Advance authorization recorded in the local demo only. No money transferred.') : (isAr ? 'لم يُعتمد المقدّم.' : 'Advance not authorized.')}</p>
       {e.advanceAuthorizedAt && <p className="text-sm mt-2"><bdi>{e.advanceAuthorizedAt}</bdi> · {isAr ? 'نسخة الاتفاقية' : 'Agreement revision'} {state.agreementRevision}</p>}
     </section>
-    <section className={panel}>
-      <h2 className="text-xl font-semibold mb-3">{isAr ? 'التسليم وما بعد الافتتاح' : 'Delivery and Post-Opening'}</h2>
-      <p>{isAr ? 'دفعتان منفصلتان. تبقيان معلقتين حتى إضافة أدلة التسليم وما بعد الافتتاح؛ لا يجمعهما اعتماد نهائي واحد.' : 'Two separate milestones. Both remain pending until their own delivery and post-opening evidence is implemented; there is no combined final clearing action.'}</p>
+    {(['delivery', 'completion'] as const).map(tranche => <section key={tranche} className={panel}>
+      <h2 className="text-xl font-semibold">{tranche === 'delivery' ? (isAr ? 'دفعة التسليم' : 'Delivery tranche') : (isAr ? 'المرحلة 8 · دفعة الإكمال' : 'Stage 8 · Completion tranche')}</h2>
+      <p className="my-3">{tranche === 'delivery' ? (isAr ? 'تتطلب تسجيل الاستلام الفعلي بواسطة اللوجستيات.' : 'Requires PHYSICAL_ASSET_RECEIVED recorded by Logistics.') : (isAr ? 'تتطلب إغلاق المعرض والإعادة الآمنة وتسوية تقرير الحالة.' : 'Requires exhibition closure, safe return and condition reconciliation.')}</p>
+      <button className={actionButton} disabled={!milestoneEligible(state, tranche)} onClick={() => onRecordTranche(tranche)}>{isAr ? 'تسجيل الدفعة في السجل' : 'Record Disbursement in Ledger'}</button>
+    </section>)}
+    <section className={panel}><h2 className="text-xl font-semibold">{isAr ? 'السجل التجريبي لهذه الجلسة' : 'Session rehearsal ledger'}</h2>
+      {(state.ledger || []).map(row => <p key={row.tranche} className="mt-2"><bdi>{row.tranche} · AED {row.amount.toLocaleString()} · {row.at}</bdi></p>)}
     </section>
   </div>;
 }

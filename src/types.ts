@@ -123,6 +123,9 @@ export interface CommissionEvidence {
 }
 
 export interface CommissionState {
+  logistics?: { status: 'PHYSICAL_ASSET_RECEIVED'; reference: string; receivedAt: string; closedAt?: string; returnReference?: string; reconciliationReference?: string };
+  safRequest?: { technicians: number; hours: number; rationale: string; requestedAt: string };
+  ledger?: { tranche: 'advance' | 'delivery' | 'completion'; amount: number; at: string; revision: number }[];
   contracts: import('./types/contractStage6').BilateralContract[];
   agreementRevision: number;
   evidence: CommissionEvidence;

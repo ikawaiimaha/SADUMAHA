@@ -1,3 +1,4 @@
+import { ASSIGNED_COORDINATOR } from '../data/vetting';
 import { useMockupText } from '../i18n/useMockupText';
 import React, { useState } from 'react';
 import {
@@ -28,7 +29,11 @@ export interface NominatedArtistDossier {
   mockupCount: number;
   submittedBy: 'Preparatory Committee' | 'Coordinator';
   submittedAt: string;
-  status: 'PENDING_DIRECTOR_REVIEW' | 'VETOED' | 'APPROVED';
+  assignedCoordinatorId?: string;
+  provenanceFileName?: string;
+  complianceReason?: string;
+  decisionAt?: string;
+  status: 'DRAFT' | 'REJECTED_COMPLIANCE' | 'PENDING_DIRECTOR_REVIEW' | 'VETOED' | 'APPROVED';
   vetoReason?: string;
   vetoNotes?: string;
 }
@@ -49,6 +54,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
   onCancel,
 }) => {
   const tr = useMockupText();
+  const [provenance, setProvenance] = useState<File | null>(null);
   const [artistName, setArtistName] = useState('');
   const [artistCategory, setArtistCategory] = useState<ArtistCategory | ''>('');
   const [nationality, setNationality] = useState('');
@@ -73,11 +79,12 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
   const [submitSuccess, setSubmitSuccess] = useState<boolean>(false);
 
   const isFormValid =
-    artistName.trim() !== '' &&
+    artistName.trim() !== '' && nationality.trim() !== '' && medium.trim() !== '' && proposedWorkTitle.trim() !== '' &&
+    (isCommissioned || Boolean(provenance && provenance.size > 0)) &&
     (artistCategory === 'Emerging' || artistCategory === 'Established') &&
-    (cvUploaded || cvFile !== null) &&
-    (previousWorksUploaded || previousWorks.length > 0) &&
-    (!isCommissioned || newWorkMockupUploaded || newWorkMockup.length > 0);
+    Boolean(cvFile && cvFile.size > 0) &&
+    previousWorks.length > 0 &&
+    (!isCommissioned || newWorkMockup.length > 0);
 
   const checkIsBlocked = () => {
     const normNationality = nationality.trim().toLowerCase();
@@ -106,18 +113,6 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
 
     if (!isFormValid) return;
 
-    // Check against HIP Dynamic Blocklist
-    const matchedBlock = checkIsBlocked();
-    if (matchedBlock) {
-      const alertMsg = 'Submission blocked by current HIP security/administrative directives.';
-      setBlocklistAlert(alertMsg);
-      // Also show native alert for instant user feedback
-      if (typeof window !== 'undefined' && window.alert) {
-        window.alert(alertMsg);
-      }
-      return;
-    }
-
     setBlocklistAlert(null);
 
     const dossier: NominatedArtistDossier = {
@@ -128,12 +123,14 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
       medium: medium.trim() || 'Calligraphic Arts',
       proposedWorkTitle: proposedWorkTitle.trim() || 'Untitled Biennial Proposal',
       isCommissioned,
-      cvFileName: cvFileName || (cvFile ? cvFile.name : 'Artist_Curriculum_Vitae.pdf'),
-      previousWorksCount: previousWorks.length > 0 ? previousWorks.length : 3,
-      mockupCount: newWorkMockup.length > 0 ? newWorkMockup.length : 2,
+      cvFileName: cvFile!.name,
+      assignedCoordinatorId: ASSIGNED_COORDINATOR,
+      provenanceFileName: isCommissioned ? undefined : provenance?.name,
+      previousWorksCount: previousWorks.length,
+      mockupCount: isCommissioned ? newWorkMockup.length : 0,
       submittedBy,
       submittedAt: new Date().toISOString(),
-      status: 'PENDING_DIRECTOR_REVIEW',
+      status: 'DRAFT',
     };
 
     onSubmitNomination(dossier);
@@ -146,6 +143,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
       setNationality('');
       setMedium('');
       setProposedWorkTitle('');
+      setProvenance(null);
       setCvFile(null);
       setCvUploaded(false);
       setCvFileName('');
@@ -166,7 +164,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
               <User className="h-6 w-6" />
             </div>
             <div>
-              <span className="rounded bg-sadu-sand px-2 py-0.5 text-[10px] font-bold text-sadu-brick uppercase tracking-wider border border-sadu-gold/60"> {tr("Stage 3: The Multaqa Protocol")} </span>
+              <span className="rounded bg-sadu-sand px-2 py-0.5 text-[10px] font-bold text-sadu-brick uppercase tracking-wider border border-sadu-gold/60"> {tr("Stage 4: The Multaqa Protocol")} </span>
               <h2 className="font-editorial text-2xl font-bold text-sadu-charcoal mt-0.5"> {tr("Artist Nomination Dossier")} </h2>
               <p className="text-xs text-sadu-muted"> {tr("Collaborative Nomination (")}{tr(submittedBy)}{tr(") · Strict Dossier Schema Enforced")} </p>
             </div>
@@ -213,9 +211,9 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
         <div className="rounded-xl border-2 border-emerald-400 bg-emerald-50 p-4 text-emerald-900 shadow-xs flex items-center gap-3">
           <CheckCircle2 className="h-6 w-6 text-emerald-600 shrink-0" />
           <div>
-            <strong className="text-sm font-bold block">{tr("Dossier Submitted Successfully to Candidate Pool")}</strong>
+            <strong className="text-sm font-bold block">{tr("Draft saved for the assigned Coordinator")}</strong>
             <p className="text-xs text-emerald-800">
-              {tr(artistName)} ({tr(artistCategory)} {tr("Artist) is now routed to Mohammed Al Qaseer for Stage 4 Director Review.")} </p>
+              {tr(artistName)} ({tr(artistCategory)} {tr("Artist) awaits submission by the assigned Coordinator.")} </p>
           </div>
         </div>
       )}
@@ -422,7 +420,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
                   <span className="text-[10px] font-bold text-sadu-brick">{tr("Attach Images")}</span>
                   <input type="file" multiple accept="image/*" className="hidden" onChange={e => {
                     if (e.target.files && e.target.files.length > 0) {
-                      setPreviousWorks(Array.from(e.target.files).map(f => f.name));
+                      setPreviousWorks(Array.from(e.target.files).filter(f => f.size > 0).map(f => f.name));
                       setPreviousWorksUploaded(true);
                     }
                   }} />
@@ -463,7 +461,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
                   <span className="text-[10px] font-bold text-sadu-brick">{tr("Attach Mockups")}</span>
                   <input type="file" multiple accept="image/*,.pdf" className="hidden" onChange={e => {
                     if (e.target.files && e.target.files.length > 0) {
-                      setNewWorkMockup(Array.from(e.target.files).map(f => f.name));
+                      setNewWorkMockup(Array.from(e.target.files).filter(f => f.size > 0).map(f => f.name));
                       setNewWorkMockupUploaded(true);
                     }
                   }} />
@@ -473,16 +471,21 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
           </div>
         </div>
 
+        {!isCommissioned && <label className="block rounded border border-sadu-gold ps-4 pe-4 py-4">{tr('Existing work provenance document (required)')}
+          <input type="file" accept=".pdf,image/*" className="block mt-2" onChange={e => setProvenance(e.target.files?.[0] || null)} />
+          {provenance && <span>{provenance.name}</span>}
+        </label>}
+        <p className="text-sm">{tr('Scouting saves a draft. Only the assigned Coordinator can submit it for compliance vetting.')}</p>
         {/* Submit Action Gate */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-t border-sadu-gold/40 pt-4">
           <span className="text-xs text-sadu-muted">
             {isFormValid ? (
               <span className="text-emerald-700 font-semibold flex items-center gap-1.5">
-                <CheckCircle2 className="h-4 w-4" /> {isCommissioned ? tr('All 5 mandatory schema components attached and validated.') : tr('Historical/existing work schema validated (mockup waived).')}
+                <CheckCircle2 className="h-4 w-4" /> {isCommissioned ? tr('All 5 mandatory schema components attached and validated.') : tr('Existing work images and provenance attached; mockup not required.')}
               </span>
             ) : (
               <span className="text-amber-800 font-semibold flex items-center gap-1.5">
-                <AlertTriangle className="h-4 w-4" /> {isCommissioned ? tr('Required: Name, Category tag, CV, Previous Works, and Mockups.') : tr('Required: Name, Category tag, CV, and Previous Works.')}
+                <AlertTriangle className="h-4 w-4" /> {isCommissioned ? tr('Required: Name, Category tag, CV, Previous Works, and Mockups.') : tr('Required: identity, category, CV, images and provenance.')}
               </span>
             )}
           </span>
@@ -493,7 +496,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
             className="inline-flex items-center justify-center gap-2 rounded-md bg-sadu-brick px-6 py-3 text-xs font-bold text-white shadow-xs transition-colors hover:bg-sadu-brick-dark disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             <Upload className="h-4 w-4" />
-            <span>{tr("Submit Artist Dossier (Multaqa Gate)")}</span>
+            <span>{tr("Save Dossier for Assigned Coordinator")}</span>
           </button>
         </div>
       </form>

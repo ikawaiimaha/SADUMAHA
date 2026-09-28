@@ -62,6 +62,8 @@ export interface ArtistDocumentIntake {
 }
 
 export interface BilateralContract {
+  venue?: string;
+  venueClearanceReference?: string;
   id: string;
   artistId: string;
   artistName: string;

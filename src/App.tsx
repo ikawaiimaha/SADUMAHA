@@ -1,3 +1,5 @@
+import { ASSIGNED_COORDINATOR, submitForVetting } from './data/vetting';
+import LogisticsWorkspace from './components/LogisticsWorkspace';
 import { WorkspaceNavigation, type WorkspaceHandoff } from './components/WorkspaceNavigation';
 import { StoryMode } from './components/StoryMode';
 import { useMockupText } from './i18n/useMockupText';
@@ -30,7 +32,7 @@ import CommitteeThemeWorkspace, { CommitteeThemeDraft, isThemeBatchComplete } fr
 import ChairmanWorkspace, { ThemeItem } from './components/ChairmanWorkspace';
 import HIPWorkspace, { TranslationStatus } from './components/HIPWorkspace';
 import EditorialWorkspace, { ThemePolishStatus } from './components/EditorialWorkspace';
-import DirectorWorkspace from './components/DirectorWorkspace';
+import DirectorWorkspace, { VETO_REASONS } from './components/DirectorWorkspace';
 import ArtistNominationForm, { NominatedArtistDossier } from './components/ArtistNominationForm';
 import { 
   CoordinatorContractWorkspace, 
@@ -72,6 +74,7 @@ import {
 } from 'lucide-react';
 
 export type InstitutionalRole = 
+  | 'LOGISTICS'
   | 'LANDING'
   | 'CHAIRMAN' 
   | 'BIENNIAL_DIRECTOR' 
@@ -162,6 +165,9 @@ function SADUApp() {
   const [curatorialBrief, setCuratorialBrief] = useState<string>(
     'Sharjah Calligraphy Biennial Curatorial Directive: Emphasize the dialogue between classical proportion and avant-garde architectural manifestation. All nominated artists must balance aesthetic script lineage with rigorous spatial experimentation.'
   );
+  const [restrictionProposal, setRestrictionProposal] = useState<{tags: string[]; reason: string} | null>(null);
+  const [restrictionAudit, setRestrictionAudit] = useState<string[]>([]);
+  const [scoutedDossiers, setScoutedDossiers] = useState<NominatedArtistDossier[]>([]);
   const [blocklist, setBlocklist] = useState<string[]>([
     'Restricted Nationality: Country X',
     'Hazardous Medium: Open Flame',
@@ -235,17 +241,20 @@ function SADUApp() {
   };
 
   const handleNominateArtist = (dossier: NominatedArtistDossier) => {
-    setNominatedArtists(prev => [dossier, ...prev]);
+    if (!['PREP_COMMITTEE', 'COORDINATOR'].includes(activeRole)) return;
+    setScoutedDossiers(prev => [{...dossier, status: 'DRAFT', assignedCoordinatorId: ASSIGNED_COORDINATOR}, ...prev]);
     setIsNominationFormOpen(false);
   };
 
   const handleVetoArtist = (id: string, reason: string, notes?: string) => {
+    if (activeRole !== 'BIENNIAL_DIRECTOR' || !VETO_REASONS.includes(reason) || !nominatedArtists.some(a => a.id === id && a.status === 'PENDING_DIRECTOR_REVIEW')) return;
     setNominatedArtists(prev =>
       prev.map(artist =>
         artist.id === id
           ? {
               ...artist,
               status: 'VETOED',
+              decisionAt: new Date().toISOString(),
               vetoReason: reason,
               vetoNotes: notes,
             }
@@ -263,8 +272,9 @@ function SADUApp() {
   };
 
   const handleApproveArtist = (id: string) => {
+    if (activeRole !== 'BIENNIAL_DIRECTOR' || !nominatedArtists.some(a => a.id === id && a.status === 'PENDING_DIRECTOR_REVIEW')) return;
     setNominatedArtists(prev =>
-      prev.map(artist => (artist.id === id ? { ...artist, status: 'APPROVED' } : artist))
+      prev.map(artist => (artist.id === id ? { ...artist, status: 'APPROVED', decisionAt: new Date().toISOString() } : artist))
     );
 
     const target = nominatedArtists.find(a => a.id === id);
@@ -374,6 +384,7 @@ function SADUApp() {
   ) => {
     if (artistId !== COMMISSION.id || activeRole !== 'COORDINATOR') return;
     const terms = contractTerms as ContractFormState;
+    if (!['DEPARTMENT', 'HOUSE_OF_WISDOM', 'SHARJAH_ART_MUSEUM'].includes(terms.venue) || (terms.venue !== 'DEPARTMENT' && !terms.venueClearanceReference?.trim()) || commission.ledger?.length) return;
     const percentages = [terms.advancePercentage, terms.interimPercentage, terms.finalPercentage];
     if (!Number.isFinite(terms.productionGrant) || terms.productionGrant <= 0
       || percentages.some(value => !Number.isFinite(value) || value <= 0 || value > 100)
@@ -391,7 +402,7 @@ function SADUApp() {
     setNominatedArtists(prev =>
       prev.map(artist =>
         artist.id === artistId || `contract-${artist.id}` === artistId
-          ? { ...artist, status: 'APPROVED' }
+          ? { ...artist, status: 'APPROVED', decisionAt: new Date().toISOString() }
           : artist
       )
     );
@@ -438,6 +449,8 @@ function SADUApp() {
         productionCost,
         shippingTerms: shippingMethod,
         specialConditions: terms.specialConditions,
+        venue: terms.venue,
+        venueClearanceReference: terms.venueClearanceReference,
         cancellationClauseMandatory: true,
         status: 'SENT_TO_ARTIST',
         draftedAt: existing?.draftedAt || new Date().toISOString(),
@@ -501,6 +514,9 @@ function SADUApp() {
     justification: string,
     proposedGrant?: number
   ) => {
+    const target = contracts.find(c => c.id === contractId);
+    if (activeRole !== 'ARTIST' || !target || target.status !== 'SENT_TO_ARTIST' || !justification.trim() || commission.ledger?.length) return;
+    setArtists(rows => rows.map(row => row.id === target.artistId ? {...row, status: 'DIRECTOR_APPROVED'} : row));
     setContracts(prev =>
       prev.map(c => {
         if (c.id !== contractId) return c;
@@ -619,6 +635,13 @@ function SADUApp() {
         return (
           <DirectorWorkspace
             onAutoNavigate={handleAutoNavigate}
+            restrictionProposal={restrictionProposal}
+            onReviewRestrictions={approved => {
+              if (activeRole !== 'BIENNIAL_DIRECTOR' || !restrictionProposal) return;
+              if (approved) setBlocklist(restrictionProposal.tags);
+              setRestrictionAudit(rows => [...rows, `${new Date().toISOString()} · Director · ${approved ? 'APPROVED' : 'REJECTED'} · ${restrictionProposal.reason} · ${restrictionProposal.tags.join(', ')}`]);
+              setRestrictionProposal(null);
+            }}
             submittedThemes={directorThemes}
             onReturnToCommittee={handleReturnToCommittee}
             onPresentToChairman={handlePresentToChairman}
@@ -705,7 +728,12 @@ function SADUApp() {
             curatorialBrief={curatorialBrief}
             onUpdateCuratorialBrief={setCuratorialBrief}
             blocklist={blocklist}
-            onUpdateBlocklist={setBlocklist}
+            restrictionPending={Boolean(restrictionProposal)}
+            restrictionAudit={restrictionAudit}
+            onUpdateBlocklist={(tags, reason) => {
+              if (activeRole !== 'HIP' || !reason.trim() || restrictionProposal) return;
+              setRestrictionProposal({ tags, reason: reason.trim() });
+            }}
             ratifiedTheme={ratifiedTheme}
           />
         );
@@ -713,11 +741,26 @@ function SADUApp() {
       case 'COORDINATOR':
         return (
           <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <section className="rounded border border-[#D9CEBA] bg-[#F7F1E6] ps-5 pe-5 py-5 space-y-3 text-start">
+              <h2 className="text-xl font-semibold">{isAr ? 'المرحلة 4 · مكتب المنسق المكلّف' : 'Stage 4 · Assigned Coordinator desk'}</h2>
+              <p>{ASSIGNED_COORDINATOR}</p>
+              <details><summary className="cursor-pointer">{isAr ? 'إعداد ملف ترشيح' : 'Prepare nomination dossier'}</summary><ArtistNominationForm submittedBy="Coordinator" onSubmitNomination={handleNominateArtist} /></details>
+              {scoutedDossiers.map(d => <article key={d.id} className="border-t border-[#D9CEBA] py-3"><h3 className="font-semibold">{d.artistName} · {d.proposedWorkTitle}</h3><p>{d.status} · {d.assignedCoordinatorId}</p><p>{d.complianceReason}</p>
+                <button disabled={d.status !== 'DRAFT' || d.assignedCoordinatorId !== ASSIGNED_COORDINATOR} className="mt-2 rounded bg-[#8B261E] text-white ps-4 pe-4 py-2 disabled:opacity-50" onClick={() => {
+                  const submitted = submitForVetting(d, activeRole, ASSIGNED_COORDINATOR, blocklist);
+                  if (!submitted) return;
+                  setScoutedDossiers(rows => rows.map(row => row.id === d.id ? submitted : row));
+                  if (submitted.status === 'PENDING_DIRECTOR_REVIEW') setNominatedArtists(rows => [...rows, submitted]);
+                }}>{isAr ? 'إرسال للتدقيق' : 'Submit for Vetting'}</button>
+              </article>)}
+              {nominatedArtists.filter(d => d.status === 'VETOED').map(d => <p key={d.id} role="status">{d.artistName} · {d.vetoReason} · {d.vetoNotes} · {d.decisionAt}</p>)}
+            </section>
+            <p className="my-4 text-sm text-[#736357]">{isAr ? 'التعاقد والتنفيذ في هذه المحاكاة مخصصان لعمل أفق كوفي؛ ملفات الترشيح الأخرى مخصصة لعرض التدقيق والقرارات.' : 'Contracting and execution in this rehearsal use Kufic Horizon only; other nominations demonstrate vetting and executive decisions.'}</p>
             {/* Stage 6: Bilateral Contracting Workspace */}
             {activeRole === 'COORDINATOR' && (
               <CoordinatorContractWorkspace 
                 isAr={isRtl} 
-                artists={artists}
+                artists={artists.filter(artist => artist.id === COMMISSION.id)}
                 contracts={contracts}
                 onDispatchContract={handleDispatchContract} 
               />
@@ -746,11 +789,17 @@ function SADUApp() {
       case 'TECHNICAL':
         return <TechnicalWorkspace isAr={isAr} state={commission}
           onCheck={(field, value) => dispatchCommission({ type: 'technical-check', actor: activeRole, field, value })}
+          onRequestSAF={(technicians, hours, rationale) => dispatchCommission({type: 'request-saf', actor: activeRole, technicians, hours, rationale, at: new Date().toISOString()})}
           onClearTechnical={handleClearTechnical} />;
 
+      case 'LOGISTICS':
+        return <LogisticsWorkspace isAr={isAr} state={commission} onRecord={action => {
+          if (activeRole === 'LOGISTICS') dispatchCommission(action);
+        }} />;
       case 'FINANCE':
         return <FinanceWorkspace isAr={isAr} state={commission}
           artist={artists.find(artist => artist.id === contracts[0]?.artistId)}
+          onRecordTranche={tranche => dispatchCommission({type: 'record-tranche', actor: activeRole, tranche, at: new Date().toISOString()})}
           onAuthorizeAdvance={() => {
             const artist = artists.find(artist => artist.id === contracts[0]?.artistId);
             if (artist?.prCleared !== true || artist?.technicalCleared !== true) return;
@@ -802,7 +851,7 @@ function SADUApp() {
         const storyRoles: Record<string, InstitutionalRole> = {
           DIRECTORATE: 'CHAIRMAN', SDC_COORDINATOR: 'COORDINATOR', COMMITTEE: 'PREP_COMMITTEE',
           EDITORIAL: 'EDITORIAL', SAF_TECHNICIAN: 'TECHNICAL', PR_PROTOCOL: 'PR_PROTOCOL',
-          FINANCE: 'FINANCE', ARTIST: 'ARTIST',
+          FINANCE: 'FINANCE', ARTIST: 'ARTIST', LOGISTICS: 'LOGISTICS',
         };
         setActiveRole(storyRoles[role] ?? 'ROLES');
       }} />;

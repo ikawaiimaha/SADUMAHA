@@ -234,7 +234,7 @@ export default function ArtistPortalWorkspace({
             <div className="border border-[#D9D2C5] rounded-md p-5 bg-stone-50/50 mb-6 font-serif text-xs leading-relaxed space-y-3 text-[#5C554E]">
               <p className="font-bold text-[#1A1817] font-sans uppercase tracking-wider text-[11px]">{tr("Key Terms & Conditions Summary:")}</p>
               <p> {tr("1. The artist agrees to produce and deliver the commissioned work in strict accordance with the approved curatorial scope and technical guidelines established by the Head of International Programs (HIP).")} </p>
-              <p> {tr("2. The three percentages and amounts are taken from the Coordinator agreement above. In this fictional scenario, advance authorization additionally requires recorded PR and Technical evidence. Delivery and Post-Opening remain separate pending milestones.")} </p>
+              <p> {tr("2. The three percentages and amounts are taken from the Coordinator agreement above. In this fictional scenario, advance authorization additionally requires recorded PR and Technical evidence. Delivery requires a Logistics receipt; Completion requires closure, safe return and condition reconciliation.")} </p>
               <p className="italic text-[#8B4513]"> {tr("\"The Department reserves full administrative authority to modify exhibition terms in alignment with overarching cultural directives. All copyright permissions remain vested with the artist while granting Sharjah Department of Culture reproduction rights for catalog and archival documentation.\"")} </p>
             </div>
 
@@ -303,7 +303,7 @@ export default function ArtistPortalWorkspace({
                     className="flex items-center gap-2 bg-[#8B4513] hover:bg-[#6e350f] disabled:opacity-40 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-md text-xs font-bold shadow-xs transition-colors cursor-pointer"
                   >
                     <FileCheck className="w-4 h-4" />
-                    <span>{tr("Accept Demo Agreement")}</span>
+                    <span>{isAr ? 'محاكاة قبول الاتفاقية' : 'Simulate Agreement Acceptance'}</span>
                   </button>
                 )}
               </div>

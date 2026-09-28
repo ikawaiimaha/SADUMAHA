@@ -12,7 +12,7 @@ const ROLE_GROUPS: { ar: string; en: string; roles: [InstitutionalRole, string, 
   { ar: 'التنفيذ والتعاقد', en: 'Delivery & agreements', roles: [
     ['COORDINATOR', 'المنسق العام', 'Coordinator'], ['ARTIST', 'الفنان', 'Artist'],
     ['PR_PROTOCOL', 'التشريفات والعلاقات', 'PR & Protocol'], ['TECHNICAL', 'الفريق الفني', 'Technical'],
-    ['FINANCE', 'الشؤون المالية', 'Finance'],
+    ['FINANCE', 'الشؤون المالية', 'Finance'], ['LOGISTICS', 'اللوجستيات والإعادة', 'Logistics & Return'],
   ] },
 ];
 
@@ -32,6 +32,8 @@ export function WorkspaceNavigation({ role, onNavigate, isAr, onToggleLanguage, 
 }) {
   const control = 'inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-[#D9CEBA] bg-white ps-3 pe-3 py-2 text-sm text-[#51453B] hover:bg-[#EDE4D3] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8B261E]';
   return <header dir={isAr ? 'rtl' : 'ltr'} className="sticky top-0 z-50 border-b border-[#D9CEBA] bg-[#F7F1E6] text-[#2C2A29] shadow-sm">
+    <p className="border-b border-[#D9CEBA] ps-4 pe-4 py-2 text-center text-xs" dir="ltr">Guided rehearsal • fictional records • no external actions</p>
+    <p className="ps-4 pe-4 py-1 text-center text-xs text-[#736357]">{isAr ? 'العقود والمراجعات الفنية والاعتمادات تخص هذه الجلسة فقط؛ ليست سجلات قانونية ثابتة.' : 'Contracts, engineering reviews and approvals are session-bound prototype state, not immutable legal records.'}</p>
     <nav aria-label={isAr ? 'مساحات العمل' : 'Workspaces'} className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 ps-4 pe-4 py-3">
       <div className="me-auto flex items-baseline gap-2">
         <span className="font-serif text-2xl font-bold text-[#8B261E]">{isAr ? 'سدو' : 'SADU'}</span>

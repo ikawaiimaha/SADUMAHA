@@ -30,7 +30,9 @@ export interface HIPWorkspaceProps {
   curatorialBrief?: string;
   onUpdateCuratorialBrief?: (brief: string) => void;
   blocklist: string[];
-  onUpdateBlocklist: (tags: string[]) => void;
+  restrictionPending?: boolean;
+  restrictionAudit?: string[];
+  onUpdateBlocklist: (tags: string[], reason: string) => void;
   ratifiedTheme?: ThemeItem | null;
   onBackToRoles?: () => void;
 }
@@ -54,12 +56,15 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
   onUpdateCuratorialBrief,
   blocklist,
   onUpdateBlocklist,
+  restrictionPending,
+  restrictionAudit = [],
   ratifiedTheme,
   onBackToRoles,
 }) => {
   const tr = useMockupText();
   const { isAr } = useI18n();
   const [arabicText, setArabicText, saveFailed] = useLocalDraft<string>(`sadu:draft:v1:hip:${themeEssayArabic || ''}`, guidelinesArabic || curatorialBrief || '', isText);
+  const [restrictionReason, setRestrictionReason] = useState('');
   const [newTagInput, setNewTagInput] = useState<string>('');
 
   const handleSubmitToEditorial = (e: React.FormEvent) => {
@@ -70,15 +75,17 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
   };
 
   const handleAddTag = (tagToAdd: string) => {
+    if (!restrictionReason.trim() || restrictionPending) return;
     const trimmed = tagToAdd.trim();
     if (!trimmed) return;
     if (blocklist.some(t => t.toLowerCase() === trimmed.toLowerCase())) return;
-    onUpdateBlocklist([...blocklist, trimmed]);
+    onUpdateBlocklist([...blocklist, trimmed], restrictionReason);
     setNewTagInput('');
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
-    onUpdateBlocklist(blocklist.filter(t => t.toLowerCase() !== tagToRemove.toLowerCase()));
+    if (!restrictionReason.trim() || restrictionPending) return;
+    onUpdateBlocklist(blocklist.filter(t => t.toLowerCase() !== tagToRemove.toLowerCase()), restrictionReason);
   };
 
   const isLocked = themeStatus !== 'PUBLISHED_OFFICIAL';
@@ -273,7 +280,7 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
             <button
               type="button"
               onClick={() => handleAddTag(newTagInput)}
-              disabled={!newTagInput.trim()}
+              disabled={!newTagInput.trim() || restrictionPending || !restrictionReason.trim()}
               className="inline-flex items-center gap-1 rounded-md bg-sadu-brick px-3.5 py-2 text-xs font-bold text-white hover:bg-sadu-brick-dark disabled:opacity-50 cursor-pointer"
             >
               <Plus className="h-3.5 w-3.5" />
@@ -281,6 +288,9 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
             </button>
           </div>
 
+          <label className="block text-sm">{isAr ? 'مبرر تعديل القيود — يتطلب موافقة المدير' : 'Restriction change reason — Director sign-off required'}<textarea value={restrictionReason} onChange={e => setRestrictionReason(e.target.value)} className="block w-full border border-sadu-gold ps-3 pe-3 py-2" /></label>
+          <p role="status" className="text-sm">{restrictionPending ? (isAr ? 'طلب تعديل معلّق؛ القيود النشطة لم تتغير.' : 'Change pending; active restrictions remain unchanged.') : (isAr ? 'كل إضافة أو إزالة تُحال إلى المدير قبل التطبيق.' : 'Every addition or removal is proposed to the Director before activation.')}</p>
+          {restrictionAudit.map((entry, index) => <p key={index} className="text-xs" dir="ltr">{entry}</p>)}
           {/* Quick Presets */}
           <div>
             <span className="block text-[11px] font-semibold text-sadu-muted mb-1">{tr("Quick Directives:")}</span>
@@ -291,7 +301,7 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
                   <button
                     key={preset}
                     type="button"
-                    disabled={isAdded}
+                    disabled={isAdded || restrictionPending || !restrictionReason.trim()}
                     onClick={() => handleAddTag(preset)}
                     className={`rounded px-2 py-0.5 text-[10px] font-semibold transition-colors ${
                       isAdded
@@ -323,6 +333,7 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
                     <span>{tr(tag)}</span>
                     <button
                       type="button"
+                      disabled={restrictionPending || !restrictionReason.trim()}
                       onClick={() => handleRemoveTag(tag)}
                       className="ms-1 text-red-500 hover:text-red-800 cursor-pointer"
                       title={tr("Remove restriction")}

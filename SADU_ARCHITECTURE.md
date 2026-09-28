@@ -1,3 +1,15 @@
+# 28 September 2026 — Owner clarification: split payments and accountable handoffs
+
+This update supersedes earlier conflicting payment and stage wording. All records remain fictional and session-bound. Browser-persisted text drafts do not restore approvals.
+
+- Stage 3: HIP proposes dynamic restriction changes with a reason; Director approves or rejects before activation. Changes are logged within the session.
+- Stage 4: scouts prepare dossiers; the assigned demo Coordinator alone submits for vetting. Commissioned works require mockups; existing works require images and provenance. Matching active restrictions excludes dossiers from the Director queue.
+- Stage 5: Emerging/Established ratio is informational, excludes vetoed dossiers, and imposes no numeric quota. A veto requires an explicit institutional reason and returns feedback to Coordinator.
+- Stage 6: external venues require a fictional clearance reference before agreement generation. Artist amendment returns to Coordinator without repeated Stage 5 approval. No live legal signatures.
+- Stage 7: Advance requires accepted agreement and PR/Technical evidence, never physical arrival. Delivery requires Logistics PHYSICAL_ASSET_RECEIVED. SAF technician requests are separate from structural evidence and do not imply external allocation.
+- Stage 8: Completion requires exhibition closure, safe return reference and condition reconciliation reference. Finance records each tranche separately in a session ledger. No banking actions occur.
+- Session demo uses one assigned Coordinator and the Kufic Horizon commission for contracting/logistics/finance. Production identity, external integrations and multi-commission execution remain outside this prototype.
+
 # 26 September 2026 — Fictional commission remediation (supersedes conflicting rules below)
 
 The owner explicitly revised the Stage 6–7 design. Earlier statements calling this file immutable do not prevent this authorized change. This document is a prototype specification, not an institutional delegation instrument.
