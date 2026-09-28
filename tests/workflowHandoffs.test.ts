@@ -692,3 +692,28 @@ test('fabrication requests remain separate from disposal, installation and Finan
  const ready=readyFabrication(rows,'f1','TECHNICAL',at);assert.equal(ready[0].status,'READY_FOR_INSTALL');assert.equal(ready[0].disposition,'DISCARD');
  assert.equal(readyFabrication(ready,'f1','TECHNICAL',at),ready);
 });
+import { validVisaIntake, validPassportPDF, pdfHasSignature, type VisaIntake } from '../src/data/visaIntake';
+const visa = ():VisaIntake => ({id:'visa-1',contractId:contract.id,passportNumber:'DEMO123',expiryDate:'2028-10-01',motherName:'Sample',nationality:'Sample',passport:new File(['%PDF-1.4 sample'], 'sample.pdf',{type:'application/pdf'}),submittedAt:at});
+test('visa intake rejects invalid dates, incomplete companion consent and non-PDF files',async()=>{
+ const v=visa();assert.equal(validVisaIntake(v),true);
+ for(const expiryDate of ['2027-02-30','2026-01-01','invalid'])assert.equal(validVisaIntake({...v,expiryDate}),false);
+ assert.equal(validVisaIntake({...v,companion:{name:'Guest',passport:v.passport,liabilityAcknowledged:false as true}}),false);
+ assert.equal(validPassportPDF(new File(['x'],'photo.jpg',{type:'image/jpeg'})),false);
+ assert.equal(validPassportPDF(new File([],'empty.pdf',{type:'application/pdf'})),false);
+ assert.equal(await pdfHasSignature(new File(['not a PDF'],'fake.pdf',{type:'application/pdf'})),false);
+ assert.equal(await pdfHasSignature(v.passport),true);
+});
+test('visa submission is role-bound, idempotent and revokes PR on replacement without deleting history',()=>{
+ const s=accepted(), v=visa();
+ assert.equal(reduce(s,{type:'submit-visa',actor:'COORDINATOR',intake:v}),s);
+ assert.equal(reduce(s,{type:'submit-visa',actor:'ARTIST',intake:{...v,contractId:'other'}}),s);
+ const submitted=reduce(s,{type:'submit-visa',actor:'ARTIST',intake:v});
+ assert.equal(submitted.visaIntakes?.length,1);
+ assert.equal(reduce(submitted,{type:'submit-visa',actor:'ARTIST',intake:v}),submitted);
+ const cleared={...submitted,evidence:{...submitted.evidence,prEvidenceGate:true,prRecordedAt:at,passportVerified:true,visaCleared:true}};
+ const changed=reduce(cleared,{type:'submit-visa',actor:'ARTIST',intake:{...v,id:'visa-2',passportNumber:'NEW123'}});
+ assert.equal(changed.evidence.prEvidenceGate,false);
+ assert.equal(changed.evidence.prRecordedAt,undefined);
+ assert.equal(changed.visaIntakes?.length,2);
+ assert.equal(cleared.evidence.prEvidenceGate,true);
+});
