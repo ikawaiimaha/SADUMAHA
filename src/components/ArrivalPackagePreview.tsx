@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useSessionDraft } from '../context/SessionDrafts';
 import { FileText, Plane } from 'lucide-react';
 import { airportService, arrivalPreviewReady, type ArrivalDraft } from '../data/arrivalPackage';
 
-export function ArrivalPackagePreview({ isAr, artistName }: { isAr: boolean; artistName: string }) {
-  const [draft, setDraft] = useState<ArrivalDraft>({ airport: '', flight: '', terminal: '', arrivalLocal: '', identityReviewed: false, itineraryReviewed: false, juryGuideIncluded: false });
-  const [prepared, setPrepared] = useState<ArrivalDraft | null>(null);
+export function ArrivalPackagePreview({ isAr, artistName, artistId = 'sample-artist' }: { isAr: boolean; artistName: string; artistId?: string }) {
+  const [draft, setDraft] = useSessionDraft<ArrivalDraft>(`arrival:${artistId}`, { airport: '', flight: '', terminal: '', arrivalLocal: '', identityReviewed: false, itineraryReviewed: false, welcomeGuideIncluded: false });
+  const [prepared, setPrepared] = useSessionDraft<ArrivalDraft | null>(`arrival-preview:${artistId}`, null);
   const service = airportService(draft.airport);
   const ready = arrivalPreviewReady(draft);
   const inputClass = 'mt-1 block w-full rounded-md border border-[#D9CEBA] bg-[#F7F1E6] ps-3 pe-3 py-2 text-start';
@@ -16,7 +16,7 @@ export function ArrivalPackagePreview({ isAr, artistName }: { isAr: boolean; art
 
   return <section className="rounded-lg border border-[#D9CEBA] bg-white ps-5 pe-5 py-5 space-y-4 text-start" aria-label={isAr ? 'حزمة الوصول التدريبية' : 'Rehearsal arrival package'}>
     <h2 className="flex items-center gap-2 text-xl font-semibold"><Plane className="size-5" aria-hidden="true" />{isAr ? 'حزمة الوصول — معاينة محلية' : 'Arrival package — local preview'}</h2>
-    <p className="rounded bg-[#EDE4D3] ps-3 pe-3 py-3 text-sm">{isAr ? 'بيانات نموذجية / غير موثقة. لا إرسال أو رفع ملفات أو حجز خدمة. تُمسح هذه المسودة عند مغادرة مساحة العمل.' : 'Sample data / Unverified. No sending, file uploads or service booking. This draft resets when you leave the workspace.'}</p>
+    <p className="rounded bg-[#EDE4D3] ps-3 pe-3 py-3 text-sm">{isAr ? 'بيانات نموذجية / غير موثقة. لا إرسال أو رفع ملفات أو حجز خدمة. المسودة محفوظة أثناء الجلسة؛ تُمسح عند تحديث الصفحة.' : 'Sample data / Unverified. No sending, file uploads or service booking. Draft saved for this session; refresh clears it.'}</p>
     <p>{isAr ? 'المستلم التجريبي' : 'Fictional recipient'}: <bdi>{artistName}</bdi></p>
     <div className="grid gap-4 sm:grid-cols-2">
       <label>{isAr ? 'مطار الوصول' : 'Arrival airport'}<select className={inputClass} value={draft.airport} onChange={event => updateItinerary({ airport: event.target.value, terminal: '' })}>
@@ -36,7 +36,7 @@ export function ArrivalPackagePreview({ isAr, artistName }: { isAr: boolean; art
       {([
         ['identityReviewed', isAr ? 'راجعت تطابق اسم صاحب التذكرة والتأشيرة مع المستلم النموذجي.' : 'I checked the sample ticket and visa belong to this fictional recipient.'],
         ['itineraryReviewed', isAr ? 'راجعت المطار والمبنى والرحلة والتوقيت المحلي.' : 'I reviewed the airport, terminal, flight and local arrival time.'],
-        ['juryGuideIncluded', isAr ? 'أدرجت دليل التحكيم النموذجي في قائمة الحزمة.' : 'I included the sample jury guide in the package checklist.'],
+        ['welcomeGuideIncluded', isAr ? 'أدرجت دليل الترحيب بالفنان في قائمة الحزمة.' : 'I included the artist welcome guide in the package checklist.'],
       ] as const).map(([field, label]) => <label key={field} className="flex items-start gap-3"><input type="checkbox" checked={draft[field]} onChange={event => { setDraft(current => ({ ...current, [field]: event.target.checked })); setPrepared(null); }} className="mt-1 size-5 shrink-0" /><span>{label}</span></label>)}
     </fieldset>
     <button type="button" disabled={!ready} onClick={() => { if (arrivalPreviewReady(draft)) setPrepared({ ...draft }); }} className="rounded-md bg-[#8B261E] ps-5 pe-5 py-3 font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed">{isAr ? 'تجهيز معاينة حزمة الوصول' : 'Prepare arrival package preview'}</button>
@@ -58,7 +58,7 @@ export function ArrivalPackagePreview({ isAr, artistName }: { isAr: boolean; art
         <p>بيانات اتصال التشريفات ورابط مجموعة الضيوف: بانتظار التوثيق.</p>
       </article>
       <h3 className="flex items-center gap-2 font-semibold"><FileText className="size-4" aria-hidden="true" />{isAr ? 'قائمة الحزمة — لا ملفات مرفقة' : 'Package checklist — no files attached'}</h3>
-      <ul className="list-disc ps-5 text-sm"><li>{isAr ? 'تذكرة نموذجية' : 'Sample flight ticket'}</li><li>{isAr ? 'تأشيرة نموذجية — لا أرقام هوية شخصية' : 'Sample visa — no personal identifiers'}</li><li>{isAr ? 'دليل تحكيم نموذجي' : 'Sample jury guidelines'}</li></ul>
+      <ul className="list-disc ps-5 text-sm"><li>{isAr ? 'تذكرة نموذجية' : 'Sample flight ticket'}</li><li>{isAr ? 'تأشيرة نموذجية — لا أرقام هوية شخصية' : 'Sample visa — no personal identifiers'}</li><li>{isAr ? 'دليل ترحيب بالفنان' : 'Sample artist welcome guide'}</li></ul>
       <p className="text-sm">{isAr ? 'تجهيز المعاينة لا يسجل وصول الضيف ولا يمنح اعتماد التشريفات.' : 'Preparing this preview does not record guest arrival or clear the PR evidence gate.'}</p>
     </div>}
   </section>;

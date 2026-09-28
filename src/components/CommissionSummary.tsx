@@ -1,6 +1,5 @@
 import { useMockupText } from '../i18n/useMockupText';
 import React from 'react';
-import { SoloInvitationPreview } from './SoloInvitationPreview';
 import { COMMISSION } from '../data/commissionScenario';
 import type { BilateralContract } from '../types/contractStage6';
 
@@ -11,9 +10,7 @@ export function CommissionSummary({ isAr, showTechnical = true }: { isAr: boolea
   return <div className="space-y-2 text-start">
     <p className="font-semibold">{isAr ? COMMISSION.artistNameAr : COMMISSION.artistName}</p>
     {showTechnical && <p>{isAr ? COMMISSION.titleAr : COMMISSION.title} · <bdi>{COMMISSION.weightKg}</bdi> {isAr ? 'كغ' : 'kg'}</p>}
-    <p className="text-sm text-[#594F47]">{isAr
-      ? 'سيناريو خيالي محلي. لا مستندات حقيقية أو اعتماد مؤسسي أو تحويل مالي. تُفقد التغييرات عند تحديث الصفحة.'
-      : 'Local fictional scenario. No real documents, institutional approval or money transfer. Refresh resets the demo.'}</p>
+
   </div>;
 }
 
@@ -26,7 +23,7 @@ export function AgreementMilestones({ contract, isAr }: { contract: BilateralCon
     [isAr ? 'الإكمال والإعادة' : 'Completion & Return', t.installationPercentage, t.installationAmount],
   ];
   return <section className={panel} aria-label={isAr ? 'جدول الاتفاقية' : 'Agreement schedule'}>
-    {contract.participationCategory === 'SOLO_EXHIBITION' && <SoloInvitationPreview artistName={contract.artistName} artworkCount={contract.artworkCount!} />}
+    <p className="mb-3 text-base">{isAr ? 'الثيمة المنشورة عند إعداد الاتفاقية:' : 'Published theme when drafted:'} <bdi>{contract.themeArabic ?? (isAr ? 'لم تُنشر بعد' : 'Not published yet')}</bdi></p>
     <h2 className="font-serif text-xl font-bold mb-3">{isAr ? 'اتفاقية المنسق — ثلاث دفعات' : 'Coordinator agreement — three tranches'}</h2>
     <p className="text-sm mb-3">{isAr ? 'الإجمالي' : 'Total'}: <bdi>{contract.productionCost.toLocaleString(isAr ? 'ar-AE' : 'en-AE')} {isAr ? 'درهم' : 'AED'}</bdi></p>
     <div className="overflow-x-auto"><table className="w-full text-sm text-start">

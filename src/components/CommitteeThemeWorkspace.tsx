@@ -2,7 +2,7 @@ import { useLocalDraft } from '../hooks/useLocalDraft';
 import { scrollWorkspaceToTop } from '../utils/scrollWorkspaceToTop';
 import { useMockupText } from '../i18n/useMockupText';
 import { useI18n } from '../context/I18nContext';
-import React, { useEffect, useRef, useId, useMemo, useState } from 'react';
+import React, { useId, useMemo, useState } from 'react';
 import { ClipboardList, Wand2, Send, CheckCircle2, RotateCcw, Sparkles, BookOpen } from 'lucide-react';
 
 export interface CommitteeThemeDraft {
@@ -23,6 +23,7 @@ export interface CommitteeThemeWorkspaceProps {
   ratifiedTheme?: { arabicName: string } | null;
   /** Called with the three completed theme drafts once presented to the Chairman. */
   onPresentToChairman?: (themes: CommitteeThemeDraft[], eventId?: string) => void;
+  onCancelAutoNavigate?: () => void;
   onAutoNavigate?: (role: string) => void;
   onBackToRoles?: () => void;
 }
@@ -62,6 +63,7 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
   ratifiedTheme,
   onPresentToChairman,
   onAutoNavigate,
+  onCancelAutoNavigate,
   onBackToRoles,
 }) => {
   const DEMO_THEMES: CommitteeThemeDraft[] = [
@@ -88,8 +90,6 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
     }
   ];
 
-  const navigationTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  useEffect(() => () => { clearTimeout(navigationTimer.current); }, []);
   const tr = useMockupText();
   const { isAr } = useI18n();
   const [themes, setThemes, saveFailed] = useLocalDraft<CommitteeThemeDraft[]>(
@@ -131,11 +131,8 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
     }));
     onPresentToChairman?.(finalized, eventId);
     setIsSubmitted(true);
-    clearTimeout(navigationTimer.current);
     scrollWorkspaceToTop();
-    navigationTimer.current = setTimeout(() => {
-      onAutoNavigate?.('DIRECTOR');
-    }, 3500);
+    onAutoNavigate?.('DIRECTOR');
   };
 
   const handleAutoFillDemo = () => {
@@ -144,8 +141,7 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
   };
 
   const handleStartNewBatch = () => {
-    clearTimeout(navigationTimer.current);
-    navigationTimer.current = undefined;
+    onCancelAutoNavigate?.();
     if (ratifiedTheme) return;
     setThemes(createEmptyThemes());
     setIsSubmitted(false);
@@ -187,7 +183,7 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
               <div className="flex items-center justify-between border-b border-sadu-gold/30 pb-2">
                 <span className="text-[10px] font-bold uppercase tracking-wide text-sadu-muted"> {tr("Candidate Proposal")} {index + 1}
                 </span>
-                <span className="rounded bg-emerald-100 ps-1.5 pe-1.5 py-0.5 text-[9px] font-bold text-emerald-800"> {tr("Rigorously Defended")} </span>
+                <span className="rounded bg-emerald-100 ps-1.5 pe-1.5 py-0.5 text-[9px] font-bold text-emerald-800"> {isAr ? 'الحقول المطلوبة مكتملة' : 'Required fields complete'} </span>
               </div>
 
               <div>
@@ -294,7 +290,7 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
                 <span className="text-xs font-bold text-sadu-charcoal">{tr("Theme Candidate")} {index + 1}</span>
                 {complete ? (
                   <span className="inline-flex items-center gap-1 rounded bg-emerald-100 ps-2 pe-2 py-0.5 text-[10px] font-bold text-emerald-800">
-                    <CheckCircle2 className="h-3 w-3" /> {tr("Fully Defended")} </span>
+                    <CheckCircle2 className="h-3 w-3" /> {isAr ? 'الحقول المطلوبة مكتملة' : 'Required fields complete'} </span>
                 ) : (
                   <span className="rounded-full bg-amber-100 ps-2 pe-2 py-0.5 text-[10px] font-bold text-amber-800"> {tr("Criteria Incomplete")} </span>
                 )}

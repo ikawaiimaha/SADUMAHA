@@ -2,7 +2,7 @@ import { useLocalDraft, isNotes } from '../hooks/useLocalDraft';
 import { scrollWorkspaceToTop } from '../utils/scrollWorkspaceToTop';
 import { useMockupText } from '../i18n/useMockupText';
 import { useI18n } from '../context/I18nContext';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Wand2,
   Lock,
@@ -67,12 +67,10 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
     "يعتمد. يتم تحويل الميزانية للإدارة المالية، مع التشديد على استقطاب فنانين دوليين."
   ];
   const [chairmanNotes, setChairmanNotes, notesSaveFailed] = useLocalDraft<Record<number, string>>(`sadu:draft:v1:chairmanNotes:${JSON.stringify((themes || []).map(theme => [theme.arabicName, theme.curatorialJustification]))}`, {}, isNotes);
-  const navigationTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  useEffect(() => () => { clearTimeout(navigationTimer.current); }, []);
   const tr = useMockupText();
   const { isAr } = useI18n();
   const [approvedIndex, setApprovedIndex] = useState<number | null>(initialApprovedIndex);
-  const [allocatedBudget, setAllocatedBudget] = useState<number>(initialBudget ?? 12500000);
+  const [allocatedBudget, setAllocatedBudget] = useState<number>(initialBudget ?? 0);
   const [isBudgetAssigned, setIsBudgetAssigned] = useState<boolean>(initialBudget !== null);
 
   // Check if 3 submitted theme drafts exist and have content
@@ -94,11 +92,8 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
   const handleAssignBudget = () => {
     if (!isBudgetValid || isBudgetAssigned) return;
     setIsBudgetAssigned(true);
-    clearTimeout(navigationTimer.current);
     scrollWorkspaceToTop();
-    navigationTimer.current = setTimeout(() => {
-      onAutoNavigate?.('EDITORIAL');
-    }, 3500);
+    onAutoNavigate?.('EDITORIAL');
     if (winningTheme && onBudgetAssigned) {
       onBudgetAssigned(allocatedBudget, winningTheme, 'PENDING_EDITORIAL_POLISH');
     }
@@ -215,13 +210,13 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
         <div className="space-y-6">
           {winningTheme.chairmanNotes && <section className="rounded border border-sadu-gold bg-[#F7F1E6] ps-4 pe-4 py-3 text-start">
             <h3 className="text-sm font-bold">{isAr ? 'توجيهات رئيس الدائرة' : 'Chairman Directives'}</h3>
-            <p dir="auto" className="mt-2 whitespace-pre-wrap text-sm">{winningTheme.chairmanNotes}</p>
+            <p dir="auto" className="mt-2 whitespace-pre-wrap text-lg leading-relaxed">{winningTheme.chairmanNotes}</p>
           </section>}
           {/* Large Official Theme Ratified Success Banner */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border-2 border-sadu-brick/40 bg-gradient-to-r from-sadu-brick-light via-sadu-sand to-sadu-paper p-6 shadow-sm">
             <div className="flex items-start sm:items-center gap-4">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-sadu-brick text-white shadow-xs">
-                <Lock className="h-6 w-6" />
+                {isBudgetAssigned ? <Lock className="h-6 w-6" /> : <Clock className="h-6 w-6" />}
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
@@ -233,8 +228,8 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
               </div>
             </div>
             <div className="shrink-0 flex sm:flex-col items-end gap-1">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-600/30 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-800">
-                <ShieldCheck className="h-4 w-4 text-emerald-700" /> {isBudgetAssigned ? tr('Theme Locked') : (isAr ? 'بانتظار الميزانية' : 'Awaiting Budget')} </span>
+              <span className={`inline-flex items-center gap-1.5 rounded-full border ps-3 pe-3 py-1 text-sm font-bold ${isBudgetAssigned ? 'border-emerald-600/30 bg-emerald-50 text-emerald-800' : 'border-[#D9CEBA] bg-[#F7F1E6] text-[#736357]'}`}>
+                {isBudgetAssigned ? <ShieldCheck className="h-4 w-4" /> : <Clock className="h-4 w-4" />} {isBudgetAssigned ? tr('Theme Locked') : (isAr ? 'بانتظار الميزانية' : 'Awaiting Budget')} </span>
             </div>
           </div>
 
@@ -254,7 +249,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
               </div>
               <div hidden={isAr} className="text-start sm:text-end" dir="rtl">
                 <span className="text-xs font-semibold text-sadu-muted block pb-0.5">
-                  الاسم الرسمي المعتمد
+                  {isBudgetAssigned ? 'الاسم المعتمد' : 'المقترح المختار'}
                 </span>
                 <h4 className="font-editorial text-2xl font-bold text-sadu-brick">
                   {winningTheme.arabicName}
@@ -310,10 +305,10 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
                 </div>
                 <div>
                   <h4 className="font-editorial text-lg font-bold text-sadu-charcoal"> {tr("Official Budget Assignment")} </h4>
-                  <p className="text-xs text-sadu-muted"> {tr("Conferred by H.E. Abdullah Al Owais · Chairman / CEO")} </p>
+                  <p className="text-xs text-sadu-muted"> {isAr ? 'سعادة عبدالله بن محمد العويس · رئيس دائرة الثقافة' : 'H.E. Abdullah bin Mohammed Al Owais · Chairman of the Department of Culture'} </p>
                 </div>
               </div>
-              <span className="rounded bg-sadu-sand px-2.5 py-1 text-[10px] font-bold text-sadu-brick uppercase tracking-wider border border-sadu-gold/60"> {isAr ? 'المرحلة 2 · التحرير والنشر' : 'Stage 2 · Editorial and publication'} </span>
+              <span className="rounded bg-sadu-sand px-2.5 py-1 text-[10px] font-bold text-sadu-brick uppercase tracking-wider border border-sadu-gold/60"> {isAr ? 'التالي: المرحلة 2 · التحرير والنشر' : 'Next: Stage 2 · Editorial and publication'} </span>
             </div>
 
             <p className="text-xs text-sadu-muted leading-relaxed"> {isAr ? 'اعتماد الميزانية يثبّت اختيار الثيمة ويقفل الميزانية، ثم يحيل الثيمة إلى قسم التحرير للصياغة المؤسسية والترجمة.' : 'Budget ratification finalizes the theme selection and locks the budget, then routes the theme to Editorial for institutional refinement and translation.'} </p>
@@ -328,9 +323,9 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
                 {!isBudgetAssigned && (
                   <div className="flex items-center gap-2">
                     {[
-                      { label: '10M AED', value: 10000000 },
-                      { label: '12.5M AED', value: 12500000 },
-                      { label: '15M AED', value: 15000000 },
+                      { label: 'Demo · 10M AED', value: 10000000 },
+                      { label: 'Demo · 12.5M AED', value: 12500000 },
+                      { label: 'Demo · 15M AED', value: 15000000 },
                     ].map(tier => (
                       <button
                         key={tier.value}
@@ -358,7 +353,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
                   min="0.01"
                   aria-invalid={!isBudgetValid}
                   disabled={isBudgetAssigned}
-                  value={allocatedBudget}
+                  value={allocatedBudget || ''}
                   onChange={e => setAllocatedBudget(Number(e.target.value) || 0)}
                   className={`w-full rounded-md border py-2 ps-12 pe-4 font-mono text-base font-bold focus:outline-none focus:ring-1 ${
                     isBudgetAssigned
@@ -369,7 +364,9 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
               </div>
 
               {!isBudgetValid && <p id="budget-validation" role="alert" className="text-start text-xs text-red-700">{isAr ? 'أدخل ميزانية رقمية أكبر من صفر.' : 'Enter a finite budget greater than zero.'}</p>}
-              {/* Tranche Breakdown */}
+              <details className="border-t border-[#D9CEBA] pt-3">
+                <summary className="cursor-pointer text-base">{isAr ? 'توزيع توضيحي فقط — ليس تخصيصاً معتمداً' : 'Illustrative split only — not an approved allocation'}</summary>
+              {/* Illustrative budget split */}
               <div className="grid grid-cols-2 gap-2 pt-2 sm:grid-cols-4 text-xs">
                 <div className="rounded border border-sadu-gold/40 bg-white p-2 text-center">
                   <span className="text-[10px] text-sadu-muted block">{tr("Commissions (50%)")}</span>
@@ -388,6 +385,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
                   <span className="font-bold text-sadu-charcoal">{tr("AED")} {(allocatedBudget * 0.1).toLocaleString()}</span>
                 </div>
               </div>
+              </details>
             </div>
 
             {/* Action or Final Success State */}
@@ -500,7 +498,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
                     onClick={() => handleApprove(index)}
                     className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-sadu-brick px-4 py-2.5 text-xs font-bold text-white shadow-xs transition-colors hover:bg-sadu-brick-dark cursor-pointer"
                   >
-                    <CheckCircle2 className="h-4 w-4" /> {tr("Approve Theme")} </button>
+                    <CheckCircle2 className="h-4 w-4" /> {isAr ? 'اختيار المقترح' : 'Select proposal'} </button>
                 </div>
               </div>
             ))}

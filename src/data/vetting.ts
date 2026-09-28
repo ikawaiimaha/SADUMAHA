@@ -1,6 +1,9 @@
+import { COORDINATORS, validSoloCount } from './participation2026';
 import type { NominatedArtistDossier } from '../components/ArtistNominationForm';
 export const ASSIGNED_COORDINATOR = 'demo-coordinator';
 export function validDossier(d: NominatedArtistDossier): boolean {
+  if (!COORDINATORS.some(c => c.id === d.assignedCoordinatorId) || !validSoloCount(d.participationTrack, d.artworkCount)) return false;
+  if (d.participationTrack === 'HONORED_GUEST') return Boolean(d.artistName.trim() && d.nationality.trim());
   return Boolean(d.artistName.trim() && d.nationality.trim() && d.medium.trim() && d.proposedWorkTitle.trim() && d.cvFileName)
     && ['Emerging', 'Established'].includes(d.artistCategory) && d.previousWorksCount > 0
     && (d.isCommissioned === true ? d.mockupCount > 0 : d.isCommissioned === false && Boolean(d.provenanceFileName));

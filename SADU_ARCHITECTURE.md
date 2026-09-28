@@ -1,3 +1,23 @@
+# 28 September 2026 — Honored guest roster and participation tracks
+
+The locally inspected `قائمة فناني التكريم (2).docx` contains 53 distinct guest rows assigned to nine coordinators (24/10/4/4/3/2/2/2/2), confirmed by the owner. Source spellings are retained, including Paco Feenandez. The heading specifies House of Wisdom, Saturday 10 October 2026. Hospitality dates 6–11 October come from the separate invitation source. Shurooq clearance is an owner-specified operational dependency; the roster supplies no authorization evidence.
+
+Participation tracks are HONORED_GUEST, SOLO_EXHIBITION and GENERAL_COMPETITION. They are distinct from single-work versus solo contract scope. Only solo proposals require 15–20 whole artworks. Honored guests require identity for vetting, not invented artworks or career classifications, and are excluded from artwork balance ratios. The source roster is a read-only reference, not a set of approved dossiers or attendance confirmations.
+
+Coordinator demo selection filters source guests and draft queues; only the assigned coordinator may submit a dossier. `assignedCoordinatorId` and `participationTrack` are frontend fields intended to map to assigned_coordinator_id and participation_category when a reviewed database migration is implemented. No Supabase seed, authenticated coordinator accounts or RLS changes are included. Kufic Horizon contracting remains assigned to the fictional demo coordinator. Real source guests are never automatically given grants or contracts. All source event cards explicitly show external venue clearance as not recorded.
+
+---
+
+# 28 September 2026 — Connected rehearsal UX
+
+The gateway is a short operational introduction; the institutional story remains optional. Presenter handoffs default to manual Continue. Optional 3.5-second forwarding has a visible countdown and Pause; changing desks or resetting a proposal set cancels pending navigation. All existing approval prerequisites remain in force.
+
+Kufic Horizon remains a single 84 kg work in the active contracting rehearsal. The 2026 solo-exhibition letter is a separate source reference, never a generated current-deal document. Solo validation remains available in the schema for future separate fixtures. Current agreements record the published theme at drafting; an unpublished theme is explicitly identified rather than replaced by the source letter's theme.
+
+Operational form drafts and local identity assets survive role changes within this app session. Refresh clears these session drafts and approvals; existing browser text-draft recovery remains separate. The artist arrival package uses an artist welcome guide, not a juror-only requirement. No Auth, banking, booking or production database integration is implied. The operational handoff summary reads existing evidence and does not change gates.
+
+---
+
 # 28 September 2026 — Solo invitation source scope
 
 The owner supplied an Arabic transcription identified as source 6 (letter ش.ث/خ.س/001, dated 24 February 2026). The scan was not independently inspected in this implementation. Stage 6 now distinguishes single-work agreements from solo exhibitions; only solo exhibitions require 15–20 whole artworks. The source-scoped rehearsal preview records the 12th Biennial theme ميزان, event dates 7 October–15 November 2026, hosting 6–11 October, round-trip artwork transport and insurance, hospitality/accommodation, the three exact attachment labels, and the source coordinator contact and dual signatory titles. Form 100 is an owner-proposed mapping, not a literal source identifier. Generated previews adapt the recipient to the current fictional record, allocate no official outgoing reference, and remain session-bound and watermarked. This does not change payment prerequisites or create external actions.

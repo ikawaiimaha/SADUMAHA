@@ -1,4 +1,3 @@
-import { PortraitHierarchy, PortraitCredit } from './PortraitHierarchy';
 import { ExecutiveQuote } from './ExecutiveQuote';
 import { InstitutionalProtocolPillars } from './InstitutionalProtocolPillars';
 import React, { useState, useEffect, useRef } from 'react';
@@ -90,7 +89,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
   return (
     <div className="story-shell bg-sadu-sand text-sadu-charcoal">
       <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">{chapterAnnouncement}</p>
-      <div className="sticky top-0 z-50 bg-[#F7F1E6] ps-4 pe-4 py-2 text-center text-xs" dir="ltr">Guided rehearsal • fictional records • no external actions</div>
+      <div className="sticky top-0 z-50 bg-[#F7F1E6] ps-4 pe-4 py-2 text-center text-xs" >{isAr ? 'عرض تدريبي • سجلات خيالية • لا إجراءات خارجية' : 'Guided rehearsal • fictional records • no external actions'}</div>
       <header className="story-toolbar border-b border-sadu-gold bg-sadu-linen px-4 sm:px-6 py-2 shadow-xs">
         <div className="max-w-6xl mx-auto flex flex-wrap gap-2 items-center justify-between">
           <div className="flex items-center gap-3">
@@ -172,7 +171,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
 
           <div key={currentChapter} className="story-body">
             {currentChapter < chapters.length - 1 ? (
-              <div className="story-content-grid">
+              <div className="story-content-grid" style={current.leadershipRank ? { gridTemplateColumns: '1fr' } : undefined}>
                 <div className="story-copy">
                   <>{isLeadChapter ? <ExecutiveQuote isAr={isAr}/> : <p className="story-description text-sadu-charcoal">{isAr ? current.contentAr : current.contentEn}</p>}</>
                   {isLeadChapter && <InstitutionalProtocolPillars isAr={isAr} />}
@@ -185,16 +184,8 @@ export const StoryMode: React.FC<StoryModeProps> = ({
                   </div>
                 </div>
 
-                {current.leadershipRank ? (
-                  <figure className="story-figure">
-                    <div className="story-portrait-stage">
-                      <PortraitHierarchy rank={current.leadershipRank} isAr={isAr}/>
-                    </div>
-                    <figcaption className="story-caption text-sadu-muted"><PortraitCredit rank={current.leadershipRank} isAr={isAr}/></figcaption>
-                  </figure>
-                ) : (
-                <StoryCaseGraphic chapter={currentChapter} />
-                )}
+                {!current.leadershipRank && <StoryCaseGraphic chapter={currentChapter} />}
+
               </div>
             ) : (
               <div className="story-role-layout">

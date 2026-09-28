@@ -5,7 +5,7 @@ export interface ArrivalDraft {
   arrivalLocal: string;
   identityReviewed: boolean;
   itineraryReviewed: boolean;
-  juryGuideIncluded: boolean;
+  welcomeGuideIncluded: boolean;
 }
 
 // Rehearsal routing from the user's supplied text, not a confirmed service booking.
@@ -22,5 +22,5 @@ export function arrivalPreviewReady(draft: ArrivalDraft): boolean {
     && calendarDate.toISOString().slice(0, 16) === draft.arrivalLocal;
   return Boolean(airportService(draft.airport) && draft.flight.trim() && draft.terminal.trim()
     && validLocalTime
-    && draft.identityReviewed && draft.itineraryReviewed && draft.juryGuideIncluded);
+    && draft.identityReviewed && draft.itineraryReviewed && draft.welcomeGuideIncluded);
 }

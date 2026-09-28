@@ -1,8 +1,9 @@
+import { PARTICIPATION_TRACKS } from '../data/participation2026';
 import { useLocalDraft, isNotes } from '../hooks/useLocalDraft';
 import { scrollWorkspaceToTop } from '../utils/scrollWorkspaceToTop';
 import { useMockupText } from '../i18n/useMockupText';
 import { useI18n } from '../context/I18nContext';
-import React, { useEffect, useRef, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Wand2,
   ShieldCheck,
@@ -86,8 +87,6 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
   onAutoNavigate,
   onBackToRoles,
 }) => {
-  const navigationTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  useEffect(() => () => { clearTimeout(navigationTimer.current); }, []);
   const tr = useMockupText();
   const { isAr } = useI18n();
   // Tabbed layout: Phase 1 (Theme Ratification Queue) or Phase 2 (Artist Veto & Balance Review)
@@ -110,7 +109,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
   const [previewDoc, setPreviewDoc] = useState<{ title: string; type: 'cv' | 'mockup'; artistName: string } | null>(null);
 
   // Visual Analytics: Ratio calculation
-  const activeCohort = nominatedArtists.filter(a => a.status !== 'VETOED');
+  const activeCohort = nominatedArtists.filter(a => a.status !== 'VETOED' && a.participationTrack !== 'HONORED_GUEST');
   const totalArtists = activeCohort.length;
   const emergingArtists = activeCohort.filter(a => a.artistCategory === 'Emerging');
   const establishedArtists = activeCohort.filter(a => a.artistCategory === 'Established');
@@ -143,8 +142,6 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
 
   const handleReturnThemes = () => {
     if (ratifiedTheme || activeThemes.length === 0 || !onReturnToCommittee) return;
-    clearTimeout(navigationTimer.current);
-    navigationTimer.current = undefined;
     setThemesPresented(false);
     setDirectorNotes({});
     onReturnToCommittee();
@@ -158,11 +155,8 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
     }));
     onPresentToChairman?.(updatedThemesWithNotes, directorNotes);
     setThemesPresented(true);
-    clearTimeout(navigationTimer.current);
     scrollWorkspaceToTop();
-    navigationTimer.current = setTimeout(() => {
-      onAutoNavigate?.('CHAIRMAN');
-    }, 3500);
+    onAutoNavigate?.('CHAIRMAN');
 
   };
 
@@ -208,7 +202,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
                 {isAr ? 'مساحة عمل مدير الملتقى · الأستاذ محمد إبراهيم القصير' : 'Biennial Director Workspace · Mohammed Al Qaseer'}
               </h1>
               <p className="text-xs font-semibold text-sadu-brick" dir="rtl">
-                مدير البينالي · اعتماد مقترحات الثيم ومراجعة توازن الفنانين (حق النقض)
+                مدير الملتقى · مراجعة مقترحات الثيمة وتوازن الفنانين
               </p>
             </div>
           </div>
@@ -271,14 +265,14 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
               <div className="flex items-center gap-2">
                 <Award className="h-5 w-5 text-sadu-brick" />
                 <div>
-                  <h2 className="font-editorial text-lg font-bold text-sadu-charcoal"> {tr("Theme Ratification Queue (Stage 1 Directorate Review)")} </h2>
+                  <h2 className="font-editorial text-lg font-bold text-sadu-charcoal"> {isAr ? 'مراجعة المقترحات الثلاثة' : 'Review three proposals'} </h2>
                   <p className="text-xs text-sadu-muted"> {tr("Evaluate 3 theme proposals formulated by the Preparatory Committee before formal escalation to the Chairman")} </p>
                 </div>
               </div>
               <span className="rounded-full bg-sadu-sand px-3 py-1 text-xs font-bold text-sadu-brick border border-sadu-gold/60"> {tr("3 Candidate Themes")} </span>
             </div>
 
-            <p className="text-xs text-sadu-muted leading-relaxed"> {tr("As Biennial Director, Mohammed Al Qaseer reviews the curatorial rigor of the 3 candidate proposals. You may append optional Directorate Notes to each proposal prior to presenting the set to Chairman H.E. Abdullah Al Owais for executive selection and budget locking.")} </p>
+            <details><summary className="cursor-pointer text-sm">{isAr ? 'مسؤولية هذا المكتب' : 'Desk responsibilities'}</summary><p className="mt-2 text-base leading-relaxed">{isAr ? 'راجع المقترحات وأضف ملاحظاتك، ثم أحلها إلى رئيس الدائرة للاختيار واعتماد الميزانية.' : 'Review the proposals and add advice, then send the docket to the Chairman for selection and budget ratification.'}</p></details>
 
             {/* 3 Theme Proposals Cards Grid */}
             <div className="grid gap-6 md:grid-cols-3">
@@ -291,7 +285,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
                     <div className="flex items-center justify-between border-b border-sadu-gold/30 pb-2">
                       <span className="rounded bg-sadu-sand px-2 py-0.5 text-[10px] font-bold text-sadu-charcoal"> {tr("Proposal Candidate")} {index + 1}
                       </span>
-                      <span className="rounded bg-emerald-100 text-emerald-800 px-2 py-0.5 text-[9px] font-bold"> {tr("Rigorously Defended")} </span>
+                      <span className="rounded bg-emerald-100 text-emerald-800 px-2 py-0.5 text-[9px] font-bold"> {isAr ? 'الحقول المطلوبة مكتملة' : 'Required fields complete'} </span>
                     </div>
 
                     <div>
@@ -428,7 +422,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
         <div className="space-y-1.5 rounded-lg border border-sadu-gold/40 bg-sadu-paper/60 p-3">
           <div className="flex items-center justify-between text-xs font-bold text-sadu-charcoal">
             <span className="text-sadu-brick">{tr("Emerging:")} {emergingPct}% ({emergingCount})</span>
-            <span className="text-[10px] text-sadu-muted font-normal">{tr("Target: 40% - 60% Balance")}</span>
+            <span className="text-[10px] text-sadu-muted font-normal">{isAr ? 'نسبة إرشادية للأعمال؛ لا تشمل ضيوف التكريم' : 'Informational artwork ratio; excludes honored guests'}</span>
             <span className="text-sadu-charcoal">{tr("Established:")} {establishedPct}% ({establishedCount})</span>
           </div>
 
@@ -516,7 +510,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
                           : 'bg-sadu-charcoal text-white'
                       }`}
                     >
-                      {tr(artist.artistCategory)}
+                      {tr(artist.artistCategory)} · {PARTICIPATION_TRACKS[artist.participationTrack ?? 'GENERAL_COMPETITION'][isAr ? 'ar' : 'en']}
                     </span>
                   </div>
 

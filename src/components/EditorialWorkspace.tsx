@@ -1,8 +1,9 @@
+import { useSessionDraft } from '../context/SessionDrafts';
 import { useLocalDraft, isText } from '../hooks/useLocalDraft';
 import { scrollWorkspaceToTop } from '../utils/scrollWorkspaceToTop';
 import { useMockupText } from '../i18n/useMockupText';
 import { useI18n } from '../context/I18nContext';
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Languages, 
   BookOpen, 
@@ -68,8 +69,6 @@ export default function EditorialWorkspace({
   onAutoNavigate,
   onBackToRoles,
 }: EditorialWorkspaceProps = {}) {
-  const navigationTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  useEffect(() => () => { clearTimeout(navigationTimer.current); }, []);
   const tr = useMockupText();
   const { isAr } = useI18n();
   // Determine raw theme approved by Chairman in Stage 1
@@ -90,7 +89,7 @@ export default function EditorialWorkspace({
     englishText: initialEssayEnglish || ''
   }, (value): value is EditorialDraft => Boolean(value) && typeof value === 'object' && isText((value as EditorialDraft).arabicText) && isText((value as EditorialDraft).englishText));
 
-  const [identityAssets, setIdentityAssets] = useState<{ file: File; attachedAt: string }[]>([]);
+  const [identityAssets, setIdentityAssets] = useSessionDraft<{ file: File; attachedAt: string }[]>(`identity-assets:${rawChairmanTheme}`, []);
 
   const [guidelinesDraftEnglish, setGuidelinesDraftEnglish, guidelineSaveFailed] = useLocalDraft(`sadu:draft:v1:guidelines-english:${guidelinesArabic || ''}`, '', isText);
   const guidelinesPending = isPublished && guidelinesTranslationStatus === 'PENDING_TRANSLATION' && Boolean(guidelinesArabic?.trim());
@@ -116,11 +115,8 @@ export default function EditorialWorkspace({
     
     // Locks Stage 2 and unlocks Stage 3 (HIP Curatorial Directives)
     setPublishedLocally(true);
-    clearTimeout(navigationTimer.current);
     scrollWorkspaceToTop();
-    navigationTimer.current = setTimeout(() => {
-      onAutoNavigate?.('HIP');
-    }, 3500);
+    onAutoNavigate?.('HIP');
 
     if (onPublishOfficialTheme) {
       onPublishOfficialTheme({
@@ -302,8 +298,8 @@ export default function EditorialWorkspace({
                     <FileCheck className="size-5 shrink-0 text-[#8C7A6B]" aria-hidden="true" />
                     {isAr ? 'سجل المرفقات والهوية البصرية' : 'Visual Identity & Asset Log'}
                   </h3>
-                  <p id="identity-assets-help" className="mt-2 text-xs leading-relaxed text-[#6B635B]">
-                    {isAr ? 'الشعار الرسمي وملفات الهوية من فريق التصميم الخارجي. سجل تجريبي؛ الملفات المختارة تبقى في هذه الجلسة ولا تُرفع إلى خادم.' : 'Official Shi’aar and identity assets from the external design team. Demo log; selected files stay in this session and are not uploaded to a server.'}
+                  <p id="identity-assets-help" className="mt-2 text-base leading-relaxed text-[#6B635B]">
+                    {isAr ? 'المرفقات اختيارية لنشر نص الثيمة. سجل محلي فقط؛ إرفاق الملفات لا يعتمد الهوية البصرية ولا يرفعها إلى خادم.' : 'Optional for theme-text publication. Local identity-asset log only; attaching files does not certify the visual identity or upload them to a server.'}
                   </p>
                   <label className={`mt-4 block rounded-md border-2 border-dashed border-[#C8BBA6] bg-[#EDE4D3] ps-4 pe-4 py-5 text-start ${isPublished ? 'opacity-60' : 'cursor-pointer focus-within:ring-2 focus-within:ring-[#8C7A6B]'}`}>
                     <span className="flex items-center gap-2 text-sm font-semibold text-[#2C2A29]">

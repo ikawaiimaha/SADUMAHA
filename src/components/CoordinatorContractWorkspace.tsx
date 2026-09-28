@@ -1,3 +1,4 @@
+import { useSessionDraft } from '../context/SessionDrafts';
 import { useMockupText } from '../i18n/useMockupText';
 import React, { useState, useEffect } from 'react';
 import type { BilateralContract } from '../types/contractStage6';
@@ -44,6 +45,7 @@ export interface ContractFormState {
 }
 
 export interface CoordinatorContractWorkspaceProps {
+  officialTheme?: string;
   isAr?: boolean;
   artists: VettedArtist[];
   contracts?: BilateralContract[];
@@ -51,7 +53,8 @@ export interface CoordinatorContractWorkspaceProps {
 }
 
 export function CoordinatorContractWorkspace({ 
-  isAr = true, 
+  isAr = true,
+  officialTheme,
   artists = [],
   contracts = [],
   onDispatchContract 
@@ -65,7 +68,8 @@ export function CoordinatorContractWorkspace({
   const [selectedArtistId, setSelectedArtistId] = useState<string | null>(null);
   const [dispatchedSuccess, setDispatchedSuccess] = useState<string | null>(null);
 
-  const [form, setForm] = useState<ContractFormState>({
+  const existingAgreement = contracts.find(c => c.artistId === selectedArtistId);
+  const [form, setForm, hasDraft] = useSessionDraft<ContractFormState>(`deal:${selectedArtistId ?? artists[0]?.id}:${existingAgreement?.status ?? 'new'}:${existingAgreement?.auditTrail.length ?? 0}`, {
     participationCategory: 'SINGLE_WORK',
     artworkCount: 1,
     venue: '',
@@ -89,9 +93,8 @@ export function CoordinatorContractWorkspace({
 
   const selectedArtist = artists.find(a => a.id === selectedArtistId);
 
-  const existingAgreement = contracts.find(c => c.artistId === selectedArtistId);
   useEffect(() => {
-    if (existingAgreement?.status !== 'CONTRACT_DISPUTED') return;
+    if (existingAgreement?.status !== 'CONTRACT_DISPUTED' || hasDraft) return;
     setForm({ participationCategory: existingAgreement.participationCategory ?? 'SINGLE_WORK', artworkCount: existingAgreement.artworkCount ?? 1, productionGrant: existingAgreement.productionCost, shippingMethod: existingAgreement.shippingTerms,
       advancePercentage: existingAgreement.tranches.advancePercentage, interimPercentage: existingAgreement.tranches.deliveryPercentage,
       finalPercentage: existingAgreement.tranches.installationPercentage, specialConditions: existingAgreement.specialConditions || '',
@@ -101,7 +104,7 @@ export function CoordinatorContractWorkspace({
 
   const handleDispatch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedArtistId || !isTrancheValid || !venueReady || !validParticipationScope(form)) return;
+    if (!selectedArtistId || !isTrancheValid || !venueReady || !validParticipationScope(form) || form.participationCategory !== 'SINGLE_WORK') return;
 
     
     // 1. Pass the data UP to App.tsx instead of handling it locally
@@ -162,6 +165,11 @@ export function CoordinatorContractWorkspace({
 
       {contracts.map(contract => <AgreementMilestones key={contract.id} contract={contract} isAr={isAr} />)}
 
+      <details className="rounded border border-[#D9CEBA] ps-4 pe-4 py-3">
+        <summary className="cursor-pointer font-semibold">{isAr ? 'مرجع مستقل: دعوة معرض شخصي لعام 2026' : 'Separate source reference: 2026 solo-exhibition invitation'}</summary>
+        <p className="my-3 text-base">{isAr ? 'هذا مرجع للمصدر، وليس مستنداً مولداً للاتفاقية الحالية. لا يغير الثيمة أو نطاق العمل.' : 'This source reference is not generated from the current agreement. It does not change the current theme or work scope.'}</p>
+        <SoloInvitationPreview artistName="مريم أبوطالب — مرجع المصدر" artworkCount={15} />
+      </details>
       {/* Main Grid: Queue on one side, Terms Editor on the other */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Approved Artist Queue */}
@@ -240,21 +248,12 @@ export function CoordinatorContractWorkspace({
         <div className="lg:col-span-8">
           {selectedArtist ? (
             <form onSubmit={handleDispatch} className="bg-[#FAF7F2] border border-[#D9CEBA] rounded-lg p-6 space-y-6">
-              <div className="space-y-3 text-start">
-                <label className="block">{isAr ? 'فئة المشاركة' : 'Participation category'}
-                  <select value={form.participationCategory} onChange={e => setForm({ ...form, participationCategory: e.target.value as ParticipationCategory, artworkCount: e.target.value === 'SOLO_EXHIBITION' ? 15 : 1 })} className="block w-full rounded border border-[#D9CEBA] bg-[#F7F1E6] ps-3 pe-3 py-2">
-                    <option value="SINGLE_WORK">{isAr ? 'عمل منفرد' : 'Single work'}</option>
-                    <option value="SOLO_EXHIBITION">{isAr ? 'معرض شخصي (15–20 عملاً)' : 'Solo exhibition (15–20 works)'}</option>
-                  </select>
-                </label>
-                {form.participationCategory === 'SOLO_EXHIBITION' && <>
-                  <label className="block">{isAr ? 'عدد الأعمال المشاركة' : 'Number of artworks'}
-                    <input type="number" min={15} max={20} step={1} required value={Number.isNaN(form.artworkCount) ? '' : form.artworkCount} onChange={e => setForm({ ...form, artworkCount: e.target.valueAsNumber })} aria-invalid={!validParticipationScope(form)} className="block w-full rounded border border-[#D9CEBA] bg-[#F7F1E6] ps-3 pe-3 py-2" />
-                  </label>
-                  {!validParticipationScope(form) && <p role="alert" className="text-sm text-[#8B261E]">{isAr ? 'أدخل عدداً صحيحاً من 15 إلى 20.' : 'Enter a whole number from 15 to 20.'}</p>}
-                  <SoloInvitationPreview artistName={isAr ? selectedArtist.name_ar : selectedArtist.name_en} artworkCount={form.artworkCount} />
-                </>}
-              </div>
+              <section className="space-y-3 rounded border border-[#D9CEBA] bg-[#F7F1E6] ps-4 pe-4 py-4">
+                <h3 className="text-lg font-semibold">{isAr ? 'ملخص السجل الحالي' : 'Current record'}</h3>
+                <p>{isAr ? 'الثيمة المنشورة:' : 'Published theme:'} <bdi>{officialTheme ?? (isAr ? 'لم تُنشر بعد' : 'Not published yet')}</bdi></p>
+                <p>{isAr ? 'عمل واحد · أفق كوفي · 84 كغ. لا يتغير نطاق هذا السيناريو إلى معرض شخصي.' : 'Single work · Kufic Horizon · 84 kg. This scenario does not convert into a solo exhibition.'}</p>
+                <p role="status" className="text-sm">{isAr ? 'المسودة محفوظة أثناء الجلسة؛ الاعتمادات منفصلة.' : 'Draft retained during this session; approvals are separate.'}</p>
+              </section>
               <div className="border-b border-[#D9CEBA] pb-4 flex items-center justify-between">
                 <div>
                   <h3 className="text-lg font-serif font-bold text-[#2A2624]">
@@ -399,7 +398,7 @@ export function CoordinatorContractWorkspace({
               <div className="pt-2 flex items-center justify-end gap-3 border-t border-[#D9CEBA]">
                 <button
                   type="submit"
-                  disabled={!isTrancheValid || !venueReady || !validParticipationScope(form)}
+                  disabled={!isTrancheValid || !venueReady || !validParticipationScope(form) || form.participationCategory !== 'SINGLE_WORK'}
                   className="px-5 py-2.5 bg-[#8B261E] hover:bg-[#721F18] text-white text-xs font-semibold rounded-md shadow flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <Send className="w-4 h-4 rtl:rotate-180" />

@@ -60,7 +60,7 @@ export type CommissionAction =
   | { type: 'record-pr' | 'record-technical' | 'authorize-advance'; actor: Actor; at: string };
 
 function termsKey(c?: BilateralContract): string {
-  return JSON.stringify(c && [c.id, c.participationCategory, c.artworkCount, c.invitationSourceId, c.productionCost, c.shippingTerms, c.specialConditions, c.venue, c.venueClearanceReference,
+  return JSON.stringify(c && [c.id, c.themeArabic, c.participationCategory, c.artworkCount, c.invitationSourceId, c.productionCost, c.shippingTerms, c.specialConditions, c.venue, c.venueClearanceReference,
     c.tranches.advancePercentage, c.tranches.advanceAmount, c.tranches.deliveryPercentage,
     c.tranches.deliveryAmount, c.tranches.installationPercentage, c.tranches.installationAmount]);
 }

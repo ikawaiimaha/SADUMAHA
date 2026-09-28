@@ -1,3 +1,5 @@
+import { COORDINATORS, PARTICIPATION_TRACKS, validSoloCount, type ParticipationTrack } from '../data/participation2026';
+import { useI18n } from '../context/I18nContext';
 import { ASSIGNED_COORDINATOR } from '../data/vetting';
 import { useMockupText } from '../i18n/useMockupText';
 import React, { useState } from 'react';
@@ -19,7 +21,9 @@ export type ArtistCategory = 'Emerging' | 'Established';
 export interface NominatedArtistDossier {
   id: string;
   artistName: string;
-  artistCategory: ArtistCategory;
+  artistCategory: ArtistCategory | 'Not applicable';
+  participationTrack?: ParticipationTrack;
+  artworkCount?: number;
   nationality: string;
   medium: string;
   proposedWorkTitle: string;
@@ -39,6 +43,7 @@ export interface NominatedArtistDossier {
 }
 
 export interface ArtistNominationFormProps {
+  assignedCoordinatorId?: string;
   curatorialBrief?: string;
   blocklist?: string[];
   onSubmitNomination: (dossier: NominatedArtistDossier) => void;
@@ -47,6 +52,7 @@ export interface ArtistNominationFormProps {
 }
 
 export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
+  assignedCoordinatorId,
   curatorialBrief,
   blocklist = [],
   onSubmitNomination,
@@ -54,6 +60,11 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
   onCancel,
 }) => {
   const tr = useMockupText();
+  const { isAr } = useI18n();
+  const [participationTrack, setParticipationTrack] = useState<ParticipationTrack>('GENERAL_COMPETITION');
+  const [coordinatorId, setCoordinatorId] = useState(ASSIGNED_COORDINATOR);
+  const [artworkCount, setArtworkCount] = useState(15);
+  const honored = participationTrack === 'HONORED_GUEST';
   const [provenance, setProvenance] = useState<File | null>(null);
   const [artistName, setArtistName] = useState('');
   const [artistCategory, setArtistCategory] = useState<ArtistCategory | ''>('');
@@ -78,13 +89,15 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
   const [blocklistAlert, setBlocklistAlert] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState<boolean>(false);
 
-  const isFormValid =
+  const artworkValid =
     artistName.trim() !== '' && nationality.trim() !== '' && medium.trim() !== '' && proposedWorkTitle.trim() !== '' &&
     (isCommissioned || Boolean(provenance && provenance.size > 0)) &&
     (artistCategory === 'Emerging' || artistCategory === 'Established') &&
     Boolean(cvFile && cvFile.size > 0) &&
     previousWorks.length > 0 &&
     (!isCommissioned || newWorkMockup.length > 0);
+
+  const isFormValid = validSoloCount(participationTrack, artworkCount) && (honored ? Boolean(artistName.trim() && nationality.trim()) : artworkValid);
 
   const checkIsBlocked = () => {
     const normNationality = nationality.trim().toLowerCase();
@@ -118,16 +131,17 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
     const dossier: NominatedArtistDossier = {
       id: `dossier-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       artistName: artistName.trim(),
-      artistCategory: artistCategory as ArtistCategory,
+      artistCategory: honored ? 'Not applicable' : artistCategory as ArtistCategory,
+      participationTrack, artworkCount: participationTrack === 'SOLO_EXHIBITION' ? artworkCount : undefined,
       nationality: nationality.trim() || 'Undisclosed',
-      medium: medium.trim() || 'Calligraphic Arts',
-      proposedWorkTitle: proposedWorkTitle.trim() || 'Untitled Biennial Proposal',
-      isCommissioned,
-      cvFileName: cvFile!.name,
-      assignedCoordinatorId: ASSIGNED_COORDINATOR,
-      provenanceFileName: isCommissioned ? undefined : provenance?.name,
-      previousWorksCount: previousWorks.length,
-      mockupCount: isCommissioned ? newWorkMockup.length : 0,
+      medium: honored ? '' : medium.trim(),
+      proposedWorkTitle: honored ? '' : proposedWorkTitle.trim(),
+      isCommissioned: honored ? undefined : isCommissioned,
+      cvFileName: honored ? '' : cvFile!.name,
+      assignedCoordinatorId: assignedCoordinatorId ?? coordinatorId,
+      provenanceFileName: honored || isCommissioned ? undefined : provenance?.name,
+      previousWorksCount: honored ? 0 : previousWorks.length,
+      mockupCount: !honored && isCommissioned ? newWorkMockup.length : 0,
       submittedBy,
       submittedAt: new Date().toISOString(),
       status: 'DRAFT',
@@ -220,6 +234,23 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
 
       {/* Nomination Form */}
       <form onSubmit={handleSubmit} className="rounded-xl border border-sadu-gold bg-white p-6 shadow-xs space-y-6">
+        <label className="block">{isAr ? 'مسار المشاركة' : 'Participation track'}
+          <select className="mt-2 block w-full rounded border ps-3 pe-3 py-2 text-start" value={participationTrack} onChange={e => setParticipationTrack(e.target.value as ParticipationTrack)}>
+            {Object.entries(PARTICIPATION_TRACKS).map(([id, label]) => <option key={id} value={id}>{isAr ? label.ar : label.en}</option>)}
+          </select>
+        </label>
+        <label className="block">{isAr ? 'المنسقة المسؤولة' : 'Assigned coordinator'}
+          <select className="mt-2 block w-full rounded border ps-3 pe-3 py-2" disabled={Boolean(assignedCoordinatorId)} value={assignedCoordinatorId ?? coordinatorId} onChange={e => setCoordinatorId(e.target.value)}>
+            {COORDINATORS.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </label>
+        {participationTrack === 'SOLO_EXHIBITION' && <label className="block">{isAr ? 'عدد الأعمال (15–20)' : 'Artwork count (15–20)'}<input className="block rounded border ps-3 pe-3 py-2" type="number" min={15} max={20} step={1} value={artworkCount} onChange={e => setArtworkCount(Number(e.target.value))} /></label>}
+        {honored && <div className="space-y-3">
+          <label className="block">{isAr ? 'اسم الضيف' : 'Guest name'}<input className="block w-full rounded border ps-3 pe-3 py-2" required value={artistName} onChange={e => setArtistName(e.target.value)} /></label>
+          <label className="block">{isAr ? 'الجنسية / البلد' : 'Nationality / country'}<input className="block w-full rounded border ps-3 pe-3 py-2" required value={nationality} onChange={e => setNationality(e.target.value)} /></label>
+          <p>{isAr ? '10 أكتوبر 2026 · بيت الحكمة · تصريح الجهة الخارجية لم يسجّل' : '10 October 2026 · House of Wisdom · External clearance not recorded'}</p>
+        </div>}
+        <fieldset hidden={honored} disabled={honored} className="space-y-6">
         {/* Section 1: Artist Identity & Strategic Tagging */}
         <div className="space-y-4 border-b border-sadu-gold/30 pb-6">
           <h3 className="font-editorial text-lg font-bold text-sadu-charcoal flex items-center gap-2">
@@ -475,11 +506,12 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
           <input type="file" accept=".pdf,image/*" className="block mt-2" onChange={e => setProvenance(e.target.files?.[0] || null)} />
           {provenance && <span>{provenance.name}</span>}
         </label>}
+        </fieldset>
         <p className="text-sm">{tr('Scouting saves a draft. Only the assigned Coordinator can submit it for compliance vetting.')}</p>
         {/* Submit Action Gate */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-t border-sadu-gold/40 pt-4">
           <span className="text-xs text-sadu-muted">
-            {isFormValid ? (
+            {honored ? <p>{isAr ? 'بيانات الضيف مطلوبة؛ لا يلزم ملف أعمال فنية.' : 'Guest identity required; no artwork dossier required.'}</p> : isFormValid ? (
               <span className="text-emerald-700 font-semibold flex items-center gap-1.5">
                 <CheckCircle2 className="h-4 w-4" /> {isCommissioned ? tr('All 5 mandatory schema components attached and validated.') : tr('Existing work images and provenance attached; mockup not required.')}
               </span>

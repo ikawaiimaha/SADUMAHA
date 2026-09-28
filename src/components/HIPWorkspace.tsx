@@ -208,7 +208,7 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
                 value={arabicText}
                 onChange={e => setArabicText(e.target.value)}
                 placeholder="اكتب التوجيهات الفنية والمعايير التنسيقية للمعرض باللغة العربية حصراً..."
-                className={`mt-1.5 w-full rounded-md border p-3 text-xs leading-relaxed ${
+                className={`mt-1.5 w-full rounded-md border p-3 text-base leading-relaxed ${
                   isLocked
                     ? 'border-gray-300 bg-gray-50 text-gray-700 cursor-not-allowed'
                     : 'border-sadu-gold/60 bg-white text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick'

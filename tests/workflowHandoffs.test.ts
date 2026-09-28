@@ -1,3 +1,4 @@
+import { operationalHandoff } from '../src/data/operationalHandoff';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createCommission, commissionReducer as reduce, advanceEligible, milestoneEligible, validAgreement, COMMISSION } from '../src/data/commissionScenario';
@@ -147,4 +148,64 @@ test('accepted solo artwork scope cannot be silently changed', () => {
   for (const patch of [{artworkCount:20}, {participationCategory:'SINGLE_WORK' as const,artworkCount:1}, {invitationSourceId:'different-source'}]) {
     assert.equal(reduce(state,{type:'contracts',update: cs => cs.map(c => ({...c,...patch}))}),state);
   }
+});
+
+
+test('operational summary follows actual evidence without changing any gates', () => {
+  const initial = createCommission();
+  assert.equal(operationalHandoff(initial, false).owner, 'COORDINATOR');
+  const pending = {...initial, contracts: [{...contract, status: 'SENT_TO_ARTIST' as const}]};
+  assert.equal(operationalHandoff(pending, false).owner, 'ARTIST');
+  const state = accepted();
+  const before = JSON.stringify(state);
+  assert.equal(operationalHandoff(state, false).owner, 'PR_PROTOCOL');
+  assert.equal(JSON.stringify(state), before);
+  const pr = {...state, evidence: {...state.evidence, prEvidenceGate: true}};
+  assert.equal(operationalHandoff(pr, false).owner, 'TECHNICAL');
+  const cleared = {...pr, evidence: {...pr.evidence, technicalEvidenceGate: true}};
+  assert.equal(cleared.logistics, undefined);
+  assert.equal(operationalHandoff(cleared, false).owner, 'FINANCE');
+  const paid = reduce(cleared, {type:'authorize-advance', actor:'FINANCE', at});
+  assert.equal(operationalHandoff(paid, false).owner, 'LOGISTICS');
+  const received = reduce(paid, {type:'receive-asset', actor:'LOGISTICS', reference:'R1', at});
+  assert.equal(operationalHandoff(received, false).owner, 'FINANCE');
+});
+
+test('published theme snapshot is immutable after acceptance', () => {
+  const state = reduce(createCommission(), {type:'contracts', update:() => [{...contract, themeArabic:'النقطة'}]});
+  assert.equal(reduce(state, {type:'contracts', update:rows => rows.map(row => ({...row, themeArabic:'ميزان'}))}), state);
+});
+import { assignedTo, COORDINATORS, HONORED_GUESTS, HONORED_EVENT, validSoloCount } from '../src/data/participation2026';
+
+test('source roster has 53 unique guests, nine exclusive coordinator assignments', () => {
+  assert.equal(HONORED_GUESTS.length, 53);
+  assert.equal(new Set(HONORED_GUESTS.map(g => g.name)).size, 53);
+  assert.deepEqual(COORDINATORS.slice(1).map(c => assignedTo(HONORED_GUESTS, c.id).length).sort((a,b) => a-b), [2,2,2,2,3,4,4,10,24]);
+  const maha = COORDINATORS.find(c => c.name === 'مها السويدي')!;
+  assert.deepEqual(assignedTo(HONORED_GUESTS, maha.id).map(g => g.name), ['فاطمة الحمادي', 'Murat Kurt']);
+  assert.deepEqual(assignedTo(HONORED_GUESTS, 'unknown'), []);
+  assert.equal(HONORED_EVENT.date, '2026-10-10');
+  assert.equal(HONORED_EVENT.requiresExternalClearance, true);
+});
+
+test('only solo participation requires 15–20 whole artworks', () => {
+  for (const count of [undefined, 0, 14, 15.5, 21, NaN]) assert.equal(validSoloCount('SOLO_EXHIBITION', count), false);
+  for (const count of [15, 20]) assert.equal(validSoloCount('SOLO_EXHIBITION', count), true);
+  assert.equal(validSoloCount('HONORED_GUEST'), true);
+  assert.equal(validSoloCount('GENERAL_COMPETITION'), true);
+});
+
+test('honored guest vetting needs identity and the assigned coordinator, not invented artwork', () => {
+  const d: NominatedArtistDossier = {
+    id: 'test-guest', artistName: 'Fictional guest', artistCategory: 'Not applicable',
+    nationality: 'Fictional country', medium: '', proposedWorkTitle: '', cvFileName: '',
+    previousWorksCount: 0, mockupCount: 0, submittedBy: 'Coordinator', submittedAt: at,
+    assignedCoordinatorId: COORDINATORS[1].id, participationTrack: 'HONORED_GUEST', status: 'DRAFT',
+  };
+  assert.equal(validDossier(d), true);
+  assert.equal(submitForVetting(d, 'COORDINATOR', COORDINATORS[2].id, []), null);
+  assert.equal(submitForVetting(d, 'COORDINATOR', COORDINATORS[1].id, [])?.status, 'PENDING_DIRECTOR_REVIEW');
+  assert.equal(submitForVetting(d, 'COORDINATOR', COORDINATORS[1].id, ['Fictional country'])?.status, 'REJECTED_COMPLIANCE');
+  assert.equal(validDossier({...d, nationality: ''}), false);
+  assert.equal(validDossier({...d, assignedCoordinatorId: undefined}), false);
 });

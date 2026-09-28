@@ -32,8 +32,7 @@ export function WorkspaceNavigation({ role, onNavigate, isAr, onToggleLanguage, 
 }) {
   const control = 'inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-[#D9CEBA] bg-white ps-3 pe-3 py-2 text-sm text-[#51453B] hover:bg-[#EDE4D3] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8B261E]';
   return <header dir={isAr ? 'rtl' : 'ltr'} className="sticky top-0 z-50 border-b border-[#D9CEBA] bg-[#F7F1E6] text-[#2C2A29] shadow-sm">
-    <p className="border-b border-[#D9CEBA] ps-4 pe-4 py-2 text-center text-xs" dir="ltr">Guided rehearsal • fictional records • no external actions</p>
-    <p className="ps-4 pe-4 py-1 text-center text-xs text-[#736357]">{isAr ? 'العقود والمراجعات الفنية والاعتمادات تخص هذه الجلسة فقط؛ ليست سجلات قانونية ثابتة.' : 'Contracts, engineering reviews and approvals are session-bound prototype state, not immutable legal records.'}</p>
+    <p className="border-b border-[#D9CEBA] ps-4 pe-4 py-2 text-center text-sm">{isAr ? 'عرض تدريبي • سجلات خيالية • لا إجراءات خارجية • الاعتمادات مؤقتة للجلسة' : 'Guided rehearsal • fictional records • no external actions • session-only approvals'}</p>
     <nav aria-label={isAr ? 'مساحات العمل' : 'Workspaces'} className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 ps-4 pe-4 py-3">
       <div className="me-auto flex items-baseline gap-2">
         <span className="font-serif text-2xl font-bold text-[#8B261E]">{isAr ? 'سدو' : 'SADU'}</span>

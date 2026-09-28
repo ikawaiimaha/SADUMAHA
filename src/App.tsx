@@ -1,3 +1,10 @@
+import { assignedTo, COORDINATORS } from './data/participation2026';
+import { HonoredGuestRoster } from './components/HonoredGuestRoster';
+import { scrollWorkspaceToTop } from './utils/scrollWorkspaceToTop';
+import { operationalHandoff } from './data/operationalHandoff';
+import { SessionDraftProvider } from './context/SessionDrafts';
+import { Gateway } from './components/Gateway';
+import { PresentationHandoff } from './components/PresentationHandoff';
 import { ASSIGNED_COORDINATOR, submitForVetting } from './data/vetting';
 import LogisticsWorkspace from './components/LogisticsWorkspace';
 import { WorkspaceNavigation, type WorkspaceHandoff } from './components/WorkspaceNavigation';
@@ -27,7 +34,7 @@ import { useMockupText } from './i18n/useMockupText';
  */
 
 import { validParticipationScope, SOLO_INVITATION_2026 } from './data/soloInvitation2026';
-import React, { useState, useEffect, useReducer, useRef } from 'react';
+import React, { useState, useEffect, useReducer, useRef, useCallback } from 'react';
 import RoleSelection, { AppRole } from './components/RoleSelection';
 import CommitteeThemeWorkspace, { CommitteeThemeDraft, isThemeBatchComplete } from './components/CommitteeThemeWorkspace';
 import ChairmanWorkspace, { ThemeItem } from './components/ChairmanWorkspace';
@@ -137,11 +144,22 @@ function SADUApp() {
   }, []);
 
   // Executive Prototype State-Based Switcher (offline/tablet zero-latency pitch mode)
-  const [activeRole, setActiveRole] = useState<InstitutionalRole>('LANDING');
+  const [activeRole, setRole] = useState<InstitutionalRole>('LANDING');
+  const [showStory, setShowStory] = useState(false);
+  const [autoForward, setAutoForward] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState<{ role: InstitutionalRole; id: number } | null>(null);
+  const setActiveRole = useCallback((role: InstitutionalRole) => {
+    setPendingNavigation(null);
+    setShowStory(false);
+    setRole(role);
+  }, []);
+  const continueNavigation = useCallback(() => {
+    if (pendingNavigation) setActiveRole(pendingNavigation.role);
+  }, [pendingNavigation, setActiveRole]);
   const workspaceScrollRef = useRef<HTMLElement>(null);
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    workspaceScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+    scrollWorkspaceToTop();
+    workspaceScrollRef.current?.focus({ preventScroll: true });
   }, [activeRole]);
 
   const [submittedThemes, setSubmittedThemes] = useState<CommitteeThemeDraft[] | undefined>(undefined);
@@ -169,6 +187,7 @@ function SADUApp() {
   );
   const [restrictionProposal, setRestrictionProposal] = useState<{tags: string[]; reason: string} | null>(null);
   const [restrictionAudit, setRestrictionAudit] = useState<string[]>([]);
+  const [activeCoordinatorId, setActiveCoordinatorId] = useState<string>(ASSIGNED_COORDINATOR);
   const [scoutedDossiers, setScoutedDossiers] = useState<NominatedArtistDossier[]>([]);
   const [blocklist, setBlocklist] = useState<string[]>([
     'Restricted Nationality: Country X',
@@ -246,7 +265,7 @@ function SADUApp() {
 
   const handleNominateArtist = (dossier: NominatedArtistDossier) => {
     if (!['PREP_COMMITTEE', 'COORDINATOR'].includes(activeRole)) return;
-    setScoutedDossiers(prev => [{...dossier, status: 'DRAFT', assignedCoordinatorId: ASSIGNED_COORDINATOR}, ...prev]);
+    setScoutedDossiers(prev => [{...dossier, status: 'DRAFT', assignedCoordinatorId: activeRole === 'COORDINATOR' ? activeCoordinatorId : dossier.assignedCoordinatorId}, ...prev]);
     setIsNominationFormOpen(false);
   };
 
@@ -282,7 +301,7 @@ function SADUApp() {
     );
 
     const target = nominatedArtists.find(a => a.id === id);
-    if (target) {
+    if (target && target.participationTrack !== 'HONORED_GUEST') {
       setArtists(prev => {
         if (prev.some(a => a.id === id)) {
           return prev.map(a => (a.id === id ? { ...a, status: 'DIRECTOR_APPROVED' } : a));
@@ -306,7 +325,7 @@ function SADUApp() {
       const existing = prev.find(c => c.artistId === id);
       if (existing) return prev;
       const target = nominatedArtists.find(a => a.id === id);
-      if (!target) return prev;
+      if (!target || target.participationTrack === 'HONORED_GUEST' || target.artistCategory === 'Not applicable') return prev;
 
       const productionCost = target.artistCategory === 'Established' ? 120000 : 65000;
       const advance = Math.round(productionCost * 0.3);
@@ -386,9 +405,9 @@ function SADUApp() {
     shippingTermsArg?: string,
     resolutionNotes?: string
   ) => {
-    if (artistId !== COMMISSION.id || activeRole !== 'COORDINATOR') return;
+    if (artistId !== COMMISSION.id || activeRole !== 'COORDINATOR' || activeCoordinatorId !== ASSIGNED_COORDINATOR) return;
     const terms = contractTerms as ContractFormState;
-    if (!validParticipationScope(terms)) return;
+    if (!validParticipationScope(terms) || terms.participationCategory !== 'SINGLE_WORK') return;
     if (!['DEPARTMENT', 'HOUSE_OF_WISDOM', 'SHARJAH_ART_MUSEUM'].includes(terms.venue) || (terms.venue !== 'DEPARTMENT' && !terms.venueClearanceReference?.trim()) || commission.ledger?.length) return;
     const percentages = [terms.advancePercentage, terms.interimPercentage, terms.finalPercentage];
     if (!Number.isFinite(terms.productionGrant) || terms.productionGrant <= 0
@@ -451,6 +470,7 @@ function SADUApp() {
         nationality: targetArtist?.nationality || 'United Arab Emirates',
         medium: targetArtist?.medium || 'Calligraphic Art',
         proposedWorkTitle: COMMISSION.title,
+        themeArabic: themePolishStatus === 'PUBLISHED_OFFICIAL' ? ratifiedTheme?.arabicName : undefined,
         productionCost,
         shippingTerms: shippingMethod,
         specialConditions: terms.specialConditions,
@@ -597,8 +617,10 @@ function SADUApp() {
   };
 
   const handleAutoNavigate = (role: string) => {
-    if (role === 'DIRECTOR') setActiveRole('BIENNIAL_DIRECTOR');
-    else if (role === 'CHAIRMAN' || role === 'EDITORIAL' || role === 'HIP') setActiveRole(role);
+    const target: InstitutionalRole | null = role === 'DIRECTOR' ? 'BIENNIAL_DIRECTOR'
+      : role === 'CHAIRMAN' || role === 'EDITORIAL' || role === 'HIP' ? role : null;
+    if (target) setPendingNavigation({ role: target, id: Date.now() });
+    scrollWorkspaceToTop();
   };
 
   const renderWorkspace = () => {
@@ -679,6 +701,7 @@ function SADUApp() {
               />
             ) : (
               <CommitteeThemeWorkspace
+            onCancelAutoNavigate={() => setPendingNavigation(null)}
             onAutoNavigate={handleAutoNavigate}
                 eventId={EVENT_ID}
                 ratifiedTheme={ratifiedTheme}
@@ -743,23 +766,27 @@ function SADUApp() {
           <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
             <section className="rounded border border-[#D9CEBA] bg-[#F7F1E6] ps-5 pe-5 py-5 space-y-3 text-start">
               <h2 className="text-xl font-semibold">{isAr ? 'المرحلة 4 · مكتب المنسق المكلّف' : 'Stage 4 · Assigned Coordinator desk'}</h2>
-              <p>{ASSIGNED_COORDINATOR}</p>
-              <details><summary className="cursor-pointer">{isAr ? 'إعداد ملف ترشيح' : 'Prepare nomination dossier'}</summary><ArtistNominationForm submittedBy="Coordinator" onSubmitNomination={handleNominateArtist} /></details>
-              {scoutedDossiers.map(d => <article key={d.id} className="border-t border-[#D9CEBA] py-3"><h3 className="font-semibold">{d.artistName} · {d.proposedWorkTitle}</h3><p>{d.status} · {d.assignedCoordinatorId}</p><p>{d.complianceReason}</p>
-                <button disabled={d.status !== 'DRAFT' || d.assignedCoordinatorId !== ASSIGNED_COORDINATOR} className="mt-2 rounded bg-[#8B261E] text-white ps-4 pe-4 py-2 disabled:opacity-50" onClick={() => {
-                  const submitted = submitForVetting(d, activeRole, ASSIGNED_COORDINATOR, blocklist);
+              <label className="block">{isAr ? 'اختيار المنسقة للمحاكاة — ليس تسجيل دخول' : 'Demo coordinator selection — not authentication'}
+                <select className="mt-2 block rounded border ps-3 pe-3 py-2" value={activeCoordinatorId} onChange={e => setActiveCoordinatorId(e.target.value)}>{COORDINATORS.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
+              </label>
+              <HonoredGuestRoster coordinatorId={activeCoordinatorId} isAr={isAr} />
+              <details><summary className="cursor-pointer">{isAr ? 'إعداد ملف ترشيح' : 'Prepare nomination dossier'}</summary><ArtistNominationForm key={activeCoordinatorId} assignedCoordinatorId={activeCoordinatorId} submittedBy="Coordinator" onSubmitNomination={handleNominateArtist} /></details>
+              {assignedTo(scoutedDossiers, activeCoordinatorId).map(d => <article key={d.id} className="border-t border-[#D9CEBA] py-3"><h3 className="font-semibold">{d.artistName} · {d.proposedWorkTitle}</h3><p>{d.status} · {d.assignedCoordinatorId}</p><p>{d.complianceReason}</p>
+                <button disabled={d.status !== 'DRAFT' || d.assignedCoordinatorId !== activeCoordinatorId} className="mt-2 rounded bg-[#8B261E] text-white ps-4 pe-4 py-2 disabled:opacity-50" onClick={() => {
+                  const submitted = submitForVetting(d, activeRole, activeCoordinatorId, blocklist);
                   if (!submitted) return;
                   setScoutedDossiers(rows => rows.map(row => row.id === d.id ? submitted : row));
                   if (submitted.status === 'PENDING_DIRECTOR_REVIEW') setNominatedArtists(rows => [...rows, submitted]);
                 }}>{isAr ? 'إرسال للتدقيق' : 'Submit for Vetting'}</button>
               </article>)}
-              {nominatedArtists.filter(d => d.status === 'VETOED').map(d => <p key={d.id} role="status">{d.artistName} · {d.vetoReason} · {d.vetoNotes} · {d.decisionAt}</p>)}
+              {assignedTo(nominatedArtists, activeCoordinatorId).filter(d => d.status === 'VETOED').map(d => <p key={d.id} role="status">{d.artistName} · {d.vetoReason} · {d.vetoNotes} · {d.decisionAt}</p>)}
             </section>
             <p className="my-4 text-sm text-[#736357]">{isAr ? 'التعاقد والتنفيذ في هذه المحاكاة مخصصان لعمل أفق كوفي؛ ملفات الترشيح الأخرى مخصصة لعرض التدقيق والقرارات.' : 'Contracting and execution in this rehearsal use Kufic Horizon only; other nominations demonstrate vetting and executive decisions.'}</p>
             {/* Stage 6: Bilateral Contracting Workspace */}
-            {activeRole === 'COORDINATOR' && (
+            {activeRole === 'COORDINATOR' && activeCoordinatorId === ASSIGNED_COORDINATOR && (
               <CoordinatorContractWorkspace 
-                isAr={isRtl} 
+                isAr={isRtl}
+                officialTheme={themePolishStatus === 'PUBLISHED_OFFICIAL' ? ratifiedTheme?.arabicName : undefined}
                 artists={artists.filter(artist => artist.id === COMMISSION.id)}
                 contracts={contracts}
                 onDispatchContract={handleDispatchContract} 
@@ -793,9 +820,9 @@ function SADUApp() {
           onClearTechnical={handleClearTechnical} />;
 
       case 'LOGISTICS':
-        return <LogisticsWorkspace isAr={isAr} state={commission} onRecord={action => {
+        return <><HonoredGuestRoster isAr={isAr} /><LogisticsWorkspace isAr={isAr} state={commission} onRecord={action => {
           if (activeRole === 'LOGISTICS') dispatchCommission(action);
-        }} />;
+        }} /></>;
       case 'FINANCE':
         return <FinanceWorkspace isAr={isAr} state={commission}
           artist={artists.find(artist => artist.id === contracts[0]?.artistId)}
@@ -843,6 +870,9 @@ function SADUApp() {
     }
   }
 
+  if (['COORDINATOR', 'ARTIST', 'PR_PROTOCOL', 'TECHNICAL', 'FINANCE', 'LOGISTICS'].includes(activeRole)) handoff = operationalHandoff(commission, isAr);
+
+  if (activeRole === 'LANDING' && !showStory) return <Gateway isAr={isAr} onEnter={() => setActiveRole('PREP_COMMITTEE')} onStory={() => setShowStory(true)} onLanguage={toggleLang} />;
   if (activeRole === 'LANDING') {
     return <StoryMode showRosterLink={false} lang={lang} onToggleLanguage={toggleLang}
       onSkipToPlatform={() => setActiveRole('PREP_COMMITTEE')}
@@ -860,14 +890,15 @@ function SADUApp() {
   return (
     <div className="min-h-screen bg-[#F7F1E6] text-[#2C2A29] flex flex-col font-sans">
       <WorkspaceNavigation role={activeRole} onNavigate={setActiveRole} isAr={isAr}
-        onToggleLanguage={toggleLang} onOpenPresenter={() => setIsPresenterDrawerOpen(prev => !prev)} handoff={handoff} />
+        onToggleLanguage={toggleLang} onOpenPresenter={() => setIsPresenterDrawerOpen(prev => !prev)} handoff={pendingNavigation && handoff ? { ...handoff, owner: undefined } : handoff} />
+      <PresentationHandoff isAr={isAr} automatic={autoForward} onAutomaticChange={setAutoForward} pending={pendingNavigation ? { id: pendingNavigation.id, label: ({ BIENNIAL_DIRECTOR: isAr ? 'مدير الملتقى' : 'Biennial Director', CHAIRMAN: isAr ? 'رئيس الدائرة' : 'Chairman', EDITORIAL: isAr ? 'قسم التحرير' : 'Editorial', HIP: isAr ? 'منسق معرض عام' : 'HIP' } as Partial<Record<InstitutionalRole, string>>)[pendingNavigation.role] ?? pendingNavigation.role } : null} onContinue={continueNavigation} />
 
       {/* 
         WORKSPACE MOUNT POINT
         The actual Archival Heritage Pop UI renders inside this container.
       */}
-      <main id="workspace-scroll" ref={workspaceScrollRef} className="flex-1 overflow-y-auto relative bg-[#F7F1E6]">
-        {!['CHAIRMAN', 'BIENNIAL_DIRECTOR', 'EDITORIAL', 'HIP', 'ROLES', 'PR_PROTOCOL', 'TECHNICAL', 'FINANCE'].includes(activeRole) && (activeRole !== 'PREP_COMMITTEE' || isNominationFormOpen) && <aside className="border-b border-[#D9CEBA] ps-4 pe-4 py-3 text-start" dir={isAr ? 'rtl' : 'ltr'}>
+      <main id="workspace-scroll" tabIndex={-1} ref={workspaceScrollRef} className="flex-1 overflow-y-auto relative bg-[#F7F1E6]">
+        {!['CHAIRMAN', 'BIENNIAL_DIRECTOR', 'EDITORIAL', 'HIP', 'ROLES', 'PR_PROTOCOL', 'TECHNICAL', 'FINANCE'].includes(activeRole) && (activeRole !== 'PREP_COMMITTEE' || isNominationFormOpen) && (activeRole !== 'COORDINATOR' || activeCoordinatorId === ASSIGNED_COORDINATOR) && <aside className="border-b border-[#D9CEBA] ps-4 pe-4 py-3 text-start" dir={isAr ? 'rtl' : 'ltr'}>
           <CommissionSummary isAr={isAr} showTechnical={activeRole !== 'PR_PROTOCOL'} />
         </aside>}
         {renderWorkspace()}
@@ -886,7 +917,7 @@ function SADUApp() {
 export default function App() {
   return (
     <I18nProvider initialLang="ar">
-      <SADUApp />
+      <SessionDraftProvider><SADUApp /></SessionDraftProvider>
     </I18nProvider>
   );
 }
