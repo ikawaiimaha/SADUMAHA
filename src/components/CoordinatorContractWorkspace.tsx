@@ -1,3 +1,4 @@
+import type { PortalInvitation } from '../data/portalInvitation';
 import { agreementPipelineReady } from '../data/workflowEligibility';
 import { useSessionDraft } from '../context/SessionDrafts';
 import { validCrate, type CrateSpec } from '../data/installationOperations';
@@ -51,6 +52,8 @@ export interface ContractFormState {
 }
 
 export interface CoordinatorContractWorkspaceProps {
+  invitation?: PortalInvitation;
+  onOpenPortal?: () => void;
   themeStatus?: string;
   guidelinesStatus?: string;
   isIsolatedRehearsalMode?: boolean;
@@ -58,11 +61,11 @@ export interface CoordinatorContractWorkspaceProps {
   isAr?: boolean;
   artists: VettedArtist[];
   contracts?: BilateralContract[];
-  onDispatchContract: (artistId: string, contractData: ContractFormState) => void;
+  onDispatchContract: (artistId: string, contractData: ContractFormState) => boolean | void;
 }
 
 export function CoordinatorContractWorkspace({ 
-  isAr = true,
+  isAr = true, invitation, onOpenPortal,
   officialTheme, themeStatus = '', guidelinesStatus = '', isIsolatedRehearsalMode = false,
   artists = [],
   contracts = [],
@@ -73,7 +76,7 @@ export function CoordinatorContractWorkspace({
   
   // Filter incoming global state
   const pendingArtists = artists.filter(a => a.status === 'DIRECTOR_APPROVED');
-  const dispatchedArtists = artists.filter(a => a.status === 'CONTRACT_PENDING_SIGNATURE');
+  const dispatchedArtists = artists.filter(a => ['CONTRACT_PENDING_SIGNATURE','INVITATION_DISPATCHED'].includes(a.status));
 
   const [selectedArtistId, setSelectedArtistId] = useState<string | null>(null);
   const [dispatchedSuccess, setDispatchedSuccess] = useState<string | null>(null);
@@ -118,7 +121,7 @@ export function CoordinatorContractWorkspace({
 
     
     // 1. Pass the data UP to App.tsx instead of handling it locally
-    onDispatchContract(selectedArtistId, form);
+    if (!onDispatchContract(selectedArtistId, form)) return;
 
     // 2. Show success message
     setDispatchedSuccess(selectedArtistId);
@@ -173,11 +176,18 @@ export function CoordinatorContractWorkspace({
         <div className="bg-[#EBF3ED] border border-[#9DC4A7] text-[#1E4A28] px-4 py-3 rounded-lg flex items-center gap-3 text-sm mb-6">
           <CheckCircle2 className="w-5 h-5 shrink-0 text-[#2D6A3E]" />
           <span>{isAr
-            ? `تم إصدار الاتفاقية الثنائية للفنان (${dispatchedArtist?.name_ar ?? ''}) بنجاح. جاهزة لمحاكاة قبول الفنان؛ لم تُرسل أي مراسلات خارجية.`
-            : `Bilateral agreement generated & dispatched for ${dispatchedArtist?.name_en ?? ''}. Ready for simulated artist acceptance; nothing was sent externally.`}</span>
+            ? `تم تسجيل إرسال الدعوة للفنان (${dispatchedArtist?.name_ar ?? ''}) بنجاح. بانتظار تأكيد الاسم القانوني قبل إنشاء الاتفاقية؛ لم تُرسل أي مراسلات خارجية.`
+            : `Invitation / revised agreement recorded for ${dispatchedArtist?.name_en ?? ''}. The initial agreement requires legal identity confirmation. Nothing was emailed externally.`}</span>
         </div>
       )}
 
+      {invitation && <section role="status" className="rounded-lg border border-[#D9CEBA] bg-[#F7F1E6] ps-5 pe-5 py-4 space-y-3 text-start">
+        <h2 className="font-semibold">{isAr ? 'سجل دعوة البوابة' : 'Portal invitation record'}</h2>
+        <p>{invitation.legalName ?? invitation.originalName} · {invitation.status}</p>
+        <p>{new Date(invitation.dispatchedAt).toLocaleString(isAr ? 'ar-AE' : 'en-GB')}</p>
+        <p>{isAr ? 'محاكاة داخل الجلسة فقط — لا بريد مرسل ولا رابط دخول آمن فعلي. تؤكد هوية الفنان قبل توليد الاتفاقية.' : 'Session rehearsal only — no email or authenticated link is sent. Artist identity confirmation precedes agreement generation.'}</p>
+        <button type="button" onClick={onOpenPortal} className="rounded border border-[#8B261E] text-[#8B261E] ps-4 pe-4 py-2">{isAr ? 'فتح معاينة بوابة الفنان' : 'Open Artist Portal Preview'}</button>
+      </section>}
       {contracts.map(contract => <AgreementMilestones key={contract.id} contract={contract} isAr={isAr} />)}
 
       <details className="rounded border border-[#D9CEBA] ps-4 pe-4 py-3">
@@ -240,7 +250,7 @@ export function CoordinatorContractWorkspace({
           {/* Recently Dispatched Queue */}
           <div className="bg-[#FAF7F2] border border-[#D9CEBA] rounded-lg p-4">
             <h2 className="text-xs font-semibold text-[#736357] uppercase tracking-wider mb-2">
-              {isAr ? 'الاتفاقيات المرسلة للتوقيع' : 'Agreements Pending Signature'}
+              {isAr ? 'الدعوات والاتفاقيات المرسلة' : 'Dispatched Invitations & Agreements'}
             </h2>
             {dispatchedArtists.length === 0 ? (
               <div className="text-xs text-[#8C7E72] italic py-2">
@@ -251,7 +261,7 @@ export function CoordinatorContractWorkspace({
                 {dispatchedArtists.map(a => (
                   <div key={a.id} className="py-2 flex items-center justify-between">
                     <span className="text-[#2A2624] font-medium">{isAr ? a.name_ar : a.name_en}</span>
-                    <span className="text-[10px] text-[#8B261E] bg-[#F5E6E4] px-1.5 py-0.5 rounded font-mono"> {tr("CONTRACT_PENDING")} </span>
+                    <span className="text-[10px] text-[#8B261E] bg-[#F5E6E4] px-1.5 py-0.5 rounded font-mono"> {a.status === 'INVITATION_DISPATCHED' ? (isAr ? 'بانتظار تأكيد الاسم' : 'AWAITING_IDENTITY') : tr('CONTRACT_PENDING')} </span>
                   </div>
                 ))}
               </div>
@@ -422,7 +432,7 @@ export function CoordinatorContractWorkspace({
                   className="px-5 py-2.5 bg-[#8B261E] hover:bg-[#721F18] text-white text-xs font-semibold rounded-md shadow flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <Send className="w-4 h-4 rtl:rotate-180" />
-                  {isAr ? 'إنشاء الاتفاقية التجريبية' : 'Generate Demo Agreement'}
+                  {existingAgreement ? (isAr ? 'إرسال الاتفاقية المعدلة' : 'Dispatch Revised Agreement') : (isAr ? 'إرسال رابط البوابة الآمن (محاكاة)' : 'Dispatch Secure Portal Link (Rehearsal)')}
                 </button>
               </div>
             </form>

@@ -4,6 +4,7 @@ import type { WorkspaceHandoff } from '../components/WorkspaceNavigation';
 /** Presentation only: mirrors evidence; never grants authority or changes gates. */
 export function operationalHandoff(state: CommissionState, isAr: boolean): WorkspaceHandoff {
   const message = (title: [string, string], description: [string, string], owner?: WorkspaceHandoff['owner']): WorkspaceHandoff => ({ title: title[isAr ? 0 : 1], description: description[isAr ? 0 : 1], owner });
+  if (state.invitation?.status === 'INVITATION_DISPATCHED') return message(['بانتظار تأكيد الاسم القانوني','Legal identity confirmation pending'],['الفنان: مراجعة الاسم قبل إنشاء الاتفاقية','Artist: verify name before agreement generation'],'ARTIST');
   const contract = state.contracts[0];
   if (!contract || ['DRAFT', 'NOT_DRAFTED', 'CONTRACT_DISPUTED', 'AMENDMENT_UNDER_REVIEW'].includes(contract.status))
     return message(['بانتظار إعداد الاتفاقية', 'Agreement preparation pending'], ['المنسق: استكمال البنود وموافقة المكان', 'Coordinator: complete terms and venue clearance'], 'COORDINATOR');

@@ -83,6 +83,7 @@ export type ArtistStatus =
   | 'PENDING_VETTING'
   | 'DIRECTOR_APPROVED'
   | 'DIRECTOR_VETOED'
+  | 'INVITATION_DISPATCHED'
   | 'CONTRACT_PENDING_SIGNATURE'
   | 'CONTRACT_EXECUTED'
   | 'LOGISTICS_PENDING_PR'
@@ -125,6 +126,7 @@ export interface CommissionEvidence {
 }
 
 export interface CommissionState {
+  invitation?: import('./data/portalInvitation').PortalInvitation;
   layoutBlueprints?: import('./data/artistExecution').LayoutBlueprint[];
   domesticPickups?: import('./data/artistExecution').DomesticPickup[];
   collectionTerms?: import('./data/collectionCloseout').CollectionTerms;

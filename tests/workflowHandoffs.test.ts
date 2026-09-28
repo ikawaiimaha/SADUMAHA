@@ -851,3 +851,30 @@ test('venue clearance enforces designated host, readiness, delegated reviewer an
  assert.equal(clearVenue(approved,'one','VENUE:SHARJAH_ART_MUSEUM:backup',at),approved);
  assert.equal(s.tickets.one.status,'PENDING_VENUE_APPROVAL');
 });
+
+
+test('portal invitation freezes terms and requires identity before agreement creation', () => {
+  const draft={...contract,status:'SENT_TO_ARTIST' as const,shippingLiability:'DEPARTMENT' as const,venue:'DEPARTMENT',crate:{reference:'TEST',lengthCm:100,widthCm:100,heightCm:100,grossWeightKg:84}};
+  const action={type:'dispatch-invitation' as const,actor:'COORDINATOR',pipelineReady:true,id:'invite-1',at,contract:draft};
+  const initial=createCommission();
+  assert.equal(reduce(initial,{...action,actor:'ARTIST'}),initial);
+  assert.equal(reduce(initial,{...action,pipelineReady:false}),initial);
+  assert.equal(reduce(initial,{...action,contract:{...draft,venue:'SHARJAH_ART_MUSEUM'}}),initial);
+  const pending=reduce(initial,action);
+  assert.equal(pending.invitation?.status,'INVITATION_DISPATCHED');
+  assert.equal(pending.contracts.length,0);
+  assert.equal(operationalHandoff(pending,false).owner,'ARTIST');
+  assert.equal(reduce(pending,action),pending);
+  assert.equal(reduce(pending,{type:'contracts',update:()=>[draft]}),pending);
+  const confirm={type:'confirm-identity' as const,actor:'ARTIST',pipelineReady:true,invitationId:'invite-1',legalName:'Noura Corrected',at};
+  for(const patch of [{actor:'COORDINATOR'},{pipelineReady:false},{invitationId:'wrong'},{legalName:'   '},{legalName:'1234'},{legalName:'Name\u202E'},{at:'invalid'}])assert.equal(reduce(pending,{...confirm,...patch}),pending);
+  const confirmed=reduce(pending,confirm);
+  assert.equal(confirmed.contracts[0].artistName,'Noura Corrected');
+  assert.equal(confirmed.contracts[0].status,'SENT_TO_ARTIST');
+  assert.equal(confirmed.invitation?.originalName,COMMISSION.artistName);
+  assert.equal(confirmed.agreementRevision,1);
+  assert.equal(reduce(confirmed,confirm),confirmed);
+  assert.equal(reduce(confirmed,{type:'contracts',update:rows=>rows.map(c=>({...c,artistName:'Another name'}))}),confirmed);
+  assert.equal(advanceEligible(confirmed),false);
+  assert.notEqual(pending.invitation?.draft,draft);
+});

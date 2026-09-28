@@ -1,3 +1,4 @@
+import { validLegalName, type InvitationAction } from './portalInvitation';
 import { artistExecutionTransition, type ArtistExecutionAction } from './artistExecution';
 import { closeoutTransition, type CloseoutAction } from './collectionCloseout';
 import { validAdministration, normalizeIBAN, metadataUnlocked, type ArtistAdministration } from './artistAdministration';
@@ -57,7 +58,7 @@ export function milestoneEligible(state: CommissionState, tranche: 'delivery' | 
 }
 
 type Actor = 'PR_PROTOCOL' | 'TECHNICAL' | 'FINANCE' | string;
-export type CommissionAction = ConditionAction | CloseoutAction | ArtistExecutionAction
+export type CommissionAction = InvitationAction | ConditionAction | CloseoutAction | ArtistExecutionAction
   | {type:'save-administration';actor:string;data:ArtistAdministration}
   | {type:'record-loan-payment';actor:string;contractId:string;amount:number;reference:string;at:string}
   | {type:'submit-visa';actor:string;intake:VisaIntake}
@@ -95,6 +96,26 @@ function recordLedger(state: CommissionState, tranche: 'advance' | 'delivery' | 
 /** Shared transition guard. UI locks are not the only checks; this remains a local demo, not RBAC. */
 export function commissionReducer(state: CommissionState, action: CommissionAction): CommissionState {
   if(state.installationStatus==='ARCHIVED_CLOSED')return state;
+  if (action.type === 'dispatch-invitation') {
+    if (action.actor !== 'COORDINATOR' || !action.pipelineReady || state.invitation || state.contracts.length || state.installationStatus === 'EXECUTIVE_IMPOUND' || damageHold(state)
+      || action.contract.artistId !== COMMISSION.id || !validAgreement(action.contract) || !validCrate(action.contract.crate)
+      || !['ARTIST','DEPARTMENT'].includes(action.contract.shippingLiability ?? '')
+      || !['DEPARTMENT','HOUSE_OF_WISDOM','SHARJAH_ART_MUSEUM'].includes(action.contract.venue ?? '')
+      || (action.contract.venue !== 'DEPARTMENT' && !action.contract.venueClearanceReference?.trim())
+      || !action.id || !Number.isFinite(Date.parse(action.at))) return state;
+    return {...state, invitation:{id:action.id,artistId:action.contract.artistId,status:'INVITATION_DISPATCHED',dispatchedAt:action.at,
+      originalName:action.contract.artistName,draft:structuredClone({...action.contract,status:'DRAFT' as const,sentAt:undefined})}};
+  }
+  if (action.type === 'confirm-identity') {
+    const invitation = state.invitation;
+    if (action.actor !== 'ARTIST' || !action.pipelineReady || !invitation || invitation.id !== action.invitationId || invitation.status !== 'INVITATION_DISPATCHED'
+      || state.contracts.length || state.installationStatus === 'EXECUTIVE_IMPOUND' || damageHold(state)
+      || !validLegalName(action.legalName) || !Number.isFinite(Date.parse(action.at)) || Date.parse(action.at)<Date.parse(invitation.dispatchedAt)) return state;
+    const legalName = action.legalName.trim().replace(/\s+/g, ' ');
+    const confirmed = {...invitation,status:'IDENTITY_CONFIRMED' as const,legalName,confirmedAt:action.at};
+    return commissionReducer({...state,invitation:confirmed}, {type:'contracts',update:()=>[{...invitation.draft,artistName:legalName,status:'SENT_TO_ARTIST',sentAt:action.at}]});
+  }
+
   if(action.type==='upload-layout'||action.type==='request-domestic-pickup')return damageHold(state)?state:artistExecutionTransition(state,action);
   if(['collection-terms','acquire','return-ticket','return-awb','archive'].includes(action.type))return damageHold(state)?state:closeoutTransition(state,action as CloseoutAction);
   if (['record-condition','dispatch-damage','request-plan-b','review-plan-b'].includes(action.type)) return conditionTransition(state, action as ConditionAction);
@@ -170,10 +191,11 @@ export function commissionReducer(state: CommissionState, action: CommissionActi
     return recordLedger(state, action.tranche, action.at);
   }
   if (action.type === 'contracts') {
+    if (state.invitation?.status === 'INVITATION_DISPATCHED') return state;
     const contracts = action.update(state.contracts).filter(c => c.artistId === COMMISSION.id).slice(0, 1);
     const before = state.contracts[0];
     const after = contracts[0];
-    if (after && !validParticipationScope(after)) return state;
+    if (after && (!validParticipationScope(after) || (state.invitation?.legalName && after.artistName !== state.invitation.legalName))) return state;
     // Generic updates cannot unlock an accepted contract or impersonate an amendment request.
     if ((accepted && after?.status !== before.status) || (after?.status === 'CONTRACT_DISPUTED' && before?.status !== 'CONTRACT_DISPUTED')) return state;
     if (termsKey(before) !== termsKey(after)) {

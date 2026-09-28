@@ -1,3 +1,5 @@
+import { LegalIdentityGate, ConfirmedAgreementDocument } from './LegalIdentityGate';
+import type { PortalInvitation } from '../data/portalInvitation';
 import { ArtistExecutionBridge } from './ArtistExecutionBridge';
 import { CollectionCloseout } from './CollectionCloseout';
 import { ArtistAdministrationForm } from './ArtistAdministration';
@@ -38,6 +40,10 @@ import { NegotiationRound } from '../types';
 import { BilateralContract } from '../types/contractStage6';
 
 export interface ArtistPortalProps {
+  invitation?: PortalInvitation;
+  identityPipelineReady?: boolean;
+  onConfirmIdentity?: (legalName:string)=>void;
+  onReturnToCoordinator?: ()=>void;
   conditionState?: CommissionState;
   onSubmitVisa?: (intake:VisaIntake)=>void;
   onSubmitCatalog?: (action:CommissionAction)=>void;
@@ -69,7 +75,7 @@ export interface ArtistPortalProps {
 export type ArtistPortalWorkspaceProps = ArtistPortalProps;
 
 export default function ArtistPortalWorkspace({
-  conditionState, onSubmitCatalog, onSubmitVisa,
+  conditionState, onSubmitCatalog, onSubmitVisa, invitation, identityPipelineReady = false, onConfirmIdentity, onReturnToCoordinator,
   profileArtistId,
   contracts,
   onSignContract,
@@ -159,13 +165,15 @@ export default function ArtistPortalWorkspace({
     onUploadLogistics?.(type);
   };
 
+  if (invitation?.status === 'INVITATION_DISPATCHED') return <LegalIdentityGate key={invitation.id} invitation={invitation} isAr={isAr} ready={identityPipelineReady} onConfirm={onConfirmIdentity} onBack={onReturnToCoordinator} />;
   const directoryArtistId = activeContract?.artistId ?? profileArtistId;
-  if (contracts && !activeContract) return <>{directoryArtistId && <MissingDeliverables artistId={directoryArtistId} isAr={isAr}/>} {directoryArtistId && <LivingProfileEditor artistId={directoryArtistId} isAr={isAr}/>}<p className="ps-6 pe-6 py-6 text-start" dir={isAr ? 'rtl' : 'ltr'}>{isAr ? 'بانتظار إنشاء الاتفاقية في مكتب المنسق.' : 'Waiting for the Coordinator to create the agreement.'}</p></>;
+  if (contracts && !activeContract) return <>{directoryArtistId && <MissingDeliverables artistId={directoryArtistId} isAr={isAr}/>} {directoryArtistId && <LivingProfileEditor artistId={directoryArtistId} isAr={isAr} legalName={invitation?.legalName}/>}<p className="ps-6 pe-6 py-6 text-start" dir={isAr ? 'rtl' : 'ltr'}>{isAr ? 'بانتظار إنشاء الاتفاقية في مكتب المنسق.' : 'Waiting for the Coordinator to create the agreement.'}</p></>;
 
   return (
     <div className="min-h-screen bg-[#F7F1E6] p-6 text-[#2C2A29] font-sans text-start" dir={isAr ? 'rtl' : 'ltr'}>
+      {activeContract && invitation?.status === 'IDENTITY_CONFIRMED' && <ConfirmedAgreementDocument contract={activeContract} invitation={invitation} isAr={isAr} />}
       {directoryArtistId && <MissingDeliverables artistId={directoryArtistId} isAr={isAr}/>}
-      {directoryArtistId && <LivingProfileEditor artistId={directoryArtistId} isAr={isAr}/>}
+      {directoryArtistId && <LivingProfileEditor artistId={directoryArtistId} isAr={isAr} legalName={invitation?.legalName}/>}
       {conditionState && activeContract?.artistId === conditionState.contracts[0]?.artistId && <ConditionReporting state={conditionState} isAr={isAr} actor="ARTIST" />}
       {activeContract && <>
         <TravelStatusTracker key={`status:${activeContract.artistId}`} artistId={activeContract.artistId} passportDone={passportDone} isAr={isAr} />

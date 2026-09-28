@@ -410,16 +410,7 @@ function SADUApp() {
     if (!Number.isFinite(terms.productionGrant) || terms.productionGrant <= 0
       || percentages.some(value => !Number.isFinite(value) || value <= 0 || value > 100)
       || Math.abs(percentages.reduce((a, b) => a + b, 0) - 100) > 0.000001) return;
-    // 1. Update the global artist list to change the status
-    setArtists(prevArtists =>
-      prevArtists.map(artist =>
-        artist.id === artistId || `contract-${artist.id}` === artistId
-          ? { ...artist, status: 'CONTRACT_PENDING_SIGNATURE' }
-          : artist
-      )
-    );
-
-    // 2. Push the new contract terms into the global contracts array
+    if (commission.invitation?.status === 'INVITATION_DISPATCHED' || (contracts[0] && !['CONTRACT_DISPUTED','AMENDMENT_UNDER_REVIEW'].includes(contracts[0].status))) return;
     const cleanArtistId = artistId.startsWith('contract-') ? artistId.replace('contract-', '') : artistId;
     const targetArtist =
       artists.find(a => a.id === cleanArtistId || a.id === artistId) ||
@@ -440,8 +431,8 @@ function SADUApp() {
     const deliveryAmount = Math.round(productionCost * interimPct) / 100;
     const installationAmount = Math.round((productionCost - advanceAmount - deliveryAmount) * 100) / 100;
 
-    setContracts(prevContracts => {
-      const existing = prevContracts.find(
+    {
+      const existing = contracts.find(
         c => c.artistId === cleanArtistId || c.id === artistId || c.id === `contract-${cleanArtistId}`
       );
 
@@ -450,7 +441,7 @@ function SADUApp() {
       const newContractRecord: any = {
         id: contractId,
         artistId: cleanArtistId,
-        artistName: (targetArtist as any)?.name_en || (targetArtist as any)?.artistName || 'Artist',
+        artistName: commission.invitation?.legalName || (targetArtist as any)?.name_en || (targetArtist as any)?.artistName || 'Artist',
         artistCategory:
           ((targetArtist as any)?.category === 'ESTABLISHED' || (targetArtist as any)?.artistCategory === 'Established')
             ? 'Established'
@@ -466,7 +457,7 @@ function SADUApp() {
         crate: terms.crate,
         participationCategory: terms.participationCategory,
         artworkCount: terms.artworkCount,
-        invitationSourceId: terms.participationCategory === 'SOLO_EXHIBITION' ? SOLO_INVITATION_2026.sourceId : undefined,
+        invitationSourceId: undefined,
         venue: terms.venue,
         venueClearanceReference: terms.venueClearanceReference,
         cancellationClauseMandatory: true,
@@ -502,11 +493,27 @@ function SADUApp() {
       };
 
       if (existing) {
-        return prevContracts.map(c => (c.id === existing.id ? newContractRecord : c));
+        setContracts(previous => previous.map(c => c.id === existing.id ? newContractRecord : c));
+        setArtists(previous => previous.map(a => a.id === artistId ? {...a,status:'CONTRACT_PENDING_SIGNATURE'} : a));
       } else {
-        return [...prevContracts, newContractRecord];
+        dispatchCommission({type:'dispatch-invitation',actor:activeRole,pipelineReady:true,id:crypto.randomUUID(),at:new Date().toISOString(),contract:newContractRecord});
       }
-    });
+    }
+    return true;
+  };
+  useEffect(() => {
+    const invitation = commission.invitation;
+    if (!invitation) return;
+    setArtists(previous => previous.map(a => a.id === invitation.artistId ? {...a,
+      name_en:invitation.legalName ?? a.name_en,
+      status:invitation.status === 'INVITATION_DISPATCHED' ? 'INVITATION_DISPATCHED' : 'CONTRACT_PENDING_SIGNATURE'} : a));
+    if (invitation.legalName) setNominatedArtists(previous => previous.map(d => d.id === invitation.artistId ? {...d,artistName:invitation.legalName!} : d));
+  }, [commission.invitation]);
+  const handleConfirmIdentity = (legalName:string) => {
+    const dossier = nominatedArtists.find(d => d.id === COMMISSION.id);
+    if (activeRole !== 'ARTIST' || !commission.invitation || dossier?.status !== 'APPROVED' || dossier.amendments?.some(a=>a.status==='PENDING')) return;
+    dispatchCommission({type:'confirm-identity',actor:activeRole,invitationId:commission.invitation.id,legalName,at:new Date().toISOString(),
+      pipelineReady:agreementPipelineReady(themePolishStatus,translationStatus,isIsolatedRehearsalMode)});
   };
   const handleSignContract = (contractId?: string, signerName?: string) => {
     const target = contracts.find(c => c.id === contractId);
@@ -821,6 +828,8 @@ function SADUApp() {
                   return dossier ? {...artist, nationality:dossier.nationality, medium:dossier.medium, assignedCoordinatorId:dossier.assignedCoordinatorId} : artist;
                 })}
                 contracts={contracts}
+                invitation={commission.invitation}
+                onOpenPortal={() => setActiveRole('ARTIST')}
                 onDispatchContract={handleDispatchContract} 
               />
               </>
@@ -831,6 +840,10 @@ function SADUApp() {
       case 'ARTIST':
         return (
           <ArtistPortalWorkspace
+            invitation={commission.invitation}
+            identityPipelineReady={agreementPipelineReady(themePolishStatus,translationStatus,isIsolatedRehearsalMode)}
+            onConfirmIdentity={handleConfirmIdentity}
+            onReturnToCoordinator={() => setActiveRole('COORDINATOR')}
             onSubmitVisa={intake=>{if(activeRole==='ARTIST')dispatchCommission({type:'submit-visa',actor:activeRole,intake});}}
             onSubmitCatalog={action=>{if(activeRole==='ARTIST'&&(action.type==='submit-catalog'||action.type==='save-administration'||action.type==='collection-terms'||action.type==='upload-layout'||action.type==='request-domestic-pickup'))dispatchCommission({...action,actor:activeRole});}}
             conditionState={commission}
@@ -937,7 +950,7 @@ function SADUApp() {
       */}
       <main id="workspace-scroll" tabIndex={-1} ref={workspaceScrollRef} className="flex-1 overflow-y-auto relative bg-[#F7F1E6]">
         {!['CHAIRMAN', 'BIENNIAL_DIRECTOR', 'EDITORIAL', 'HIP', 'ROLES', 'PR_PROTOCOL', 'TECHNICAL', 'FINANCE'].includes(activeRole) && (activeRole !== 'PREP_COMMITTEE' || isNominationFormOpen) && (activeRole !== 'COORDINATOR' || activeCoordinatorId === commissionCoordinatorId) && <aside className="border-b border-[#D9CEBA] ps-4 pe-4 py-3 text-start" dir={isAr ? 'rtl' : 'ltr'}>
-          <CommissionSummary isAr={isAr} showTechnical={activeRole !== 'PR_PROTOCOL'} />
+          <CommissionSummary isAr={isAr} legalName={commission.invitation?.legalName} showTechnical={activeRole !== 'PR_PROTOCOL'} />
         </aside>}
         <GovernanceDesk role={activeRole} pending={activeRole==='PR_PROTOCOL'&&!commission.evidence.prEvidenceGate?['Identity & Travel approval']:activeRole==='HIP'?nominatedArtists.filter(d=>!culturalCleared(d)).map(d=>`Cultural review: ${d.artistName}`):activeRole==='BIENNIAL_DIRECTOR'?nominatedArtists.filter(d=>d.status==='PENDING_DIRECTOR_REVIEW').map(d=>`Director decision: ${d.artistName}`):[]} blockedArtistIds={damageHold(commission)||['ARCHIVED_CLOSED','EXECUTIVE_IMPOUND'].includes(commission.installationStatus??'')?[COMMISSION.id]:[]}/>
         <DelegatedRoleGate role={activeRole}>
@@ -948,9 +961,9 @@ function SADUApp() {
         {['TECHNICAL','COORDINATOR','FINANCE'].includes(activeRole) && <SupplierRegister rows={supplierDeliveries} dossiers={nominatedArtists.filter(d=>commission.installationStatus!=='ARCHIVED_CLOSED'||d.id!==COMMISSION.id)} actor={activeRole} coordinatorId={activeCoordinatorId} isAr={isAr} onAction={action=>setSupplierDeliveries(rows=>supplierTransition(rows,{...action,actor:activeRole},nominatedArtists.filter(d=>commission.installationStatus!=='ARCHIVED_CLOSED'||d.id!==COMMISSION.id)))} />}
         {['COORDINATOR','HIP','BIENNIAL_DIRECTOR'].includes(activeRole) && <>
           {dossierNotice && <p role="status" className="mx-auto max-w-5xl rounded border ps-4 pe-4 py-3">{dossierNotice}</p>}
-          <DossierTracking dossiers={activeRole === 'COORDINATOR' ? assignedTo(nominatedArtists,activeCoordinatorId) : nominatedArtists.filter(d => d.status === 'APPROVED')} isAr={isAr} actor={activeRole} publicationReady={themePolishStatus === 'PUBLISHED_OFFICIAL' && translationStatus === 'PUBLISHED'} lockedIds={contracts.filter(c => c.status !== 'NOT_DRAFTED').map(c=>c.artistId)}
+          <DossierTracking dossiers={activeRole === 'COORDINATOR' ? assignedTo(nominatedArtists,activeCoordinatorId) : nominatedArtists.filter(d => d.status === 'APPROVED')} isAr={isAr} actor={activeRole} publicationReady={themePolishStatus === 'PUBLISHED_OFFICIAL' && translationStatus === 'PUBLISHED'} lockedIds={[...contracts.filter(c => c.status !== 'NOT_DRAFTED').map(c=>c.artistId), ...(commission.invitation ? [commission.invitation.artistId] : [])]}
             onRequest={(id,scope,reason) => {
-              if (activeRole !== 'COORDINATOR'||(id===COMMISSION.id&&commission.installationStatus==='ARCHIVED_CLOSED')) return;
+              if (activeRole !== 'COORDINATOR'||commission.invitation?.artistId===id||(id===COMMISSION.id&&commission.installationStatus==='ARCHIVED_CLOSED')) return;
               const d = nominatedArtists.find(row=>row.id===id); if (!d) return;
               const next = requestScopeChange(d,activeCoordinatorId,scope,reason,new Date().toISOString(),crypto.randomUUID());
               setDossierNotice(next===d ? (isAr?'لم يسجّل التعديل: تحقق من الحقول والتغيير والمراجعة المعلقة.':'Amendment not recorded: check required fields, changed values and pending review.') : (isAr?'تمت إحالة التعديل؛ القيم المعتمدة لم تتغير.':'Amendment submitted; approved values are unchanged.'));
@@ -958,7 +971,7 @@ function SADUApp() {
             }}
             onReview={(id,amendmentId,approve) => {
               const d=nominatedArtists.find(row=>row.id===id); if (!d||(id===COMMISSION.id&&commission.installationStatus==='ARCHIVED_CLOSED')) return;
-              const next=reviewScopeChange(d,amendmentId,approve,activeRole,blocklist,contracts.some(c=>c.artistId===id&&c.status!=='NOT_DRAFTED'),new Date().toISOString());
+              const next=reviewScopeChange(d,amendmentId,approve,activeRole,blocklist,commission.invitation?.artistId===id||contracts.some(c=>c.artistId===id&&c.status!=='NOT_DRAFTED'),new Date().toISOString());
               setDossierNotice(next===d ? (isAr?'لم يسجّل القرار: تحقق من القيود والاتفاقية والمراجعة الحالية.':'Decision not recorded: check compliance, agreement lock and current revision.') : (isAr?'تم تسجيل القرار في الملف المشترك.':'Decision recorded in the shared dossier.'));
               setNominatedArtists(rows=>rows.map(row=>row===d?next:row));
             }}

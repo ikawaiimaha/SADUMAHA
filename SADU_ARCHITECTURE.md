@@ -1,3 +1,10 @@
+# 28 September 2026 — Invitation and legal identity rehearsal
+
+The assigned Coordinator prepares validated terms, then records INVITATION_DISPATCHED. No contract exists until the Artist confirms their full passport name. Original committee spelling, confirmed name and timestamps remain in shared session state. A full-name field supports international names without guessing first/family-name boundaries. Confirmation locks the name, creates the agreement from the frozen terms and generates a watermarked, non-binding PDF summary. Published theme/guidelines remain required unless the explicit isolated rehearsal toggle is enabled. Existing amendments retain the confirmed name and return through the Coordinator.
+
+Dispatch is a simulated notification with an Open Artist Portal Preview action, not an emailed encrypted link or authenticated identity check. Records survive desk changes, not refresh. No production database persistence, authentication, external dispatch or legal signature is implemented by this feature.
+
+---
 # 28 September 2026 — Editorial identity-asset lifecycle
 
 The Arabic text lock enables the identity-asset log. Theme text publication no longer freezes asset intake: late design files and replacement versions can be recorded without editing the published bilingual statement. Approved versions remain read-only historical records. Replacement versions require their own inspection confirmation and separate Editorial session approval; later approval supersedes earlier versions without deleting them. Draft removal is reversible.
