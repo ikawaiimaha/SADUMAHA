@@ -1,3 +1,13 @@
+# 28 September 2026 — Evidence-backed Chairman oversight
+
+The Chairman opens a portfolio view of existing program references, then a separate Biennial decisions view retaining Stage 1 ratification and downstream handoffs. Operational evidence is derived from the existing commission state: PR and Technical require their gate and valid recorded timestamp; Logistics requires its receipt status and timestamp; Finance requires an actual session ledger entry, not authorization alone. Missing evidence has no invented reference or health percentage.
+
+Calendar overlap uses the intersection of known date ranges. Shared program coordinator/venue names alone do not establish exclusive booking conflicts. Explicit shared exclusive-resource bookings are required for that classification. Missing assignment schedules remain unknown, not a zero-conflict assurance. Existing program references are not live delivery reports.
+
+Executive escalation records are owned by App and start empty; the provided engineering-waiver fixture and invented report identifiers are intentionally not seeded. Disposition callbacks are Chairman-only and idempotent, and never modify specialist clearance or payment state. No production backend, external waiver or resource allocation is implied. An originating-department escalation submission workflow is not yet connected.
+
+---
+
 # 28 September 2026 — Honored guest roster and participation tracks
 
 The locally inspected `قائمة فناني التكريم (2).docx` contains 53 distinct guest rows assigned to nine coordinators (24/10/4/4/3/2/2/2/2), confirmed by the owner. Source spellings are retained, including Paco Feenandez. The heading specifies House of Wisdom, Saturday 10 October 2026. Hospitality dates 6–11 October come from the separate invitation source. Shurooq clearance is an owner-specified operational dependency; the roster supplies no authorization evidence.

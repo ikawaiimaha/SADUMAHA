@@ -23,6 +23,8 @@ interface PortfolioActivity {
   area: PortfolioArea;
   activityEn: string;
   activityAr: string;
+  startDate?: string;
+  endDate?: string;
   contextEn?: string;
   contextAr?: string;
   outputEn: string;
@@ -38,7 +40,7 @@ interface PortfolioActivity {
 }
 
 // Sourced directly from SDC Official Calendar: September 2026 – August 2027.
-const programmeReferences: Omit<PortfolioActivity, 'forecast' | 'escalated'>[] = [
+export const programmeReferences: Omit<PortfolioActivity, 'forecast' | 'escalated'>[] = [
   // Pillar 1: Awards & Criticism (الجوائز والنقد)
   {
     id: 'REF-AWARD-ART',
@@ -78,6 +80,7 @@ const programmeReferences: Omit<PortfolioActivity, 'forecast' | 'escalated'>[] =
   // Pillar 2: Flagship Festivals & Cultural Affairs (الملتقيات والمهرجانات والفنون)
   {
     id: 'REF-CALLIGRAPHY-12',
+    startDate: '2026-10-07', endDate: '2026-11-15',
     area: 'programmes',
     scope: 'programme-reference',
     source: 'calendar',
@@ -90,6 +93,7 @@ const programmeReferences: Omit<PortfolioActivity, 'forecast' | 'escalated'>[] =
   },
   {
     id: 'REF-KALBA-FESTIVAL',
+    startDate: '2026-10-23', endDate: '2026-10-24',
     area: 'programmes',
     scope: 'programme-reference',
     source: 'calendar',

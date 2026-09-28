@@ -209,3 +209,36 @@ test('honored guest vetting needs identity and the assigned coordinator, not inv
   assert.equal(validDossier({...d, nationality: ''}), false);
   assert.equal(validDossier({...d, assignedCoordinatorId: undefined}), false);
 });
+
+import { analyzePortfolioConflicts, deriveDepartmentEvidenceStatus, commissionEvidence, resolveEscalation } from '../src/utils/chairmanOversight';
+import type { PortfolioProgram, EscalationRecord } from '../src/types/chairman';
+test('Chairman evidence requires a valid timestamp and clearance; counts use the same evidence', () => {
+  assert.equal(deriveDepartmentEvidenceStatus('PR', undefined, true).isComplete, false);
+  assert.equal(deriveDepartmentEvidenceStatus('PR', 'invalid', true).isComplete, false);
+  assert.equal(deriveDepartmentEvidenceStatus('PR', at, false).isComplete, false);
+  assert.equal(deriveDepartmentEvidenceStatus('PR', at, true).isComplete, true);
+  assert.equal(commissionEvidence(createCommission()).filter(e => e.isComplete).length, 0);
+  const s = createCommission();
+  s.evidence.financeApprovalGate = true;
+  s.evidence.advanceAuthorizedAt = at;
+  assert.equal(commissionEvidence(s)[3].isComplete, false);
+  s.ledger = [{tranche:'advance', amount:10, revision:0, at}];
+  assert.equal(commissionEvidence(s)[3].isComplete, true);
+});
+test('calendar intersection is not resource proof; missing and inverted dates do not report overlaps', () => {
+  const a: PortfolioProgram = {id:'a',nameAr:'a',nameEn:'a',isLiveSessionProgram:true,startDate:'2026-10-07',endDate:'2026-11-15',assignedCoordinatorId:'same',venueKey:'same'};
+  const b = {...a,id:'b',startDate:'2026-10-23',endDate:'2026-10-24'};
+  assert.equal(analyzePortfolioConflicts([a,b])[0].type, 'POTENTIAL_OVERLAP');
+  assert.equal(analyzePortfolioConflicts([a,b])[0].datesDescription, '2026-10-23 – 2026-10-24');
+  assert.equal(analyzePortfolioConflicts([{...a,exclusiveResourceIds:['technician-1']},{...b,exclusiveResourceIds:['technician-1']}])[0].type, 'RESOURCE_CONFLICT');
+  assert.deepEqual(analyzePortfolioConflicts([a,{...b,endDate:'2026-10-01'}]), []);
+  assert.deepEqual(analyzePortfolioConflicts([a,{...b,startDate:undefined}]), []);
+});
+test('executive disposition is role guarded, idempotent and retained in parent records', () => {
+  const rows: EscalationRecord[] = [{id:'e', programId:'p', programName:'test', originatingDepartment:'Technical', reason:'test', supportingEvidenceRef:'test-ref', requestedDecision:'Review scope', status:'PENDING_EXECUTIVE_ACTION',submittedAt:at}];
+  assert.equal(resolveEscalation(rows,'e','APPROVED','TECHNICAL',at),rows);
+  const next = resolveEscalation(rows,'e','DEFERRED','CHAIRMAN',at);
+  assert.equal(next[0].executiveDisposition,'DEFERRED');
+  assert.equal(resolveEscalation(next,'e','APPROVED','CHAIRMAN',at), next);
+  assert.equal(rows[0].status,'PENDING_EXECUTIVE_ACTION');
+});

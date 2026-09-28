@@ -1,3 +1,6 @@
+import { programmeReferences } from './data/directoratePortfolio';
+import { resolveEscalation } from './utils/chairmanOversight';
+import type { EscalationRecord, PortfolioProgram } from './types/chairman';
 import { assignedTo, COORDINATORS } from './data/participation2026';
 import { HonoredGuestRoster } from './components/HonoredGuestRoster';
 import { scrollWorkspaceToTop } from './utils/scrollWorkspaceToTop';
@@ -164,6 +167,7 @@ function SADUApp() {
 
   const [submittedThemes, setSubmittedThemes] = useState<CommitteeThemeDraft[] | undefined>(undefined);
   const [directorThemes, setDirectorThemes] = useState<CommitteeThemeDraft[]>([]);
+  const [executiveEscalations, setExecutiveEscalations] = useState<EscalationRecord[]>([]);
   const [assignedBudget, setAssignedBudget] = useState<number | null>(null);
   const [ratifiedTheme, setRatifiedTheme] = useState<ThemeItem | null>(null);
 
@@ -628,6 +632,18 @@ function SADUApp() {
       case 'CHAIRMAN':
         return (
           <ChairmanWorkspace
+            oversight={{
+              commission,
+              programs: programmeReferences.map((p): PortfolioProgram => ({
+                id: p.id, nameEn: p.activityEn, nameAr: p.activityAr,
+                locationEn: p.contextEn, locationAr: p.contextAr,
+                startDate: p.startDate, endDate: p.endDate,
+                isLiveSessionProgram: p.id === 'REF-CALLIGRAPHY-12',
+                budgetCeilingAED: p.id === 'REF-CALLIGRAPHY-12' ? assignedBudget ?? undefined : undefined,
+              })),
+              escalations: executiveEscalations,
+              onResolveEscalation: (id, disposition) => setExecutiveEscalations(rows => resolveEscalation(rows, id, disposition, activeRole, new Date().toISOString())),
+            }}
             onAutoNavigate={handleAutoNavigate}
             eventId={EVENT_ID}
             themes={submittedThemes}

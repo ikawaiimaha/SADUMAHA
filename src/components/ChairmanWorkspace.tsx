@@ -1,3 +1,4 @@
+import { ChairmanOversight, type ChairmanOversightProps } from './ChairmanOversight';
 import { useLocalDraft, isNotes } from '../hooks/useLocalDraft';
 import { scrollWorkspaceToTop } from '../utils/scrollWorkspaceToTop';
 import { useMockupText } from '../i18n/useMockupText';
@@ -31,6 +32,7 @@ export type ThemeItem = CommitteeThemeDraft | {
 };
 
 export interface ChairmanWorkspaceProps {
+  oversight?: Omit<ChairmanOversightProps, 'children'>;
   /** Identifier of the biennial/event these theme proposals belong to. */
   eventId?: string;
   /** Submitted candidate themes from the Preparatory Committee (the 3 drafts). */
@@ -49,7 +51,7 @@ export interface ChairmanWorkspaceProps {
   onBackToRoles?: () => void;
 }
 
-export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
+const ChairmanDecisions: React.FC<ChairmanWorkspaceProps> = ({
   eventId,
   themes,
   onThemeApproved,
@@ -71,13 +73,13 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
   const { isAr } = useI18n();
   const [approvedIndex, setApprovedIndex] = useState<number | null>(initialApprovedIndex);
   const [allocatedBudget, setAllocatedBudget] = useState<number>(initialBudget ?? 0);
-  const [isBudgetAssigned, setIsBudgetAssigned] = useState<boolean>(initialBudget !== null);
+  const [isBudgetAssigned, setIsBudgetAssigned] = useState<boolean>(initialBudget !== null && Number.isFinite(initialBudget) && initialBudget > 0);
 
   // Check if 3 submitted theme drafts exist and have content
   const hasSubmittedThemes =
     Boolean(themes) &&
-    themes!.length > 0 &&
-    themes!.some(t => t.arabicName.trim() !== '' || t.englishName.trim() !== '');
+    themes!.length === 3 &&
+    themes!.every(t => t.arabicName.trim() !== '');
 
   const handleApprove = (index: number) => {
     if (isBudgetAssigned) return;
@@ -90,7 +92,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
   const isBudgetValid = Number.isFinite(allocatedBudget) && allocatedBudget > 0;
 
   const handleAssignBudget = () => {
-    if (!isBudgetValid || isBudgetAssigned) return;
+    if (!isBudgetValid || isBudgetAssigned || !winningTheme || !onBudgetAssigned) return;
     setIsBudgetAssigned(true);
     scrollWorkspaceToTop();
     onAutoNavigate?.('EDITORIAL');
@@ -508,6 +510,10 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
     </section>
   );
 };
+
+export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = (props) => props.oversight
+  ? <ChairmanOversight {...props.oversight}><ChairmanDecisions {...props} /></ChairmanOversight>
+  : <ChairmanDecisions {...props} />;
 
 export default ChairmanWorkspace;
 
