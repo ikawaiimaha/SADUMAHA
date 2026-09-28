@@ -32,6 +32,7 @@ import { ThemeItem } from './ChairmanWorkspace';
 import { CommitteeThemeDraft, isThemeBatchComplete } from './CommitteeThemeWorkspace';
 
 export interface DirectorWorkspaceProps {
+  isForwarded?: boolean;
   restrictionProposal?: { tags: string[]; reason: string } | null;
   onReviewRestrictions?: (approved: boolean) => void;
   /** The 3 theme proposals submitted by the Preparatory Committee */
@@ -70,6 +71,7 @@ const DEMO_DIRECTOR_NOTES = [
 ];
 
 export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
+  isForwarded = false,
   restrictionProposal,
   onReviewRestrictions,
   submittedThemes,
@@ -93,7 +95,8 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
 
   // Phase 1 State: Themes & Director's Notes
   const activeThemes = submittedThemes ?? [];
-  const canPresentThemes = !ratifiedTheme && isThemeBatchComplete(activeThemes);
+  const notesLocked = isForwarded || Boolean(ratifiedTheme);
+  const canPresentThemes = !notesLocked && isThemeBatchComplete(activeThemes);
   const [directorNotes, setDirectorNotes, notesSaveFailed] = useLocalDraft<Record<number, string>>(`sadu:draft:v1:directorNotes:${JSON.stringify(activeThemes.map(theme => [theme.arabicName, theme.curatorialJustification]))}`, {}, isNotes);
   const [themesPresented, setThemesPresented] = useState<boolean>(false);
 
@@ -148,7 +151,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
   };
 
   const handlePresentThemes = () => {
-    if (!canPresentThemes) return;
+    if (!canPresentThemes || themesPresented) return;
     const updatedThemesWithNotes = activeThemes.map((theme, index) => ({
       ...theme,
       directorNotes: directorNotes[index] || '',
@@ -160,7 +163,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
     navigationTimer.current = setTimeout(() => {
       onAutoNavigate?.('CHAIRMAN');
     }, 3500);
-    setTimeout(() => setThemesPresented(false), 5000);
+
   };
 
   const handleConfirmVeto = (e: React.FormEvent) => {
@@ -184,7 +187,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
               </div>
             )}
       {activeTab === 'phase1' && <div className="flex justify-end">
-        <button type="button" onClick={handleAutoFillNotes} disabled={!canPresentThemes || themesPresented} className="inline-flex items-center gap-2 rounded-md border border-[#736357]/40 ps-3 pe-3 py-1.5 text-xs font-semibold text-[#736357] hover:border-[#8B261E] hover:text-[#8B261E] disabled:opacity-50 disabled:cursor-not-allowed">
+        <button type="button" onClick={handleAutoFillNotes} hidden={notesLocked || themesPresented} disabled={!canPresentThemes || themesPresented} className="inline-flex items-center gap-2 rounded-md border border-[#736357]/40 ps-3 pe-3 py-1.5 text-xs font-semibold text-[#736357] hover:border-[#8B261E] hover:text-[#8B261E] disabled:opacity-50 disabled:cursor-not-allowed">
           <Wand2 className="size-3.5" aria-hidden="true" />
           {isAr ? 'تعبئة ملاحظات الإدارة' : 'Auto-fill Notes'}
         </button>
@@ -333,7 +336,8 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
                     <textarea
                       id={`director-note-${index}`}
                       rows={2}
-                      value={tr(directorNotes[index] || '')}
+                      disabled={notesLocked || themesPresented}
+                      value={notesLocked ? (theme.directorNotes ?? '') : (directorNotes[index] ?? '')}
                       onChange={e => setDirectorNotes({ ...directorNotes, [index]: e.target.value })}
                       placeholder={tr("Add executive remarks for Chairman Al Owais...")}
                       className="w-full rounded-md border border-sadu-gold/60 bg-sadu-sand/20 p-2 text-xs text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
@@ -354,7 +358,8 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
               <button
                 type="button"
                 onClick={handlePresentThemes}
-                disabled={!canPresentThemes}
+                hidden={notesLocked || themesPresented}
+                disabled={!canPresentThemes || themesPresented}
                 className="inline-flex items-center justify-center gap-2 rounded-md bg-sadu-brick px-6 py-3 text-xs font-bold text-white shadow-xs transition-colors hover:bg-sadu-brick-dark cursor-pointer shrink-0"
               >
                 <Send className="h-4 w-4" />

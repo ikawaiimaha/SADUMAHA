@@ -150,6 +150,7 @@ function SADUApp() {
 
   // Stage 1 & 2: Theme Ratification & Editorial Polish State
   const [themePolishStatus, setThemePolishStatus] = useState<ThemePolishStatus>('PENDING_CHAIRMAN_APPROVAL');
+  const [arabicLocked, setArabicLocked] = useState(false);
   const [themeEssayArabic, setThemeEssayArabic] = useState<string>('');
   const [themeEssayEnglish, setThemeEssayEnglish] = useState<string>('');
 
@@ -193,7 +194,7 @@ function SADUApp() {
   };
 
   const handlePresentToChairman = (themes: CommitteeThemeDraft[]) => {
-    if (ratifiedTheme || !isThemeBatchComplete(themes)) return;
+    if (activeRole !== 'BIENNIAL_DIRECTOR' || ratifiedTheme || submittedThemes || !isThemeBatchComplete(themes)) return;
     setSubmittedThemes(themes);
   };
 
@@ -202,6 +203,7 @@ function SADUApp() {
     setAssignedBudget(amount);
     // Preserve the complete executive record, including both sets of notes.
     setRatifiedTheme({ ...theme });
+    setArabicLocked(false);
     setThemeEssayArabic('');
     setThemeEssayEnglish('');
     setThemePolishStatus('PENDING_EDITORIAL_POLISH');
@@ -216,6 +218,7 @@ function SADUApp() {
     themeEssayEnglish: string;
     approvedTheme: any;
   }) => {
+    if (activeRole !== 'EDITORIAL' || !arabicLocked || themePolishStatus !== 'PENDING_EDITORIAL_POLISH' || essayAr !== themeEssayArabic || !essayEn.trim()) return;
     setThemeEssayArabic(essayAr);
     setThemeEssayEnglish(essayEn);
     setRatifiedTheme(approvedTheme);
@@ -223,7 +226,7 @@ function SADUApp() {
   };
 
   const handleSubmitToEditorial = (arabicText: string) => {
-    if (themePolishStatus !== 'PUBLISHED_OFFICIAL' || !arabicText.trim()) return;
+    if (activeRole !== 'HIP' || themePolishStatus !== 'PUBLISHED_OFFICIAL' || !['DRAFT', 'REQUEST_REVISION'].includes(translationStatus) || !arabicText.trim()) return;
     setGuidelinesArabic(arabicText.trim());
     setGuidelinesEnglish('');
     setTranslationStatus('PENDING_TRANSLATION');
@@ -517,28 +520,10 @@ function SADUApp() {
     const target = contracts.find(c => c.id === contractId);
     if (activeRole !== 'ARTIST' || !target || target.status !== 'SENT_TO_ARTIST' || !justification.trim() || commission.ledger?.length) return;
     setArtists(rows => rows.map(row => row.id === target.artistId ? {...row, status: 'DIRECTOR_APPROVED'} : row));
-    setContracts(prev =>
-      prev.map(c => {
-        if (c.id !== contractId) return c;
-        const newRound: NegotiationRound = {
-          id: `neg-${Date.now()}`,
-          requestedAt: new Date().toISOString().split('T')[0],
-          createdAt: new Date().toISOString(),
-          contractId,
-          disputedCategory: category,
-          artistJustification: justification,
-          justification,
-          proposedValue: proposedGrant,
-          proposedGrant,
-          status: 'PENDING_COORDINATOR_REVIEW',
-        };
-        return {
-          ...c,
-          status: 'CONTRACT_DISPUTED',
-          auditTrail: [...(c.auditTrail || []), newRound],
-        };
-      })
-    );
+    dispatchCommission({ type: 'CONTRACT_DISPUTED', actor: activeRole, contractId,
+      round: { id: `neg-${Date.now()}`, contractId, requestedAt: new Date().toISOString(),
+        disputedCategory: category, artistJustification: justification, justification,
+        proposedValue: proposedGrant, proposedGrant, status: 'PENDING_COORDINATOR_REVIEW' } });
   };
 
   const handleStartReviewAmendment = (contractId: string) => {
@@ -642,7 +627,8 @@ function SADUApp() {
               setRestrictionAudit(rows => [...rows, `${new Date().toISOString()} · Director · ${approved ? 'APPROVED' : 'REJECTED'} · ${restrictionProposal.reason} · ${restrictionProposal.tags.join(', ')}`]);
               setRestrictionProposal(null);
             }}
-            submittedThemes={directorThemes}
+            isForwarded={Boolean(submittedThemes)}
+            submittedThemes={submittedThemes ?? directorThemes}
             onReturnToCommittee={handleReturnToCommittee}
             onPresentToChairman={handlePresentToChairman}
             nominatedArtists={nominatedArtists}
@@ -700,6 +686,12 @@ function SADUApp() {
       case 'EDITORIAL':
         return (
           <EditorialWorkspace
+            arabicLocked={arabicLocked}
+            onLockArabic={text => {
+              if (activeRole !== 'EDITORIAL' || arabicLocked || !ratifiedTheme || themePolishStatus !== 'PENDING_EDITORIAL_POLISH' || text.trim().length <= 10) return;
+              setThemeEssayArabic(text.trim());
+              setArabicLocked(true);
+            }}
             onAutoNavigate={handleAutoNavigate}
             approvedTheme={ratifiedTheme}
             themePolishStatus={themePolishStatus}
@@ -724,9 +716,12 @@ function SADUApp() {
             guidelinesArabic={guidelinesArabic}
             translationStatus={translationStatus}
             hipSubmissionTime={hipSubmissionTime}
+            onRequestRevision={() => {
+              if (activeRole === 'HIP' && translationStatus === 'PUBLISHED') setTranslationStatus('REQUEST_REVISION');
+            }}
             onSubmitToEditorial={handleSubmitToEditorial}
             curatorialBrief={curatorialBrief}
-            onUpdateCuratorialBrief={setCuratorialBrief}
+
             blocklist={blocklist}
             restrictionPending={Boolean(restrictionProposal)}
             restrictionAudit={restrictionAudit}

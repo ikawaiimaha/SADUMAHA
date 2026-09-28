@@ -1,5 +1,5 @@
 import type { CommissionState } from '../types';
-import type { BilateralContract } from '../types/contractStage6';
+import type { BilateralContract, NegotiationRound } from '../types/contractStage6';
 
 export const COMMISSION = {
   id: 'demo-kufic-horizon',
@@ -27,7 +27,7 @@ export function validAgreement(contract?: BilateralContract): boolean {
   const amounts = [t.advanceAmount, t.deliveryAmount, t.installationAmount];
   return percentages.every(n => Number.isFinite(n) && n > 0 && n <= 100)
     && Math.abs(percentages.reduce((a, b) => a + b, 0) - 100) < 0.000001
-    && amounts.every(n => Number.isFinite(n) && n > 0)
+    && amounts.every((n, index) => Number.isFinite(n) && n > 0 && Math.abs(n - contract.productionCost * percentages[index] / 100) <= 1)
     && Math.abs(amounts.reduce((a, b) => a + b, 0) - contract.productionCost) < 0.01;
 }
 
@@ -48,6 +48,7 @@ export function milestoneEligible(state: CommissionState, tranche: 'delivery' | 
 
 type Actor = 'PR_PROTOCOL' | 'TECHNICAL' | 'FINANCE' | string;
 export type CommissionAction =
+  | { type: 'CONTRACT_DISPUTED'; actor: Actor; contractId: string; round: NegotiationRound }
   | { type: 'receive-asset'; actor: Actor; at: string; reference: string }
   | { type: 'close-exhibition'; actor: Actor; at: string; returnReference: string; reconciliationReference: string }
   | { type: 'request-saf'; actor: Actor; at: string; technicians: number; hours: number; rationale: string }
@@ -78,6 +79,17 @@ export function commissionReducer(state: CommissionState, action: CommissionActi
   const e = state.evidence;
   const c = state.contracts[0];
   const accepted = c?.status === 'ARTIST_APPROVED' || c?.status === 'LOCKED';
+  const advanceRecorded = state.ledger?.some(row => row.tranche === 'advance') || c?.tranches.advanceStatus === 'DISBURSED';
+  const financeHistory = advanceRecorded
+    ? { financeApprovalGate: e.financeApprovalGate, advanceAuthorizedAt: e.advanceAuthorizedAt }
+    : { financeApprovalGate: false, advanceAuthorizedAt: undefined };
+  if (action.type === 'CONTRACT_DISPUTED') {
+    if (action.actor !== 'ARTIST' || !c || c.id !== action.contractId || state.ledger?.length
+      || !['SENT_TO_ARTIST', 'ARTIST_APPROVED', 'LOCKED'].includes(c.status)
+      || !action.round.artistJustification?.trim()) return state;
+    return { ...state, evidence: emptyEvidence(), contracts: [{ ...c, status: 'CONTRACT_DISPUTED',
+      signedAt: undefined, signatureReference: undefined, auditTrail: [...c.auditTrail, action.round] }] };
+  }
   if (action.type === 'receive-asset' && action.actor === 'LOGISTICS' && accepted && action.reference.trim() && !state.logistics) {
     return { ...state, logistics: { status: 'PHYSICAL_ASSET_RECEIVED', reference: action.reference.trim(), receivedAt: action.at } };
   }
@@ -96,7 +108,11 @@ export function commissionReducer(state: CommissionState, action: CommissionActi
     const contracts = action.update(state.contracts).filter(c => c.artistId === COMMISSION.id).slice(0, 1);
     const before = state.contracts[0];
     const after = contracts[0];
+    // Generic updates cannot unlock an accepted contract or impersonate an amendment request.
+    if ((accepted && after?.status !== before.status) || (after?.status === 'CONTRACT_DISPUTED' && before?.status !== 'CONTRACT_DISPUTED')) return state;
     if (termsKey(before) !== termsKey(after)) {
+      if (accepted || before?.status === 'SENT_TO_ARTIST') return state;
+      if (before && after && ['ARTIST_APPROVED', 'LOCKED'].includes(after.status)) return state;
       if (state.ledger?.length) return state;
       return { contracts, agreementRevision: state.agreementRevision + 1, evidence: emptyEvidence() };
     }
@@ -104,18 +120,22 @@ export function commissionReducer(state: CommissionState, action: CommissionActi
       || before?.documents.passportFileName !== after?.documents.passportFileName;
     const contractSuspended = before?.status !== after?.status
       && after?.status !== 'ARTIST_APPROVED' && after?.status !== 'LOCKED';
-    return { ...state, contracts, evidence: contractSuspended ? emptyEvidence() : passportChanged
-      ? { ...e, passportVerified: false, prEvidenceGate: false, financeApprovalGate: false,
-          prRecordedAt: undefined, advanceAuthorizedAt: undefined } : e };
+    return { ...state, contracts, evidence: contractSuspended ? { ...emptyEvidence(), ...financeHistory } : passportChanged
+      ? { ...e, passportVerified: false, prEvidenceGate: false, ...financeHistory,
+          prRecordedAt: undefined } : e };
   }
   if (action.type === 'pr-check' && action.actor === 'PR_PROTOCOL') {
+    if (e[action.field] === action.value) return state;
     return { ...state, evidence: { ...e, [action.field]: action.value, prEvidenceGate: false,
-      prRecordedAt: undefined, financeApprovalGate: false, advanceAuthorizedAt: undefined } };
+      prRecordedAt: undefined, ...financeHistory } };
   }
   if (action.type === 'technical-check' && action.actor === 'TECHNICAL') {
+    if (e[action.field] === action.value) return state;
     return { ...state, evidence: { ...e, [action.field]: action.value, technicalEvidenceGate: false,
-      technicalRecordedAt: undefined, financeApprovalGate: false, advanceAuthorizedAt: undefined } };
+      technicalRecordedAt: undefined, ...financeHistory } };
   }
+  if (action.type === 'record-pr' && (e.prRecordedAt || e.prEvidenceGate)) return state;
+  if (action.type === 'record-technical' && (e.technicalRecordedAt || e.technicalEvidenceGate)) return state;
   if (action.type === 'record-pr' && action.actor === 'PR_PROTOCOL' && state.contracts.length
     && e.passportVerified && e.visaCleared) {
     return { ...state, evidence: { ...e, prEvidenceGate: true, prRecordedAt: action.at } };

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createCommission, commissionReducer as reduce, advanceEligible, milestoneEligible, COMMISSION } from '../src/data/commissionScenario';
+import { createCommission, commissionReducer as reduce, advanceEligible, milestoneEligible, validAgreement, COMMISSION } from '../src/data/commissionScenario';
 import { submitForVetting, ASSIGNED_COORDINATOR, validDossier } from '../src/data/vetting';
 import type { BilateralContract } from '../src/types/contractStage6';
 import type { NominatedArtistDossier } from '../src/components/ArtistNominationForm';
@@ -78,4 +78,50 @@ test('only assigned Coordinator submits; active compliance matches never reach D
   const passed=submitForVetting(dossier,'COORDINATOR',ASSIGNED_COORDINATOR,[]);
   assert.equal(passed?.status,'PENDING_DIRECTOR_REVIEW');
   assert.equal(submitForVetting(passed!,'COORDINATOR',ASSIGNED_COORDINATOR,[]),null);
+});
+
+
+test('accepted and locked terms require an explicit dispute before amendment', () => {
+  for (const status of ['ARTIST_APPROVED', 'LOCKED'] as const) {
+    const s = reduce(createCommission(), {type:'contracts',update:()=>[{...contract,status}]});
+    assert.equal(reduce(s,{type:'contracts',update:cs=>cs.map(c=>({...c,shippingTerms:'mutated'}))}),s);
+    assert.equal(reduce(s,{type:'contracts',update:cs=>cs.map(c=>({...c,status:'CONTRACT_DISPUTED'}))}),s);
+    const action = {type:'CONTRACT_DISPUTED',actor:'ARTIST',contractId:contract.id,round:{id:'r1',disputedCategory:'SHIPPING_TERMS',artistJustification:'Revise courier'}} as const;
+    assert.equal(reduce(s,{...action,actor:'COORDINATOR'}),s);
+    const disputed=reduce(s,action);
+    assert.equal(disputed.contracts[0].status,'CONTRACT_DISPUTED');
+    assert.equal(reduce(disputed,action),disputed);
+    const amended=reduce(disputed,{type:'contracts',update:cs=>cs.map(c=>({...c,status:'SENT_TO_ARTIST',shippingTerms:'new courier'}))});
+    assert.equal(amended.contracts[0].shippingTerms,'new courier');
+    assert.equal(advanceEligible(amended),false);
+  }
+});
+
+test('clearance replay is idempotent and evidence edits preserve recorded advance history', () => {
+  let s=accepted();
+  s={...s,evidence:{...s.evidence,passportVerified:true,visaCleared:true,floorLoadVerified:true,mountingVerified:true}};
+  s=reduce(s,{type:'record-pr',actor:'PR_PROTOCOL',at});
+  s=reduce(s,{type:'record-technical',actor:'TECHNICAL',at});
+  assert.equal(reduce(s,{type:'record-pr',actor:'PR_PROTOCOL',at:'later'}),s);
+  assert.equal(reduce(s,{type:'record-technical',actor:'TECHNICAL',at:'later'}),s);
+  s=reduce(s,{type:'authorize-advance',actor:'FINANCE',at});
+  const changed=reduce(s,{type:'pr-check',actor:'PR_PROTOCOL',field:'passportVerified',value:false});
+  assert.equal(changed.evidence.prEvidenceGate,false);
+  assert.equal(changed.evidence.financeApprovalGate,true);
+  assert.equal(changed.evidence.advanceAuthorizedAt,at);
+  assert.equal(changed.ledger,s.ledger);
+  const technical=reduce(s,{type:'technical-check',actor:'TECHNICAL',field:'mountingVerified',value:false});
+  assert.equal(technical.evidence.technicalEvidenceGate,false);
+  assert.equal(technical.evidence.advanceAuthorizedAt,at);
+  const replacement=reduce(s,{type:'contracts',update:cs=>cs.map(c=>({...c,documents:{...c.documents,passportFileName:'replacement.pdf'}}))});
+  assert.equal(replacement.evidence.financeApprovalGate,true);
+  assert.equal(replacement.evidence.advanceAuthorizedAt,at);
+});
+
+test('each tranche amount must match its percentage within one AED', () => {
+  const withAmounts=(advanceAmount:number,deliveryAmount:number)=>({...contract,tranches:{...contract.tranches,advanceAmount,deliveryAmount}});
+  assert.equal(validAgreement(withAmounts(3001,3999)),true);
+  assert.equal(validAgreement(withAmounts(3001.01,3998.99)),false);
+  assert.equal(validAgreement(withAmounts(6999,1)),false);
+  assert.equal(validAgreement({...contract,productionCost:0}),false);
 });

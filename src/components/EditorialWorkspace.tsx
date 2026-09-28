@@ -25,7 +25,9 @@ interface EditorialDraft {
 }
 
 export interface EditorialWorkspaceProps {
-  guidelinesTranslationStatus?: 'DRAFT' | 'PENDING_TRANSLATION' | 'PUBLISHED';
+  arabicLocked?: boolean;
+  onLockArabic?: (text: string) => void;
+  guidelinesTranslationStatus?: 'REQUEST_REVISION' | 'DRAFT' | 'PENDING_TRANSLATION' | 'PUBLISHED';
   guidelinesArabic?: string;
   guidelinesEnglish?: string;
   onPublishOfficialGuidelines?: (englishTranslation: string, arabicSource: string) => void;
@@ -49,6 +51,8 @@ const DEFAULT_RAW_CHAIRMAN_THEME =
   'استكشاف الجذور العميقة للخط العربي وتفاعله مع الفنون المعاصرة في بيئة حضرية متغيرة، مع التركيز على التوازن بين الأصالة والابتكار.';
 
 export default function EditorialWorkspace({
+  arabicLocked = false,
+  onLockArabic,
   guidelinesTranslationStatus,
   guidelinesArabic,
   guidelinesEnglish,
@@ -78,7 +82,6 @@ export default function EditorialWorkspace({
     initialEssayArabic || 
     DEFAULT_RAW_CHAIRMAN_THEME;
 
-  const [arabicLocked, setArabicLocked] = useState(false);
   const [publishedLocally, setPublishedLocally] = useState(false);
   const isPublished = publishedLocally || isInitiallyPublished || themePolishStatus === 'PUBLISHED' || themePolishStatus === 'PUBLISHED_OFFICIAL';
 
@@ -95,15 +98,16 @@ export default function EditorialWorkspace({
   const [translationVerified, setTranslationVerified] = useState(false);
   const isArabicLocked = arabicLocked || isPublished;
   const canLockArabic = themePolishStatus !== 'PENDING_CHAIRMAN_APPROVAL' && Boolean(approvedTheme) && draft.arabicText.trim().length > 10;
-  const canPublish = arabicLocked && !isPublished && draft.arabicText.trim().length > 10 && draft.englishText.trim().length > 10 && translationVerified;
+  const certifiedArabic = isArabicLocked ? (initialEssayArabic ?? '') : draft.arabicText;
+  const canPublish = arabicLocked && !isPublished && certifiedArabic.trim().length > 10 && draft.englishText.trim().length > 10 && translationVerified;
 
   const handleLockArabic = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isArabicLocked || !canLockArabic) return;
+    if (isArabicLocked || !canLockArabic || !onLockArabic) return;
     const arabicText = draft.arabicText.trim();
     setDraft({ arabicText, englishText: '' });
     setTranslationVerified(false);
-    setArabicLocked(true);
+    onLockArabic(arabicText);
   };
 
   const handlePublish = (e: React.FormEvent) => {
@@ -120,7 +124,7 @@ export default function EditorialWorkspace({
 
     if (onPublishOfficialTheme) {
       onPublishOfficialTheme({
-        themeEssayArabic: draft.arabicText.trim(),
+        themeEssayArabic: certifiedArabic.trim(),
         themeEssayEnglish: draft.englishText.trim(),
         approvedTheme,
       });
@@ -208,7 +212,7 @@ export default function EditorialWorkspace({
           <div className="bg-[#FAF8F5] border border-[#EAE3D9] p-4 rounded-md mb-4">
             <span className="text-[10px] uppercase font-bold text-[#8C7A6B] mb-2 block">{isArabicLocked ? (isAr ? "البيان الفني المؤسسي المجمّد" : "Locked institutional statement") : tr("Source Text (Raw Arabic)")}</span>
             <p className="text-sm text-[#1A1817] leading-relaxed font-serif text-start" dir="rtl">
-              {isArabicLocked ? draft.arabicText : rawChairmanTheme}
+              {isArabicLocked ? certifiedArabic : rawChairmanTheme}
             </p>
           </div>
 

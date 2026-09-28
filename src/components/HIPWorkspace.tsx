@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { ThemeItem } from './ChairmanWorkspace';
 
-export type TranslationStatus = 'DRAFT' | 'PENDING_TRANSLATION' | 'PUBLISHED';
+export type TranslationStatus = 'REQUEST_REVISION' | 'DRAFT' | 'PENDING_TRANSLATION' | 'PUBLISHED';
 
 export interface HIPWorkspaceProps {
   themeStatus: string;
@@ -26,6 +26,7 @@ export interface HIPWorkspaceProps {
   guidelinesArabic?: string;
   translationStatus?: TranslationStatus;
   hipSubmissionTime?: string | null;
+  onRequestRevision?: () => void;
   onSubmitToEditorial?: (arabicText: string) => void;
   curatorialBrief?: string;
   onUpdateCuratorialBrief?: (brief: string) => void;
@@ -51,6 +52,7 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
   guidelinesEnglish,
   translationStatus,
   hipSubmissionTime,
+  onRequestRevision,
   onSubmitToEditorial,
   curatorialBrief,
   onUpdateCuratorialBrief,
@@ -69,7 +71,7 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
 
   const handleSubmitToEditorial = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isLocked || !arabicText.trim() || !onSubmitToEditorial) return;
+    if (submissionLocked || !arabicText.trim() || !onSubmitToEditorial) return;
     onSubmitToEditorial?.(arabicText);
     onUpdateCuratorialBrief?.(arabicText);
   };
@@ -89,6 +91,7 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
   };
 
   const isLocked = themeStatus !== 'PUBLISHED_OFFICIAL';
+  const submissionLocked = isLocked || translationStatus === 'PUBLISHED' || translationStatus === 'PENDING_TRANSLATION';
   const lockReason = (() => {
     if (themeStatus === 'ARABIC_LOCKED') {
       return {
@@ -201,7 +204,7 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
                 dir="rtl"
                 rows={7}
                 required
-                disabled={isLocked}
+                disabled={submissionLocked}
                 value={arabicText}
                 onChange={e => setArabicText(e.target.value)}
                 placeholder="اكتب التوجيهات الفنية والمعايير التنسيقية للمعرض باللغة العربية حصراً..."
@@ -213,6 +216,7 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
               />
             </label>
 
+            {translationStatus === 'PUBLISHED' && <button type="button" onClick={onRequestRevision} className="rounded border border-sadu-gold ps-4 pe-4 py-2 text-sm">{isAr ? 'طلب مراجعة الدليل المنشور' : 'Request revision of published guidelines'}</button>}
             {/* Locked Status Badge or Action Button */}
             {isLocked ? (
               <div className="rounded-md border border-amber-300 bg-amber-50 ps-3 pe-3 py-3 text-start text-xs font-semibold text-amber-900 flex items-start gap-2.5">
@@ -227,7 +231,7 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
                 <span className="text-[11px] text-sadu-muted">{arabicText.length} {tr("characters (Arabic)")}</span>
                 <button
                   type="submit"
-                  disabled={isLocked}
+                  disabled={submissionLocked}
                   className="inline-flex items-center gap-1.5 rounded-md bg-sadu-brick px-4 py-2 text-xs font-bold text-white hover:bg-sadu-brick-dark disabled:opacity-50 cursor-pointer shadow-xs"
                 >
                   <Send className="h-3.5 w-3.5" />
