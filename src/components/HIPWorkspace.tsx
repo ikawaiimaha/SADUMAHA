@@ -1,12 +1,4 @@
-import { ArtworkRosterQueue } from './ArtworkRoster';
-import { MissingDeliverables } from './DeliverableRouting';
-import { LiveCatalogAggregator } from './CatalogMetadata';
-import type { CommissionState } from '../types';
-import { MasterDirectory } from './MasterDirectory';
 import { useLocalDraft, isText } from '../hooks/useLocalDraft';
-import { CulturalVerificationCard } from './CulturalVerificationCard';
-import { SharedSpatialLedger } from './SharedSpatialLedger';
-import type { NominatedArtistDossier } from './ArtistNominationForm';
 import { useMockupText } from '../i18n/useMockupText';
 import { useI18n } from '../context/I18nContext';
 import React, { useState } from 'react';
@@ -27,9 +19,6 @@ import { ThemeItem } from './ChairmanWorkspace';
 export type TranslationStatus = 'REQUEST_REVISION' | 'DRAFT' | 'PENDING_TRANSLATION' | 'PUBLISHED';
 
 export interface HIPWorkspaceProps {
-  catalogState?: CommissionState;
-  culturalDossiers?: NominatedArtistDossier[];
-  onClearCultural?: (id: string) => void;
   themeStatus: string;
   themeEssayArabic?: string;
   themeEssayEnglish?: string;
@@ -56,8 +45,6 @@ const PRESET_DIRECTIVES = [
 ];
 
 export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
-  catalogState,
-  culturalDossiers = [], onClearCultural,
   guidelinesArabic,
   themeStatus,
   themeEssayArabic,
@@ -126,11 +113,6 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6">
-      <ArtworkRosterQueue isAr={isAr}/>
-      {catalogState && <LiveCatalogAggregator state={catalogState} isAr={isAr}/>}
-      <MasterDirectory isAr={isAr} />
-      <SharedSpatialLedger isAr={isAr} />
-      {culturalDossiers.map(d => <section key={d.id}><CulturalVerificationCard dossier={d} isAr={isAr} onClear={onClearCultural ? () => onClearCultural(d.id) : undefined} /><MissingDeliverables artistId={d.id} artistName={d.artistName} isAr={isAr} canRequest /></section>)}
       {/* Header */}
       <div className="rounded-xl border border-sadu-gold bg-sadu-paper p-6 shadow-xs">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-sadu-gold/40 pb-4">
@@ -277,7 +259,7 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
           <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900 leading-relaxed flex items-start gap-2">
             <AlertTriangle className="h-4 w-4 shrink-0 text-amber-700 mt-0.5" />
             <div>
-              <strong className="block font-bold">{tr("Enforcement Gate:")}</strong> {tr("If a Coordinator submits an artist matching any active tag below, the system immediately rejects with:")} <span className="block mt-1 font-mono font-bold text-red-700 bg-white/70 px-2 py-0.5 rounded border border-red-200"> {tr("\"Submission blocked by current HIP security/administrative directives.\"")} </span>
+              <strong className="block font-bold">{tr("Enforcement Gate:")}</strong> {tr("Nominations remain visible to the Committee. A match against current active restrictions blocks endorsement:")} <span className="block mt-1 font-mono font-bold text-red-700 bg-white/70 ps-2 pe-2 py-0.5 rounded border border-red-200"> {tr("\"Committee endorsement blocked by active administrative restrictions.\"")} </span>
             </div>
           </div>
 

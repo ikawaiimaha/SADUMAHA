@@ -2,7 +2,7 @@ import { operationalHandoff } from '../src/data/operationalHandoff';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createCommission, commissionReducer as reduce, advanceEligible, milestoneEligible, validAgreement, COMMISSION } from '../src/data/commissionScenario';
-import { submitForVetting, ASSIGNED_COORDINATOR, validDossier } from '../src/data/vetting';
+import { submitForVetting, ASSIGNED_COORDINATOR, validDossier, queueNomination, reviewByCommittee, directorEligible, safePortfolioUrl } from '../src/data/vetting';
 import type { BilateralContract } from '../src/types/contractStage6';
 import type { NominatedArtistDossier } from '../src/components/ArtistNominationForm';
 const at = '2026-09-28T10:00:00Z';
@@ -75,9 +75,9 @@ test('dossier schemas distinguish new and existing work and do not fabricate att
 test('only assigned Coordinator submits; active compliance matches never reach Director',()=>{
   assert.equal(submitForVetting(dossier,'PREP_COMMITTEE',ASSIGNED_COORDINATOR,[]),null);
   assert.equal(submitForVetting(dossier,'COORDINATOR','other',[]),null);
-  assert.equal(submitForVetting(dossier,'COORDINATOR',ASSIGNED_COORDINATOR,['Restricted Nationality: Country X'])?.status,'REJECTED_COMPLIANCE');
+  assert.equal(submitForVetting(dossier,'COORDINATOR',ASSIGNED_COORDINATOR,['Restricted Nationality: Country X'])?.status,'PENDING_COMMITTEE_REVIEW');
   const passed=submitForVetting(dossier,'COORDINATOR',ASSIGNED_COORDINATOR,[]);
-  assert.equal(passed?.status,'PENDING_DIRECTOR_REVIEW');
+  assert.equal(passed?.status,'PENDING_COMMITTEE_REVIEW');
   assert.equal(submitForVetting(passed!,'COORDINATOR',ASSIGNED_COORDINATOR,[]),null);
 });
 
@@ -205,8 +205,8 @@ test('honored guest vetting needs identity and the assigned coordinator, not inv
   };
   assert.equal(validDossier(d), true);
   assert.equal(submitForVetting(d, 'COORDINATOR', COORDINATORS[2].id, []), null);
-  assert.equal(submitForVetting(d, 'COORDINATOR', COORDINATORS[1].id, [])?.status, 'PENDING_DIRECTOR_REVIEW');
-  assert.equal(submitForVetting(d, 'COORDINATOR', COORDINATORS[1].id, ['Fictional country'])?.status, 'REJECTED_COMPLIANCE');
+  assert.equal(submitForVetting(d, 'COORDINATOR', COORDINATORS[1].id, [])?.status, 'PENDING_COMMITTEE_REVIEW');
+  assert.equal(submitForVetting(d, 'COORDINATOR', COORDINATORS[1].id, ['Fictional country'])?.status, 'PENDING_COMMITTEE_REVIEW');
   assert.equal(validDossier({...d, nationality: ''}), false);
   assert.equal(validDossier({...d, assignedCoordinatorId: undefined}), false);
 });
@@ -291,14 +291,14 @@ test('amendment decisions enforce authority, compliance and contract locks with 
   assert.equal(rejected.artworkCount,1);
   assert.equal(rejected.approvalRevision,1);
 });
-test('dispatch requires publication and HIP authority; snapshots survive later amendments',()=>{
-  assert.equal(recordDossierDispatch(approvedDossier,'HIP',false,at),approvedDossier);
-  assert.equal(recordDossierDispatch(approvedDossier,'COORDINATOR',true,at),approvedDossier);
-  const sent=recordDossierDispatch(approvedDossier,'HIP',true,at);
-  assert.equal(recordDossierDispatch(sent,'HIP',true,at),sent);
+test('dispatch requires publication and assigned Coordinator authority; snapshots survive later amendments',()=>{
+  assert.equal(recordDossierDispatch(approvedDossier,'COORDINATOR',false,at,ASSIGNED_COORDINATOR),approvedDossier);
+  assert.equal(recordDossierDispatch(approvedDossier,'HIP',true,at),approvedDossier);
+  const sent=recordDossierDispatch(approvedDossier,'COORDINATOR',true,at,ASSIGNED_COORDINATOR);
+  assert.equal(recordDossierDispatch(sent,'COORDINATOR',true,at,ASSIGNED_COORDINATOR),sent);
   const pending=requestScopeChange(sent,ASSIGNED_COORDINATOR,proposedScope,'Reason',at,'a');
   const amended=reviewScopeChange(pending,'a',true,'BIENNIAL_DIRECTOR',[],false,at);
-  const resent=recordDossierDispatch(amended,'HIP',true,at);
+  const resent=recordDossierDispatch(amended,'COORDINATOR',true,at,ASSIGNED_COORDINATOR);
   assert.deepEqual(resent.dispatchHistory?.map(r=>[r.revision,r.scope.artworkCount]),[[1,1],[2,2]]);
 });
 
@@ -406,23 +406,33 @@ test('technical requests validate routing choices and prevent duplicate submissi
 });
 
 
-import { clearCultural, culturalCleared } from '../src/data/culturalDeclaration';
+import { culturalCleared } from '../src/data/culturalDeclaration';
 import { ingestMaster, requestPrototype, decidePrototype, type PrototypeTicket } from '../src/data/productionBridge';
-test('cultural review requires a complete declaration and HIP authority before Stage 4',()=>{
+test('Committee alone endorses complete declarations; rejection requires immutable consensus minutes',()=>{
  const draft={...dossier,culturalDeclaration:undefined,culturalClearedAt:undefined};
- assert.equal(submitForVetting(draft,'COORDINATOR',ASSIGNED_COORDINATOR,[]),null);
- assert.equal(clearCultural(draft,'HIP',at),draft);
- const emptyYes={...draft,culturalDeclaration:{containsText:true,explanation:'  '}};
- assert.equal(clearCultural(emptyYes,'HIP',at),emptyYes);
- for(const declaration of [{containsText:false,explanation:''},{containsText:true,explanation:'Full translation and context.'}]) {
-  const ready={...draft,culturalDeclaration:declaration};
-  assert.equal(clearCultural(ready,'BIENNIAL_DIRECTOR',at),ready);
-  const reviewed=clearCultural(ready,'HIP',at);
-  assert.equal(culturalCleared(reviewed),true);
-  assert.equal(reviewed.culturalDeclaration,declaration);
-  assert.equal(clearCultural(reviewed,'HIP','2026-10-02T10:00:00Z'),reviewed);
-  assert.equal(submitForVetting(reviewed,'COORDINATOR',ASSIGNED_COORDINATOR,[])?.status,'PENDING_DIRECTOR_REVIEW');
- }
+ assert.equal(queueNomination(draft,'COORDINATOR',ASSIGNED_COORDINATOR,[]),null);
+ assert.equal(queueNomination(dossier,'HIP',ASSIGNED_COORDINATOR,[]),null);
+ assert.equal(queueNomination(dossier,'COORDINATOR','other',[]),null);
+ const pending=queueNomination({...dossier,culturalClearedAt:undefined},'COORDINATOR',ASSIGNED_COORDINATOR,[])!;
+ assert.equal(pending.status,'PENDING_COMMITTEE_REVIEW');
+ assert.equal(directorEligible(pending,[]),false);
+ assert.equal(queueNomination(dossier,'PREP_COMMITTEE','unused',[])?.status,'PENDING_COMMITTEE_REVIEW');
+ for(const actor of ['HIP','COORDINATOR','BIENNIAL_DIRECTOR','ARTIST'])assert.equal(reviewByCommittee(pending,actor,true,'',[],at),pending);
+ assert.equal(reviewByCommittee(pending,'PREP_COMMITTEE',false,'   ',[],at),pending);
+ assert.equal(reviewByCommittee(pending,'PREP_COMMITTEE',true,'',['Hazardous Medium: Bronze'],at),pending);
+ const rejected=reviewByCommittee(pending,'PREP_COMMITTEE',false,'Consensus minute 07: scope mismatch',[],at);
+ assert.equal(rejected.status,'COMMITTEE_REJECTED');
+ assert.equal(rejected.committeeReview?.minutes,'Consensus minute 07: scope mismatch');
+ assert.equal(reviewByCommittee(rejected,'PREP_COMMITTEE',true,'',[],at),rejected);
+ assert.equal(directorEligible(rejected,[]),false);
+ const endorsed=reviewByCommittee(pending,'PREP_COMMITTEE',true,'Recorded collective endorsement',[],at);
+ assert.equal(endorsed.status,'PENDING_DIRECTOR_REVIEW');
+ assert.equal(culturalCleared(endorsed),true);
+ assert.equal(directorEligible(endorsed,[]),true);
+ assert.equal(directorEligible(endorsed,['Hazardous Medium: Bronze']),false);
+ assert.equal(reviewByCommittee(endorsed,'PREP_COMMITTEE',false,'Override',[],at),endorsed);
+ assert.equal(safePortfolioUrl('javascript:alert(1)'),undefined);
+ assert.equal(safePortfolioUrl('https://example.com/portfolio'),'https://example.com/portfolio');
 });
 test('digital ingestion rejects links, unsupported formats, oversized files and duplicate assets',()=>{
  const item={id:'video1',file:{name:'master.mp4',size:100,lastModified:1} as File,at};

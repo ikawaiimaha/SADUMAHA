@@ -1,3 +1,12 @@
+# 28 September 2026 — Committee nomination authority (executive correction)
+
+This correction supersedes earlier HIP nomination/cultural clearance gates. HIP is limited to Stage 3 guidelines and confidential dynamic restriction proposals; activation still requires Director sign-off. Complete Coordinator proposals and Committee scouting submissions enter PENDING_COMMITTEE_REVIEW automatically. The Committee records collective endorsement to PENDING_DIRECTOR_REVIEW or COMMITTEE_REJECTED with mandatory rejection minutes. Recorded decisions are immutable within the session, and assigned Coordinators can read the outcome and minutes.
+
+Automated compliance remains separate from curatorial judgment. Pending dossiers display a current active-rule match badge without exposing confidential parameters. Matches block Committee endorsement; the Director rechecks active restrictions at approval. No nationality/medium quotas or new automatic restrictions are introduced. Portfolio links allow HTTP(S) only; uploaded portfolio images are retained as local session Files for actual inspection rather than filename-only placeholders.
+
+HIP's downstream nomination, catalog, spatial and dispatch modules are removed from its screen. The existing catalog aggregator is available in Editorial, and simulated dossier dispatch is assigned-Coordinator-only. Historical records are retained; session UI decisions are not authenticated multi-member voting or database authorization.
+
+---
 # 28 September 2026 — Invitation and legal identity rehearsal
 
 The assigned Coordinator prepares validated terms, then records INVITATION_DISPATCHED. No contract exists until the Artist confirms their full passport name. Original committee spelling, confirmed name and timestamps remain in shared session state. A full-name field supports international names without guessing first/family-name boundaries. Confirmation locks the name, creates the agreement from the frozen terms and generates a watermarked, non-binding PDF summary. Published theme/guidelines remain required unless the explicit isolated rehearsal toggle is enabled. Existing amendments retain the confirmed name and return through the Coordinator.

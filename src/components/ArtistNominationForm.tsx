@@ -1,3 +1,4 @@
+import { safePortfolioUrl } from '../data/vetting';
 import type { ScopeAmendment, DossierScope } from '../data/dossierLedger';
 import { validDeclaration, type CulturalDeclaration } from '../data/culturalDeclaration';
 import { COORDINATORS, PARTICIPATION_TRACKS, validSoloCount, type ParticipationTrack } from '../data/participation2026';
@@ -24,7 +25,10 @@ export interface NominatedArtistDossier {
   geographicRegion?: import('../data/regionalDelegation').Region;
   delegationHistory?: {from?:string;to:string;region:string;at:string;by:string}[];
   culturalDeclaration?: CulturalDeclaration;
-  culturalClearedAt?: string;
+  culturalClearedAt?: string; // Historical legacy record; no longer an approval gate.
+  committeeReview?: {decision:'ENDORSED'|'REJECTED';minutes:string;at:string;actor:'PREP_COMMITTEE'};
+  portfolioUrl?: string;
+  portfolioFiles?: File[];
   id: string;
   artistName: string;
   artistCategory: ArtistCategory | 'Not applicable';
@@ -46,7 +50,7 @@ export interface NominatedArtistDossier {
   provenanceFileName?: string;
   complianceReason?: string;
   decisionAt?: string;
-  status: 'DRAFT' | 'REJECTED_COMPLIANCE' | 'PENDING_DIRECTOR_REVIEW' | 'VETOED' | 'APPROVED';
+  status: 'DRAFT' | 'REJECTED_COMPLIANCE' | 'PENDING_COMMITTEE_REVIEW' | 'COMMITTEE_REJECTED' | 'PENDING_DIRECTOR_REVIEW' | 'VETOED' | 'APPROVED';
   vetoReason?: string;
   vetoNotes?: string;
 }
@@ -91,6 +95,8 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
   const [cvUploaded, setCvUploaded] = useState<boolean>(false);
   const [cvFileName, setCvFileName] = useState<string>('');
 
+  const [portfolioUrl, setPortfolioUrl] = useState('');
+  const [portfolioFiles,setPortfolioFiles] = useState<File[]>([]);
   const [previousWorks, setPreviousWorks] = useState<string[]>([]);
   const [previousWorksUploaded, setPreviousWorksUploaded] = useState<boolean>(false);
 
@@ -136,12 +142,12 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!isFormValid || !validDeclaration(declaration)) return;
+    if (!isFormValid || !validDeclaration(declaration) || (portfolioUrl.trim() && !safePortfolioUrl(portfolioUrl))) return;
 
     setBlocklistAlert(null);
 
     const dossier: NominatedArtistDossier = {
-      culturalDeclaration: declaration,
+      culturalDeclaration: declaration, portfolioUrl:portfolioUrl.trim() || undefined, portfolioFiles,
       id: `dossier-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       artistName: artistName.trim(),
       artistCategory: honored ? 'Not applicable' : artistCategory as ArtistCategory,
@@ -176,7 +182,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
       setCvFile(null);
       setCvUploaded(false);
       setCvFileName('');
-      setPreviousWorks([]);
+      setPreviousWorks([]); setPortfolioFiles([]);
       setPreviousWorksUploaded(false);
       setNewWorkMockup([]);
       setNewWorkMockupUploaded(false);
@@ -240,22 +246,24 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
         <div className="rounded-xl border-2 border-emerald-400 bg-emerald-50 p-4 text-emerald-900 shadow-xs flex items-center gap-3">
           <CheckCircle2 className="h-6 w-6 text-emerald-600 shrink-0" />
           <div>
-            <strong className="text-sm font-bold block">{tr("Draft saved for the assigned Coordinator")}</strong>
+            <strong className="text-sm font-bold block">{isAr?'تم إرسال الملف إلى قائمة اللجنة':'Dossier sent to the Committee queue'}</strong>
             <p className="text-xs text-emerald-800">
-              {tr(artistName)} ({tr(artistCategory)} {tr("Artist) awaits submission by the assigned Coordinator.")} </p>
+              {tr(artistName)} ({tr(artistCategory)} {isAr?'بانتظار مداولات اللجنة.':'Artist) awaits Committee deliberation.'} </p>
           </div>
         </div>
       )}
 
+
       {/* Nomination Form */}
       <form onSubmit={handleSubmit} className="rounded-xl border border-sadu-gold bg-white p-6 shadow-xs space-y-6">
+      <label className="block text-start">{isAr?'رابط الملف الفني الكامل (اختياري)':'Full portfolio URL (optional)'}<input type="url" value={portfolioUrl} onChange={e=>setPortfolioUrl(e.target.value)} pattern="https?://.*" placeholder="https://" className="mt-2 w-full rounded border ps-3 pe-3 py-2"/></label>
         <fieldset className="space-y-3 rounded border border-[#D9CEBA] bg-[#F7F1E6] ps-4 pe-4 py-4 text-start">
           <legend className="font-semibold">Textual &amp; Cultural Elements Declaration</legend>
           <label className="block">{isAr ? 'هل يتضمن العمل نصوصاً دينية أو آيات قرآنية أو أحاديث أو عبارات سياسية؟' : "Does this artwork incorporate religious texts, Qur'anic verses, Hadiths, or political statements?"}
             <select required value={textAnswer} onChange={e => setTextAnswer(e.target.value)} className="mt-2 block w-full border ps-3 pe-3 py-2"><option value="">{isAr ? 'اختر إجابة' : 'Select an answer'}</option><option value="YES">{isAr ? 'نعم' : 'Yes'}</option><option value="NO">{isAr ? 'لا' : 'No'}</option></select>
           </label>
           {textAnswer === 'YES' && <label className="block">{isAr ? 'الترجمة الكاملة والشرح السياقي' : 'Full translation and contextual explanation'}<textarea required value={textExplanation} onChange={e=>setTextExplanation(e.target.value)} className="mt-2 block w-full border ps-3 pe-3 py-2" /></label>}
-          <p>{isAr ? 'تتطلب جميع الإقرارات مراجعة HIP قبل إحالة الملف للتدقيق.' : 'All declarations require explicit HIP review before vetting submission.'}</p>
+          <p>{isAr ? 'تراجع اللجنة التحضيرية الإقرارات ضمن مداولات الترشيح.' : 'The Preparatory Committee reviews declarations collectively during nomination deliberations.'}</p>
         </fieldset>
         <label className="block">{isAr ? 'مسار المشاركة' : 'Participation track'}
           <select className="mt-2 block w-full rounded border ps-3 pe-3 py-2 text-start" value={participationTrack} onChange={e => setParticipationTrack(e.target.value as ParticipationTrack)}>
@@ -464,7 +472,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
               {previousWorksUploaded || previousWorks.length > 0 ? (
                 <div className="flex items-center justify-between rounded bg-white p-2 border border-emerald-300 text-xs">
                   <span className="text-emerald-950 font-medium">{previousWorks.length > 0 ? `${previousWorks.length} ${tr('Images Attached')}` : tr('Images Attached')}</span>
-                  <button type="button" onClick={() => { setPreviousWorks([]); setPreviousWorksUploaded(false); }} className="text-red-500 hover:text-red-700 ms-1 cursor-pointer">
+                  <button type="button" onClick={() => { setPreviousWorks([]); setPortfolioFiles([]); setPreviousWorksUploaded(false); }} className="text-red-500 hover:text-red-700 ms-1 cursor-pointer">
                     <X className="h-3.5 w-3.5" />
                   </button>
                 </div>
@@ -474,6 +482,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
                   <span className="text-[10px] font-bold text-sadu-brick">{tr("Attach Images")}</span>
                   <input type="file" multiple accept="image/*" className="hidden" onChange={e => {
                     if (e.target.files && e.target.files.length > 0) {
+                      setPortfolioFiles(Array.from(e.target.files).filter(f => f.size > 0));
                       setPreviousWorks(Array.from(e.target.files).filter(f => f.size > 0).map(f => f.name));
                       setPreviousWorksUploaded(true);
                     }
@@ -530,7 +539,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
           {provenance && <span>{provenance.name}</span>}
         </label>}
         </fieldset>
-        <p className="text-sm">{tr('Scouting saves a draft. Only the assigned Coordinator can submit it for compliance vetting.')}</p>
+        <p className="text-sm">{isAr?'ترسل الملفات المكتملة إلى اللجنة التحضيرية للمداولة قبل مراجعة المدير.':'Complete dossiers enter Committee deliberation before Director review.'}</p>
         {/* Submit Action Gate */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-t border-sadu-gold/40 pt-4">
           <span className="text-xs text-sadu-muted">
@@ -551,7 +560,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
             className="inline-flex items-center justify-center gap-2 rounded-md bg-sadu-brick px-6 py-3 text-xs font-bold text-white shadow-xs transition-colors hover:bg-sadu-brick-dark disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             <Upload className="h-4 w-4" />
-            <span>{tr("Save Dossier for Assigned Coordinator")}</span>
+            <span>{isAr?'إرسال الترشيح إلى اللجنة':'Submit Nomination to Committee'}</span>
           </button>
         </div>
       </form>

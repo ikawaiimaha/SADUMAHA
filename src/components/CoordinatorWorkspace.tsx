@@ -113,6 +113,7 @@ export const CoordinatorWorkspace: React.FC<CoordinatorWorkspaceProps> = ({
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6">
+      {nominatedArtists.filter(d=>d.assignedCoordinatorId===activeCoordinatorId).map(d=><CommitteeNominationOutcome key={`committee:${d.id}`} dossier={d} isAr={isAr}/>)}
       <ArtworkRosterQueue isAr={isAr} coordinatorId={activeCoordinatorId} assignedArtistIds={nominatedArtists.filter(d=>d.assignedCoordinatorId===activeCoordinatorId).map(d=>d.id)}/>
       {nominatedArtists.filter(d=>d.assignedCoordinatorId===activeCoordinatorId).map(d=><section key={`routing:${d.id}`}><MissingDeliverables artistId={d.id} artistName={d.artistName} isAr={isAr}/>{d.status==='APPROVED'&&<FabricationLedger artistId={d.id} artistName={d.artistName} isAr={isAr} actor="COORDINATOR"/>}</section>)}
       <RegionalDelegation dossiers={nominatedArtists} isAr={isAr} canDelegate={canDelegateRegions} onDelegate={onDelegateRegion} lockedIds={[...delegationLockedIds,...contracts.map(c=>c.artistId)]} />
@@ -722,3 +723,14 @@ export const CoordinatorWorkspace: React.FC<CoordinatorWorkspaceProps> = ({
 export default CoordinatorWorkspace;
 
 
+
+
+export function CommitteeNominationOutcome({dossier,isAr}:{dossier:NominatedArtistDossier;isAr:boolean}) {
+  if(!['PENDING_COMMITTEE_REVIEW','COMMITTEE_REJECTED','PENDING_DIRECTOR_REVIEW'].includes(dossier.status))return null;
+  const rejected=dossier.status==='COMMITTEE_REJECTED';
+  return <section role="status" className={`rounded border ps-4 pe-4 py-3 text-start ${rejected?'border-red-300 bg-red-50':'border-[#D9CEBA] bg-[#F7F1E6]'}`}>
+    <h3 className="font-semibold">{dossier.artistName}</h3>
+    <p>{rejected?(isAr?'مرفوض بقرار اللجنة التحضيرية':'Rejected by Committee Consensus'):dossier.status==='PENDING_COMMITTEE_REVIEW'?(isAr?'بانتظار مداولات اللجنة':'Pending Committee Review'):(isAr?'اعتمدت اللجنة — بانتظار المدير':'Committee endorsed — awaiting Director')}</p>
+    {dossier.committeeReview&&<><p className="whitespace-pre-wrap">{dossier.committeeReview.minutes}</p><time>{new Date(dossier.committeeReview.at).toLocaleString(isAr?'ar-AE':'en-GB')}</time></>}
+  </section>;
+}

@@ -19,7 +19,7 @@ export function reviewScopeChange(d: NominatedArtistDossier, id: string, approve
 export function readyForDispatch(d: NominatedArtistDossier): boolean {
   return d.status === 'APPROVED' && Boolean(d.assignedCoordinatorId) && !d.amendments?.some(a => a.status === 'PENDING') && !d.dispatchHistory?.some(row => row.revision === (d.approvalRevision ?? 1));
 }
-export function recordDossierDispatch(d: NominatedArtistDossier, actor: string, publicationReady: boolean, at: string): NominatedArtistDossier {
-  if (actor !== 'HIP' || !publicationReady || !readyForDispatch(d) || !Number.isFinite(Date.parse(at))) return d;
+export function recordDossierDispatch(d: NominatedArtistDossier, actor: string, publicationReady: boolean, at: string, coordinatorId?:string): NominatedArtistDossier {
+  if (actor !== 'COORDINATOR' || coordinatorId !== d.assignedCoordinatorId || !publicationReady || !readyForDispatch(d) || !Number.isFinite(Date.parse(at))) return d;
   return {...d,dispatchHistory:[...(d.dispatchHistory ?? []),{revision:d.approvalRevision ?? 1,at,scope:scopeOf(d)}]};
 }

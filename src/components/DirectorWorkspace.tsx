@@ -1,6 +1,6 @@
 import { CollectionCloseout } from './CollectionCloseout';
 import { ConditionReporting } from './ConditionReporting';
-import { culturalCleared } from '../data/culturalDeclaration';
+import { directorEligible } from '../data/vetting';
 import { InstallationIntervention } from './InstallationIntervention';
 import type { CommissionState } from '../types';
 import type { CommissionAction } from '../data/commissionScenario';
@@ -40,6 +40,7 @@ import { ThemeItem } from './ChairmanWorkspace';
 import { CommitteeThemeDraft, isThemeBatchComplete } from './CommitteeThemeWorkspace';
 
 export interface DirectorWorkspaceProps {
+  blocklist?: string[];
   installationState?: CommissionState;
   onInstallationAction?: (action: CommissionAction) => void;
   isForwarded?: boolean;
@@ -81,7 +82,7 @@ const DEMO_DIRECTOR_NOTES = [
 ];
 
 export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
-  installationState, onInstallationAction,
+  installationState, onInstallationAction, blocklist = [],
   isForwarded = false,
   restrictionProposal,
   onReviewRestrictions,
@@ -591,7 +592,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
                 <div className="mt-4 border-t border-sadu-gold/30 pt-3 flex items-center gap-2">
                   <button
                     type="button"
-                    disabled={artist.status !== 'PENDING_DIRECTOR_REVIEW' || !culturalCleared(artist)}
+                    disabled={!directorEligible(artist, blocklist)}
                     onClick={() => onApproveArtist?.(artist.id)}
                     className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-xs font-bold transition-colors cursor-pointer ${
                       artist.status === 'APPROVED'
