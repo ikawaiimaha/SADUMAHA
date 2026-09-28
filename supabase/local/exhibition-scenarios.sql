@@ -43,7 +43,7 @@ begin
    if n is null or n<1 or n>100 or length(trim(coalesce(z->>'name',''))) not between 1 and 150 or length(trim(coalesce(z->>'medium',''))) not between 1 and 250 or length(trim(coalesce(z->>'displaySpecifications',''))) not between 1 and 4000 or jsonb_typeof(z->'avRequired') is distinct from 'boolean' or jsonb_typeof(z->'darkRoom') is distinct from 'boolean' or jsonb_typeof(z->'printRequired') is distinct from 'boolean' or not ((z->>'avRequired')::boolean or (z->>'printRequired')::boolean) then raise exception 'Complete zone fields and declare media';end if;
    foreach cat in array array['PRINT','AV'] loop
     if (cat='PRINT' and (z->>'printRequired')::boolean) or (cat='AV' and (z->>'avRequired')::boolean) then
-     if not exists(select 1 from public.sadu_scenario_media m join storage.objects o on o.name=m.object_name and o.bucket_id='logistics-secure' where m.scenario_id=new.id and m.zone_id=(z->>'id')::uuid and m.category=cat and (o.metadata->>'size')::bigint between 1 and 52428800 and ((cat='PRINT' and o.metadata->>'mimetype' in ('image/png','image/tiff')) or (cat='AV' and o.metadata->>'mimetype' in ('video/mp4','video/quicktime')))) then raise exception 'Uploaded media missing for zone';end if;
+     if not exists(select 1 from public.sadu_scenario_media m join storage.objects o on o.name=m.object_name and o.bucket_id='logistics-secure' where m.scenario_id=new.id and m.zone_id=(z->>'id')::uuid and m.category=cat and (o.metadata->>'size')::bigint between 1 and 2147483648 and ((cat='PRINT' and o.metadata->>'mimetype' in ('image/png','image/tiff')) or (cat='AV' and o.metadata->>'mimetype' in ('video/mp4','video/quicktime')))) then raise exception 'Uploaded media missing for zone';end if;
     end if;
    end loop;
   end loop;

@@ -953,3 +953,27 @@ test('scenario submission stays disabled without configured authenticated storag
  const html=renderToStaticMarkup(createElement(ExhibitionScenario));
  assert.match(html,/Submission is locked/);assert.match(html,/disabled=""[^>]*>إرسال الملفات النهائية/);
 });
+
+import {vaultNotification} from '../src/lib/vaultNotification';
+import {tusEndpoint,MEDIA_LIMIT,createMediaTransfer} from '../src/lib/resumableMedia';
+import {Upload} from 'tus-js-client';
+import type {SupabaseClient} from '@supabase/supabase-js';
+test('vault notification repeats notice, escapes body and rejects unsafe links and injected headers',()=>{
+ const mail=vaultNotification('Missing files','<script>bad</script>','https://vault.example/artist?token=sample','https://vault.example');
+ assert.equal(mail.text.split('⚠️ IMPORTANT:').length,3);assert.equal(mail.html.split('⚠️ IMPORTANT:').length,3);
+ assert.ok(mail.html.includes('&lt;script&gt;'));assert.ok(!mail.html.includes('<script>'));
+ assert.throws(()=>vaultNotification('A\r\nB','body','https://vault.example/','https://vault.example'));
+ assert.throws(()=>vaultNotification('A','body','https://other.example/','https://vault.example'));
+ assert.equal(mail.headers['Auto-Submitted'],'auto-generated');
+});
+test('resumable upload retains task for retry, uses 6 MiB chunks and cancels without overwrite',async()=>{
+ let starts=0;const progress:number[]=[];
+ class SimulatedUpload extends Upload {start(){starts++;assert.equal(this.options.chunkSize,6*1024*1024);assert.equal(this.options.storeFingerprintForResuming,false);this.options.onProgress?.(5,10);if(starts===1)this.options.onError?.(new Error('Network interrupted'));else this.options.onSuccess?.({lastResponse:null});}async abort(){}}
+ const task=createMediaTransfer(new File(['sample'],'a.png'),'user/path/a.png','image/png','user',p=>progress.push(p),{client:{} as SupabaseClient,url:'http://127.0.0.1:54321',UploadClass:SimulatedUpload});
+ await assert.rejects(task.start(),/interrupted/);await task.start();assert.equal(starts,2);assert.deepEqual(progress,[50,50]);task.cancel();await assert.rejects(task.start(),/cancelled/);
+ assert.equal(tusEndpoint('https://abc.supabase.co'),'https://abc.storage.supabase.co/storage/v1/upload/resumable');
+ assert.equal(tusEndpoint('http://127.0.0.1:54321'),'http://127.0.0.1:54321/storage/v1/upload/resumable');assert.equal(MEDIA_LIMIT,2147483648);
+});
+test('heavy media validation accepts a declared 2 GiB header without buffering the full file and rejects oversize',async()=>{
+ const f=new File([new Uint8Array([73,73,42,0])],'large.tiff');Object.defineProperty(f,'size',{value:2147483648,configurable:true});assert.equal(await mediaContentType(f,'PRINT'),'image/tiff');Object.defineProperty(f,'size',{value:2147483649});assert.equal(await mediaContentType(f,'PRINT'),null);
+});

@@ -1,3 +1,8 @@
+# 28 September 2026 — Heavy-media transfer upgrade
+
+Scenario uploads now support 2 GiB through TUS with 6 MiB chunks, progress, automatic retries and same-page resume. Storage size verification precedes final-deliverables eligibility. Local limits and SQL validation are upgraded; remote deployment remains separate. The shared vault-only email envelope is prepared for future transport integration. No live mail sender or inbound attachment rejection exists. See docs/audits/heavy-media-2026-09-28.md.
+
+---
 # 28 September 2026 — Authenticated exhibition scenarios
 
 The Artist declares spatial zones and print/video requirements against an accepted, owned database contract. The artwork_checklist JSON is submitted only when private logistics-secure objects exist for every declared zone/category. Submitted records are immutable. Assigned Coordinators and Logistics read structured checklists under RLS. Demo role selection never supplies database authority. Local SQL and rollback tests are retained under supabase/local/exhibition-scenarios.sql and supabase/tests/exhibition-scenarios.sql; no hosted migration was applied. The 50 MB/file pilot limit, authentication requirement and incomplete HTTP upload verification are documented in the audit.
