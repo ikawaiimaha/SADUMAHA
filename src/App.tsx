@@ -1,5 +1,6 @@
+import { EscalationSubmission } from './components/EscalationSubmission';
 import { programmeReferences } from './data/directoratePortfolio';
-import { resolveEscalation } from './utils/chairmanOversight';
+import { resolveEscalation, submitEscalation, ESCALATION_DEPARTMENTS } from './utils/chairmanOversight';
 import type { EscalationRecord, PortfolioProgram } from './types/chairman';
 import { assignedTo, COORDINATORS } from './data/participation2026';
 import { HonoredGuestRoster } from './components/HonoredGuestRoster';
@@ -167,6 +168,7 @@ function SADUApp() {
 
   const [submittedThemes, setSubmittedThemes] = useState<CommitteeThemeDraft[] | undefined>(undefined);
   const [directorThemes, setDirectorThemes] = useState<CommitteeThemeDraft[]>([]);
+  const [chairmanDocketRevision, setChairmanDocketRevision] = useState(0);
   const [executiveEscalations, setExecutiveEscalations] = useState<EscalationRecord[]>([]);
   const [assignedBudget, setAssignedBudget] = useState<number | null>(null);
   const [ratifiedTheme, setRatifiedTheme] = useState<ThemeItem | null>(null);
@@ -219,11 +221,12 @@ function SADUApp() {
 
   const handlePresentToChairman = (themes: CommitteeThemeDraft[]) => {
     if (activeRole !== 'BIENNIAL_DIRECTOR' || ratifiedTheme || submittedThemes || !isThemeBatchComplete(themes)) return;
+    setChairmanDocketRevision(revision => revision + 1);
     setSubmittedThemes(themes);
   };
 
   const handleBudgetAssigned = (amount: number, theme: ThemeItem) => {
-    if (ratifiedTheme || !Number.isFinite(amount) || amount <= 0) return;
+    if (activeRole !== 'CHAIRMAN' || ratifiedTheme || !submittedThemes || !isThemeBatchComplete(submittedThemes) || !submittedThemes.some(candidate => candidate.arabicName === theme.arabicName && candidate.curatorialJustification === theme.curatorialJustification) || !Number.isFinite(amount) || amount <= 0) return;
     setAssignedBudget(amount);
     // Preserve the complete executive record, including both sets of notes.
     setRatifiedTheme({ ...theme });
@@ -639,6 +642,7 @@ function SADUApp() {
                 locationEn: p.contextEn, locationAr: p.contextAr,
                 startDate: p.startDate, endDate: p.endDate,
                 isLiveSessionProgram: p.id === 'REF-CALLIGRAPHY-12',
+                sessionThemeArabic: p.id === 'REF-CALLIGRAPHY-12' ? ratifiedTheme?.arabicName : undefined,
                 budgetCeilingAED: p.id === 'REF-CALLIGRAPHY-12' ? assignedBudget ?? undefined : undefined,
               })),
               escalations: executiveEscalations,
@@ -646,6 +650,7 @@ function SADUApp() {
             }}
             onAutoNavigate={handleAutoNavigate}
             eventId={EVENT_ID}
+            docketRevision={chairmanDocketRevision}
             themes={submittedThemes}
             onThemeApproved={(theme, index) => {
               if (ratifiedTheme) return;
@@ -918,6 +923,7 @@ function SADUApp() {
           <CommissionSummary isAr={isAr} showTechnical={activeRole !== 'PR_PROTOCOL'} />
         </aside>}
         {renderWorkspace()}
+        {Object.hasOwn(ESCALATION_DEPARTMENTS, activeRole) && <EscalationSubmission key={activeRole} actor={activeRole} isAr={isAr} records={executiveEscalations} onSubmit={input => setExecutiveEscalations(rows => submitEscalation(rows, input, activeRole, new Date().toISOString()))} />}
       </main>
 
       {/* Presenter Architecture Drawer (Ctrl+Shift+P / ⌘⇧P) */}

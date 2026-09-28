@@ -1,5 +1,16 @@
 import type { CommissionState } from '../types';
-import type { EscalationRecord, PortfolioProgram, ResourceConflictReport } from '../types/chairman';
+import type { EscalationInput, EscalationRecord, PortfolioProgram, ResourceConflictReport } from '../types/chairman';
+
+export const ESCALATION_DEPARTMENTS: Record<string, EscalationRecord['originatingDepartment']> = {
+  COORDINATOR: 'Coordination', TECHNICAL: 'Technical', FINANCE: 'Finance', PR_PROTOCOL: 'PR & Protocol',
+};
+
+export function submitEscalation(rows: EscalationRecord[], input: EscalationInput, actor: string, at: string): EscalationRecord[] {
+  const department = Object.hasOwn(ESCALATION_DEPARTMENTS, actor) ? ESCALATION_DEPARTMENTS[actor] : undefined;
+  if (!department || !input.id.trim() || !input.reason.trim() || !input.supportingEvidenceRef.trim() || !input.requestedDecision.trim() || !Number.isFinite(Date.parse(at))) return rows;
+  if (rows.some(row => row.id === input.id || (row.status === 'PENDING_EXECUTIVE_ACTION' && row.originatingDepartment === department && row.reason === input.reason.trim() && row.supportingEvidenceRef === input.supportingEvidenceRef.trim() && row.requestedDecision === input.requestedDecision.trim()))) return rows;
+  return [...rows, { id: input.id, programId: 'REF-CALLIGRAPHY-12', programName: '12th Sharjah Calligraphy Biennial', originatingDepartment: department, reason: input.reason.trim(), supportingEvidenceRef: input.supportingEvidenceRef.trim(), requestedDecision: input.requestedDecision.trim(), status: 'PENDING_EXECUTIVE_ACTION', submittedAt: at, decisionHistory: [] }];
+}
 
 export function deriveDepartmentEvidenceStatus(departmentName: string, timestamp?: string | null, isCleared?: boolean | null, referenceId?: string | null, isAr = false) {
   const isComplete = isCleared === true && Boolean(timestamp && Number.isFinite(Date.parse(timestamp)));
@@ -39,5 +50,6 @@ export function resolveEscalation(rows: EscalationRecord[], id: string, disposit
   if (actor !== 'CHAIRMAN' || !['APPROVED', 'REJECTED', 'DEFERRED'].includes(disposition) || !Number.isFinite(Date.parse(at))) return rows;
   const target = rows.find(row => row.id === id);
   if (!target || target.status !== 'PENDING_EXECUTIVE_ACTION' || !target.supportingEvidenceRef.trim()) return rows;
-  return rows.map(row => row.id === id ? {...row, status: 'RESOLVED', executiveDisposition: disposition, decidedAt: at} : row);
+  if (disposition === 'DEFERRED' && target.executiveDisposition === 'DEFERRED') return rows;
+  return rows.map(row => row.id === id ? {...row, status: disposition === 'DEFERRED' ? 'PENDING_EXECUTIVE_ACTION' : 'RESOLVED', executiveDisposition: disposition, decidedAt: at, decisionHistory: [...(row.decisionHistory ?? []), {disposition, at}] } : row);
 }

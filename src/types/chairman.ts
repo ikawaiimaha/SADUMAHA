@@ -14,6 +14,7 @@ export interface PortfolioProgram {
   exclusiveResourceIds?: string[];
   isLiveSessionProgram: boolean;
   budgetCeilingAED?: number;
+  sessionThemeArabic?: string;
 }
 export interface ResourceConflictReport {
   programA: string;
@@ -34,4 +35,12 @@ export interface EscalationRecord {
   executiveDisposition?: 'APPROVED' | 'REJECTED' | 'DEFERRED';
   submittedAt: string;
   decidedAt?: string;
+  decisionHistory?: { disposition: 'APPROVED' | 'REJECTED' | 'DEFERRED'; at: string }[];
+}
+
+export interface EscalationInput {
+  id: string;
+  reason: string;
+  supportingEvidenceRef: string;
+  requestedDecision: string;
 }

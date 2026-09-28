@@ -1,3 +1,15 @@
+# 28 September 2026 — Chairman audit remediation
+
+Chairman selection and budget drafts now use session storage keyed by event and docket revision; returning to a desk retains the draft, while a newly forwarded docket starts fresh. Ratification remains in App state and requires the Chairman role, a complete presented batch, a matching proposal and a positive finite budget. The oversight view selection also survives desk switching.
+
+Coordination, Technical, PR and Finance can record a session escalation with reason, evidence reference and requested decision. Intake derives the department from the active role, requires all fields, and rejects duplicate pending submissions. References are user-entered session references, not authenticated document uploads. Submitted records and responses survive role switches, but not refresh.
+
+Deferral remains PENDING_EXECUTIVE_ACTION and retains a decision history; later approval/rejection resolves the record. Repeated deferral and terminal re-decisions are blocked. Neither intake nor executive disposition changes specialist clearance, venue authorization, contract terms or payment gates.
+
+The portfolio displays the current session theme and ratified budget separately from source program titles. Evidence counts use localized words rather than bidi-sensitive fractions. No database, authentication or external actions are added.
+
+---
+
 # 28 September 2026 — Evidence-backed Chairman oversight
 
 The Chairman opens a portfolio view of existing program references, then a separate Biennial decisions view retaining Stage 1 ratification and downstream handoffs. Operational evidence is derived from the existing commission state: PR and Technical require their gate and valid recorded timestamp; Logistics requires its receipt status and timestamp; Finance requires an actual session ledger entry, not authorization alone. Missing evidence has no invented reference or health percentage.

@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
+import { useSessionDraft } from '../context/SessionDrafts';
 import type { CommissionState } from '../types';
 import type { ChairmanViewMode, EscalationRecord, PortfolioProgram } from '../types/chairman';
 import { analyzePortfolioConflicts, commissionEvidence } from '../utils/chairmanOversight';
@@ -14,7 +15,7 @@ export interface ChairmanOversightProps {
 
 export function ChairmanOversight({ programs, commission, escalations, onResolveEscalation, children }: ChairmanOversightProps) {
   const { isAr } = useI18n();
-  const [view, setView] = useState<ChairmanViewMode>('PORTFOLIO');
+  const [view, setView] = useSessionDraft<ChairmanViewMode>('chairman-view', 'PORTFOLIO');
   const evidence = commissionEvidence(commission, isAr);
   const conflicts = analyzePortfolioConflicts(programs);
   const programName = (id: string) => { const p = programs.find(p => p.id === id); return p ? (isAr ? p.nameAr : p.nameEn) : id; };
@@ -26,9 +27,15 @@ export function ChairmanOversight({ programs, commission, escalations, onResolve
     </nav>
     {view === 'PORTFOLIO' && <div className="space-y-5">
       <p className="rounded border ps-4 pe-4 py-3">{isAr ? 'مراجع البرامج القائمة؛ تقارير التشغيل والتكليفات غير متاحة. أدلة الملتقى أدناه محاكاة للجلسة فقط.' : 'Existing program references; operational reports and assignments unavailable. Biennial evidence below is session simulation only.'}</p>
+      {programs.filter(p => p.isLiveSessionProgram).map(p => <section key={p.id} aria-label={isAr ? 'ملخص قرار الجلسة' : 'Session decision summary'} className="rounded border border-[#D9CEBA] bg-white ps-4 pe-4 py-4">
+        <h2 className="text-xl font-semibold">{isAr ? 'قرار الملتقى في هذه الجلسة' : 'Biennial decision in this session'}</h2>
+        <p>{isAr ? 'الثيمة المعتمدة: ' : 'Ratified theme: '}<bdi>{p.sessionThemeArabic ?? (isAr ? 'لم تعتمد بعد' : 'Not ratified yet')}</bdi></p>
+        <p>{isAr ? 'الميزانية المعتمدة: ' : 'Ratified budget: '}{p.budgetCeilingAED !== undefined ? <bdi>{new Intl.NumberFormat(isAr ? 'ar-AE' : 'en-AE', {style:'currency',currency:'AED'}).format(p.budgetCeilingAED)}</bdi> : (isAr ? 'لم تعتمد بعد' : 'Not ratified yet')}</p>
+        <p className="text-sm text-[#736357]">{isAr ? 'عنوان المصدر أدناه مرجع مستقل؛ لا يستبدل قرار الجلسة.' : 'The source title below is a separate reference, not the session decision.'}</p>
+      </section>)}
       <div className="grid gap-3 sm:grid-cols-3">
         <p className="rounded border bg-white ps-4 pe-4 py-4">{isAr ? 'مراجع البرامج' : 'Program references'}: {programs.length}</p>
-        <p className="rounded border bg-white ps-4 pe-4 py-4">{isAr ? 'سجلات أدلة المحاكاة' : 'Recorded simulation evidence'}: {evidence.filter(e => e.isComplete).length} / {evidence.length}</p>
+        <p className="rounded border bg-white ps-4 pe-4 py-4">{isAr ? 'سجلات أدلة المحاكاة' : 'Recorded simulation evidence'}: {evidence.filter(e => e.isComplete).length} {isAr ? 'من' : 'of'} {evidence.length}</p>
         <p className="rounded border bg-white ps-4 pe-4 py-4">{isAr ? 'تصعيدات مسجلة معلقة' : 'Recorded pending escalations'}: {escalations.filter(e => e.status === 'PENDING_EXECUTIVE_ACTION').length}</p>
       </div>
       <div className="overflow-x-auto rounded border bg-white"><table className="w-full text-start"><thead><tr>{[isAr ? 'البرنامج' : 'Program', isAr ? 'السياق المرجعي' : 'Reference context', isAr ? 'التقرير التشغيلي' : 'Operational report'].map(label => <th key={label} className="ps-4 pe-4 py-3 text-start">{label}</th>)}</tr></thead><tbody>
@@ -43,7 +50,9 @@ export function ChairmanOversight({ programs, commission, escalations, onResolve
       <section className="rounded border bg-white ps-4 pe-4 py-4"><h2 className="text-xl font-semibold">{isAr ? 'سجل التصعيد التنفيذي' : 'Executive escalations docket'}</h2>
         {!escalations.length && <p>{isAr ? 'لا توجد إحالات تنفيذية مسجّلة؛ وزن العمل وحده لا ينشئ طلب إعفاء هندسي.' : 'No executive escalations recorded. Artwork weight alone does not establish an engineering waiver request.'}</p>}
         {escalations.map(e => <article key={e.id} className="mt-3 space-y-2 rounded border ps-4 pe-4 py-4"><h3>{e.programName} · {e.originatingDepartment}</h3><p>{e.reason}</p><p>{e.supportingEvidenceRef}</p><p>{e.requestedDecision}</p><p>{e.submittedAt}</p>
-          {e.status === 'PENDING_EXECUTIVE_ACTION' ? <div className="flex flex-wrap gap-2">{(['APPROVED','REJECTED','DEFERRED'] as const).map((d,i) => <button type="button" key={d} disabled={!e.supportingEvidenceRef.trim()} className="rounded border ps-3 pe-3 py-2 disabled:opacity-50" onClick={() => onResolveEscalation(e.id,d)}>{isAr ? ['تسجيل الموافقة','تسجيل الرفض','تسجيل التأجيل'][i] : ['Record approval','Record rejection','Record deferral'][i]}</button>)}</div> : <p role="status">{e.executiveDisposition} · {e.decidedAt}</p>}
+          {e.executiveDisposition === 'DEFERRED' && e.status === 'PENDING_EXECUTIVE_ACTION' && <p role="status">{isAr ? 'مؤجلة — تبقى مفتوحة لاتخاذ القرار النهائي' : 'Deferred — remains open for a final decision'}</p>}
+          {Boolean(e.decisionHistory?.length) && <details><summary>{isAr ? 'سجل القرارات' : 'Decision history'}</summary><ul>{e.decisionHistory?.map((entry,index) => <li key={index}>{entry.disposition === 'DEFERRED' ? (isAr ? 'تأجيل' : 'Deferred') : entry.disposition === 'APPROVED' ? (isAr ? 'موافقة' : 'Approved') : (isAr ? 'رفض' : 'Rejected')} · {entry.at}</li>)}</ul></details>}
+          {e.status === 'PENDING_EXECUTIVE_ACTION' ? <div className="flex flex-wrap gap-2">{(['APPROVED','REJECTED','DEFERRED'] as const).map((d,i) => <button type="button" key={d} disabled={!e.supportingEvidenceRef.trim() || (d === 'DEFERRED' && e.executiveDisposition === 'DEFERRED')} className="rounded border ps-3 pe-3 py-2 disabled:opacity-50" onClick={() => onResolveEscalation(e.id,d)}>{isAr ? ['تسجيل الموافقة','تسجيل الرفض','تسجيل التأجيل'][i] : ['Record approval','Record rejection','Record deferral'][i]}</button>)}</div> : <p role="status">{e.executiveDisposition === 'APPROVED' ? (isAr ? 'موافقة' : 'Approved') : (isAr ? 'رفض' : 'Rejected')} · {e.decidedAt}</p>}
         </article>)}
         <p className="mt-3 text-sm">{isAr ? 'التوجيه التنفيذي لا يمنح تصريحاً فنياً أو مالياً؛ تظل بوابات الجهات المختصة مستقلة.' : 'Executive disposition does not grant technical or financial clearance; specialist gates remain independent.'}</p>
       </section>

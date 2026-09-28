@@ -210,7 +210,7 @@ test('honored guest vetting needs identity and the assigned coordinator, not inv
   assert.equal(validDossier({...d, assignedCoordinatorId: undefined}), false);
 });
 
-import { analyzePortfolioConflicts, deriveDepartmentEvidenceStatus, commissionEvidence, resolveEscalation } from '../src/utils/chairmanOversight';
+import { analyzePortfolioConflicts, deriveDepartmentEvidenceStatus, commissionEvidence, resolveEscalation, submitEscalation } from '../src/utils/chairmanOversight';
 import type { PortfolioProgram, EscalationRecord } from '../src/types/chairman';
 test('Chairman evidence requires a valid timestamp and clearance; counts use the same evidence', () => {
   assert.equal(deriveDepartmentEvidenceStatus('PR', undefined, true).isComplete, false);
@@ -239,6 +239,27 @@ test('executive disposition is role guarded, idempotent and retained in parent r
   assert.equal(resolveEscalation(rows,'e','APPROVED','TECHNICAL',at),rows);
   const next = resolveEscalation(rows,'e','DEFERRED','CHAIRMAN',at);
   assert.equal(next[0].executiveDisposition,'DEFERRED');
-  assert.equal(resolveEscalation(next,'e','APPROVED','CHAIRMAN',at), next);
+  assert.equal(next[0].status, 'PENDING_EXECUTIVE_ACTION');
+  assert.equal(resolveEscalation(next,'e','DEFERRED','CHAIRMAN',at), next);
+  const resolved = resolveEscalation(next,'e','APPROVED','CHAIRMAN',at);
+  assert.equal(resolved[0].status, 'RESOLVED');
+  assert.deepEqual(resolved[0].decisionHistory?.map(d => d.disposition), ['DEFERRED','APPROVED']);
+  assert.equal(resolveEscalation(resolved,'e','REJECTED','CHAIRMAN',at), resolved);
   assert.equal(rows[0].status,'PENDING_EXECUTIVE_ACTION');
+});
+
+test('department escalation intake validates evidence, roles and duplicate submissions', () => {
+  const empty: EscalationRecord[] = [];
+  const input = {id:'new-escalation',reason:'Venue scope review',supportingEvidenceRef:'SESSION-REF-1',requestedDecision:'Review inter-entity dependency'};
+  for (const actor of ['ARTIST','CHAIRMAN','HIP','toString']) assert.equal(submitEscalation(empty,input,actor,at),empty);
+  assert.equal(submitEscalation(empty,{...input,supportingEvidenceRef:'  '},'TECHNICAL',at),empty);
+  assert.equal(submitEscalation(empty,input,'TECHNICAL','invalid'),empty);
+  for (const actor of ['COORDINATOR','PR_PROTOCOL','TECHNICAL','FINANCE']) assert.equal(submitEscalation(empty,input,actor,at).length,1);
+  const rows = submitEscalation(empty,input,'TECHNICAL',at);
+  assert.equal(rows[0].originatingDepartment,'Technical');
+  assert.equal(submitEscalation(rows,input,'TECHNICAL',at),rows);
+  assert.equal(submitEscalation(rows,{...input,id:'retry'},'TECHNICAL',at),rows);
+  const deferred = resolveEscalation(rows,input.id,'DEFERRED','CHAIRMAN',at);
+  assert.equal(submitEscalation(deferred,{...input,id:'retry'},'TECHNICAL',at),deferred);
+  assert.equal(empty.length,0);
 });

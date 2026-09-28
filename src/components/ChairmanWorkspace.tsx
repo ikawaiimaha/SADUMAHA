@@ -1,9 +1,10 @@
+import { useSessionDraft } from '../context/SessionDrafts';
 import { ChairmanOversight, type ChairmanOversightProps } from './ChairmanOversight';
 import { useLocalDraft, isNotes } from '../hooks/useLocalDraft';
 import { scrollWorkspaceToTop } from '../utils/scrollWorkspaceToTop';
 import { useMockupText } from '../i18n/useMockupText';
 import { useI18n } from '../context/I18nContext';
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Wand2,
   Lock,
@@ -35,6 +36,7 @@ export interface ChairmanWorkspaceProps {
   oversight?: Omit<ChairmanOversightProps, 'children'>;
   /** Identifier of the biennial/event these theme proposals belong to. */
   eventId?: string;
+  docketRevision?: number;
   /** Submitted candidate themes from the Preparatory Committee (the 3 drafts). */
   themes?: ThemeItem[];
   /** Callback fired when the Chairman confers official ratification on a theme. */
@@ -53,6 +55,7 @@ export interface ChairmanWorkspaceProps {
 
 const ChairmanDecisions: React.FC<ChairmanWorkspaceProps> = ({
   eventId,
+  docketRevision = 0,
   themes,
   onThemeApproved,
   onBudgetAssigned,
@@ -71,9 +74,12 @@ const ChairmanDecisions: React.FC<ChairmanWorkspaceProps> = ({
   const [chairmanNotes, setChairmanNotes, notesSaveFailed] = useLocalDraft<Record<number, string>>(`sadu:draft:v1:chairmanNotes:${JSON.stringify((themes || []).map(theme => [theme.arabicName, theme.curatorialJustification]))}`, {}, isNotes);
   const tr = useMockupText();
   const { isAr } = useI18n();
-  const [approvedIndex, setApprovedIndex] = useState<number | null>(initialApprovedIndex);
-  const [allocatedBudget, setAllocatedBudget] = useState<number>(initialBudget ?? 0);
-  const [isBudgetAssigned, setIsBudgetAssigned] = useState<boolean>(initialBudget !== null && Number.isFinite(initialBudget) && initialBudget > 0);
+  const [decisionDraft, setDecisionDraft] = useSessionDraft(`chairman-decision:${eventId ?? 'default'}:${docketRevision}`, { approvedIndex: initialApprovedIndex, allocatedBudget: initialBudget ?? 0 });
+  const approvedIndex = decisionDraft.approvedIndex;
+  const allocatedBudget = initialBudget ?? decisionDraft.allocatedBudget;
+  const isBudgetAssigned = Boolean(initialApprovedTheme && initialBudget !== null && Number.isFinite(initialBudget) && initialBudget > 0);
+  const setApprovedIndex = (index: number | null) => setDecisionDraft(previous => ({...previous, approvedIndex: index}));
+  const setAllocatedBudget = (amount: number) => setDecisionDraft(previous => ({...previous, allocatedBudget: amount}));
 
   // Check if 3 submitted theme drafts exist and have content
   const hasSubmittedThemes =
@@ -93,7 +99,6 @@ const ChairmanDecisions: React.FC<ChairmanWorkspaceProps> = ({
 
   const handleAssignBudget = () => {
     if (!isBudgetValid || isBudgetAssigned || !winningTheme || !onBudgetAssigned) return;
-    setIsBudgetAssigned(true);
     scrollWorkspaceToTop();
     onAutoNavigate?.('EDITORIAL');
     if (winningTheme && onBudgetAssigned) {
@@ -104,7 +109,6 @@ const ChairmanDecisions: React.FC<ChairmanWorkspaceProps> = ({
   const handleUnlock = () => {
     if (isBudgetAssigned) return;
     setApprovedIndex(null);
-    setIsBudgetAssigned(false);
   };
 
   // EMPTY STATE: If no themes are submitted yet, show an elegant empty state saying 'Awaiting Committee Proposals'
