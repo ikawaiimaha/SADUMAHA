@@ -1,3 +1,4 @@
+import { CollectionCloseout } from './components/CollectionCloseout';
 import { MissingDeliverables, FabricationLedger } from './components/DeliverableRouting';
 import { damageHold } from './data/conditionReporting';
 import { RegionalDelegation } from './components/RegionalDelegation';
@@ -614,6 +615,8 @@ function SADUApp() {
   };
 
   const renderWorkspace = () => {
+    if(commission.installationStatus==='ARCHIVED_CLOSED'&&['ARTIST','PR_PROTOCOL','TECHNICAL','LOGISTICS','FINANCE'].includes(activeRole))return <><h1 className="ps-5 pe-5 py-5 text-xl">Archived artist dossier — read-only</h1><CollectionCloseout state={commission} actor={activeRole}/><section className="ps-5 pe-5 py-5"><h2>{commission.contracts[0]?.artistName} · {commission.contracts[0]?.proposedWorkTitle}</h2><p>Agreement revision {commission.agreementRevision}</p>{commission.ledger?.map(row=><p key={row.tranche}>{row.tranche} · AED {row.amount} · {row.at}</p>)}</section></>;
+
     switch (activeRole) {
       case 'CHAIRMAN':
         return (
@@ -651,7 +654,7 @@ function SADUApp() {
         return (
           <DirectorWorkspace
             installationState={commission}
-            onInstallationAction={action => { if (activeRole === 'BIENNIAL_DIRECTOR' && (action.type === 'impound' || action.type === 'review-plan-b')) dispatchCommission({...action, actor: activeRole}); }}
+            onInstallationAction={action => { if (activeRole === 'BIENNIAL_DIRECTOR' && (action.type === 'impound' || action.type === 'review-plan-b' || action.type === 'acquire')) dispatchCommission({...action, actor: activeRole}); }}
             onAutoNavigate={handleAutoNavigate}
             restrictionProposal={restrictionProposal}
             onReviewRestrictions={approved => {
@@ -745,8 +748,8 @@ function SADUApp() {
         return (
           <HIPWorkspace
             catalogState={commission}
-            culturalDossiers={nominatedArtists}
-            onClearCultural={id => setNominatedArtists(rows => rows.map(d => d.id === id ? clearCultural(d, activeRole, new Date().toISOString()) : d))}
+            culturalDossiers={nominatedArtists.filter(d=>commission.installationStatus!=='ARCHIVED_CLOSED'||d.id!==COMMISSION.id)}
+            onClearCultural={id => {if(id===COMMISSION.id&&commission.installationStatus==='ARCHIVED_CLOSED')return;setNominatedArtists(rows => rows.map(d => d.id === id ? clearCultural(d, activeRole, new Date().toISOString()) : d));}}
             themeEssayArabic={themeEssayArabic}
             themeEssayEnglish={themeEssayEnglish}
             guidelinesEnglish={guidelinesEnglish}
@@ -779,7 +782,7 @@ function SADUApp() {
               <label className="block">{isAr ? 'اختيار المنسقة للمحاكاة — ليس تسجيل دخول' : 'Demo coordinator selection — not authentication'}
                 <select className="mt-2 block rounded border ps-3 pe-3 py-2" value={activeCoordinatorId} onChange={e => {setActiveCoordinatorId(e.target.value);setDelegationNotice('');}}><option value={GENERAL_COORDINATOR_ID}>{isAr ? 'المنسق العام — محاكاة' : 'General Coordinator — rehearsal'}</option>{COORDINATORS.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
               </label>
-              {assignedTo(nominatedArtists,activeCoordinatorId).map(d=><section key={`deliverables:${d.id}`}><MissingDeliverables artistId={d.id} artistName={d.artistName} isAr={isAr}/>{d.status==='APPROVED'&&<details><summary className="cursor-pointer">{d.artistName} · {isAr?'أوامر التصنيع':'Fabrication orders'}</summary><FabricationLedger artistId={d.id} artistName={d.artistName} isAr={isAr} actor="COORDINATOR" blocked={d.id===COMMISSION.id&&(damageHold(commission)||commission.installationStatus==='EXECUTIVE_IMPOUND')}/></details>}</section>)}
+              {assignedTo(nominatedArtists,activeCoordinatorId).map(d=><section key={`deliverables:${d.id}`}><MissingDeliverables artistId={d.id} artistName={d.artistName} isAr={isAr}/>{d.status==='APPROVED'&&<details><summary className="cursor-pointer">{d.artistName} · {isAr?'أوامر التصنيع':'Fabrication orders'}</summary><FabricationLedger artistId={d.id} artistName={d.artistName} isAr={isAr} actor="COORDINATOR" blocked={d.id===COMMISSION.id&&(damageHold(commission)||commission.installationStatus==='EXECUTIVE_IMPOUND'||commission.installationStatus==='ARCHIVED_CLOSED')}/></details>}</section>)}
               <RegionalDelegation isAr={isAr} dossiers={activeCoordinatorId === GENERAL_COORDINATOR_ID ? nominatedArtists : assignedTo(nominatedArtists, activeCoordinatorId)} canDelegate={activeCoordinatorId === GENERAL_COORDINATOR_ID} notice={delegationNotice} lockedIds={[...contracts.map(c=>c.artistId),...regionalClaims.map(c=>c.artistId)]} onDelegate={(region,target)=>{
                 if(activeRole !== 'COORDINATOR' || activeCoordinatorId !== GENERAL_COORDINATOR_ID)return;
                 const input={actor:activeRole,coordinatorId:activeCoordinatorId,region,target,at:new Date().toISOString()};
@@ -789,7 +792,7 @@ function SADUApp() {
                 setNominatedArtists(rows=>delegateRegion(rows,input,locked));
               }}/>
               <HonoredGuestRoster coordinatorId={activeCoordinatorId} isAr={isAr} />
-              <SharedSpatialLedger key={activeCoordinatorId} coordinatorId={activeCoordinatorId} dossiers={nominatedArtists} isAr={isAr} />
+              <SharedSpatialLedger key={activeCoordinatorId} coordinatorId={activeCoordinatorId} dossiers={nominatedArtists.filter(d=>commission.installationStatus!=='ARCHIVED_CLOSED'||d.id!==COMMISSION.id)} isAr={isAr} />
               {activeCoordinatorId !== GENERAL_COORDINATOR_ID && <details><summary className="cursor-pointer">{isAr ? 'إعداد ملف ترشيح' : 'Prepare nomination dossier'}</summary><ArtistNominationForm key={activeCoordinatorId} assignedCoordinatorId={activeCoordinatorId} submittedBy="Coordinator" onSubmitNomination={handleNominateArtist} /></details>}
               {assignedTo(nominatedArtists, activeCoordinatorId).filter(d => d.status === 'DRAFT' || d.status === 'REJECTED_COMPLIANCE').map(d => <article key={d.id} className="border-t border-[#D9CEBA] py-3"><h3 className="font-semibold">{d.artistName} · {d.proposedWorkTitle}</h3><p>{d.status} · {d.assignedCoordinatorId}</p><p>{d.complianceReason}</p>{!culturalCleared(d) && <p>{isAr ? 'بانتظار التحقق الثقافي من HIP' : 'Awaiting HIP cultural clearance'}</p>}
                 <button disabled={d.status !== 'DRAFT' || d.assignedCoordinatorId !== activeCoordinatorId || !culturalCleared(d)} className="mt-2 rounded bg-[#8B261E] text-white ps-4 pe-4 py-2 disabled:opacity-50" onClick={() => {
@@ -802,7 +805,7 @@ function SADUApp() {
             </section>
             <p className="my-4 text-sm text-[#736357]">{isAr ? 'التعاقد والتنفيذ في هذه المحاكاة مخصصان لعمل أفق كوفي؛ ملفات الترشيح الأخرى مخصصة لعرض التدقيق والقرارات.' : 'Contracting and execution in this rehearsal use Kufic Horizon only; other nominations demonstrate vetting and executive decisions.'}</p>
             {/* Stage 6: Bilateral Contracting Workspace */}
-            {activeRole === 'COORDINATOR' && activeCoordinatorId === commissionCoordinatorId && (
+            {activeRole === 'COORDINATOR' && activeCoordinatorId === commissionCoordinatorId && commission.installationStatus !== 'ARCHIVED_CLOSED' && (
               <>
               <InstallationIntervention key={commission.impounds?.slice(-1)[0]?.id ?? 'no-impound'} state={commission} isAr={isAr} actor="COORDINATOR" onRecord={action => { if (activeRole === 'COORDINATOR' && activeCoordinatorId === commissionCoordinatorId && action.type === 'acknowledge-alterations') dispatchCommission({...action,actor:activeRole}); }} />
               <label className="flex items-center gap-2 rounded border border-amber-300 bg-amber-50 ps-4 pe-4 py-3 text-start"><input type="checkbox" checked={isIsolatedRehearsalMode} onChange={e => setIsolatedRehearsalMode(e.target.checked)} />Isolated rehearsal — bypass theme and guidelines publication for component testing only</label>
@@ -828,7 +831,7 @@ function SADUApp() {
         return (
           <ArtistPortalWorkspace
             onSubmitVisa={intake=>{if(activeRole==='ARTIST')dispatchCommission({type:'submit-visa',actor:activeRole,intake});}}
-            onSubmitCatalog={action=>{if(activeRole==='ARTIST'&&(action.type==='submit-catalog'||action.type==='save-administration'))dispatchCommission({...action,actor:activeRole});}}
+            onSubmitCatalog={action=>{if(activeRole==='ARTIST'&&(action.type==='submit-catalog'||action.type==='save-administration'||action.type==='collection-terms'))dispatchCommission({...action,actor:activeRole});}}
             conditionState={commission}
             profileArtistId={COMMISSION.id}
             contracts={contracts}
@@ -936,26 +939,27 @@ function SADUApp() {
           <CommissionSummary isAr={isAr} showTechnical={activeRole !== 'PR_PROTOCOL'} />
         </aside>}
         {renderWorkspace()}
-        {activeRole === 'BIENNIAL_DIRECTOR' && <ExecutiveContractSummary dossiers={nominatedArtists} contracts={contracts} isAr={isAr} />}
-        {activeRole === 'LOGISTICS' && <PackingRegister record={packingEvidence} isAr={isAr} onRecord={record=>{if(activeRole==='LOGISTICS'&&validPacking(record))setPackingEvidence(previous=>previous??record);}} />}
-        {['TECHNICAL','COORDINATOR','FINANCE'].includes(activeRole) && <SupplierRegister rows={supplierDeliveries} dossiers={nominatedArtists} actor={activeRole} coordinatorId={activeCoordinatorId} isAr={isAr} onAction={action=>setSupplierDeliveries(rows=>supplierTransition(rows,{...action,actor:activeRole},nominatedArtists))} />}
+        {commission.installationStatus==='ARCHIVED_CLOSED'&&['COORDINATOR','BIENNIAL_DIRECTOR','HIP'].includes(activeRole)&&<CollectionCloseout state={commission} actor={activeRole}/>}
+        {activeRole === 'BIENNIAL_DIRECTOR' && <ExecutiveContractSummary dossiers={nominatedArtists.filter(d=>commission.installationStatus!=='ARCHIVED_CLOSED'||d.id!==COMMISSION.id)} contracts={contracts} isAr={isAr} />}
+        {activeRole === 'LOGISTICS' && commission.installationStatus !== 'ARCHIVED_CLOSED' && <PackingRegister record={packingEvidence} isAr={isAr} onRecord={record=>{if(activeRole==='LOGISTICS'&&validPacking(record))setPackingEvidence(previous=>previous??record);}} />}
+        {['TECHNICAL','COORDINATOR','FINANCE'].includes(activeRole) && <SupplierRegister rows={supplierDeliveries} dossiers={nominatedArtists.filter(d=>commission.installationStatus!=='ARCHIVED_CLOSED'||d.id!==COMMISSION.id)} actor={activeRole} coordinatorId={activeCoordinatorId} isAr={isAr} onAction={action=>setSupplierDeliveries(rows=>supplierTransition(rows,{...action,actor:activeRole},nominatedArtists.filter(d=>commission.installationStatus!=='ARCHIVED_CLOSED'||d.id!==COMMISSION.id)))} />}
         {['COORDINATOR','HIP','BIENNIAL_DIRECTOR'].includes(activeRole) && <>
           {dossierNotice && <p role="status" className="mx-auto max-w-5xl rounded border ps-4 pe-4 py-3">{dossierNotice}</p>}
           <DossierTracking dossiers={activeRole === 'COORDINATOR' ? assignedTo(nominatedArtists,activeCoordinatorId) : nominatedArtists.filter(d => d.status === 'APPROVED')} isAr={isAr} actor={activeRole} publicationReady={themePolishStatus === 'PUBLISHED_OFFICIAL' && translationStatus === 'PUBLISHED'} lockedIds={contracts.filter(c => c.status !== 'NOT_DRAFTED').map(c=>c.artistId)}
             onRequest={(id,scope,reason) => {
-              if (activeRole !== 'COORDINATOR') return;
+              if (activeRole !== 'COORDINATOR'||(id===COMMISSION.id&&commission.installationStatus==='ARCHIVED_CLOSED')) return;
               const d = nominatedArtists.find(row=>row.id===id); if (!d) return;
               const next = requestScopeChange(d,activeCoordinatorId,scope,reason,new Date().toISOString(),crypto.randomUUID());
               setDossierNotice(next===d ? (isAr?'لم يسجّل التعديل: تحقق من الحقول والتغيير والمراجعة المعلقة.':'Amendment not recorded: check required fields, changed values and pending review.') : (isAr?'تمت إحالة التعديل؛ القيم المعتمدة لم تتغير.':'Amendment submitted; approved values are unchanged.'));
               setNominatedArtists(rows=>rows.map(row=>row===d?next:row));
             }}
             onReview={(id,amendmentId,approve) => {
-              const d=nominatedArtists.find(row=>row.id===id); if (!d) return;
+              const d=nominatedArtists.find(row=>row.id===id); if (!d||(id===COMMISSION.id&&commission.installationStatus==='ARCHIVED_CLOSED')) return;
               const next=reviewScopeChange(d,amendmentId,approve,activeRole,blocklist,contracts.some(c=>c.artistId===id&&c.status!=='NOT_DRAFTED'),new Date().toISOString());
               setDossierNotice(next===d ? (isAr?'لم يسجّل القرار: تحقق من القيود والاتفاقية والمراجعة الحالية.':'Decision not recorded: check compliance, agreement lock and current revision.') : (isAr?'تم تسجيل القرار في الملف المشترك.':'Decision recorded in the shared dossier.'));
               setNominatedArtists(rows=>rows.map(row=>row===d?next:row));
             }}
-            onDispatch={id=>setNominatedArtists(rows=>rows.map(d=>d.id===id?recordDossierDispatch(d,activeRole,themePolishStatus==='PUBLISHED_OFFICIAL'&&translationStatus==='PUBLISHED',new Date().toISOString()):d))}/>
+            onDispatch={id=>setNominatedArtists(rows=>rows.map(d=>d.id===id&&!(id===COMMISSION.id&&commission.installationStatus==='ARCHIVED_CLOSED')?recordDossierDispatch(d,activeRole,themePolishStatus==='PUBLISHED_OFFICIAL'&&translationStatus==='PUBLISHED',new Date().toISOString()):d))}/>
         </>}
         {Object.hasOwn(ESCALATION_DEPARTMENTS, activeRole) && <EscalationSubmission key={activeRole} actor={activeRole} isAr={isAr} records={executiveEscalations} onSubmit={input => setExecutiveEscalations(rows => submitEscalation(rows, input, activeRole, new Date().toISOString()))} />}
       </main>

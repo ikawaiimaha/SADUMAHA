@@ -1,3 +1,4 @@
+import { CollectionCloseout } from './CollectionCloseout';
 import { LoanPaymentRecord } from './ArtistAdministration';
 import { ConditionReporting } from './ConditionReporting';
 import type { CommissionAction } from '../data/commissionScenario';
@@ -34,6 +35,7 @@ export default function FinanceWorkspace({ onEmergencyAction, isAr, state, artis
     <h1 className="font-serif text-3xl font-bold">{isAr ? 'المالية — اعتماد مستقل' : 'Finance — Independent Approval'}</h1>
     <ConditionReporting state={state} isAr={isAr} actor="FINANCE" onRecord={onEmergencyAction} />
     <LoanPaymentRecord state={state} onAction={onEmergencyAction}/>
+    {state && <CollectionCloseout state={state} actor="FINANCE" onAction={onEmergencyAction}/>}
     <CommissionSummary isAr={isAr} />
     {c ? <AgreementMilestones contract={c} isAr={isAr} /> : <p className={panel}>{isAr ? 'لم يصغ المنسق الاتفاقية بعد. لا توجد مبالغ افتراضية بديلة.' : 'The Coordinator has not drafted the agreement. No fallback amounts are used.'}</p>}
     <section className={panel}>

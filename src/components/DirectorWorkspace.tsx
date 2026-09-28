@@ -1,3 +1,4 @@
+import { CollectionCloseout } from './CollectionCloseout';
 import { ConditionReporting } from './ConditionReporting';
 import { culturalCleared } from '../data/culturalDeclaration';
 import { InstallationIntervention } from './InstallationIntervention';
@@ -181,6 +182,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6">
       {installationState && <ConditionReporting state={installationState} isAr={isAr} actor="BIENNIAL_DIRECTOR" onRecord={onInstallationAction} />}
+    {installationState && <CollectionCloseout state={installationState} actor="BIENNIAL_DIRECTOR" onAction={onInstallationAction}/>}
       {installationState && <InstallationIntervention state={installationState} isAr={isAr} actor="BIENNIAL_DIRECTOR" onRecord={onInstallationAction} />}
             {themesPresented && (
               <div className="rounded-lg border-2 border-emerald-400 bg-emerald-50 p-4 text-xs font-semibold text-emerald-900 flex items-center gap-2">

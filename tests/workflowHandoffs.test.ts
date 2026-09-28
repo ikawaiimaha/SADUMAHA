@@ -764,3 +764,28 @@ test('bank/address intake and loan payment are guarded, idempotent and do not su
  const advanced={...paid,ledger:[{tranche:'advance' as const,amount:3000,at,revision:paid.agreementRevision}],contracts:[{...contract,tranches:{...contract.tranches,advanceStatus:'DISBURSED' as const}}]};
  assert.equal(metadataUnlocked(advanced),true);assert.equal(metadataUnlocked({...advanced,agreementRevision:advanced.agreementRevision+1}),false);
 });
+import { closeoutTransition } from '../src/data/collectionCloseout';
+test('acquisition snapshots artist USD price and cancels pending return freight without deleting evidence',()=>{
+ let s=accepted();s=reduce(s,{type:'collection-terms',actor:'ARTIST',terms:{priceUSD:4500,returnAddress:'Sample return street, city, country',packing:'Use original crate',at}});
+ s=reduce(s,{type:'receive-asset',actor:'LOGISTICS',reference:'R1',at});
+ s=reduce(s,{type:'return-ticket',actor:'LOGISTICS',at});assert.equal(s.returnFreight?.status,'PENDING_RETURN');
+ assert.equal(reduce(s,{type:'acquire',actor:'ARTIST',at}),s);
+ const acquired=reduce(s,{type:'acquire',actor:'BIENNIAL_DIRECTOR',at});
+ assert.equal(acquired.acquisition?.priceUSD,4500);assert.equal(acquired.returnFreight?.status,'CANCELLED_ACQUISITION');assert.equal(acquired.returnFreight?.packing,'Use original crate');
+ assert.equal(reduce(acquired,{type:'acquire',actor:'BIENNIAL_DIRECTOR',at}),acquired);
+ assert.equal(reduce(acquired,{type:'archive',actor:'LOGISTICS',at}),acquired);
+});
+test('archive requires return AWB and terminal state blocks every commission mutation',()=>{
+ let s=accepted();s=reduce(s,{type:'collection-terms',actor:'ARTIST',terms:{priceUSD:4500,returnAddress:'Sample return street, city, country',packing:'Use original crate',at}});
+ s=reduce(s,{type:'receive-asset',actor:'LOGISTICS',reference:'R1',at});s=reduce(s,{type:'return-ticket',actor:'LOGISTICS',at});
+ assert.equal(reduce(s,{type:'archive',actor:'LOGISTICS',at}),s);
+ assert.equal(reduce(s,{type:'return-awb',actor:'LOGISTICS',at,file:new File(['x'],'a.jpg')}),s);
+ s=reduce(s,{type:'return-awb',actor:'LOGISTICS',at,file:new File(['%PDF-sample'],'sample.pdf',{type:'application/pdf'})});
+ assert.equal(reduce(s,{type:'acquire',actor:'BIENNIAL_DIRECTOR',at}),s);
+ assert.equal(reduce(s,{type:'archive',actor:'ARTIST',at}),s);
+ const closed=reduce(s,{type:'archive',actor:'LOGISTICS',at});assert.equal(closed.installationStatus,'ARCHIVED_CLOSED');
+ assert.equal(reduce(closed,{type:'contracts',update:()=>[]}),closed);
+ assert.equal(reduce(closed,{type:'archive',actor:'LOGISTICS',at}),closed);
+ assert.equal(reduce(closed,{type:'pr-check',actor:'PR_PROTOCOL',field:'passportVerified',value:true}),closed);
+ assert.equal(closeoutTransition(closed,{type:'return-ticket',actor:'LOGISTICS',at}),closed);
+});

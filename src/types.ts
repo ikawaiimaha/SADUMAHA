@@ -77,6 +77,7 @@ export type ThemeStatus =
   | 'PUBLISHED_OFFICIAL';
 
 export type ArtistStatus = 
+  | 'ARCHIVED_CLOSED'
   | 'EXECUTIVE_IMPOUND'
   | 'NOMINATED'
   | 'PENDING_VETTING'
@@ -124,6 +125,11 @@ export interface CommissionEvidence {
 }
 
 export interface CommissionState {
+  collectionTerms?: import('./data/collectionCloseout').CollectionTerms;
+  acquisition?: {status:'ACQUIRED_BY_INSTITUTION';priceUSD:number;at:string;payoutStatus:'PENDING_FINANCE'};
+  returnFreight?: {status:'PENDING_RETURN'|'CANCELLED_ACQUISITION'|'CLOSED';address:string;packing:string;at:string;cancelledAt?:string;awb?:File;awbAt?:string};
+  archivedAt?:string;
+
   administration?: import('./data/artistAdministration').ArtistAdministration;
   loanPayment?: {contractId:string;amount:number;reference:string;at:string};
   visaIntakes?: import('./data/visaIntake').VisaIntake[];

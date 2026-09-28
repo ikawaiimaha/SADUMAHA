@@ -7,7 +7,7 @@ export function InstallationIntervention({state,isAr,actor,onRecord}:{state:Comm
  const [confirmed,setConfirmed]=useState(false);
  const dialog=useRef<HTMLDialogElement>(null);
  const c=state.contracts[0];
- const active=Boolean(c&&['ARTIST_APPROVED','LOCKED'].includes(c.status)&&state.logistics&&!state.logistics.closedAt);
+ const active=Boolean(state.installationStatus!=='ARCHIVED_CLOSED'&&c&&['ARTIST_APPROVED','LOCKED'].includes(c.status)&&state.logistics&&!state.logistics.closedAt);
  const locked=state.installationStatus==='EXECUTIVE_IMPOUND';
  const last=state.impounds?.slice(-1)[0];
  const t=(ar:string,en:string)=>isAr?ar:en;
