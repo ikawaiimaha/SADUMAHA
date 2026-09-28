@@ -1,3 +1,8 @@
+import { DossierTracking } from './components/DossierTracking';
+import { ExecutiveContractSummary } from './components/ExecutiveContractSummary';
+import { SupplierRegister, PackingRegister } from './components/OperationalRegisters';
+import { supplierTransition, validPacking, type SupplierDelivery, type PackingEvidence } from './data/operationalRegisters';
+import { requestScopeChange, reviewScopeChange, recordDossierDispatch } from './data/dossierLedger';
 import { EscalationSubmission } from './components/EscalationSubmission';
 import { programmeReferences } from './data/directoratePortfolio';
 import { resolveEscalation, submitEscalation, ESCALATION_DEPARTMENTS } from './utils/chairmanOversight';
@@ -117,7 +122,7 @@ const ROLE_NAME_MAP: Record<AppRole, InstitutionalRole> = {
 const EVENT_ID = '123e4567-e89b-12d3-a456-426614174000';
 
 const INITIAL_NOMINATIONS: NominatedArtistDossier[] = [{
-  id: COMMISSION.id, artistName: COMMISSION.artistName, artistCategory: 'Emerging',
+  id: COMMISSION.id, artistName: COMMISSION.artistName, artistCategory: 'Emerging', assignedCoordinatorId: ASSIGNED_COORDINATOR, participationTrack: 'GENERAL_COMPETITION', artworkCount: 1, approvalRevision: 1,
   nationality: 'United Arab Emirates', medium: 'Architectural Bronze & Black Oxide',
   proposedWorkTitle: COMMISSION.title, cvFileName: 'fictional-noura-cv.pdf',
   previousWorksCount: 1, mockupCount: 1, submittedBy: 'Preparatory Committee',
@@ -194,13 +199,15 @@ function SADUApp() {
   const [restrictionProposal, setRestrictionProposal] = useState<{tags: string[]; reason: string} | null>(null);
   const [restrictionAudit, setRestrictionAudit] = useState<string[]>([]);
   const [activeCoordinatorId, setActiveCoordinatorId] = useState<string>(ASSIGNED_COORDINATOR);
-  const [scoutedDossiers, setScoutedDossiers] = useState<NominatedArtistDossier[]>([]);
   const [blocklist, setBlocklist] = useState<string[]>([
     'Restricted Nationality: Country X',
     'Hazardous Medium: Open Flame',
   ]);
 
   // Stage 3 & 4: Nominated Artists Pool
+  const [dossierNotice,setDossierNotice] = useState('');
+  const [supplierDeliveries,setSupplierDeliveries] = useState<SupplierDelivery[]>([]);
+  const [packingEvidence,setPackingEvidence] = useState<PackingEvidence>();
   const [nominatedArtists, setNominatedArtists] = useState<NominatedArtistDossier[]>(INITIAL_NOMINATIONS);
   const [artists, setArtists] = useState<VettedArtist[]>(INITIAL_VETTED_ARTISTS);
   const [isNominationFormOpen, setIsNominationFormOpen] = useState<boolean>(false);
@@ -272,7 +279,7 @@ function SADUApp() {
 
   const handleNominateArtist = (dossier: NominatedArtistDossier) => {
     if (!['PREP_COMMITTEE', 'COORDINATOR'].includes(activeRole)) return;
-    setScoutedDossiers(prev => [{...dossier, status: 'DRAFT', assignedCoordinatorId: activeRole === 'COORDINATOR' ? activeCoordinatorId : dossier.assignedCoordinatorId}, ...prev]);
+    setNominatedArtists(prev => [{...dossier, status: 'DRAFT', assignedCoordinatorId: activeRole === 'COORDINATOR' ? activeCoordinatorId : dossier.assignedCoordinatorId}, ...prev]);
     setIsNominationFormOpen(false);
   };
 
@@ -304,7 +311,7 @@ function SADUApp() {
   const handleApproveArtist = (id: string) => {
     if (activeRole !== 'BIENNIAL_DIRECTOR' || !nominatedArtists.some(a => a.id === id && a.status === 'PENDING_DIRECTOR_REVIEW')) return;
     setNominatedArtists(prev =>
-      prev.map(artist => (artist.id === id ? { ...artist, status: 'APPROVED', decisionAt: new Date().toISOString() } : artist))
+      prev.map(artist => (artist.id === id ? { ...artist, status: 'APPROVED', approvalRevision: 1, decisionAt: new Date().toISOString() } : artist))
     );
 
     const target = nominatedArtists.find(a => a.id === id);
@@ -319,6 +326,7 @@ function SADUApp() {
             id: target.id,
             name_ar: target.artistName,
             name_en: target.artistName,
+            assignedCoordinatorId: target.assignedCoordinatorId,
             nationality: target.nationality,
             medium: target.medium,
             category: (target.artistCategory.toUpperCase() === 'EMERGING' ? 'EMERGING' : 'ESTABLISHED'),
@@ -328,53 +336,7 @@ function SADUApp() {
       });
     }
 
-    setContracts(prev => {
-      const existing = prev.find(c => c.artistId === id);
-      if (existing) return prev;
-      const target = nominatedArtists.find(a => a.id === id);
-      if (!target || target.participationTrack === 'HONORED_GUEST' || target.artistCategory === 'Not applicable') return prev;
 
-      const productionCost = target.artistCategory === 'Established' ? 120000 : 65000;
-      const advance = Math.round(productionCost * 0.3);
-      const delivery = Math.round(productionCost * 0.4);
-      const installation = productionCost - advance - delivery;
-
-      return [
-        ...prev,
-        {
-          id: `contract-${id}`,
-          artistId: id,
-          artistName: target.artistName,
-          artistCategory: target.artistCategory,
-          nationality: target.nationality,
-          medium: target.medium,
-          proposedWorkTitle: target.proposedWorkTitle,
-          productionCost,
-          shippingTerms:
-            'The Department of Culture coordinates and covers museum-standard custom wooden crating, international climate-controlled air freight, and comprehensive door-to-door fine art transit insurance to Calligraphy Square & Sharjah Art Museum.',
-          cancellationClauseMandatory: true,
-          status: 'NOT_DRAFTED',
-          tranches: {
-            advancePercentage: 30,
-            advanceAmount: advance,
-            advanceStatus: 'PENDING',
-            deliveryPercentage: 40,
-            deliveryAmount: delivery,
-            deliveryStatus: 'PENDING',
-            installationPercentage: 30,
-            installationAmount: installation,
-            installationStatus: 'PENDING',
-          },
-          documents: {
-            passportStatus: 'NOT_UPLOADED',
-            artworkDpi: 300,
-            highResStatus: 'NOT_UPLOADED',
-            catalogBioStatus: 'DRAFT',
-          },
-          auditTrail: [],
-        },
-      ];
-    });
   };
 
   // Stage 6: Bilateral Contracts & Disbursements State
@@ -412,8 +374,10 @@ function SADUApp() {
     shippingTermsArg?: string,
     resolutionNotes?: string
   ) => {
-    if (artistId !== COMMISSION.id || activeRole !== 'COORDINATOR' || activeCoordinatorId !== ASSIGNED_COORDINATOR) return;
     const terms = contractTerms as ContractFormState;
+    const approvedDossier = nominatedArtists.find(d => d.id === artistId);
+    if (!approvedDossier || approvedDossier.status !== 'APPROVED' || approvedDossier.assignedCoordinatorId !== activeCoordinatorId || approvedDossier.amendments?.some(a => a.status === 'PENDING') || approvedDossier.artworkCount !== terms.artworkCount) return;
+    if (artistId !== COMMISSION.id || activeRole !== 'COORDINATOR' || activeCoordinatorId !== ASSIGNED_COORDINATOR) return;
     if (!validParticipationScope(terms) || terms.participationCategory !== 'SINGLE_WORK') return;
     if (!['DEPARTMENT', 'HOUSE_OF_WISDOM', 'SHARJAH_ART_MUSEUM'].includes(terms.venue) || (terms.venue !== 'DEPARTMENT' && !terms.venueClearanceReference?.trim()) || commission.ledger?.length) return;
     const percentages = [terms.advancePercentage, terms.interimPercentage, terms.finalPercentage];
@@ -425,15 +389,6 @@ function SADUApp() {
       prevArtists.map(artist =>
         artist.id === artistId || `contract-${artist.id}` === artistId
           ? { ...artist, status: 'CONTRACT_PENDING_SIGNATURE' }
-          : artist
-      )
-    );
-
-    // Also synchronize nominatedArtists if matching
-    setNominatedArtists(prev =>
-      prev.map(artist =>
-        artist.id === artistId || `contract-${artist.id}` === artistId
-          ? { ...artist, status: 'APPROVED', decisionAt: new Date().toISOString() }
           : artist
       )
     );
@@ -474,9 +429,9 @@ function SADUApp() {
           ((targetArtist as any)?.category === 'ESTABLISHED' || (targetArtist as any)?.artistCategory === 'Established')
             ? 'Established'
             : 'Emerging',
-        nationality: targetArtist?.nationality || 'United Arab Emirates',
-        medium: targetArtist?.medium || 'Calligraphic Art',
-        proposedWorkTitle: COMMISSION.title,
+        nationality: approvedDossier.nationality,
+        medium: approvedDossier.medium,
+        proposedWorkTitle: approvedDossier.proposedWorkTitle,
         themeArabic: themePolishStatus === 'PUBLISHED_OFFICIAL' ? ratifiedTheme?.arabicName : undefined,
         productionCost,
         shippingTerms: shippingMethod,
@@ -679,7 +634,7 @@ function SADUApp() {
             submittedThemes={submittedThemes ?? directorThemes}
             onReturnToCommittee={handleReturnToCommittee}
             onPresentToChairman={handlePresentToChairman}
-            nominatedArtists={nominatedArtists}
+            nominatedArtists={nominatedArtists.filter(d => !['DRAFT','REJECTED_COMPLIANCE'].includes(d.status))}
             onVetoArtist={handleVetoArtist}
             onApproveArtist={handleApproveArtist}
             assignedBudget={assignedBudget}
@@ -792,12 +747,11 @@ function SADUApp() {
               </label>
               <HonoredGuestRoster coordinatorId={activeCoordinatorId} isAr={isAr} />
               <details><summary className="cursor-pointer">{isAr ? 'إعداد ملف ترشيح' : 'Prepare nomination dossier'}</summary><ArtistNominationForm key={activeCoordinatorId} assignedCoordinatorId={activeCoordinatorId} submittedBy="Coordinator" onSubmitNomination={handleNominateArtist} /></details>
-              {assignedTo(scoutedDossiers, activeCoordinatorId).map(d => <article key={d.id} className="border-t border-[#D9CEBA] py-3"><h3 className="font-semibold">{d.artistName} · {d.proposedWorkTitle}</h3><p>{d.status} · {d.assignedCoordinatorId}</p><p>{d.complianceReason}</p>
+              {assignedTo(nominatedArtists, activeCoordinatorId).filter(d => d.status === 'DRAFT' || d.status === 'REJECTED_COMPLIANCE').map(d => <article key={d.id} className="border-t border-[#D9CEBA] py-3"><h3 className="font-semibold">{d.artistName} · {d.proposedWorkTitle}</h3><p>{d.status} · {d.assignedCoordinatorId}</p><p>{d.complianceReason}</p>
                 <button disabled={d.status !== 'DRAFT' || d.assignedCoordinatorId !== activeCoordinatorId} className="mt-2 rounded bg-[#8B261E] text-white ps-4 pe-4 py-2 disabled:opacity-50" onClick={() => {
                   const submitted = submitForVetting(d, activeRole, activeCoordinatorId, blocklist);
                   if (!submitted) return;
-                  setScoutedDossiers(rows => rows.map(row => row.id === d.id ? submitted : row));
-                  if (submitted.status === 'PENDING_DIRECTOR_REVIEW') setNominatedArtists(rows => [...rows, submitted]);
+                  setNominatedArtists(rows => rows.map(row => row.id === d.id ? submitted : row));
                 }}>{isAr ? 'إرسال للتدقيق' : 'Submit for Vetting'}</button>
               </article>)}
               {assignedTo(nominatedArtists, activeCoordinatorId).filter(d => d.status === 'VETOED').map(d => <p key={d.id} role="status">{d.artistName} · {d.vetoReason} · {d.vetoNotes} · {d.decisionAt}</p>)}
@@ -808,7 +762,10 @@ function SADUApp() {
               <CoordinatorContractWorkspace 
                 isAr={isRtl}
                 officialTheme={themePolishStatus === 'PUBLISHED_OFFICIAL' ? ratifiedTheme?.arabicName : undefined}
-                artists={artists.filter(artist => artist.id === COMMISSION.id)}
+                artists={artists.filter(artist => artist.id === COMMISSION.id).map(artist => {
+                  const dossier = nominatedArtists.find(d => d.id === artist.id);
+                  return dossier ? {...artist, nationality:dossier.nationality, medium:dossier.medium, assignedCoordinatorId:dossier.assignedCoordinatorId} : artist;
+                })}
                 contracts={contracts}
                 onDispatchContract={handleDispatchContract} 
               />
@@ -923,6 +880,27 @@ function SADUApp() {
           <CommissionSummary isAr={isAr} showTechnical={activeRole !== 'PR_PROTOCOL'} />
         </aside>}
         {renderWorkspace()}
+        {activeRole === 'BIENNIAL_DIRECTOR' && <ExecutiveContractSummary dossiers={nominatedArtists} contracts={contracts} isAr={isAr} />}
+        {activeRole === 'LOGISTICS' && <PackingRegister record={packingEvidence} isAr={isAr} onRecord={record=>{if(activeRole==='LOGISTICS'&&validPacking(record))setPackingEvidence(previous=>previous??record);}} />}
+        {['TECHNICAL','COORDINATOR','FINANCE'].includes(activeRole) && <SupplierRegister rows={supplierDeliveries} dossiers={nominatedArtists} actor={activeRole} coordinatorId={activeCoordinatorId} isAr={isAr} onAction={action=>setSupplierDeliveries(rows=>supplierTransition(rows,{...action,actor:activeRole},nominatedArtists))} />}
+        {['COORDINATOR','HIP','BIENNIAL_DIRECTOR'].includes(activeRole) && <>
+          {dossierNotice && <p role="status" className="mx-auto max-w-5xl rounded border ps-4 pe-4 py-3">{dossierNotice}</p>}
+          <DossierTracking dossiers={activeRole === 'COORDINATOR' ? assignedTo(nominatedArtists,activeCoordinatorId) : nominatedArtists.filter(d => d.status === 'APPROVED')} isAr={isAr} actor={activeRole} publicationReady={themePolishStatus === 'PUBLISHED_OFFICIAL' && translationStatus === 'PUBLISHED'} lockedIds={contracts.filter(c => c.status !== 'NOT_DRAFTED').map(c=>c.artistId)}
+            onRequest={(id,scope,reason) => {
+              if (activeRole !== 'COORDINATOR') return;
+              const d = nominatedArtists.find(row=>row.id===id); if (!d) return;
+              const next = requestScopeChange(d,activeCoordinatorId,scope,reason,new Date().toISOString(),crypto.randomUUID());
+              setDossierNotice(next===d ? (isAr?'لم يسجّل التعديل: تحقق من الحقول والتغيير والمراجعة المعلقة.':'Amendment not recorded: check required fields, changed values and pending review.') : (isAr?'تمت إحالة التعديل؛ القيم المعتمدة لم تتغير.':'Amendment submitted; approved values are unchanged.'));
+              setNominatedArtists(rows=>rows.map(row=>row===d?next:row));
+            }}
+            onReview={(id,amendmentId,approve) => {
+              const d=nominatedArtists.find(row=>row.id===id); if (!d) return;
+              const next=reviewScopeChange(d,amendmentId,approve,activeRole,blocklist,contracts.some(c=>c.artistId===id&&c.status!=='NOT_DRAFTED'),new Date().toISOString());
+              setDossierNotice(next===d ? (isAr?'لم يسجّل القرار: تحقق من القيود والاتفاقية والمراجعة الحالية.':'Decision not recorded: check compliance, agreement lock and current revision.') : (isAr?'تم تسجيل القرار في الملف المشترك.':'Decision recorded in the shared dossier.'));
+              setNominatedArtists(rows=>rows.map(row=>row===d?next:row));
+            }}
+            onDispatch={id=>setNominatedArtists(rows=>rows.map(d=>d.id===id?recordDossierDispatch(d,activeRole,themePolishStatus==='PUBLISHED_OFFICIAL'&&translationStatus==='PUBLISHED',new Date().toISOString()):d))}/>
+        </>}
         {Object.hasOwn(ESCALATION_DEPARTMENTS, activeRole) && <EscalationSubmission key={activeRole} actor={activeRole} isAr={isAr} records={executiveEscalations} onSubmit={input => setExecutiveEscalations(rows => submitEscalation(rows, input, activeRole, new Date().toISOString()))} />}
       </main>
 

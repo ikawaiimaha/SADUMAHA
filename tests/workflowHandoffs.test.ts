@@ -263,3 +263,71 @@ test('department escalation intake validates evidence, roles and duplicate submi
   assert.equal(submitEscalation(deferred,{...input,id:'retry'},'TECHNICAL',at),deferred);
   assert.equal(empty.length,0);
 });
+
+import { requestScopeChange, reviewScopeChange, recordDossierDispatch, scopeOf } from '../src/data/dossierLedger';
+const approvedDossier: NominatedArtistDossier = {...dossier,status:'APPROVED',approvalRevision:1,artworkCount:1,participationTrack:'GENERAL_COMPETITION'};
+const proposedScope = {...scopeOf(approvedDossier),artworkCount:2};
+test('scope amendments retain approval, enforce ownership and prevent duplicate pending requests',()=>{
+  assert.equal(requestScopeChange(approvedDossier,'wrong',proposedScope,'Reason',at,'a'),approvedDossier);
+  assert.equal(requestScopeChange(approvedDossier,ASSIGNED_COORDINATOR,{...proposedScope,artworkCount:0},'Reason',at,'a'),approvedDossier);
+  const pending=requestScopeChange(approvedDossier,ASSIGNED_COORDINATOR,proposedScope,'Reason',at,'a');
+  assert.equal(pending.artworkCount,1);
+  assert.equal(pending.amendments?.[0].proposed.artworkCount,2);
+  assert.equal(requestScopeChange(pending,ASSIGNED_COORDINATOR,proposedScope,'Reason',at,'b'),pending);
+  assert.equal(recordDossierDispatch(pending,'HIP',true,at),pending);
+});
+test('amendment decisions enforce authority, compliance and contract locks with revision history',()=>{
+  const pending=requestScopeChange(approvedDossier,ASSIGNED_COORDINATOR,proposedScope,'Reason',at,'a');
+  assert.equal(reviewScopeChange(pending,'a',true,'HIP',[],false,at),pending);
+  assert.equal(reviewScopeChange(pending,'a',true,'BIENNIAL_DIRECTOR',[],true,at),pending);
+  assert.equal(reviewScopeChange(pending,'a',true,'BIENNIAL_DIRECTOR',['Bronze'],false,at),pending);
+  const approved=reviewScopeChange(pending,'a',true,'BIENNIAL_DIRECTOR',[],false,at);
+  assert.equal(approved.artworkCount,2);
+  assert.equal(approved.approvalRevision,2);
+  assert.equal(approved.amendments?.[0].before.artworkCount,1);
+  assert.equal(reviewScopeChange(approved,'a',true,'BIENNIAL_DIRECTOR',[],false,at),approved);
+  const rejected=reviewScopeChange(pending,'a',false,'BIENNIAL_DIRECTOR',[],true,at);
+  assert.equal(rejected.artworkCount,1);
+  assert.equal(rejected.approvalRevision,1);
+});
+test('dispatch requires publication and HIP authority; snapshots survive later amendments',()=>{
+  assert.equal(recordDossierDispatch(approvedDossier,'HIP',false,at),approvedDossier);
+  assert.equal(recordDossierDispatch(approvedDossier,'COORDINATOR',true,at),approvedDossier);
+  const sent=recordDossierDispatch(approvedDossier,'HIP',true,at);
+  assert.equal(recordDossierDispatch(sent,'HIP',true,at),sent);
+  const pending=requestScopeChange(sent,ASSIGNED_COORDINATOR,proposedScope,'Reason',at,'a');
+  const amended=reviewScopeChange(pending,'a',true,'BIENNIAL_DIRECTOR',[],false,at);
+  const resent=recordDossierDispatch(amended,'HIP',true,at);
+  assert.deepEqual(resent.dispatchHistory?.map(r=>[r.revision,r.scope.artworkCount]),[[1,1],[2,2]]);
+});
+
+import {supplierTransition,validPacking,validPhoto,type SupplierDelivery} from '../src/data/operationalRegisters';
+const supplierRecord:SupplierDelivery={id:'vendor-delivery-1',dossierId:approvedDossier.id,coordinatorId:ASSIGNED_COORDINATOR,vendorName:'Demo technician',vendorId:'DEMO-123',deliverable:'Mount installation',invoiceReference:'INV-DEMO-1',evidenceReference:'INSPECTION-DEMO-1',recordedAt:at};
+test('supplier invoices require Technical entry and assigned Coordinator sign-off before Finance',()=>{
+ const empty:SupplierDelivery[]=[];
+ assert.equal(supplierTransition(empty,{type:'record',actor:'FINANCE',record:supplierRecord},[approvedDossier]),empty);
+ assert.equal(supplierTransition(empty,{type:'record',actor:'TECHNICAL',record:{...supplierRecord,vendorId:''}},[approvedDossier]),empty);
+ const recorded=supplierTransition(empty,{type:'record',actor:'TECHNICAL',record:supplierRecord},[approvedDossier]);
+ assert.equal(recorded.length,1);
+ assert.equal(supplierTransition(recorded,{type:'record',actor:'TECHNICAL',record:{...supplierRecord,id:'duplicate'}},[approvedDossier]),recorded);
+ const finance={type:'finance-receipt',actor:'FINANCE',id:supplierRecord.id,coordinatorId:ASSIGNED_COORDINATOR,at} as const;
+ assert.equal(supplierTransition(recorded,finance,[approvedDossier]),recorded);
+ const sign={type:'sign-off',actor:'COORDINATOR',id:supplierRecord.id,coordinatorId:ASSIGNED_COORDINATOR,at} as const;
+ assert.equal(supplierTransition(recorded,{...sign,coordinatorId:'wrong'},[approvedDossier]),recorded);
+ const signed=supplierTransition(recorded,sign,[approvedDossier]);
+ assert.equal(signed[0].signedOffAt,at);
+ assert.equal(supplierTransition(signed,sign,[approvedDossier]),signed);
+ const received=supplierTransition(signed,finance,[approvedDossier]);
+ assert.equal(received[0].receivedByFinanceAt,at);
+ assert.equal(supplierTransition(received,finance,[approvedDossier]),received);
+});
+test('packing evidence validates image size/type, count, container and reference without clearing receipt',()=>{
+ const file={type:'image/png',size:100} as File;
+ assert.equal(validPhoto({type:'image/svg+xml',size:100}),false);
+ assert.equal(validPhoto({type:'image/png',size:11*1024*1024}),false);
+ const record={containerType:'PLASTIC_CYLINDER' as const,carrierReference:'DEMO-CARRIER',files:[file],recordedAt:at};
+ assert.equal(validPacking(record),true);
+ assert.equal(validPacking({...record,files:[]}),false);
+ assert.equal(validPacking({...record,files:Array(11).fill(file)}),false);
+ assert.equal(validPacking({...record,carrierReference:' '}),false);
+});

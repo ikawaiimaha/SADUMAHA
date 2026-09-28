@@ -1,3 +1,23 @@
+# 28 September 2026 — Executive summaries and operational evidence
+
+The Director can open an automatically generated agreement summary from the shared Stage 4 dossier and any recorded Stage 6 terms. Missing financial terms remain unreported; opening the summary does not sign or approve an agreement.
+
+The existing Kufic Horizon Logistics rehearsal now records CRATE or PLASTIC_CYLINDER packaging, carrier/inspection reference and up to ten local JPEG/PNG/WebP unboxing images (10 MB each). The record survives desk switching in App memory; images are not uploaded to a server, and do not automatically certify receipt or condition. Saved evidence is read-only for the session.
+
+Technical records an external supplier delivery against an approved, assigned dossier, requiring a Central Finance Vendor ID, invoice reference, delivered-work description and evidence reference. Only the assigned Coordinator can sign off. Finance sees only signed-off entries and can record receipt once. Neither this receipt nor supplier sign-off releases artist payments or clears technical evidence. IDs/references are unverified session entries, not integrations with Central Finance.
+
+Existing executive mandate panels, pending-budget Chairman labels, global HIP submission timestamp, separate Editorial sample/live logs and role-change nested/window scroll reset remain in place.
+
+---
+# 28 September 2026 — Shared dossier and dispatch ledger
+
+App owns one session dossier list across nomination, Coordinator vetting submission, Director decisions and HIP dispatch tracking. Coordinator queues use assignedCoordinatorId; the source guest roster remains separate from approved dossiers. Approval no longer creates placeholder financial contracts.
+
+Approved nationality, medium, scope and artwork count remain unchanged while a Coordinator amendment awaits Director review. Approval rechecks compliance, increments the revision and retains before/after history. Active agreements block scope approval through this ledger. HIP records simulated dispatch only after theme and bilingual guideline publication, with an immutable scope snapshot per revision. Contract dispatch checks the approved count and pending amendments and preserves approval history.
+
+These are session records that survive role changes, not refresh or cross-user database synchronization. No external dispatch, authentication or database integration is implied.
+
+---
 # 28 September 2026 — Chairman audit remediation
 
 Chairman selection and budget drafts now use session storage keyed by event and docket revision; returning to a desk retains the draft, while a newly forwarded docket starts fresh. Ratification remains in App state and requires the Chairman role, a complete presented batch, a matching proposal and a positive finite budget. The oversight view selection also survives desk switching.
@@ -154,5 +174,3 @@ The historical specification below remains a record of the earlier design; its c
 4. **Dossier Schema Gate:** Submissions missing `artistName`, `artistCategory` ('Emerging'/'Established'), `cvUpload`, `previousWorks`, or `newWorkMockup` are strictly blocked.
 5. **Director Balance & Veto Gate:** The Director's dashboard renders a visual ratio bar of Emerging vs. Established artists. Vetoes require selecting a reason from a dropdown (Budget, Security, Curatorial Mismatch, Administrative Directive) and routes the status back to Coordinators.
 6. **Financial Lock Gate:** Finance cannot execute payment tranches until contracts are locked post-Chairman budget authorization.
-
-

@@ -20,6 +20,7 @@ import {
 export type ArtistCategory = 'EMERGING' | 'ESTABLISHED';
 
 export interface VettedArtist {
+  assignedCoordinatorId?: string;
   id: string;
   name_ar: string;
   name_en: string;

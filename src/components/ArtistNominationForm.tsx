@@ -1,3 +1,4 @@
+import type { ScopeAmendment, DossierScope } from '../data/dossierLedger';
 import { COORDINATORS, PARTICIPATION_TRACKS, validSoloCount, type ParticipationTrack } from '../data/participation2026';
 import { useI18n } from '../context/I18nContext';
 import { ASSIGNED_COORDINATOR } from '../data/vetting';
@@ -24,6 +25,9 @@ export interface NominatedArtistDossier {
   artistCategory: ArtistCategory | 'Not applicable';
   participationTrack?: ParticipationTrack;
   artworkCount?: number;
+  approvalRevision?: number;
+  amendments?: ScopeAmendment[];
+  dispatchHistory?: {revision:number;at:string;scope:DossierScope}[];
   nationality: string;
   medium: string;
   proposedWorkTitle: string;
@@ -63,7 +67,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
   const { isAr } = useI18n();
   const [participationTrack, setParticipationTrack] = useState<ParticipationTrack>('GENERAL_COMPETITION');
   const [coordinatorId, setCoordinatorId] = useState(ASSIGNED_COORDINATOR);
-  const [artworkCount, setArtworkCount] = useState(15);
+  const [artworkCount, setArtworkCount] = useState(1);
   const honored = participationTrack === 'HONORED_GUEST';
   const [provenance, setProvenance] = useState<File | null>(null);
   const [artistName, setArtistName] = useState('');
@@ -97,7 +101,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
     previousWorks.length > 0 &&
     (!isCommissioned || newWorkMockup.length > 0);
 
-  const isFormValid = validSoloCount(participationTrack, artworkCount) && (honored ? Boolean(artistName.trim() && nationality.trim()) : artworkValid);
+  const isFormValid = (honored || (Number.isInteger(artworkCount) && artworkCount > 0)) && validSoloCount(participationTrack, artworkCount) && (honored ? Boolean(artistName.trim() && nationality.trim()) : artworkValid);
 
   const checkIsBlocked = () => {
     const normNationality = nationality.trim().toLowerCase();
@@ -132,7 +136,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
       id: `dossier-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       artistName: artistName.trim(),
       artistCategory: honored ? 'Not applicable' : artistCategory as ArtistCategory,
-      participationTrack, artworkCount: participationTrack === 'SOLO_EXHIBITION' ? artworkCount : undefined,
+      participationTrack, artworkCount: honored ? undefined : artworkCount,
       nationality: nationality.trim() || 'Undisclosed',
       medium: honored ? '' : medium.trim(),
       proposedWorkTitle: honored ? '' : proposedWorkTitle.trim(),
@@ -244,7 +248,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
             {COORDINATORS.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </label>
-        {participationTrack === 'SOLO_EXHIBITION' && <label className="block">{isAr ? 'عدد الأعمال (15–20)' : 'Artwork count (15–20)'}<input className="block rounded border ps-3 pe-3 py-2" type="number" min={15} max={20} step={1} value={artworkCount} onChange={e => setArtworkCount(Number(e.target.value))} /></label>}
+        {!honored && <label className="block">{isAr ? 'عدد الأعمال (المعرض الشخصي: 15–20)' : 'Artwork count (solo: 15–20)'}<input className="block rounded border ps-3 pe-3 py-2" type="number" min={participationTrack === 'SOLO_EXHIBITION' ? 15 : 1} max={participationTrack === 'SOLO_EXHIBITION' ? 20 : undefined} step={1} value={artworkCount} onChange={e => setArtworkCount(Number(e.target.value))} /></label>}
         {honored && <div className="space-y-3">
           <label className="block">{isAr ? 'اسم الضيف' : 'Guest name'}<input className="block w-full rounded border ps-3 pe-3 py-2" required value={artistName} onChange={e => setArtistName(e.target.value)} /></label>
           <label className="block">{isAr ? 'الجنسية / البلد' : 'Nationality / country'}<input className="block w-full rounded border ps-3 pe-3 py-2" required value={nationality} onChange={e => setNationality(e.target.value)} /></label>
