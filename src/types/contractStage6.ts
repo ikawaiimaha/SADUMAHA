@@ -62,6 +62,9 @@ export interface ArtistDocumentIntake {
 }
 
 export interface BilateralContract {
+  participationCategory?: import('../data/soloInvitation2026').ParticipationCategory;
+  artworkCount?: number;
+  invitationSourceId?: string;
   venue?: string;
   venueClearanceReference?: string;
   id: string;

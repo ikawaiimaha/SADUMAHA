@@ -1,5 +1,6 @@
 import { PortraitHierarchy, PortraitCredit } from './PortraitHierarchy';
 import { ExecutiveQuote } from './ExecutiveQuote';
+import { InstitutionalProtocolPillars } from './InstitutionalProtocolPillars';
 import React, { useState, useEffect, useRef } from 'react';
 import './StoryMode.css';
 import { RosterNavLink } from './RosterNavLink';
@@ -174,6 +175,7 @@ export const StoryMode: React.FC<StoryModeProps> = ({
               <div className="story-content-grid">
                 <div className="story-copy">
                   <>{isLeadChapter ? <ExecutiveQuote isAr={isAr}/> : <p className="story-description text-sadu-charcoal">{isAr ? current.contentAr : current.contentEn}</p>}</>
+                  {isLeadChapter && <InstitutionalProtocolPillars isAr={isAr} />}
                   
                   <div className="story-highlight rounded-md bg-sadu-sand border-s-4 border-sadu-brick text-sadu-charcoal shadow-2xs">
                     <span className="font-semibold block text-sadu-brick mb-1">

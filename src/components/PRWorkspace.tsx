@@ -1,4 +1,6 @@
 import React from 'react';
+import { ArrivalPackagePreview } from './ArrivalPackagePreview';
+import { COMMISSION } from '../data/commissionScenario';
 import type { CommissionState } from '../types';
 import { CommissionSummary, panel, actionButton } from './CommissionSummary';
 
@@ -28,6 +30,7 @@ export function PRWorkspace({ isAr, state, onCheck, onClearPR }: PRWorkspaceProp
       }}>{isAr ? 'التحقق من وثائق الهوية والسفر' : 'Verify Identity & Travel Documents'}</button>
       <p role="status" className="mt-3 text-sm">{e.prEvidenceGate ? (isAr ? 'سُجّلت أدلة العلاقات العامة. لم يُعتمد أي دفع.' : 'PR evidence recorded. No payment has been authorized.') : !state.contracts.length ? (isAr ? 'بانتظار اتفاقية المنسق.' : 'Waiting for the Coordinator agreement.') : (isAr ? 'استكمل الفحصين ثم سجّل الأدلة.' : 'Complete both checks, then record the evidence.')}</p>
     </section>
+    <ArrivalPackagePreview key={state.contracts[0]?.artistId ?? COMMISSION.id} isAr={isAr} artistName={state.contracts[0]?.artistName ?? (isAr ? COMMISSION.artistNameAr : COMMISSION.artistName)} />
   </div>;
 }
 

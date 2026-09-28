@@ -11,7 +11,7 @@
     "lint": "tsc --noEmit",
     "test:demo": "node --import tsx --test tests/livingRecord.test.ts tests/artistIntake.test.ts tests/intakeWorkflow.test.ts tests/bilingualTimeline.test.tsx tests/prWorkspace.test.tsx",
     "test:e2e": "playwright test",
-    "test:guards": "node --import tsx --test tests/demoBoundaries.test.ts tests/localDraft.test.ts tests/workflowHandoffs.test.ts",
+    "test:guards": "node --import tsx --test tests/demoBoundaries.test.ts tests/localDraft.test.ts tests/workflowHandoffs.test.ts tests/arrivalPackage.test.tsx",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "chromatic": "npx chromatic --project-token=chpt_b93f012ea65c898"

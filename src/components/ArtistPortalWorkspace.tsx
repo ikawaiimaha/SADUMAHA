@@ -231,12 +231,12 @@ export default function ArtistPortalWorkspace({
             </div>
 
             {/* Legal Document Preview Box */}
-            <div className="border border-[#D9D2C5] rounded-md p-5 bg-stone-50/50 mb-6 font-serif text-xs leading-relaxed space-y-3 text-[#5C554E]">
+            {activeContract?.participationCategory !== 'SOLO_EXHIBITION' && <div className="border border-[#D9D2C5] rounded-md p-5 bg-stone-50/50 mb-6 font-serif text-xs leading-relaxed space-y-3 text-[#5C554E]">
               <p className="font-bold text-[#1A1817] font-sans uppercase tracking-wider text-[11px]">{tr("Key Terms & Conditions Summary:")}</p>
               <p> {tr("1. The artist agrees to produce and deliver the commissioned work in strict accordance with the approved curatorial scope and technical guidelines established by the Head of International Programs (HIP).")} </p>
               <p> {tr("2. The three percentages and amounts are taken from the Coordinator agreement above. In this fictional scenario, advance authorization additionally requires recorded PR and Technical evidence. Delivery requires a Logistics receipt; Completion requires closure, safe return and condition reconciliation.")} </p>
               <p className="italic text-[#8B4513]"> {tr("\"The Department reserves full administrative authority to modify exhibition terms in alignment with overarching cultural directives. All copyright permissions remain vested with the artist while granting Sharjah Department of Culture reproduction rights for catalog and archival documentation.\"")} </p>
-            </div>
+            </div>}
 
             {/* Active Dispute / Negotiation Status Banner if Disputed or Under Review */}
             {(isDisputed || isUnderReview) && (
@@ -271,11 +271,11 @@ export default function ArtistPortalWorkspace({
             <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-[#EAE3D9]">
               <button
                 type="button"
-                onClick={() => alert("Downloading official bilingual contract PDF compiled for Sharjah Department of Culture...")}
+                disabled title={isAr ? 'المعاينة التدريبية معروضة أعلاه؛ لا يتم إنشاء ملف رسمي' : 'Rehearsal preview shown above; no official PDF is generated'}
                 className="flex items-center gap-2 px-4 py-2 border border-[#D9D2C5] rounded-md text-xs font-bold text-[#6B635B] hover:bg-stone-50 transition-colors cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5" />
-                <span>{tr("Download Contract PDF")}</span>
+                <span>{isAr ? 'معاينة فقط — لا ملف رسمي' : 'Preview only — no official PDF'}</span>
               </button>
 
               <div className="flex items-center gap-3">

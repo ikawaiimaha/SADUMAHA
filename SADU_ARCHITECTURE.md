@@ -1,3 +1,7 @@
+# 28 September 2026 — Solo invitation source scope
+
+The owner supplied an Arabic transcription identified as source 6 (letter ش.ث/خ.س/001, dated 24 February 2026). The scan was not independently inspected in this implementation. Stage 6 now distinguishes single-work agreements from solo exhibitions; only solo exhibitions require 15–20 whole artworks. The source-scoped rehearsal preview records the 12th Biennial theme ميزان, event dates 7 October–15 November 2026, hosting 6–11 October, round-trip artwork transport and insurance, hospitality/accommodation, the three exact attachment labels, and the source coordinator contact and dual signatory titles. Form 100 is an owner-proposed mapping, not a literal source identifier. Generated previews adapt the recipient to the current fictional record, allocate no official outgoing reference, and remain session-bound and watermarked. This does not change payment prerequisites or create external actions.
+
 # 28 September 2026 — Owner clarification: split payments and accountable handoffs
 
 This update supersedes earlier conflicting payment and stage wording. All records remain fictional and session-bound. Browser-persisted text drafts do not restore approvals.

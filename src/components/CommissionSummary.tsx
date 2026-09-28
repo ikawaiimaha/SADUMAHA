@@ -1,5 +1,6 @@
 import { useMockupText } from '../i18n/useMockupText';
 import React from 'react';
+import { SoloInvitationPreview } from './SoloInvitationPreview';
 import { COMMISSION } from '../data/commissionScenario';
 import type { BilateralContract } from '../types/contractStage6';
 
@@ -25,6 +26,7 @@ export function AgreementMilestones({ contract, isAr }: { contract: BilateralCon
     [isAr ? 'الإكمال والإعادة' : 'Completion & Return', t.installationPercentage, t.installationAmount],
   ];
   return <section className={panel} aria-label={isAr ? 'جدول الاتفاقية' : 'Agreement schedule'}>
+    {contract.participationCategory === 'SOLO_EXHIBITION' && <SoloInvitationPreview artistName={contract.artistName} artworkCount={contract.artworkCount!} />}
     <h2 className="font-serif text-xl font-bold mb-3">{isAr ? 'اتفاقية المنسق — ثلاث دفعات' : 'Coordinator agreement — three tranches'}</h2>
     <p className="text-sm mb-3">{isAr ? 'الإجمالي' : 'Total'}: <bdi>{contract.productionCost.toLocaleString(isAr ? 'ar-AE' : 'en-AE')} {isAr ? 'درهم' : 'AED'}</bdi></p>
     <div className="overflow-x-auto"><table className="w-full text-sm text-start">

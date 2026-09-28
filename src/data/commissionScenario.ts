@@ -1,3 +1,4 @@
+import { validParticipationScope } from './soloInvitation2026';
 import type { CommissionState } from '../types';
 import type { BilateralContract, NegotiationRound } from '../types/contractStage6';
 
@@ -21,7 +22,7 @@ export const createCommission = (): CommissionState => ({
 });
 
 export function validAgreement(contract?: BilateralContract): boolean {
-  if (!contract || !Number.isFinite(contract.productionCost) || contract.productionCost <= 0) return false;
+  if (!contract || !validParticipationScope(contract) || !Number.isFinite(contract.productionCost) || contract.productionCost <= 0) return false;
   const t = contract.tranches;
   const percentages = [t.advancePercentage, t.deliveryPercentage, t.installationPercentage];
   const amounts = [t.advanceAmount, t.deliveryAmount, t.installationAmount];
@@ -59,7 +60,7 @@ export type CommissionAction =
   | { type: 'record-pr' | 'record-technical' | 'authorize-advance'; actor: Actor; at: string };
 
 function termsKey(c?: BilateralContract): string {
-  return JSON.stringify(c && [c.id, c.productionCost, c.shippingTerms, c.specialConditions, c.venue, c.venueClearanceReference,
+  return JSON.stringify(c && [c.id, c.participationCategory, c.artworkCount, c.invitationSourceId, c.productionCost, c.shippingTerms, c.specialConditions, c.venue, c.venueClearanceReference,
     c.tranches.advancePercentage, c.tranches.advanceAmount, c.tranches.deliveryPercentage,
     c.tranches.deliveryAmount, c.tranches.installationPercentage, c.tranches.installationAmount]);
 }
@@ -108,6 +109,7 @@ export function commissionReducer(state: CommissionState, action: CommissionActi
     const contracts = action.update(state.contracts).filter(c => c.artistId === COMMISSION.id).slice(0, 1);
     const before = state.contracts[0];
     const after = contracts[0];
+    if (after && !validParticipationScope(after)) return state;
     // Generic updates cannot unlock an accepted contract or impersonate an amendment request.
     if ((accepted && after?.status !== before.status) || (after?.status === 'CONTRACT_DISPUTED' && before?.status !== 'CONTRACT_DISPUTED')) return state;
     if (termsKey(before) !== termsKey(after)) {

@@ -26,6 +26,7 @@ import { useMockupText } from './i18n/useMockupText';
  * ============================================================================
  */
 
+import { validParticipationScope, SOLO_INVITATION_2026 } from './data/soloInvitation2026';
 import React, { useState, useEffect, useReducer, useRef } from 'react';
 import RoleSelection, { AppRole } from './components/RoleSelection';
 import CommitteeThemeWorkspace, { CommitteeThemeDraft, isThemeBatchComplete } from './components/CommitteeThemeWorkspace';
@@ -387,6 +388,7 @@ function SADUApp() {
   ) => {
     if (artistId !== COMMISSION.id || activeRole !== 'COORDINATOR') return;
     const terms = contractTerms as ContractFormState;
+    if (!validParticipationScope(terms)) return;
     if (!['DEPARTMENT', 'HOUSE_OF_WISDOM', 'SHARJAH_ART_MUSEUM'].includes(terms.venue) || (terms.venue !== 'DEPARTMENT' && !terms.venueClearanceReference?.trim()) || commission.ledger?.length) return;
     const percentages = [terms.advancePercentage, terms.interimPercentage, terms.finalPercentage];
     if (!Number.isFinite(terms.productionGrant) || terms.productionGrant <= 0
@@ -452,6 +454,9 @@ function SADUApp() {
         productionCost,
         shippingTerms: shippingMethod,
         specialConditions: terms.specialConditions,
+        participationCategory: terms.participationCategory,
+        artworkCount: terms.artworkCount,
+        invitationSourceId: terms.participationCategory === 'SOLO_EXHIBITION' ? SOLO_INVITATION_2026.sourceId : undefined,
         venue: terms.venue,
         venueClearanceReference: terms.venueClearanceReference,
         cancellationClauseMandatory: true,

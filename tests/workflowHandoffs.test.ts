@@ -125,3 +125,26 @@ test('each tranche amount must match its percentage within one AED', () => {
   assert.equal(validAgreement(withAmounts(6999,1)),false);
   assert.equal(validAgreement({...contract,productionCost:0}),false);
 });
+
+
+test('solo invitation scope validates inclusive artwork boundaries without affecting single works', async () => {
+  const { validParticipationScope } = await import('../src/data/soloInvitation2026');
+  for (const artworkCount of [15, 16, 20]) assert.equal(validParticipationScope({participationCategory:'SOLO_EXHIBITION',artworkCount}), true);
+  for (const artworkCount of [0, 14, 21, 15.5, NaN, Infinity, undefined]) {
+    const invalid = {...contract, participationCategory:'SOLO_EXHIBITION' as const, artworkCount};
+    assert.equal(validParticipationScope(invalid), false);
+    assert.equal(validAgreement(invalid), false);
+    const initial = createCommission();
+    assert.equal(reduce(initial, {type:'contracts',update:() => [invalid]}), initial);
+  }
+  assert.equal(validParticipationScope({participationCategory:'SINGLE_WORK',artworkCount:1}), true);
+  assert.equal(validAgreement(contract), true);
+});
+
+test('accepted solo artwork scope cannot be silently changed', () => {
+  const solo = {...contract, participationCategory:'SOLO_EXHIBITION' as const, artworkCount:15, invitationSourceId:'user-transcription:6'};
+  const state = reduce(createCommission(), {type:'contracts',update:() => [solo]});
+  for (const patch of [{artworkCount:20}, {participationCategory:'SINGLE_WORK' as const,artworkCount:1}, {invitationSourceId:'different-source'}]) {
+    assert.equal(reduce(state,{type:'contracts',update: cs => cs.map(c => ({...c,...patch}))}),state);
+  }
+});
