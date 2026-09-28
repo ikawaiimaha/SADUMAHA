@@ -1,3 +1,4 @@
+import {PaymentReceiptSync} from './BankingFreightBridge';
 import { CollectionCloseout } from './CollectionCloseout';
 import { LoanPaymentRecord } from './ArtistAdministration';
 import { ConditionReporting } from './ConditionReporting';
@@ -34,7 +35,7 @@ export default function FinanceWorkspace({ onEmergencyAction, isAr, state, artis
   return <div dir={isAr ? 'rtl' : 'ltr'} className="max-w-4xl mx-auto ps-4 pe-4 py-6 space-y-5 text-start bg-[#F7F1E6]">
     <h1 className="font-serif text-3xl font-bold">{isAr ? 'المالية — اعتماد مستقل' : 'Finance — Independent Approval'}</h1>
     <ConditionReporting state={state} isAr={isAr} actor="FINANCE" onRecord={onEmergencyAction} />
-    <LoanPaymentRecord state={state} onAction={onEmergencyAction}/>
+    <LoanPaymentRecord state={state} onAction={onEmergencyAction}/><PaymentReceiptSync state={state} actor="FINANCE" onAction={onEmergencyAction}/>
     {state && <CollectionCloseout state={state} actor="FINANCE" onAction={onEmergencyAction}/>}
     <CommissionSummary isAr={isAr} />
     {c ? <AgreementMilestones contract={c} isAr={isAr} /> : <p className={panel}>{isAr ? 'لم يصغ المنسق الاتفاقية بعد. لا توجد مبالغ افتراضية بديلة.' : 'The Coordinator has not drafted the agreement. No fallback amounts are used.'}</p>}

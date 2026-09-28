@@ -1,7 +1,7 @@
 import { validLegalName, type InvitationAction } from './portalInvitation';
 import { artistExecutionTransition, type ArtistExecutionAction } from './artistExecution';
 import { closeoutTransition, type CloseoutAction } from './collectionCloseout';
-import { validAdministration, normalizeIBAN, metadataUnlocked, type ArtistAdministration } from './artistAdministration';
+import { validBanking, validTransactionDate, validAdministration, normalizeIBAN, metadataUnlocked, type ArtistAdministration } from './artistAdministration';
 import { validVisaIntake, type VisaIntake } from './visaIntake';
 import { acceptedForCatalog, validCatalogFields } from './catalogMetadata';
 import { conditionTransition, damageHold, type ConditionAction } from './conditionReporting';
@@ -59,6 +59,9 @@ export function milestoneEligible(state: CommissionState, tranche: 'delivery' | 
 
 type Actor = 'PR_PROTOCOL' | 'TECHNICAL' | 'FINANCE' | string;
 export type CommissionAction = InvitationAction | ConditionAction | CloseoutAction | ArtistExecutionAction
+  | {type:'record-payment-receipt';actor:string;tranche:string;date:string;at:string}
+  | {type:'save-origin';actor:string;assetId:string;address:string;country:string;at:string}
+  | {type:'request-origin-freight';actor:string;assetId:string;at:string}
   | {type:'save-administration';actor:string;data:ArtistAdministration}
   | {type:'record-loan-payment';actor:string;contractId:string;amount:number;reference:string;at:string}
   | {type:'submit-visa';actor:string;intake:VisaIntake}
@@ -120,8 +123,24 @@ export function commissionReducer(state: CommissionState, action: CommissionActi
   if(['collection-terms','acquire','return-ticket','return-awb','archive'].includes(action.type))return damageHold(state)?state:closeoutTransition(state,action as CloseoutAction);
   if (['record-condition','dispatch-damage','request-plan-b','review-plan-b'].includes(action.type)) return conditionTransition(state, action as ConditionAction);
   if (damageHold(state) && ['request-fleet','fleet-transit','close-exhibition','record-technical','technical-check','contracts','CONTRACT_DISPUTED'].includes(action.type)) return state;
+  if(action.type==='record-payment-receipt') {
+    const bank=state.administration,c=state.contracts[0];
+    if(action.actor!=='FINANCE'||!acceptedForCatalog(c)||damageHold(state)||state.installationStatus==='EXECUTIVE_IMPOUND'||!bank||bank.contractId!==c.id||!validBanking(bank)||!validTransactionDate(action.date)||!Number.isFinite(Date.parse(action.at))||!state.ledger?.some(r=>r.tranche===action.tranche&&r.revision===state.agreementRevision)||state.paymentReceipts?.some(r=>r.tranche===action.tranche&&r.revision===state.agreementRevision))return state;
+    return {...state,paymentReceipts:[...(state.paymentReceipts??[]),{tranche:action.tranche,date:action.date,at:action.at,revision:state.agreementRevision,bank:{...bank}}]};
+  }
+  if(action.type==='save-origin'||action.type==='request-origin-freight') {
+    const c=state.contracts[0];
+    if(!acceptedForCatalog(c)||!Number.isFinite(Date.parse(action.at))||!Array.from({length:c.artworkCount??1},(_,i)=>`${c.id}:${i+1}`).includes(action.assetId))return state;
+    if(action.type==='save-origin') {
+      if(action.actor!=='ARTIST'||action.address.trim().length<10||action.address.length>2000||!action.country.trim()||action.country.length>100||state.originTickets?.some(t=>t.assetId===action.assetId&&t.revision===state.agreementRevision))return state;
+      return {...state,freightOrigins:{...state.freightOrigins,[action.assetId]:{address:action.address.trim(),country:action.country.trim(),at:action.at,revision:state.agreementRevision}}};
+    }
+    const origin=state.freightOrigins?.[action.assetId];
+    if(action.actor!=='LOGISTICS'||!origin||origin.revision!==state.agreementRevision||damageHold(state)||state.installationStatus==='EXECUTIVE_IMPOUND'||state.originTickets?.some(t=>t.assetId===action.assetId&&t.revision===state.agreementRevision))return state;
+    return {...state,originTickets:[...(state.originTickets??[]),{...origin,assetId:action.assetId,at:action.at,status:'PENDING_COLLECTION'}]};
+  }
   if(action.type==='save-administration') {
-    if(action.actor!=='ARTIST'||!acceptedForCatalog(state.contracts[0])||action.data.contractId!==state.contracts[0].id||!validAdministration(action.data)||state.loanPayment)return state;
+    if(action.actor!=='ARTIST'||!acceptedForCatalog(state.contracts[0])||action.data.contractId!==state.contracts[0].id||!validAdministration(action.data)||(action.data.bankName!==undefined||action.data.bic!==undefined)&&!validBanking(action.data)||state.loanPayment||state.paymentReceipts?.length)return state;
     return {...state,administration:{...action.data,iban:normalizeIBAN(action.data.iban)}};
   }
   if(action.type==='record-loan-payment') {

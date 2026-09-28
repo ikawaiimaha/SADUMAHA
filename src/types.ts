@@ -134,6 +134,9 @@ export interface CommissionState {
   returnFreight?: {status:'PENDING_RETURN'|'CANCELLED_ACQUISITION'|'CLOSED';address:string;packing:string;at:string;cancelledAt?:string;awb?:File;awbAt?:string};
   archivedAt?:string;
 
+  freightOrigins?: Record<string,{address:string;country:string;at:string;revision:number}>;
+  originTickets?: {assetId:string;address:string;country:string;at:string;revision:number;status:"PENDING_COLLECTION"}[];
+  paymentReceipts?: {tranche:string;date:string;at:string;revision:number;bank:import("./data/artistAdministration").ArtistAdministration}[];
   administration?: import('./data/artistAdministration').ArtistAdministration;
   loanPayment?: {contractId:string;amount:number;reference:string;at:string};
   visaIntakes?: import('./data/visaIntake').VisaIntake[];

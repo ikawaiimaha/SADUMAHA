@@ -888,3 +888,42 @@ test('portal invitation freezes terms and requires identity before agreement cre
   assert.equal(advanceEligible(confirmed),false);
   assert.notEqual(pending.invitation?.draft,draft);
 });
+
+
+test('dated banking receipts require Finance, valid banking, and an existing tranche; replay preserves the snapshot',()=>{
+ let s=accepted();const bank={contractId:contract.id,holder:'Sample Beneficiary',bankName:'Fictional Bank',bic:'AAAAESMMXXX',iban:'ES9121000418450200051332',address:'Sample gallery, street 123',country:'France',city:'Paris',at};
+ s=reduce(s,{type:'save-administration',actor:'ARTIST',data:bank});
+ const action={type:'record-payment-receipt' as const,actor:'FINANCE',tranche:'advance',date:'2026-09-28',at};
+ assert.equal(reduce(s,action),s);
+ s={...s,ledger:[{tranche:'advance',amount:3000,at,revision:s.agreementRevision}]};
+ assert.equal(reduce(s,{...action,actor:'ARTIST'}),s);
+ assert.equal(reduce(s,{...action,date:'2026-02-30'}),s);
+ const next=reduce(s,action);assert.equal(next.paymentReceipts?.[0].date,'2026-09-28');assert.equal(next.paymentReceipts?.[0].bank.country,'France');
+ assert.equal(reduce(next,action),next);
+ assert.equal(reduce(next,{type:'save-administration',actor:'ARTIST',data:{...bank,holder:'Changed'}}),next);
+});
+test('freight uses per-artwork physical origin, rejects unknown assets and freezes ticket snapshots',()=>{
+ let s=accepted();const assetId=`${contract.id}:1`;
+ assert.equal(reduce(s,{type:'request-origin-freight',actor:'LOGISTICS',assetId,at}),s);
+ const save={type:'save-origin' as const,actor:'ARTIST',assetId,address:'Sample Gallery, 10 Rue Example, Paris',country:'France',at};
+ assert.equal(reduce(s,{...save,assetId:'unknown'}),s);
+ s=reduce(s,save);assert.equal(s.freightOrigins?.[assetId].country,'France');
+ assert.equal(reduce(s,{type:'request-origin-freight',actor:'ARTIST',assetId,at}),s);
+ const next=reduce(s,{type:'request-origin-freight',actor:'LOGISTICS',assetId,at});
+ assert.equal(next.originTickets?.[0].address,save.address);assert.equal(next.originTickets?.[0].country,'France');
+ assert.equal(reduce(next,{...save,address:'Different address'}),next);
+ assert.equal(reduce(next,{type:'request-origin-freight',actor:'LOGISTICS',assetId,at}),next);
+ assert.equal(reduce({...s,agreementRevision:s.agreementRevision+1},{type:'request-origin-freight',actor:'LOGISTICS',assetId,at}).originTickets,undefined);
+});
+
+import {createElement} from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+import {PaymentReceiptSync,ArtworkFreightOrigins} from '../src/components/BankingFreightBridge';
+test('banking and freight views render dated receipts and per-artwork origin without nationality fallback',()=>{
+ const s=accepted();
+ const artist=renderToStaticMarkup(createElement(ArtworkFreightOrigins,{state:s,actor:'ARTIST'}));
+ assert.match(artist,/Current Physical Location/);assert.match(artist,/Current country/);
+ const logistics=renderToStaticMarkup(createElement(ArtworkFreightOrigins,{state:s,actor:'LOGISTICS'}));
+ assert.match(logistics,/Artist must provide/);assert.doesNotMatch(logistics,/Fictional country/);
+ assert.match(renderToStaticMarkup(createElement(PaymentReceiptSync,{state:s,actor:'FINANCE'})),/Transaction date/);
+});
