@@ -124,6 +124,8 @@ export interface CommissionEvidence {
 }
 
 export interface CommissionState {
+  administration?: import('./data/artistAdministration').ArtistAdministration;
+  loanPayment?: {contractId:string;amount:number;reference:string;at:string};
   visaIntakes?: import('./data/visaIntake').VisaIntake[];
   catalogSubmissions?: import('./data/catalogMetadata').CatalogMetadata[];
   conditionReports?: import('./data/conditionReporting').ConditionReport[];

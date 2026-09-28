@@ -1,3 +1,4 @@
+import { metadataUnlocked } from '../data/artistAdministration';
 import { useSessionDraft } from '../context/SessionDrafts';
 import { BookOpen, CalendarClock, Upload } from 'lucide-react';
 import type { CommissionState } from '../types';
@@ -13,7 +14,7 @@ export function CatalogPhotographyStatus({contract,isAr}:{contract:BilateralCont
 export function ExhibitionMetadata({state,contract,isAr,onSubmit}:{state:CommissionState;contract:BilateralContract;isAr:boolean;onSubmit:(a:CommissionAction)=>void}) {
  const latest=state.catalogSubmissions?.filter(r=>r.contractId===contract.id&&r.agreementRevision===state.agreementRevision).at(-1);
  const [draft,setDraft]=useSessionDraft(`catalog:${contract.artistId}:${contract.id}:${state.agreementRevision}`,{titleAr:latest?.titleAr??'',titleEn:latest?.titleEn??'',statement:latest?.statement??''});
- if(!acceptedForCatalog(contract))return null;
+ if(!metadataUnlocked(state))return <section className={panel}><h2>Exhibition &amp; Catalog Metadata</h2><p role="status">LOCKED — awaiting accepted agreement and Finance-recorded advance payment.</p></section>;
  const same=latest&&latest.titleAr===draft.titleAr.trim()&&latest.titleEn===draft.titleEn.trim()&&latest.statement===draft.statement.trim();
  const t=(ar:string,en:string)=>isAr?ar:en;
  const format=(date:string)=>new Date(date+'T12:00:00Z').toLocaleDateString(isAr?'ar-AE':'en-US',{year:'numeric',month:'long',day:'numeric',timeZone:'Asia/Dubai'});

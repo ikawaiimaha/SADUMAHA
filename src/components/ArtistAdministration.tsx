@@ -1,0 +1,20 @@
+import { damageHold } from '../data/conditionReporting';
+import { useState } from 'react';
+import type { CommissionState } from '../types';
+import type { CommissionAction } from '../data/commissionScenario';
+import { validAdministration } from '../data/artistAdministration';
+import { useSessionDraft } from '../context/SessionDrafts';
+const panel='my-5 space-y-4 rounded border bg-[#F7F1E6] ps-5 pe-5 py-5 text-start';
+const field='block w-full rounded border ps-3 pe-3 py-2';
+export function ArtistAdministrationForm({state,onAction}:{state:CommissionState;onAction:(a:CommissionAction)=>void}){
+ const c=state.contracts[0];
+ const [draft,setDraft]=useSessionDraft(`administration:${c.id}`,state.administration??{contractId:c.id,holder:'',iban:'',address:'',country:'',city:'',at:''});
+ const valid=validAdministration({...draft,at:new Date().toISOString()});
+ return <section className={panel}><h2 className="text-xl font-semibold">Bank Details &amp; Exact Collection Address</h2><p>Rehearsal only — use fictional banking and address details. IBAN format and checksum validation does not verify account ownership.</p>{state.loanPayment?.contractId===c.id&&<p role="status" className="bg-emerald-50 ps-3 pe-3 py-3">Payment Transferred — Art Loan Fee · AED {state.loanPayment.amount} · {state.loanPayment.at}. Recorded simulation only; no bank transfer.</p>}<form onSubmit={e=>{e.preventDefault();if(valid)onAction({type:'save-administration',actor:'ARTIST',data:{...draft,at:new Date().toISOString()}});}}><fieldset disabled={Boolean(state.loanPayment)} className="space-y-3">{([['holder','Account Holder'],['iban','IBAN (letters and numbers, e.g. ES…)'],['country','Collection Country'],['city','Collection City'],['address','Exact Collection Address — street, building, unit and postal code']] as const).map(([name,label])=><label className="block" key={name}>{label}<input required maxLength={name==='address'?2000:200} className={field} value={draft[name]} onChange={e=>setDraft(p=>({...p,[name]:e.target.value}))}/></label>)}<button disabled={!valid} className="rounded bg-[#8B261E] ps-4 pe-4 py-2 text-white disabled:opacity-50">Save Bank &amp; Collection Details</button></fieldset></form>{state.administration&&<p role="status">Saved for Finance and Logistics · {state.administration.at}</p>}</section>;
+}
+export function LoanPaymentRecord({state,onAction}:{state:CommissionState;onAction?:(a:CommissionAction)=>void}){
+ const [amount,setAmount]=useState(''),[reference,setReference]=useState('');const c=state.contracts[0],a=state.administration;
+ if(!c)return null;
+ const ready=Boolean(!damageHold(state)&&state.installationStatus!=='EXECUTIVE_IMPOUND'&&a&&a.contractId===c.id&&validAdministration(a)&&state.evidence.prEvidenceGate&&state.evidence.technicalEvidenceGate&&['ARTIST_APPROVED','LOCKED'].includes(c.status));
+ return <section className={panel}><h2 className="text-xl font-semibold">Art Loan Fee — Payment Confirmation</h2><p>Record a fictional payment only. This is separate from the production advance and does not unlock metadata.</p>{a?.contractId===c.id?<p>{a.holder} · {a.iban}</p>:<p>Waiting for Artist bank and collection details.</p>}{state.loanPayment?<p role="status">Payment Transferred (simulation) · AED {state.loanPayment.amount} · {state.loanPayment.reference}</p>:<form onSubmit={e=>{e.preventDefault();if(ready)onAction?.({type:'record-loan-payment',actor:'FINANCE',contractId:c.id,amount:Number(amount),reference,at:new Date().toISOString()});}}><label>Art Loan Fee (AED)<input className={field} type="number" min="0.01" step="0.01" required value={amount} onChange={e=>setAmount(e.target.value)}/></label><label>Payment Reference<input required maxLength={200} className={field} value={reference} onChange={e=>setReference(e.target.value)}/></label><button disabled={!ready||!onAction||!Number.isFinite(+amount)||+amount<=0||!reference.trim()} className="mt-3 rounded border ps-4 pe-4 py-2 disabled:opacity-50">Mark as Paid / Kaffalameera — Simulation</button></form>}</section>;
+}

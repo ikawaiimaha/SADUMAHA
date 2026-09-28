@@ -16,6 +16,7 @@ export default function LogisticsWorkspace({ state, isAr, onRecord }: { state: C
   return <div dir={isAr ? 'rtl' : 'ltr'} className="max-w-4xl mx-auto ps-4 pe-4 py-6 space-y-5 text-start">
     <h1 className="text-3xl font-bold">{isAr ? 'اللوجستيات · الاستلام والإعادة' : 'Logistics · Receipt and Return'}</h1>
     {!!state.receiptHistory?.length && <section className={panel}><h2>Receipt audit history</h2>{state.receiptHistory.map((row, index) => <p key={index}>{row.reference} · {row.receivedAt} · Revision {row.appliesToRevision} · Superseded{row.closedAt ? ` · Closed ${row.closedAt}` : ''}</p>)}</section>}
+    <section className={panel}><h2 className="text-xl">Exact Collection Address</h2>{state.administration?.contractId===state.contracts[0]?.id&&state.administration?<><p>{state.administration.country} · {state.administration.city}</p><p className="whitespace-pre-wrap">{state.administration.address}</p><p>Artist submitted · {state.administration.at}</p></>:<p>Awaiting the Artist’s exact collection address. Do not infer the pickup country from nationality.</p>}</section>
     <ConditionReporting state={state} isAr={isAr} actor="LOGISTICS" onRecord={onRecord} />
     <FleetDispatch state={state} isAr={isAr} onRecord={onRecord} />
     <section className={panel}><h2 className="text-xl">{isAr ? 'المرحلة 7 · الاستلام الفعلي' : 'Stage 7 · Physical receipt'}</h2>

@@ -647,6 +647,8 @@ test('catalog submissions require accepted agreement, valid fields and artist ro
  const action={type:'submit-catalog' as const,actor:'ARTIST',contractId:contract.id,titleAr:'ميزان',titleEn:'Mizan',statement:'Artist concept',at};
  assert.equal(reduce(createCommission(),action).catalogSubmissions,undefined);
  let state=accepted();
+ assert.equal(reduce(state,action),state);
+ state={...state,ledger:[{tranche:'advance',amount:3000,at,revision:state.agreementRevision}],contracts:[{...state.contracts[0],tranches:{...state.contracts[0].tranches,advanceStatus:'DISBURSED'}}]};
  assert.equal(reduce(state,{...action,actor:'COORDINATOR'}),state);
  assert.equal(reduce(state,{...action,titleAr:' '}),state);
  assert.equal(reduce(state,{...action,contractId:'someone-else'}),state);
@@ -738,4 +740,27 @@ test('artwork revisions lock atomically and only assigned Coordinator unlocks re
  const edited=rosterTransition(unlocked,{type:'edit',items:[{...label(),titleEn:'Revised'}]},'ARTIST');
  const revised=rosterTransition(edited,{type:'submit',at},'ARTIST');
  assert.equal(revised.history.length,2);assert.equal(revised.history[0].items[0].titleEn,'Balance');assert.equal(revised.history[1].items[0].titleEn,'Revised');
+});
+import { validIBAN, metadataUnlocked, type ArtistAdministration } from '../src/data/artistAdministration';
+test('IBAN accepts alphanumeric Spanish accounts and rejects invalid checksums',()=>{
+ assert.equal(validIBAN('ES91 2100 0418 4502 0005 1332'),true);
+ assert.equal(validIBAN('GB82 WEST 1234 5698 7654 32'),true);
+ assert.equal(validIBAN('ES00 2100 0418 4502 0005 1332'),false);
+ assert.equal(validIBAN('123456789'),false);
+});
+test('bank/address intake and loan payment are guarded, idempotent and do not substitute for advance',()=>{
+ let s=accepted();const data:ArtistAdministration={contractId:contract.id,holder:'Sample Artist',iban:'ES91 2100 0418 4502 0005 1332',address:'Sample Street 12, Unit 4, 10000',country:'Sample Country',city:'Sample City',at};
+ assert.equal(reduce(s,{type:'save-administration',actor:'FINANCE',data}),s);
+ assert.equal(reduce(s,{type:'save-administration',actor:'ARTIST',data:{...data,address:''}}),s);
+ s=reduce(s,{type:'save-administration',actor:'ARTIST',data});assert.equal(s.administration?.iban,'ES9121000418450200051332');
+ const pay={type:'record-loan-payment' as const,actor:'FINANCE',contractId:contract.id,amount:100,reference:'SAMPLE-1',at};
+ assert.equal(reduce(s,pay),s);
+ s={...s,evidence:{...s.evidence,prEvidenceGate:true,technicalEvidenceGate:true}};
+ assert.equal(reduce(s,{...pay,actor:'ARTIST'}),s);
+ assert.equal(reduce(s,{...pay,amount:-1}),s);
+ const paid=reduce(s,pay);assert.equal(paid.loanPayment?.amount,100);
+ assert.equal(reduce(paid,pay),paid);assert.equal(metadataUnlocked(paid),false);
+ assert.equal(reduce(paid,{type:'save-administration',actor:'ARTIST',data:{...data,holder:'Other'}}),paid);
+ const advanced={...paid,ledger:[{tranche:'advance' as const,amount:3000,at,revision:paid.agreementRevision}],contracts:[{...contract,tranches:{...contract.tranches,advanceStatus:'DISBURSED' as const}}]};
+ assert.equal(metadataUnlocked(advanced),true);assert.equal(metadataUnlocked({...advanced,agreementRevision:advanced.agreementRevision+1}),false);
 });

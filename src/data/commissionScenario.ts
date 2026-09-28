@@ -1,3 +1,4 @@
+import { validAdministration, normalizeIBAN, metadataUnlocked, type ArtistAdministration } from './artistAdministration';
 import { validVisaIntake, type VisaIntake } from './visaIntake';
 import { acceptedForCatalog, validCatalogFields } from './catalogMetadata';
 import { conditionTransition, damageHold, type ConditionAction } from './conditionReporting';
@@ -55,6 +56,8 @@ export function milestoneEligible(state: CommissionState, tranche: 'delivery' | 
 
 type Actor = 'PR_PROTOCOL' | 'TECHNICAL' | 'FINANCE' | string;
 export type CommissionAction = ConditionAction
+  | {type:'save-administration';actor:string;data:ArtistAdministration}
+  | {type:'record-loan-payment';actor:string;contractId:string;amount:number;reference:string;at:string}
   | {type:'submit-visa';actor:string;intake:VisaIntake}
   | {type:'submit-catalog';actor:string;contractId:string;titleAr:string;titleEn:string;statement:string;at:string}
   | { type: 'impound'; actor: Actor; artistId: string; directives: string; id: string; at: string }
@@ -91,6 +94,15 @@ function recordLedger(state: CommissionState, tranche: 'advance' | 'delivery' | 
 export function commissionReducer(state: CommissionState, action: CommissionAction): CommissionState {
   if (['record-condition','dispatch-damage','request-plan-b','review-plan-b'].includes(action.type)) return conditionTransition(state, action as ConditionAction);
   if (damageHold(state) && ['request-fleet','fleet-transit','close-exhibition','record-technical','technical-check','contracts','CONTRACT_DISPUTED'].includes(action.type)) return state;
+  if(action.type==='save-administration') {
+    if(action.actor!=='ARTIST'||!acceptedForCatalog(state.contracts[0])||action.data.contractId!==state.contracts[0].id||!validAdministration(action.data)||state.loanPayment)return state;
+    return {...state,administration:{...action.data,iban:normalizeIBAN(action.data.iban)}};
+  }
+  if(action.type==='record-loan-payment') {
+    const c=state.contracts[0];
+    if(action.actor!=='FINANCE'||!acceptedForCatalog(c)||action.contractId!==c.id||state.loanPayment||!state.administration||state.administration.contractId!==c.id||!validAdministration(state.administration)||!state.evidence.prEvidenceGate||!state.evidence.technicalEvidenceGate||damageHold(state)||state.installationStatus==='EXECUTIVE_IMPOUND'||!Number.isFinite(action.amount)||action.amount<=0||!action.reference.trim()||action.reference.length>200||!Number.isFinite(Date.parse(action.at)))return state;
+    return {...state,loanPayment:{contractId:c.id,amount:action.amount,reference:action.reference.trim(),at:action.at}};
+  }
   if(action.type==='submit-visa') {
     const c=state.contracts[0],v=action.intake;
     if(action.actor!=='ARTIST'||!acceptedForCatalog(c)||v.contractId!==c.id||!validVisaIntake(v)||state.visaIntakes?.some(r=>r.id===v.id))return state;
@@ -98,7 +110,7 @@ export function commissionReducer(state: CommissionState, action: CommissionActi
   }
   if(action.type==='submit-catalog') {
     const contract=state.contracts[0];
-    if(action.actor!=='ARTIST'||!acceptedForCatalog(contract)||contract.id!==action.contractId||!validCatalogFields(action)||!Number.isFinite(Date.parse(action.at)))return state;
+    if(action.actor!=='ARTIST'||!metadataUnlocked(state)||contract.id!==action.contractId||!validCatalogFields(action)||!Number.isFinite(Date.parse(action.at)))return state;
     const data={contractId:contract.id,artistId:contract.artistId,agreementRevision:state.agreementRevision,titleAr:action.titleAr.trim(),titleEn:action.titleEn.trim(),statement:action.statement.trim(),submittedAt:action.at};
     const last=state.catalogSubmissions?.at(-1);
     if(last&&last.agreementRevision===data.agreementRevision&&last.contractId===data.contractId&&last.titleAr===data.titleAr&&last.titleEn===data.titleEn&&last.statement===data.statement)return state;

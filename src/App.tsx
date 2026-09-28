@@ -828,7 +828,7 @@ function SADUApp() {
         return (
           <ArtistPortalWorkspace
             onSubmitVisa={intake=>{if(activeRole==='ARTIST')dispatchCommission({type:'submit-visa',actor:activeRole,intake});}}
-            onSubmitCatalog={action=>{if(activeRole==='ARTIST'&&action.type==='submit-catalog')dispatchCommission({...action,actor:activeRole});}}
+            onSubmitCatalog={action=>{if(activeRole==='ARTIST'&&(action.type==='submit-catalog'||action.type==='save-administration'))dispatchCommission({...action,actor:activeRole});}}
             conditionState={commission}
             profileArtistId={COMMISSION.id}
             contracts={contracts}
@@ -857,7 +857,7 @@ function SADUApp() {
           if (activeRole === 'LOGISTICS') dispatchCommission({...action,actor:activeRole} as typeof action);
         }} /></>;
       case 'FINANCE':
-        return <FinanceWorkspace isAr={isAr} state={commission} onEmergencyAction={action=>{if(activeRole==='FINANCE'&&action.type==='review-plan-b')dispatchCommission({...action,actor:activeRole});}}
+        return <FinanceWorkspace isAr={isAr} state={commission} onEmergencyAction={action=>{if(activeRole==='FINANCE'&&(action.type==='review-plan-b'||action.type==='record-loan-payment'))dispatchCommission({...action,actor:activeRole});}}
           artist={artists.find(artist => artist.id === contracts[0]?.artistId)}
           onRecordTranche={tranche => dispatchCommission({type: 'record-tranche', actor: activeRole, tranche, at: new Date().toISOString()})}
           onAuthorizeAdvance={() => {
