@@ -1,3 +1,4 @@
+import { useLocalDraft, isText } from '../hooks/useLocalDraft';
 import { scrollWorkspaceToTop } from '../utils/scrollWorkspaceToTop';
 import { useMockupText } from '../i18n/useMockupText';
 import { useI18n } from '../context/I18nContext';
@@ -81,15 +82,14 @@ export default function EditorialWorkspace({
   const [publishedLocally, setPublishedLocally] = useState(false);
   const isPublished = publishedLocally || isInitiallyPublished || themePolishStatus === 'PUBLISHED' || themePolishStatus === 'PUBLISHED_OFFICIAL';
 
-  const [draft, setDraft] = useState<EditorialDraft>({
+  const [draft, setDraft, draftSaveFailed] = useLocalDraft<EditorialDraft>(`sadu:draft:v1:editorial:${rawChairmanTheme}`, {
     arabicText: initialEssayArabic || rawChairmanTheme,
     englishText: initialEssayEnglish || ''
-  });
+  }, (value): value is EditorialDraft => Boolean(value) && typeof value === 'object' && isText((value as EditorialDraft).arabicText) && isText((value as EditorialDraft).englishText));
 
   const [identityAssets, setIdentityAssets] = useState<{ file: File; attachedAt: string }[]>([]);
 
-  const [guidelinesDraftEnglish, setGuidelinesDraftEnglish] = useState('');
-  useEffect(() => { setGuidelinesDraftEnglish(''); }, [guidelinesArabic, guidelinesTranslationStatus]);
+  const [guidelinesDraftEnglish, setGuidelinesDraftEnglish, guidelineSaveFailed] = useLocalDraft(`sadu:draft:v1:guidelines-english:${guidelinesArabic || ''}`, '', isText);
   const guidelinesPending = isPublished && guidelinesTranslationStatus === 'PENDING_TRANSLATION' && Boolean(guidelinesArabic?.trim());
 
   const [translationVerified, setTranslationVerified] = useState(false);
@@ -135,7 +135,7 @@ export default function EditorialWorkspace({
       {/* Header */}
       <header className="mb-8 border-b border-[#D9D2C5] pb-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <span className="text-xs uppercase tracking-widest text-[#8C7A6B] font-semibold">{tr("Stage 2 • Editorial & Translation Gate")}</span>
+          <span role="status" className="block text-sm text-[#736357]">{draftSaveFailed || guidelineSaveFailed ? (isAr ? 'تعذر حفظ المسودة محلياً' : 'Local draft save failed') : (isAr ? 'المسودات محفوظة في هذا المتصفح فقط' : 'Drafts saved in this browser only')}</span><span className="text-xs uppercase tracking-widest text-[#8C7A6B] font-semibold">{isAr ? 'المرحلة 2 · التحرير والنشر' : 'Stage 2 · Editorial and publication'}</span>
           <h1 className="text-3xl font-serif font-bold tracking-tight text-[#1A1817] mt-1">{isAr ? 'مساحة عمل قسم التحرير' : 'Editorial Workspace'}</h1>
           <p className="text-[#6B635B] text-sm mt-1"> {isAr ? "تنقيح النص العربي وإقراره، ثم إحالته إلى الترجمة المعتمدة." : "Ratify the institutional Arabic text, then hand it over for certified English translation."} </p>
         </div>

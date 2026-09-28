@@ -1,3 +1,4 @@
+import { useLocalDraft, isNotes } from '../hooks/useLocalDraft';
 import { scrollWorkspaceToTop } from '../utils/scrollWorkspaceToTop';
 import { useMockupText } from '../i18n/useMockupText';
 import { useI18n } from '../context/I18nContext';
@@ -65,7 +66,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
     "موافق عليه. يرجى التنسيق مع قسم التحرير لإبراز العمق الفلسفي في البيان الرسمي.",
     "يعتمد. يتم تحويل الميزانية للإدارة المالية، مع التشديد على استقطاب فنانين دوليين."
   ];
-  const [chairmanNotes, setChairmanNotes] = useState<Record<number, string>>({});
+  const [chairmanNotes, setChairmanNotes, notesSaveFailed] = useLocalDraft<Record<number, string>>(`sadu:draft:v1:chairmanNotes:${JSON.stringify((themes || []).map(theme => [theme.arabicName, theme.curatorialJustification]))}`, {}, isNotes);
   const navigationTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => () => { clearTimeout(navigationTimer.current); }, []);
   const tr = useMockupText();
@@ -117,7 +118,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
           <div className="flex items-center gap-2.5">
             <Award className="h-6 w-6 text-sadu-brick" />
             <div>
-              <h2 className="font-editorial text-lg font-bold text-sadu-charcoal">
+              <p role="status" className="text-sm text-[#736357]">{notesSaveFailed ? (isAr ? 'تعذر حفظ الملاحظات محلياً' : 'Local notes save failed') : (isAr ? 'مسودة الملاحظات محفوظة في هذا المتصفح فقط' : 'Draft notes saved in this browser only')}</p><h2 className="font-editorial text-lg font-bold text-sadu-charcoal">
                 {isAr ? 'مساحة عمل رئيس الدائرة · معالي عبدالله العويس' : 'Chairman Workspace · H.E. Abdullah Al Owais'}
               </h2>
               <p className="text-xs text-sadu-muted"> {tr("Executive review of Preparatory Committee thematic proposals & official budget sign-off.")} </p>
@@ -144,7 +145,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
             <Clock className="h-7 w-7" />
           </div>
 
-          <span className="rounded-full border border-sadu-gold/60 bg-sadu-sand px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-sadu-muted"> {tr("Phase 1 · Executive Review Gate")} </span>
+          <span className="rounded-full border border-sadu-gold/60 bg-sadu-sand px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-sadu-muted"> {isAr ? 'المرحلة 1 · الاعتماد التنفيذي' : 'Stage 1 · Executive ratification'} </span>
 
           <h3 className="mt-3 font-editorial text-2xl font-bold text-sadu-charcoal sm:text-3xl"> {tr("Awaiting Committee Proposals")} </h3>
           <p dir="rtl" className="mt-1 font-editorial text-base font-semibold text-sadu-brick">
@@ -312,7 +313,7 @@ export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = ({
                   <p className="text-xs text-sadu-muted"> {tr("Conferred by H.E. Abdullah Al Owais · Chairman / CEO")} </p>
                 </div>
               </div>
-              <span className="rounded bg-sadu-sand px-2.5 py-1 text-[10px] font-bold text-sadu-brick uppercase tracking-wider border border-sadu-gold/60"> {tr("Phase 2 Delegation")} </span>
+              <span className="rounded bg-sadu-sand px-2.5 py-1 text-[10px] font-bold text-sadu-brick uppercase tracking-wider border border-sadu-gold/60"> {isAr ? 'المرحلة 2 · التحرير والنشر' : 'Stage 2 · Editorial and publication'} </span>
             </div>
 
             <p className="text-xs text-sadu-muted leading-relaxed"> {isAr ? 'اعتماد الميزانية يثبّت اختيار الثيمة ويقفل الميزانية، ثم يحيل الثيمة إلى قسم التحرير للصياغة المؤسسية والترجمة.' : 'Budget ratification finalizes the theme selection and locks the budget, then routes the theme to Editorial for institutional refinement and translation.'} </p>

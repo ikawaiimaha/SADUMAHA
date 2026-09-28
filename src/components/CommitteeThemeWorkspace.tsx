@@ -1,3 +1,4 @@
+import { useLocalDraft } from '../hooks/useLocalDraft';
 import { scrollWorkspaceToTop } from '../utils/scrollWorkspaceToTop';
 import { useMockupText } from '../i18n/useMockupText';
 import { useI18n } from '../context/I18nContext';
@@ -91,7 +92,12 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
   useEffect(() => () => { clearTimeout(navigationTimer.current); }, []);
   const tr = useMockupText();
   const { isAr } = useI18n();
-  const [themes, setThemes] = useState<CommitteeThemeDraft[]>(createEmptyThemes());
+  const [themes, setThemes, saveFailed] = useLocalDraft<CommitteeThemeDraft[]>(
+    `sadu:draft:v1:${eventId || 'demo'}:committee`, createEmptyThemes(),
+    (value): value is CommitteeThemeDraft[] => Array.isArray(value) && value.length === 3 && value.every(theme =>
+      theme && ['arabicName', 'englishName', 'aestheticFramework', 'contemporaryRelevance', 'curatorialJustification'].every(field => typeof theme[field] === 'string')));
+  const [activeProposal, setActiveProposal] = useState(0);
+  const [comparing, setComparing] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const baseId = useId();
 
@@ -118,7 +124,7 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    if (ratifiedTheme || !allFieldsFilled) return;
+    if (ratifiedTheme || !allFieldsFilled || !comparing) return;
     const finalized = themes.map(t => ({
       ...t,
       definition: t.curatorialJustification,
@@ -143,6 +149,8 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
     if (ratifiedTheme) return;
     setThemes(createEmptyThemes());
     setIsSubmitted(false);
+    setComparing(false);
+    setActiveProposal(0);
   };
 
   if (ratifiedTheme) {
@@ -243,24 +251,33 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
             <Wand2 className="h-3.5 w-3.5" aria-hidden="true" />
             <span>{isAr ? 'تعبئة تلقائية للعرض' : 'Auto-fill for Demo'}</span>
           </button>
-          {eventId ? (
-            <span className="w-fit rounded-full border border-sadu-gold/60 bg-sadu-sand ps-3 pe-3 py-1 text-[10px] font-semibold text-sadu-muted"> {tr("Event Ref:")} {eventId}
-            </span>
-          ) : null}
-          {onBackToRoles && (
-            <button
-              type="button"
-              onClick={onBackToRoles}
-              className="inline-flex items-center gap-1.5 rounded-md border border-sadu-gold/70 bg-sadu-sand ps-3 pe-3 py-1.5 text-xs font-bold text-sadu-charcoal hover:bg-sadu-gold/25 cursor-pointer shadow-2xs"
-            >
-              <RotateCcw className="h-3.5 w-3.5 text-sadu-brick" />
-              <span>{isAr ? 'تغيير الدور' : 'Switch Role'}</span>
-            </button>
-          )}
+
         </div>
       </div>
-      <div className="grid gap-6 md:grid-cols-3">
+      <p role="status" className="text-sm text-[#736357]">{saveFailed
+        ? (isAr ? 'تعذر حفظ المسودة محلياً. احتفظ بنسخة قبل المغادرة.' : 'Local save failed. Keep a copy before leaving.')
+        : (isAr ? 'تُحفظ المسودات في هذا المتصفح فقط؛ لا يشمل الحفظ قرارات الاعتماد.' : 'Drafts save in this browser only; approval decisions are not saved.')}</p>
+      <div className="flex flex-wrap gap-2" aria-label={isAr ? 'المقترحات' : 'Proposals'}>
+        {themes.map((theme, index) => <button key={index} type="button" aria-pressed={!comparing && activeProposal === index}
+          onClick={() => { setActiveProposal(index); setComparing(false); }}
+          className="rounded border border-[#736357]/40 ps-4 pe-4 py-2 text-sm aria-pressed:bg-[#8B261E] aria-pressed:text-white">
+          {isAr ? 'المقترح' : 'Proposal'} {index + 1} {isThemeComplete(theme) ? '✓' : ''}
+        </button>)}
+        <button type="button" aria-pressed={comparing} onClick={() => setComparing(true)} className="rounded border border-[#736357]/40 ps-4 pe-4 py-2 text-sm aria-pressed:bg-[#8B261E] aria-pressed:text-white">
+          {isAr ? 'مقارنة المقترحات الثلاثة' : 'Compare all three'}
+        </button>
+      </div>
+      {comparing && <div className="grid gap-4 lg:grid-cols-3">
+        {themes.map((theme, index) => <article key={index} className="rounded-lg border border-sadu-gold bg-white ps-5 pe-5 py-5 text-start">
+          <h3 className="text-xl font-bold" dir="rtl">{theme.arabicName || (isAr ? 'بدون عنوان' : 'Untitled')}</h3>
+          <p dir="ltr" className="text-sm text-[#736357]">{theme.englishName}</p>
+          {([['aestheticFramework', 'الإطار الجمالي', 'Aesthetic framework'], ['contemporaryRelevance', 'الصلة المعاصرة والتاريخية', 'Contemporary relevance'], ['curatorialJustification', 'المبررات الفنية', 'Curatorial justification']] as const).map(([field, ar, en]) => <div key={field} className="mt-4"><h4 className="font-semibold">{isAr ? ar : en}</h4><p dir="rtl" className="whitespace-pre-wrap text-lg leading-relaxed">{theme[field] || '—'}</p></div>)}
+          <button type="button" onClick={() => { setActiveProposal(index); setComparing(false); }} className="mt-5 text-[#8B261E] underline">{isAr ? 'تعديل المقترح' : 'Edit proposal'} {index + 1}</button>
+        </article>)}
+      </div>}
+      <div className="grid gap-6">
         {themes.map((theme, index) => {
+          if (comparing || index !== activeProposal) return null;
           const arabicId = `${baseId}-arabic-${index}`;
           const englishId = `${baseId}-english-${index}`;
           const aestheticId = `${baseId}-aesthetic-${index}`;
@@ -314,11 +331,11 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
                   id={aestheticId}
                   dir="rtl"
                   required
-                  rows={2}
+                  rows={4}
                   value={theme.aestheticFramework}
                   onChange={e => updateField(index, 'aestheticFramework', e.target.value)}
                   placeholder={tr("Define the visual and stylistic parameters...")}
-                  className="mt-1 w-full resize-none rounded-md border border-sadu-gold/60 bg-white ps-3 pe-3 py-1.5 text-xs text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
+                  className="mt-1 w-full resize-none rounded-md border border-sadu-gold/60 bg-white ps-3 pe-3 py-2 text-lg text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
                 />
               </label>
 
@@ -330,11 +347,11 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
                   id={contemporaryId}
                   dir="rtl"
                   required
-                  rows={2}
+                  rows={4}
                   value={theme.contemporaryRelevance}
                   onChange={e => updateField(index, 'contemporaryRelevance', e.target.value)}
                   placeholder={tr("Justify the theme's position within international art standards...")}
-                  className="mt-1 w-full resize-none rounded-md border border-sadu-gold/60 bg-white ps-3 pe-3 py-1.5 text-xs text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
+                  className="mt-1 w-full resize-none rounded-md border border-sadu-gold/60 bg-white ps-3 pe-3 py-2 text-lg text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
                 />
               </label>
 
@@ -350,7 +367,7 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
                   value={theme.curatorialJustification}
                   onChange={e => updateField(index, 'curatorialJustification', e.target.value)}
                   placeholder={tr("The rigorous defense of why this theme is necessary...")}
-                  className="mt-1 w-full resize-none rounded-md border border-sadu-gold/60 bg-white ps-3 pe-3 py-1.5 text-xs text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
+                  className="mt-1 w-full resize-none rounded-md border border-sadu-gold/60 bg-white ps-3 pe-3 py-2 text-lg text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
                 />
               </label>
             </div>
@@ -360,10 +377,10 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
 
       <div className="flex flex-col items-center justify-between gap-4 border-t border-sadu-gold/40 pt-4 sm:flex-row">
         <span className="text-xs text-sadu-muted">
-          {filledCount} {isAr ? "من 3 مقترحات مكتملة. الحقول العربية إلزامية للإحالة إلى مدير الملتقى؛ الإنجليزية اختيارية." : "of 3 proposals complete. Arabic fields are required for Director review; English is optional."} </span>
+          {filledCount} {isAr ? "من 3 مقترحات مكتملة. افتح مقارنة المقترحات للمراجعة قبل الإحالة؛ الإنجليزية اختيارية." : "of 3 complete. Open Compare all three to review before submitting. English is optional."} </span>
         <button
           type="submit"
-          disabled={!allFieldsFilled}
+          disabled={!allFieldsFilled || !comparing}
           className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-sadu-brick ps-6 pe-6 py-3 text-xs font-bold text-white shadow-xs transition-colors hover:bg-sadu-brick-dark disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto cursor-pointer"
         >
           <Send className="h-4 w-4" /> {isAr ? "إحالة إلى مدير الملتقى" : "Submit to Biennial Director"} </button>

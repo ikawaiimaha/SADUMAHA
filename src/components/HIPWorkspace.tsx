@@ -1,3 +1,4 @@
+import { useLocalDraft, isText } from '../hooks/useLocalDraft';
 import { useMockupText } from '../i18n/useMockupText';
 import { useI18n } from '../context/I18nContext';
 import React, { useState } from 'react';
@@ -58,9 +59,7 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
 }) => {
   const tr = useMockupText();
   const { isAr } = useI18n();
-  const [arabicText, setArabicText] = useState<string>(
-    guidelinesArabic || curatorialBrief || ''
-  );
+  const [arabicText, setArabicText, saveFailed] = useLocalDraft<string>(`sadu:draft:v1:hip:${themeEssayArabic || ''}`, guidelinesArabic || curatorialBrief || '', isText);
   const [newTagInput, setNewTagInput] = useState<string>('');
 
   const handleSubmitToEditorial = (e: React.FormEvent) => {
@@ -112,7 +111,7 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
               <Globe className="h-6 w-6" />
             </div>
             <div>
-              <span className="rounded bg-sadu-sand px-2 py-0.5 text-[10px] font-bold text-sadu-brick uppercase tracking-wider border border-sadu-gold/60"> {tr("Stage 3: Curatorial Guidelines & Dynamic Blocklists")} </span>
+              <span role="status" className="block text-sm text-[#736357]">{saveFailed ? (isAr ? 'تعذر حفظ المسودة محلياً' : 'Local draft save failed') : (isAr ? 'المسودة محفوظة في هذا المتصفح فقط' : 'Draft saved in this browser only')}</span><span className="rounded bg-sadu-sand px-2 py-0.5 text-[10px] font-bold text-sadu-brick uppercase tracking-wider border border-sadu-gold/60"> {isAr ? 'المرحلة 3 · التوجيهات الفنية' : 'Stage 3 · Curatorial guidelines'} </span>
               <h1 className="font-editorial text-2xl font-bold text-sadu-charcoal sm:text-3xl mt-1">
                 {isAr ? 'منسق معرض عام' : 'Head of International Programs (HIP)'}
               </h1>

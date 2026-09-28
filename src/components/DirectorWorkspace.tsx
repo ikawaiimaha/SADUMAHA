@@ -1,3 +1,4 @@
+import { useLocalDraft, isNotes } from '../hooks/useLocalDraft';
 import { scrollWorkspaceToTop } from '../utils/scrollWorkspaceToTop';
 import { useMockupText } from '../i18n/useMockupText';
 import { useI18n } from '../context/I18nContext';
@@ -89,7 +90,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
   // Phase 1 State: Themes & Director's Notes
   const activeThemes = submittedThemes ?? [];
   const canPresentThemes = !ratifiedTheme && isThemeBatchComplete(activeThemes);
-  const [directorNotes, setDirectorNotes] = useState<Record<number, string>>({});
+  const [directorNotes, setDirectorNotes, notesSaveFailed] = useLocalDraft<Record<number, string>>(`sadu:draft:v1:directorNotes:${JSON.stringify(activeThemes.map(theme => [theme.arabicName, theme.curatorialJustification]))}`, {}, isNotes);
   const [themesPresented, setThemesPresented] = useState<boolean>(false);
 
   // Phase 2 State: Filters, Veto Dialog & Document Preview
@@ -194,7 +195,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
                 <span className="rounded bg-sadu-sand px-2 py-0.5 text-[10px] font-bold text-sadu-brick uppercase tracking-wider border border-sadu-gold/60"> {tr("Biennial Directorate · Executive Gate")} </span>
                 <span className="text-xs text-sadu-muted">{tr("Stage 1 & Stage 4")}</span>
               </div>
-              <h1 className="font-editorial text-2xl font-bold text-sadu-charcoal sm:text-3xl mt-1">
+              <p role="status" className="text-sm text-[#736357]">{notesSaveFailed ? (isAr ? 'تعذر حفظ الملاحظات محلياً' : 'Local notes save failed') : (isAr ? 'مسودة الملاحظات محفوظة في هذا المتصفح فقط' : 'Draft notes saved in this browser only')}</p><h1 className="font-editorial text-2xl font-bold text-sadu-charcoal sm:text-3xl mt-1">
                 {isAr ? 'مساحة عمل مدير الملتقى · الأستاذ محمد إبراهيم القصير' : 'Biennial Director Workspace · Mohammed Al Qaseer'}
               </h1>
               <p className="text-xs font-semibold text-sadu-brick" dir="rtl">
@@ -223,7 +224,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
             }`}
           >
             <Award className="h-4 w-4" />
-            <span>{tr("Phase 1: Theme Ratification Queue (Stage 1)")}</span>
+            <span>{isAr ? 'المرحلة 1 · مراجعة الثيمة' : 'Stage 1 · Theme review'}</span>
             <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${
               activeTab === 'phase1' ? 'bg-white/20 text-white' : 'bg-sadu-sand text-sadu-brick'
             }`}> {tr("3 Proposals")} </span>
@@ -239,7 +240,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
             }`}
           >
             <PieChart className="h-4 w-4" />
-            <span>{tr("Phase 2: Artist Veto & Balance Review (Stage 4)")}</span>
+            <span>{isAr ? 'المرحلة 4 · مراجعة ترشيحات الفنانين' : 'Stage 4 · Artist nomination review'}</span>
             <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${
               activeTab === 'phase2' ? 'bg-white/20 text-white' : 'bg-sadu-sand text-sadu-charcoal'
             }`}>

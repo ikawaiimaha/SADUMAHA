@@ -1,3 +1,4 @@
+import { WorkspaceNavigation, type WorkspaceHandoff } from './components/WorkspaceNavigation';
 import { StoryMode } from './components/StoryMode';
 import { useMockupText } from './i18n/useMockupText';
 /**
@@ -97,35 +98,6 @@ const ROLE_NAME_MAP: Record<AppRole, InstitutionalRole> = {
   'Technical': 'TECHNICAL',
 };
 
-function RoleButton({ 
-  role, 
-  current, 
-  onClick, 
-  icon, 
-  label 
-}: { 
-  role: InstitutionalRole; 
-  current: InstitutionalRole; 
-  onClick: (role: InstitutionalRole) => void;
-  icon: React.ReactNode;
-  label: string;
-}) {
-  const isActive = current === role;
-  return (
-    <button
-      type="button"
-      onClick={() => onClick(role)}
-      className={`flex shrink-0 items-center gap-1.5 ps-3 pe-3 py-1.5 rounded text-xs font-bold transition-colors whitespace-nowrap cursor-pointer ${
-        isActive 
-          ? 'bg-[#8B4513] text-white shadow-inner ring-1 ring-[#8B4513]' 
-          : 'bg-[#2C2A29] text-[#A89F91] hover:bg-[#3D3A38] hover:text-white'
-      }`}
-    >
-      {icon}
-      <span>{label}</span>
-    </button>
-  );
-}
 
 const EVENT_ID = '123e4567-e89b-12d3-a456-426614174000';
 
@@ -640,7 +612,6 @@ function SADUApp() {
             themeStatus={themePolishStatus}
             initialApprovedTheme={ratifiedTheme}
             initialBudget={assignedBudget}
-            onBackToRoles={() => setActiveRole('ROLES')}
           />
         );
 
@@ -657,7 +628,6 @@ function SADUApp() {
             assignedBudget={assignedBudget}
             ratifiedTheme={ratifiedTheme}
             curatorialBrief={curatorialBrief}
-            onBackToRoles={() => setActiveRole('ROLES')}
           />
         );
 
@@ -673,7 +643,7 @@ function SADUApp() {
                     ? 'bg-[#8B4513] text-white shadow-xs'
                     : 'bg-white border border-[#D9D2C5] text-[#2C2A29] hover:bg-stone-50'
                 }`}
-              > {tr("1. Theme Formulation Table")} </button>
+              > {isAr ? 'المرحلة 1 · مقترحات الثيمة' : 'Stage 1 · Theme proposals'} </button>
               <button
                 type="button"
                 onClick={() => setIsNominationFormOpen(true)}
@@ -682,7 +652,7 @@ function SADUApp() {
                     ? 'bg-[#8B4513] text-white shadow-xs'
                     : 'bg-white border border-[#D9D2C5] text-[#2C2A29] hover:bg-stone-50'
                 }`}
-              > {tr("2. Nominate Artist (Multaqa Protocol)")} </button>
+              > {isAr ? 'المرحلة 4 · ترشيح الفنانين' : 'Stage 4 · Artist nominations'} </button>
             </div>
 
             {isNominationFormOpen ? (
@@ -699,8 +669,7 @@ function SADUApp() {
                 eventId={EVENT_ID}
                 ratifiedTheme={ratifiedTheme}
                 onPresentToChairman={handleSubmitCommitteeThemes}
-                onBackToRoles={() => setActiveRole('ROLES')}
-              />
+                  />
             )}
           </div>
         );
@@ -719,7 +688,6 @@ function SADUApp() {
             assignedBudget={assignedBudget}
             initialEssayArabic={themeEssayArabic}
             initialEssayEnglish={themeEssayEnglish}
-            onBackToRoles={() => setActiveRole('ROLES')}
           />
         );
 
@@ -739,7 +707,6 @@ function SADUApp() {
             blocklist={blocklist}
             onUpdateBlocklist={setBlocklist}
             ratifiedTheme={ratifiedTheme}
-            onBackToRoles={() => setActiveRole('ROLES')}
           />
         );
 
@@ -768,7 +735,6 @@ function SADUApp() {
             onUploadPassport={handleUploadPassport}
             onUploadHighResArtwork={handleUploadHighResArtwork}
             onSaveBio={handleSaveBio}
-            onBackToRoles={() => setActiveRole('ROLES')}
           />
         );
 
@@ -806,6 +772,28 @@ function SADUApp() {
     }
   };
 
+  // Presentation-only summary derived from the existing approval state.
+  // Department switching never mutates or skips an approval gate.
+  const executiveRoles: InstitutionalRole[] = ['PREP_COMMITTEE', 'BIENNIAL_DIRECTOR', 'CHAIRMAN', 'EDITORIAL', 'HIP'];
+  let handoff: WorkspaceHandoff | undefined;
+  if (executiveRoles.includes(activeRole)) {
+    if (themePolishStatus === 'PUBLISHED_OFFICIAL' || themePolishStatus === 'PUBLISHED') {
+      handoff = translationStatus === 'PENDING_TRANSLATION'
+        ? { title: isAr ? 'ترجمة الدليل قيد الانتظار' : 'Guidelines awaiting translation', description: isAr ? 'المسؤول: قسم التحرير' : 'Owner: Editorial', owner: 'EDITORIAL' }
+        : translationStatus === 'PUBLISHED'
+          ? { title: isAr ? 'نُشرت الثيمة والدليل باللغتين' : 'Theme and bilingual guidelines published', description: isAr ? 'اكتملت مراحل الاعتماد والتحرير والتوجيهات' : 'Approval, editorial and guidelines complete' }
+          : { title: isAr ? 'الثيمة منشورة · إعداد الدليل' : 'Theme published · draft guidelines', description: isAr ? 'المسؤول: منسق معرض عام' : 'Owner: HIP', owner: 'HIP' };
+    } else if (ratifiedTheme) {
+      handoff = { title: isAr ? 'الثيمة والميزانية معتمدتان' : 'Theme and budget ratified', description: isAr ? 'المسؤول: قسم التحرير · الصياغة والترجمة' : 'Owner: Editorial · refinement and translation', owner: 'EDITORIAL' };
+    } else if (submittedThemes?.length === 3) {
+      handoff = { title: isAr ? 'المقترحات بانتظار الاعتماد' : 'Proposals awaiting ratification', description: isAr ? 'المسؤول: رئيس الدائرة · الاختيار والميزانية' : 'Owner: Chairman · selection and budget', owner: 'CHAIRMAN' };
+    } else if (directorThemes.length === 3) {
+      handoff = { title: isAr ? 'المقترحات قيد المراجعة' : 'Proposals under review', description: isAr ? 'المسؤول: مدير الملتقى' : 'Owner: Biennial Director', owner: 'BIENNIAL_DIRECTOR' };
+    } else {
+      handoff = { title: isAr ? 'إعداد ثلاثة مقترحات للثيمة' : 'Prepare three theme proposals', description: isAr ? 'المسؤول: اللجنة التحضيرية' : 'Owner: Preparatory Committee', owner: 'PREP_COMMITTEE' };
+    }
+  }
+
   if (activeRole === 'LANDING') {
     return <StoryMode showRosterLink={false} lang={lang} onToggleLanguage={toggleLang}
       onSkipToPlatform={() => setActiveRole('PREP_COMMITTEE')}
@@ -822,122 +810,8 @@ function SADUApp() {
 
   return (
     <div className="min-h-screen bg-[#F7F1E6] text-[#2C2A29] flex flex-col font-sans">
-      {/* 
-        EXECUTIVE PROTOTYPE CONTROL BAR 
-        This is strictly for the pitch demo. It acts as a God-mode switcher 
-        so you can prove the chain of command to leadership in real-time.
-      */}
-      <nav className="sticky top-0 bg-[#1A1817] text-[#D9D2C5] border-b border-[#2C2A29] px-4 py-2 flex flex-wrap items-center justify-between gap-3 z-50 shadow-md">
-        <div className="flex items-center gap-2.5">
-          <Settings2 className="w-5 h-5 text-[#8B4513] shrink-0" />
-          <div className="flex flex-col">
-            <span className="text-xs font-bold tracking-widest uppercase text-white font-mono"> {tr("SADU Prototype Control")} </span>
-            <span className="text-[10px] text-[#A89F91]"> {tr("Sharjah Calligraphy Biennial • Leadership Demo")} </span>
-          </div>
-        </div>
-
-        <div className="flex min-w-0 max-w-full items-center gap-1.5 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-1">
-          <RoleButton 
-            role="CHAIRMAN" 
-            current={activeRole} 
-            onClick={setActiveRole} 
-            icon={<Crown className="w-3.5 h-3.5" />} 
-            label={isAr ? 'رئيس الدائرة' : 'Chairman'}
-          />
-          <RoleButton 
-            role="BIENNIAL_DIRECTOR" 
-            current={activeRole} 
-            onClick={setActiveRole} 
-            icon={<Briefcase className="w-3.5 h-3.5" />} 
-            label={isAr ? 'مدير البينالي' : 'Director'}
-          />
-          <RoleButton 
-            role="PREP_COMMITTEE" 
-            current={activeRole} 
-            onClick={setActiveRole} 
-            icon={<PenTool className="w-3.5 h-3.5" />} 
-            label={isAr ? 'اللجنة التحضيرية' : 'Committee'}
-          />
-          <RoleButton 
-            role="EDITORIAL" 
-            current={activeRole} 
-            onClick={setActiveRole} 
-            icon={<Eye className="w-3.5 h-3.5" />} 
-            label={isAr ? 'قسم التحرير' : 'Editorial'}
-          />
-          <RoleButton 
-            role="HIP" 
-            current={activeRole} 
-            onClick={setActiveRole} 
-            icon={<Globe className="w-3.5 h-3.5" />} 
-            label={isAr ? 'منسق معرض عام' : 'HIP'}
-          />
-          <RoleButton 
-            role="COORDINATOR" 
-            current={activeRole} 
-            onClick={setActiveRole} 
-            icon={<GitMerge className="w-3.5 h-3.5" />} 
-            label={isAr ? 'المنسق العام' : 'Coordinator'}
-          />
-          <RoleButton 
-            role="ARTIST" 
-            current={activeRole} 
-            onClick={setActiveRole} 
-            icon={<User className="w-3.5 h-3.5" />} 
-            label={isAr ? 'الفنان' : 'Artist'}
-          />
-          <RoleButton 
-            role="PR_PROTOCOL" 
-            current={activeRole} 
-            onClick={setActiveRole} 
-            icon={<ShieldCheck className="w-3.5 h-3.5" />} 
-            label={isAr ? 'التشريفات والعلاقات' : 'PR & Protocol'}
-          />
-          <RoleButton role="TECHNICAL" current={activeRole} onClick={setActiveRole}
-            icon={<ShieldCheck className="w-3.5 h-3.5" />} label={isAr ? 'الفريق الفني' : 'Technical'} />
-          <RoleButton 
-            role="FINANCE" 
-            current={activeRole} 
-            onClick={setActiveRole} 
-            icon={<Landmark className="w-3.5 h-3.5" />} 
-            label={isAr ? 'الشؤون المالية' : 'Finance'}
-          />
-          <div className="h-5 w-px bg-[#2C2A29] mx-1 shrink-0" />
-          <RoleButton 
-            role="ROLES" 
-            current={activeRole} 
-            onClick={setActiveRole} 
-            icon={<RotateCcw className="w-3.5 h-3.5" />} 
-            label={isAr ? 'جميع الأدوار' : 'All Roles'}
-          />
-        </div>
-
-        <div className="flex items-center gap-2">
-          {/* Language Switcher */}
-          <button
-            type="button"
-            onClick={toggleLang}
-            title={isRtl ? 'Switch to English' : 'التحويل إلى العربية'}
-            className="inline-flex items-center gap-1.5 rounded border border-[#2C2A29] bg-[#2C2A29] px-2.5 py-1.5 text-xs font-bold text-[#D9D2C5] shadow-xs transition-colors hover:bg-[#3D3A38] hover:text-white cursor-pointer"
-          >
-            <Globe className="h-3.5 w-3.5 text-[#8B4513]" />
-            <span>{isRtl ? 'English' : 'عربي'}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setIsPresenterDrawerOpen(prev => !prev)}
-            title={tr("Toggle Presenter Architecture Mode (Ctrl+Shift+P / ⌘⇧P)")}
-            className="inline-flex items-center gap-1.5 rounded border border-[#2C2A29] bg-[#2C2A29] px-2.5 py-1.5 text-xs font-bold text-[#D9D2C5] shadow-xs transition-colors hover:bg-[#3D3A38] hover:text-white cursor-pointer"
-          >
-            <Compass className="h-3.5 w-3.5 text-[#8B4513]" />
-            <span className="hidden sm:inline">{tr("Presenter Specs")}</span>
-            <kbd className="hidden lg:inline-block rounded border border-[#3D3A38] bg-[#1A1817] px-1 py-0.2 text-[9px] font-mono text-[#A89F91]">
-              ⌘⇧P
-            </kbd>
-          </button>
-        </div>
-      </nav>
+      <WorkspaceNavigation role={activeRole} onNavigate={setActiveRole} isAr={isAr}
+        onToggleLanguage={toggleLang} onOpenPresenter={() => setIsPresenterDrawerOpen(prev => !prev)} handoff={handoff} />
 
       {/* 
         WORKSPACE MOUNT POINT
