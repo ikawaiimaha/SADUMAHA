@@ -1,3 +1,4 @@
+import { ProductionSpecsLedger } from './ProductionSpecs';
 import { ArtistExecutionBridge } from './ArtistExecutionBridge';
 import { damageHold } from '../data/conditionReporting';
 import React, { useState } from 'react';
@@ -24,6 +25,7 @@ export default function TechnicalWorkspace({ isAr, state, onCheck, onClearTechni
   const [rationale, setRationale] = useState('');
   return <div dir={isAr ? 'rtl' : 'ltr'} className="max-w-4xl mx-auto ps-4 pe-4 py-6 space-y-5 text-start bg-[#F7F1E6]">
     <h1 className="font-serif text-3xl font-bold">{isAr ? 'الفريق الهندسي والفني' : 'Engineering / Technical Workspace'}</h1>
+    {state.contracts[0]&&<ProductionSpecsLedger artistId={state.contracts[0].artistId} contractId={state.contracts[0].id} isAr={isAr}/>}
     <ArtistExecutionBridge state={state} actor="TECHNICAL"/>
     <CommissionSummary isAr={isAr} />
     <InstallationIntervention state={state} isAr={isAr} actor="TECHNICAL" />

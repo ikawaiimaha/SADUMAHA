@@ -810,3 +810,24 @@ test('domestic pickup uses explicit UAE collection country and approved crate sn
  assert.equal(reduce(queued,{...action,input:{...action.input,id:'duplicate'}}),queued);
  const delivered={...s,logistics:{status:'PHYSICAL_ASSET_RECEIVED' as const,reference:'R',receivedAt:at}};assert.equal(reduce(delivered,action),delivered);
 });
+import { validProductionSpecs } from '../src/data/artworkRoster';
+test('production specs are conditional and reject invalid or unchecked technical PDFs',()=>{
+ const a=label();assert.equal(validProductionSpecs(a),true);
+ assert.equal(validProductionSpecs({...a,productionEnabled:true}),false);
+ assert.equal(validProductionSpecs({...a,productionEnabled:true,avRequirements:'Screen 55 inch, loop audio'}),true);
+ const file=new File(['%PDF-sample'],'schematics.pdf',{type:'application/pdf'});
+ assert.equal(validProductionSpecs({...a,productionEnabled:true,printingFraming:'Paper A, frame 50x70 cm',technicalPDF:file}),false);
+ assert.equal(validProductionSpecs({...a,productionEnabled:true,printingFraming:'Paper A, frame 50x70 cm',technicalPDF:file,technicalPDFVerified:true}),true);
+ assert.equal(validProductionSpecs({...a,productionEnabled:true,avRequirements:'Screen',technicalPDF:new File(['x'],'sheet.jpg'),technicalPDFVerified:true}),false);
+});
+test('submitted production instructions remain immutable during authorized amendment',()=>{
+ const item={...label(),productionEnabled:true,printingFraming:'Original paper'};
+ const draft:ArtworkRoster={artistId:'artist',status:'DRAFT',items:[item],history:[],events:[]};
+ const locked=rosterTransition(draft,{type:'submit',at},'ARTIST');
+ assert.equal(rosterTransition(locked,{type:'edit',items:[{...item,printingFraming:'Changed'}]},'ARTIST'),locked);
+ const request=rosterTransition(locked,{type:'request',at},'ARTIST');
+ const unlocked=rosterTransition(request,{type:'unlock',at},'COORDINATOR',true);
+ const edited=rosterTransition(unlocked,{type:'edit',items:[{...item,printingFraming:'Changed'}]},'ARTIST');
+ assert.equal(edited.history[0].items[0].printingFraming,'Original paper');
+ assert.equal(edited.items[0].printingFraming,'Changed');
+});
