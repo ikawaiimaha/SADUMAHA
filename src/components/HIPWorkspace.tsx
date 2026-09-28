@@ -1,7 +1,9 @@
+import {CuratorialBoundaries} from './CuratorialBoundaries';
+import {boundaryCategories,categoryTags,type Boundaries} from '../data/curatorialBoundaries';
 import { useLocalDraft, isText } from '../hooks/useLocalDraft';
 import { useMockupText } from '../i18n/useMockupText';
 import { useI18n } from '../context/I18nContext';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ShieldAlert,
   Globe,
@@ -19,6 +21,8 @@ import { ThemeItem } from './ChairmanWorkspace';
 export type TranslationStatus = 'REQUEST_REVISION' | 'DRAFT' | 'PENDING_TRANSLATION' | 'PUBLISHED';
 
 export interface HIPWorkspaceProps {
+  publishedBoundaries?: Boundaries|null;
+  onPublishBoundaries?: (confirmed:boolean[])=>void;
   themeStatus: string;
   themeEssayArabic?: string;
   themeEssayEnglish?: string;
@@ -45,6 +49,7 @@ const PRESET_DIRECTIVES = [
 ];
 
 export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
+  publishedBoundaries, onPublishBoundaries,
   guidelinesArabic,
   themeStatus,
   themeEssayArabic,
@@ -66,6 +71,9 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
   const tr = useMockupText();
   const { isAr } = useI18n();
   const [arabicText, setArabicText, saveFailed] = useLocalDraft<string>(`sadu:draft:v1:hip:${themeEssayArabic || ''}`, guidelinesArabic || curatorialBrief || '', isText);
+  const [confirmed,setConfirmed]=useState([false,false,false]);
+  const [restrictionCategory,setRestrictionCategory]=useState('Medium');
+  useEffect(()=>setConfirmed([false,false,false]),[blocklist,guidelinesArabic,guidelinesEnglish]);
   const [restrictionReason, setRestrictionReason] = useState('');
   const [newTagInput, setNewTagInput] = useState<string>('');
 
@@ -77,21 +85,21 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
   };
 
   const handleAddTag = (tagToAdd: string) => {
-    if (!restrictionReason.trim() || restrictionPending) return;
+    if (publishedBoundaries || !restrictionReason.trim() || restrictionPending) return;
     const trimmed = tagToAdd.trim();
-    if (!trimmed) return;
+    if (!trimmed || !trimmed.replace(/^(Restricted (Medium|Style|Nationality)|Hazardous Medium):/i,'').trim()) return;
     if (blocklist.some(t => t.toLowerCase() === trimmed.toLowerCase())) return;
     onUpdateBlocklist([...blocklist, trimmed], restrictionReason);
     setNewTagInput('');
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
-    if (!restrictionReason.trim() || restrictionPending) return;
+    if (publishedBoundaries || !restrictionReason.trim() || restrictionPending) return;
     onUpdateBlocklist(blocklist.filter(t => t.toLowerCase() !== tagToRemove.toLowerCase()), restrictionReason);
   };
 
   const isLocked = themeStatus !== 'PUBLISHED_OFFICIAL';
-  const submissionLocked = isLocked || translationStatus === 'PUBLISHED' || translationStatus === 'PENDING_TRANSLATION';
+  const submissionLocked = Boolean(publishedBoundaries) || isLocked || translationStatus === 'PUBLISHED' || translationStatus === 'PENDING_TRANSLATION';
   const lockReason = (() => {
     if (themeStatus === 'ARABIC_LOCKED') {
       return {
@@ -113,6 +121,8 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6">
+      {publishedBoundaries&&<CuratorialBoundaries published={publishedBoundaries} isAr={isAr}/>}
+      <fieldset disabled={Boolean(publishedBoundaries)} className="space-y-6">
       {/* Header */}
       <div className="rounded-xl border border-sadu-gold bg-sadu-paper p-6 shadow-xs">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-sadu-gold/40 pb-4">
@@ -216,7 +226,7 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
               />
             </label>
 
-            {translationStatus === 'PUBLISHED' && <button type="button" onClick={onRequestRevision} className="rounded border border-sadu-gold ps-4 pe-4 py-2 text-sm">{isAr ? 'طلب مراجعة الدليل المنشور' : 'Request revision of published guidelines'}</button>}
+            {!publishedBoundaries && translationStatus === 'PUBLISHED' && <button type="button" onClick={onRequestRevision} className="rounded border border-sadu-gold ps-4 pe-4 py-2 text-sm">{isAr ? 'طلب مراجعة الدليل المنشور' : 'Request revision of published guidelines'}</button>}
             {/* Locked Status Badge or Action Button */}
             {isLocked ? (
               <div className="rounded-md border border-amber-300 bg-amber-50 ps-3 pe-3 py-3 text-start text-xs font-semibold text-amber-900 flex items-start gap-2.5">
@@ -267,23 +277,23 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
           <div className="flex gap-2">
             <div className="relative flex-1">
               <Tag className="absolute start-3 top-2.5 h-3.5 w-3.5 text-sadu-muted" />
-              <input
+              <label className="block">{isAr?'فئة القيد':'Restriction category'}<select value={restrictionCategory} onChange={e=>setRestrictionCategory(e.target.value)} className="block border ps-3 pe-3 py-2">{boundaryCategories.map(c=><option key={c}>{c}</option>)}</select></label><input
                 type="text"
                 value={newTagInput}
                 onChange={e => setNewTagInput(e.target.value)}
                 onKeyDown={e => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
-                    handleAddTag(newTagInput);
+                    handleAddTag(`Restricted ${restrictionCategory}: ${newTagInput}`);
                   }
                 }}
-                placeholder={tr("e.g. Restricted Nationality: Country X")}
+                placeholder={tr("e.g. Abstract Ink")}
                 className="w-full rounded-md border border-sadu-gold/60 py-2 ps-9 pe-3 text-xs text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
               />
             </div>
             <button
               type="button"
-              onClick={() => handleAddTag(newTagInput)}
+              onClick={() => handleAddTag(`Restricted ${restrictionCategory}: ${newTagInput}`)}
               disabled={!newTagInput.trim() || restrictionPending || !restrictionReason.trim()}
               className="inline-flex items-center gap-1 rounded-md bg-sadu-brick px-3.5 py-2 text-xs font-bold text-white hover:bg-sadu-brick-dark disabled:opacity-50 cursor-pointer"
             >
@@ -351,6 +361,8 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
           </div>
         </div>
       </div>
+      </fieldset>
+      {!publishedBoundaries&&<section className="space-y-3 rounded border bg-[#F7F1E6] ps-5 pe-5 py-5 text-start"><h2 className="text-xl font-semibold">{isAr?'مراجعة ونشر محددات المعرض':'Review and publish master boundaries'}</h2><p>{isAr?'راجع الخامات والأساليب والجنسيات، وأقرّ صراحةً إن لم تُعلن قيود لفئة. يلزم نشر الدليل باللغتين وحسم موافقات المدير.':'Review mediums, styles and nationalities, explicitly acknowledging any category with no declared restrictions. Bilingual guidelines and completed Director sign-off are required.'}</p>{boundaryCategories.map((cat,i)=><label key={cat} className="block"><input type="checkbox" checked={confirmed[i]} onChange={e=>setConfirmed(rows=>rows.map((v,j)=>j===i?e.target.checked:v))}/>{cat}: {categoryTags(blocklist,cat).join(' · ')|| (isAr?'لا قيود معلنة':'None declared')} — {isAr?'تمت المراجعة':'Reviewed'}</label>)}<button type="button" disabled={isLocked||translationStatus!=='PUBLISHED'||restrictionPending||!confirmed.every(Boolean)||!onPublishBoundaries} onClick={()=>onPublishBoundaries?.(confirmed)} className="rounded bg-[#8B261E] ps-4 pe-4 py-3 text-white disabled:opacity-50 disabled:cursor-not-allowed">اعتماد ونشر محددات المعرض / Publish &amp; Lock Curatorial Directives</button></section>}
     </div>
   );
 };

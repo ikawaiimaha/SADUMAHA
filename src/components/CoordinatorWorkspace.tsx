@@ -1,3 +1,5 @@
+import {CuratorialBoundaries} from './CuratorialBoundaries';
+import {nominationOpen,type Boundaries} from '../data/curatorialBoundaries';
 import { ArtworkRosterQueue } from './ArtworkRoster';
 import { MissingDeliverables, FabricationLedger } from './DeliverableRouting';
 import { RegionalDelegation } from './RegionalDelegation';
@@ -23,6 +25,7 @@ import ArtistNominationForm from './ArtistNominationForm';
 import { BilateralContract } from '../types/contractStage6';
 
 export interface CoordinatorWorkspaceProps {
+  publishedBoundaries?: Boundaries|null;
   canDelegateRegions?: boolean;
   onDelegateRegion?: (region: Region, target: string) => void;
   delegationLockedIds?: string[];
@@ -46,7 +49,7 @@ const CANCELLATION_CLAUSE_AR =
   'تحتفظ دائرة الثقافة بالحق في إلغاء أو تعديل أي عمل فني لا يتوافق مع الرؤية المؤسسية للدائرة أو الموجهات التنسيقية العامة للمعرض.';
 
 export const CoordinatorWorkspace: React.FC<CoordinatorWorkspaceProps> = ({
-  activeCoordinatorId, canDelegateRegions = false, onDelegateRegion, delegationLockedIds = [],
+  publishedBoundaries, activeCoordinatorId, canDelegateRegions = false, onDelegateRegion, delegationLockedIds = [],
   nominatedArtists,
   contracts,
   onNominateArtist,
@@ -111,8 +114,9 @@ export const CoordinatorWorkspace: React.FC<CoordinatorWorkspaceProps> = ({
     .filter(c => c.status === 'ARTIST_APPROVED' || c.status === 'LOCKED')
     .reduce((sum, c) => sum + (c.productionCost || 0), 0);
 
+  if(!nominationOpen(publishedBoundaries))return <CuratorialBoundaries isAr={isAr}/>;
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-6">
+    <div className="mx-auto w-full max-w-5xl space-y-6"><CuratorialBoundaries published={publishedBoundaries} isAr={isAr}/>
       {nominatedArtists.filter(d=>d.assignedCoordinatorId===activeCoordinatorId).map(d=><CommitteeNominationOutcome key={`committee:${d.id}`} dossier={d} isAr={isAr}/>)}
       <ArtworkRosterQueue isAr={isAr} coordinatorId={activeCoordinatorId} assignedArtistIds={nominatedArtists.filter(d=>d.assignedCoordinatorId===activeCoordinatorId).map(d=>d.id)}/>
       {nominatedArtists.filter(d=>d.assignedCoordinatorId===activeCoordinatorId).map(d=><section key={`routing:${d.id}`}><MissingDeliverables artistId={d.id} artistName={d.artistName} isAr={isAr}/>{d.status==='APPROVED'&&<FabricationLedger artistId={d.id} artistName={d.artistName} isAr={isAr} actor="COORDINATOR"/>}</section>)}

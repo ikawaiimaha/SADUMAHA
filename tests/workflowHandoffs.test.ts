@@ -977,3 +977,18 @@ test('resumable upload retains task for retry, uses 6 MiB chunks and cancels wit
 test('heavy media validation accepts a declared 2 GiB header without buffering the full file and rejects oversize',async()=>{
  const f=new File([new Uint8Array([73,73,42,0])],'large.tiff');Object.defineProperty(f,'size',{value:2147483648,configurable:true});assert.equal(await mediaContentType(f,'PRINT'),'image/tiff');Object.defineProperty(f,'size',{value:2147483649});assert.equal(await mediaContentType(f,'PRINT'),null);
 });
+
+import {publishBoundaries,nominationOpen,categoryTags} from '../src/data/curatorialBoundaries';
+test('curatorial publication requires HIP, bilingual guidelines, category review and completed Director decisions',()=>{
+ const publish=(actor='HIP',theme='PUBLISHED_OFFICIAL',status='PUBLISHED',pending=false,checks=[true,true,true])=>publishBoundaries(null,actor,theme,status,'دليل','Guidelines',['Restricted Medium: Abstract Ink','Restricted Style: Non-Classical Script'],pending,checks,at);
+ assert.equal(nominationOpen(null),false);assert.equal(publish('COORDINATOR'),null);assert.equal(publish('HIP','DRAFT'),null);assert.equal(publish('HIP','PUBLISHED_OFFICIAL','PENDING_TRANSLATION'),null);assert.equal(publish('HIP','PUBLISHED_OFFICIAL','PUBLISHED',true),null);assert.equal(publish('HIP','PUBLISHED_OFFICIAL','PUBLISHED',false,[true,false,true]),null);
+ const locked=publish()!;assert.equal(nominationOpen(locked),true);assert.equal(locked.status,'CURATORIAL_DIRECTIVES_PUBLISHED');assert.deepEqual(categoryTags(locked.tags,'Style'),['Restricted Style: Non-Classical Script']);assert.deepEqual(categoryTags(locked.tags,'Nationality'),[]);
+ assert.equal(publishBoundaries(locked,'HIP','PUBLISHED_OFFICIAL','PUBLISHED','Changed','Changed',[],false,[true,true,true],at),locked);
+ const tags=['Restricted Medium: Abstract Ink'];const snapshot=publishBoundaries(null,'HIP','PUBLISHED_OFFICIAL','PUBLISHED','دليل','Guide',tags,false,[true,true,true],at)!;tags.push('Other');assert.equal(snapshot.tags.length,1);
+});
+import {CuratorialBoundaries} from '../src/components/CuratorialBoundaries';
+test('Coordinator boundaries gate renders a waiting state, then the exact published master list',()=>{
+ assert.match(renderToStaticMarkup(createElement(CuratorialBoundaries,{isAr:false})),/Waiting for Head of International Programs/);
+ const published=publishBoundaries(null,'HIP','PUBLISHED_OFFICIAL','PUBLISHED','دليل','Guide',['Restricted Medium: Abstract Ink'],false,[true,true,true],at);
+ const html=renderToStaticMarkup(createElement(CuratorialBoundaries,{isAr:false,published}));assert.match(html,/Active Curatorial Boundaries/);assert.match(html,/Restricted Medium: Abstract Ink/);assert.match(html,/None declared/);
+});

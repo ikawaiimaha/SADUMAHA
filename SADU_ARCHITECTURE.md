@@ -1,3 +1,8 @@
+# 28 September 2026 — Stage 3 master-boundaries gate
+
+HIP publishes an immutable CURATORIAL_DIRECTIVES_PUBLISHED snapshot only after theme and bilingual guideline publication, review of medium/style/nationality categories and resolution of Director restriction sign-off. No restrictions is a valid explicit category declaration. Coordinator dashboards and nomination entry remain closed until publication. Committee scouting submissions also require publication. Coordinators see the exact active snapshot; Committee retains nomination decision authority. This gate is session-only and does not claim backend authorization.
+
+---
 # 28 September 2026 — Heavy-media transfer upgrade
 
 Scenario uploads now support 2 GiB through TUS with 6 MiB chunks, progress, automatic retries and same-page resume. Storage size verification precedes final-deliverables eligibility. Local limits and SQL validation are upgraded; remote deployment remains separate. The shared vault-only email envelope is prepared for future transport integration. No live mail sender or inbound attachment rejection exists. See docs/audits/heavy-media-2026-09-28.md.

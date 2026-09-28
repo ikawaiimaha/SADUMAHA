@@ -39,6 +39,7 @@ export interface NominatedArtistDossier {
   dispatchHistory?: {revision:number;at:string;scope:DossierScope}[];
   nationality: string;
   medium: string;
+  style?: string;
   proposedWorkTitle: string;
   isCommissioned?: boolean;
   cvFileName: string;
@@ -85,6 +86,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
   const [artistName, setArtistName] = useState('');
   const [artistCategory, setArtistCategory] = useState<ArtistCategory | ''>('');
   const [nationality, setNationality] = useState('');
+  const [style,setStyle]=useState('');
   const [medium, setMedium] = useState('');
   const [proposedWorkTitle, setProposedWorkTitle] = useState('');
   // Hardening #1: Dynamic Dossier Schema toggle
@@ -126,7 +128,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
       const cleanTag = tag
         .toLowerCase()
         .replace(/^restricted nationality:\s*/i, '')
-        .replace(/^hazardous medium:\s*/i, '')
+        .replace(/^(hazardous medium|restricted medium|restricted style):\s*/i, '')
         .replace(/^directive:\s*/i, '')
         .trim();
 
@@ -134,7 +136,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
       return (
         (normNationality && (normNationality.includes(cleanTag) || cleanTag.includes(normNationality))) ||
         (normMedium && (normMedium.includes(cleanTag) || cleanTag.includes(normMedium))) ||
-        (normName && normName.includes(cleanTag))
+        (normName && normName.includes(cleanTag)) || (style.trim() && style.trim().toLowerCase().includes(cleanTag))
       );
     });
   };
@@ -153,7 +155,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
       artistCategory: honored ? 'Not applicable' : artistCategory as ArtistCategory,
       participationTrack, artworkCount: honored ? undefined : artworkCount,
       nationality: nationality.trim() || 'Undisclosed',
-      medium: honored ? '' : medium.trim(),
+      medium: honored ? '' : medium.trim(), style: honored ? '' : style.trim(),
       proposedWorkTitle: honored ? '' : proposedWorkTitle.trim(),
       isCommissioned: honored ? undefined : isCommissioned,
       cvFileName: honored ? '' : cvFile!.name,
@@ -176,7 +178,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
       setTextExplanation('');
       setArtistCategory('');
       setNationality('');
-      setMedium('');
+      setMedium(''); setStyle('');
       setProposedWorkTitle('');
       setProvenance(null);
       setCvFile(null);
@@ -378,7 +380,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
               />
             </div>
             <div>
-              <label htmlFor="nomination-medium" className="block text-xs font-bold text-sadu-charcoal uppercase tracking-wider mb-1"> {tr("Medium & Materials")} </label>
+              <label className="block text-sm">{isAr?'الأسلوب الفني':'Artistic Style'}<input maxLength={250} className="block w-full rounded border ps-3 pe-3 py-2" value={style} onChange={e=>setStyle(e.target.value)}/></label><label htmlFor="nomination-medium" className="block text-xs font-bold text-sadu-charcoal uppercase tracking-wider mb-1"> {tr("Medium & Materials")} </label>
               <input
                 id="nomination-medium"
                 type="text"

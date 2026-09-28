@@ -12,8 +12,8 @@ export function validDossier(d: NominatedArtistDossier): boolean {
 }
 export function matchedRestriction(d: NominatedArtistDossier, tags: string[]): string | undefined {
   return tags.find(tag => {
-    const value = tag.replace(/^(restricted nationality|hazardous medium|directive):\s*/i, '').trim().toLowerCase();
-    return value && [d.nationality, d.medium].some(field => field.trim().toLowerCase().includes(value));
+    const value = tag.replace(/^(restricted nationality|restricted medium|restricted style|hazardous medium|directive):\s*/i, '').trim().toLowerCase();
+    return value && [d.nationality, d.medium, d.style??''].some(field => field.trim().toLowerCase().includes(value));
   });
 }
 export function submitForVetting(d: NominatedArtistDossier, actor: string, coordinatorId: string, tags: string[]): NominatedArtistDossier | null {
