@@ -1,3 +1,4 @@
+import { artistExecutionTransition, type ArtistExecutionAction } from './artistExecution';
 import { closeoutTransition, type CloseoutAction } from './collectionCloseout';
 import { validAdministration, normalizeIBAN, metadataUnlocked, type ArtistAdministration } from './artistAdministration';
 import { validVisaIntake, type VisaIntake } from './visaIntake';
@@ -56,7 +57,7 @@ export function milestoneEligible(state: CommissionState, tranche: 'delivery' | 
 }
 
 type Actor = 'PR_PROTOCOL' | 'TECHNICAL' | 'FINANCE' | string;
-export type CommissionAction = ConditionAction | CloseoutAction
+export type CommissionAction = ConditionAction | CloseoutAction | ArtistExecutionAction
   | {type:'save-administration';actor:string;data:ArtistAdministration}
   | {type:'record-loan-payment';actor:string;contractId:string;amount:number;reference:string;at:string}
   | {type:'submit-visa';actor:string;intake:VisaIntake}
@@ -94,6 +95,7 @@ function recordLedger(state: CommissionState, tranche: 'advance' | 'delivery' | 
 /** Shared transition guard. UI locks are not the only checks; this remains a local demo, not RBAC. */
 export function commissionReducer(state: CommissionState, action: CommissionAction): CommissionState {
   if(state.installationStatus==='ARCHIVED_CLOSED')return state;
+  if(action.type==='upload-layout'||action.type==='request-domestic-pickup')return damageHold(state)?state:artistExecutionTransition(state,action);
   if(['collection-terms','acquire','return-ticket','return-awb','archive'].includes(action.type))return damageHold(state)?state:closeoutTransition(state,action as CloseoutAction);
   if (['record-condition','dispatch-damage','request-plan-b','review-plan-b'].includes(action.type)) return conditionTransition(state, action as ConditionAction);
   if (damageHold(state) && ['request-fleet','fleet-transit','close-exhibition','record-technical','technical-check','contracts','CONTRACT_DISPUTED'].includes(action.type)) return state;

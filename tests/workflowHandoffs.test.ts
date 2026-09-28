@@ -789,3 +789,24 @@ test('archive requires return AWB and terminal state blocks every commission mut
  assert.equal(reduce(closed,{type:'pr-check',actor:'PR_PROTOCOL',field:'passportVerified',value:true}),closed);
  assert.equal(closeoutTransition(closed,{type:'return-ticket',actor:'LOGISTICS',at}),closed);
 });
+import { artistExecutionTransition, validLayout } from '../src/data/artistExecution';
+test('layout uploads retain revisions and reject unauthorized or archived edits',()=>{
+ const s=accepted(),action={type:'upload-layout' as const,actor:'ARTIST',id:'layout-1',contractId:contract.id,file:new File(['sample'],'layout.png',{type:'image/png'}),at};
+ assert.equal(validLayout(new File(['x'],'script.svg',{type:'image/svg+xml'})),false);
+ assert.equal(reduce(s,{...action,actor:'TECHNICAL'}),s);
+ const uploaded=reduce(s,action);assert.equal(uploaded.layoutBlueprints?.length,1);
+ assert.equal(reduce(uploaded,action),uploaded);
+ const updated=reduce(uploaded,{...action,id:'layout-2'});assert.equal(updated.layoutBlueprints?.length,2);
+ const archived={...s,installationStatus:'ARCHIVED_CLOSED' as const};assert.equal(artistExecutionTransition(archived,action),archived);
+});
+test('domestic pickup uses explicit UAE collection country and approved crate snapshot',()=>{
+ let s=accepted();s={...s,contracts:[{...contract,crate:{reference:'CRATE-1',lengthCm:100,widthCm:80,heightCm:60,grossWeightKg:84}}],administration:{contractId:contract.id,holder:'Sample',iban:'ES9121000418450200051332',address:'Sample street 123',country:'UAE',city:'Sharjah',at}};
+ const action={type:'request-domestic-pickup' as const,actor:'ARTIST',input:{id:'pickup-1',contractId:contract.id,emirate:'Sharjah',area:'Area',street:'Street',building:'Villa 1',date:'2026-10-01',contact:'Sample',phone:'+971501234567',at}};
+ assert.equal(reduce(s,{...action,actor:'COORDINATOR'}),s);
+ assert.equal(reduce(s,{...action,input:{...action.input,date:'2026-02-30'}}),s);
+ const foreign={...s,administration:{...s.administration!,country:'Spain'}};assert.equal(reduce(foreign,action),foreign);
+ assert.equal(reduce(s,{...action,input:{...action.input,phone:'-------'}}),s);
+ const queued=reduce(s,action);assert.equal(queued.domesticPickups?.[0].status,'PENDING_COLLECTION');assert.equal(queued.domesticPickups?.[0].crate.grossWeightKg,84);assert.notEqual(queued.domesticPickups?.[0].crate,s.contracts[0].crate);
+ assert.equal(reduce(queued,{...action,input:{...action.input,id:'duplicate'}}),queued);
+ const delivered={...s,logistics:{status:'PHYSICAL_ASSET_RECEIVED' as const,reference:'R',receivedAt:at}};assert.equal(reduce(delivered,action),delivered);
+});

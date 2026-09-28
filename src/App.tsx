@@ -831,7 +831,7 @@ function SADUApp() {
         return (
           <ArtistPortalWorkspace
             onSubmitVisa={intake=>{if(activeRole==='ARTIST')dispatchCommission({type:'submit-visa',actor:activeRole,intake});}}
-            onSubmitCatalog={action=>{if(activeRole==='ARTIST'&&(action.type==='submit-catalog'||action.type==='save-administration'||action.type==='collection-terms'))dispatchCommission({...action,actor:activeRole});}}
+            onSubmitCatalog={action=>{if(activeRole==='ARTIST'&&(action.type==='submit-catalog'||action.type==='save-administration'||action.type==='collection-terms'||action.type==='upload-layout'||action.type==='request-domestic-pickup'))dispatchCommission({...action,actor:activeRole});}}
             conditionState={commission}
             profileArtistId={COMMISSION.id}
             contracts={contracts}

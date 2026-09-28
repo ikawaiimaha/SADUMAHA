@@ -125,6 +125,8 @@ export interface CommissionEvidence {
 }
 
 export interface CommissionState {
+  layoutBlueprints?: import('./data/artistExecution').LayoutBlueprint[];
+  domesticPickups?: import('./data/artistExecution').DomesticPickup[];
   collectionTerms?: import('./data/collectionCloseout').CollectionTerms;
   acquisition?: {status:'ACQUIRED_BY_INSTITUTION';priceUSD:number;at:string;payoutStatus:'PENDING_FINANCE'};
   returnFreight?: {status:'PENDING_RETURN'|'CANCELLED_ACQUISITION'|'CLOSED';address:string;packing:string;at:string;cancelledAt?:string;awb?:File;awbAt?:string};

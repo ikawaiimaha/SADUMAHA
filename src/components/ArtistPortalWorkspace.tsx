@@ -1,3 +1,4 @@
+import { ArtistExecutionBridge } from './ArtistExecutionBridge';
 import { CollectionCloseout } from './CollectionCloseout';
 import { ArtistAdministrationForm } from './ArtistAdministration';
 import { metadataUnlocked } from '../data/artistAdministration';
@@ -198,6 +199,7 @@ export default function ArtistPortalWorkspace({
       </header>
 
       {activeContract && <p className="my-3 text-start">{isAr ? 'مسؤولية التأمين أثناء النقل' : 'Transit insurance liability'}: {activeContract.shippingLiability ?? (isAr ? 'غير مسجلة' : 'Not recorded')}</p>}
+      {activeContract && conditionState && onSubmitCatalog && <ArtistExecutionBridge key={activeContract.id} state={conditionState} actor="ARTIST" onAction={onSubmitCatalog}/>}
       {activeContract && conditionState && onSubmitCatalog && <CollectionCloseout state={conditionState} actor="ARTIST" onAction={onSubmitCatalog}/>}
       {activeContract && isSigned && conditionState && onSubmitCatalog && <ArtistAdministrationForm key={activeContract.id} state={conditionState} onAction={onSubmitCatalog}/>}
       {activeContract && conditionState && onSubmitCatalog && <ExhibitionMetadata key={`${activeContract.id}:${conditionState.agreementRevision}`} state={conditionState} contract={activeContract} isAr={isAr} onSubmit={onSubmitCatalog} />}

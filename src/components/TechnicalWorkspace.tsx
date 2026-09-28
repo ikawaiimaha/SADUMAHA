@@ -1,3 +1,4 @@
+import { ArtistExecutionBridge } from './ArtistExecutionBridge';
 import { damageHold } from '../data/conditionReporting';
 import React, { useState } from 'react';
 import { SpatialVarianceTicket } from './SpatialVarianceTicket';
@@ -23,6 +24,7 @@ export default function TechnicalWorkspace({ isAr, state, onCheck, onClearTechni
   const [rationale, setRationale] = useState('');
   return <div dir={isAr ? 'rtl' : 'ltr'} className="max-w-4xl mx-auto ps-4 pe-4 py-6 space-y-5 text-start bg-[#F7F1E6]">
     <h1 className="font-serif text-3xl font-bold">{isAr ? 'الفريق الهندسي والفني' : 'Engineering / Technical Workspace'}</h1>
+    <ArtistExecutionBridge state={state} actor="TECHNICAL"/>
     <CommissionSummary isAr={isAr} />
     <InstallationIntervention state={state} isAr={isAr} actor="TECHNICAL" />
     {damageHold(state) && <p role="status" className="rounded border border-red-300 bg-red-50 ps-4 pe-4 py-3">Artwork damage hold — installation is locked pending a separately authorized resolution.</p>}
