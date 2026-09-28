@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { SharedSpatialLedger } from '../SharedSpatialLedger';
+import { ClaimedSpatialClearances } from '../SpatialEquipmentClearances';
 import { useI18n } from '../../context/I18nContext';
 import { Map, Workflow, Maximize, Zap, Volume2, Weight, Sun, Ruler, AlertTriangle, Move } from 'lucide-react';
 
@@ -14,6 +16,8 @@ export const CuratorialCanvas: React.FC = () => {
 
   return (
     <div className="space-y-4">
+      <SharedSpatialLedger isAr={isAr} />
+      <ClaimedSpatialClearances isAr={isAr} />
       <div className="flex flex-col justify-between gap-4 border-b border-sadu-gold/40 pb-2 sm:flex-row sm:items-center">
         <div>
           <span className="mb-1 inline-block rounded border border-sadu-gold/50 bg-sadu-sand px-2 py-0.5 text-[10px] font-mono font-bold uppercase tracking-widest text-sadu-brick">{label('Smart Floorplan', 'مخطط ذكي')}</span>

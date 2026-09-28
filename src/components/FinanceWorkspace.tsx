@@ -1,3 +1,5 @@
+import { ConditionReporting } from './ConditionReporting';
+import type { CommissionAction } from '../data/commissionScenario';
 import React from 'react';
 import { Lock } from 'lucide-react';
 import type { VettedArtist } from './CoordinatorContractWorkspace';
@@ -6,6 +8,7 @@ import { advanceEligible, milestoneEligible } from '../data/commissionScenario';
 import { AgreementMilestones, CommissionSummary, panel, actionButton } from './CommissionSummary';
 
 export interface FinanceWorkspaceProps {
+  onEmergencyAction?: (action:CommissionAction)=>void;
   isAr: boolean;
   state: CommissionState;
   artist?: Pick<VettedArtist, 'id' | 'prCleared' | 'technicalCleared'>;
@@ -13,7 +16,7 @@ export interface FinanceWorkspaceProps {
   onRecordTranche: (tranche: 'delivery' | 'completion') => void;
 }
 
-export default function FinanceWorkspace({ isAr, state, artist, onAuthorizeAdvance, onRecordTranche }: FinanceWorkspaceProps) {
+export default function FinanceWorkspace({ onEmergencyAction, isAr, state, artist, onAuthorizeAdvance, onRecordTranche }: FinanceWorkspaceProps) {
   const c = state.contracts[0];
   const e = state.evidence;
   const prCleared = artist?.id === c?.artistId && artist?.prCleared === true && e.prEvidenceGate;
@@ -28,6 +31,7 @@ export default function FinanceWorkspace({ isAr, state, artist, onAuthorizeAdvan
   ] as const;
   return <div dir={isAr ? 'rtl' : 'ltr'} className="max-w-4xl mx-auto ps-4 pe-4 py-6 space-y-5 text-start bg-[#F7F1E6]">
     <h1 className="font-serif text-3xl font-bold">{isAr ? 'المالية — اعتماد مستقل' : 'Finance — Independent Approval'}</h1>
+    <ConditionReporting state={state} isAr={isAr} actor="FINANCE" onRecord={onEmergencyAction} />
     <CommissionSummary isAr={isAr} />
     {c ? <AgreementMilestones contract={c} isAr={isAr} /> : <p className={panel}>{isAr ? 'لم يصغ المنسق الاتفاقية بعد. لا توجد مبالغ افتراضية بديلة.' : 'The Coordinator has not drafted the agreement. No fallback amounts are used.'}</p>}
     <section className={panel}>

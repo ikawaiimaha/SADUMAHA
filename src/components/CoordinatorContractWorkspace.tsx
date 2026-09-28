@@ -1,4 +1,7 @@
+import { agreementPipelineReady } from '../data/workflowEligibility';
 import { useSessionDraft } from '../context/SessionDrafts';
+import { validCrate, type CrateSpec } from '../data/installationOperations';
+import { ClaimedSpatialClearances } from './SpatialEquipmentClearances';
 import { useMockupText } from '../i18n/useMockupText';
 import React, { useState, useEffect } from 'react';
 import type { BilateralContract } from '../types/contractStage6';
@@ -33,11 +36,13 @@ export interface VettedArtist {
 }
 
 export interface ContractFormState {
+  crate?: CrateSpec;
   participationCategory: ParticipationCategory;
   artworkCount: number;
   venue: string;
   venueClearanceReference: string;
   productionGrant: number;
+  shippingLiability?: 'ARTIST' | 'DEPARTMENT';
   shippingMethod: string;
   advancePercentage: number;
   interimPercentage: number;
@@ -46,6 +51,9 @@ export interface ContractFormState {
 }
 
 export interface CoordinatorContractWorkspaceProps {
+  themeStatus?: string;
+  guidelinesStatus?: string;
+  isIsolatedRehearsalMode?: boolean;
   officialTheme?: string;
   isAr?: boolean;
   artists: VettedArtist[];
@@ -55,11 +63,12 @@ export interface CoordinatorContractWorkspaceProps {
 
 export function CoordinatorContractWorkspace({ 
   isAr = true,
-  officialTheme,
+  officialTheme, themeStatus = '', guidelinesStatus = '', isIsolatedRehearsalMode = false,
   artists = [],
   contracts = [],
   onDispatchContract 
 }: CoordinatorContractWorkspaceProps) {
+  const pipelineReady = agreementPipelineReady(themeStatus, guidelinesStatus, isIsolatedRehearsalMode);
   const tr = useMockupText(isAr);
   
   // Filter incoming global state
@@ -96,7 +105,7 @@ export function CoordinatorContractWorkspace({
 
   useEffect(() => {
     if (existingAgreement?.status !== 'CONTRACT_DISPUTED' || hasDraft) return;
-    setForm({ participationCategory: existingAgreement.participationCategory ?? 'SINGLE_WORK', artworkCount: existingAgreement.artworkCount ?? 1, productionGrant: existingAgreement.productionCost, shippingMethod: existingAgreement.shippingTerms,
+    setForm({ shippingLiability: existingAgreement.shippingLiability, crate: existingAgreement.crate, participationCategory: existingAgreement.participationCategory ?? 'SINGLE_WORK', artworkCount: existingAgreement.artworkCount ?? 1, productionGrant: existingAgreement.productionCost, shippingMethod: existingAgreement.shippingTerms,
       advancePercentage: existingAgreement.tranches.advancePercentage, interimPercentage: existingAgreement.tranches.deliveryPercentage,
       finalPercentage: existingAgreement.tranches.installationPercentage, specialConditions: existingAgreement.specialConditions || '',
       venue: existingAgreement.venue || '', venueClearanceReference: existingAgreement.venueClearanceReference || '' });
@@ -105,7 +114,7 @@ export function CoordinatorContractWorkspace({
 
   const handleDispatch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedArtistId || !isTrancheValid || !venueReady || !validParticipationScope(form) || form.participationCategory !== 'SINGLE_WORK') return;
+    if (!pipelineReady || !form.shippingLiability || !selectedArtistId || !validCrate(form.crate) || !isTrancheValid || !venueReady || !validParticipationScope(form) || form.participationCategory !== 'SINGLE_WORK') return;
 
     
     // 1. Pass the data UP to App.tsx instead of handling it locally
@@ -123,6 +132,10 @@ export function CoordinatorContractWorkspace({
 
   return (
     <div className="w-full space-y-6 text-start">
+      <details className="rounded border border-[#D9CEBA] bg-[#F7F1E6] ps-4 pe-4 py-4">
+        <summary className="cursor-pointer font-semibold">{isAr ? 'النطاق المعتمد — منير فاطمي (مثال تدريبي)' : 'Claimed space — session record'}</summary>
+        <div className="mt-4"><ClaimedSpatialClearances artistId={selectedArtistId ?? undefined} isAr={isAr} /></div>
+      </details>
       {/* Header Banner */}
       <div className="bg-[#FAF7F2] border border-[#D9CEBA] rounded-lg p-6 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -155,6 +168,7 @@ export function CoordinatorContractWorkspace({
         </div>
       </div>
 
+      {!pipelineReady && <p role="status" className="rounded border border-amber-400 bg-amber-50 ps-4 pe-4 py-4 text-start">Institutional Pipeline Locked: Awaiting Theme Publication and HIP Curatorial Guidelines.</p>}
       {dispatchedSuccess && (
         <div className="bg-[#EBF3ED] border border-[#9DC4A7] text-[#1E4A28] px-4 py-3 rounded-lg flex items-center gap-3 text-sm mb-6">
           <CheckCircle2 className="w-5 h-5 shrink-0 text-[#2D6A3E]" />
@@ -249,6 +263,10 @@ export function CoordinatorContractWorkspace({
         <div className="lg:col-span-8">
           {selectedArtist ? (
             <form onSubmit={handleDispatch} className="bg-[#FAF7F2] border border-[#D9CEBA] rounded-lg p-6 space-y-6">
+              <fieldset className="rounded border border-[#D9CEBA] ps-4 pe-4 py-4 space-y-3"><legend className="font-semibold">{isAr ? 'مواصفات الصندوق للنقل الداخلي' : 'Crate specifications for fleet dispatch'}</legend>
+                <p>{isAr ? 'أدخل الأبعاد الخارجية والوزن الإجمالي مع التغليف، وليس وزن العمل وحده.' : 'Record external dimensions and gross packed weight, not artwork weight alone.'}</p>
+                {(['reference','lengthCm','widthCm','heightCm','grossWeightKg'] as const).map((field,index)=><label key={field} className="block">{(isAr?['مرجع الصندوق','الطول (سم)','العرض (سم)','الارتفاع (سم)','الوزن الإجمالي (كغ)']:['Crate reference','Length (cm)','Width (cm)','Height (cm)','Gross weight (kg)'])[index]}<input required type={field==='reference'?'text':'number'} min={field==='reference'?undefined:0.01} step={field==='reference'?undefined:'any'} value={form.crate?.[field]??''} className="block w-full border ps-3 pe-3 py-2" onChange={e=>setForm(current=>({...current,crate:{reference:'',lengthCm:0,widthCm:0,heightCm:0,grossWeightKg:0,...current.crate,[field]:field==='reference'?e.target.value:Number(e.target.value)}}))}/></label>)}
+              </fieldset>
               <section className="space-y-3 rounded border border-[#D9CEBA] bg-[#F7F1E6] ps-4 pe-4 py-4">
                 <h3 className="text-lg font-semibold">{isAr ? 'ملخص السجل الحالي' : 'Current record'}</h3>
                 <p>{isAr ? 'الثيمة المنشورة:' : 'Published theme:'} <bdi>{officialTheme ?? (isAr ? 'لم تُنشر بعد' : 'Not published yet')}</bdi></p>
@@ -305,6 +323,7 @@ export function CoordinatorContractWorkspace({
                 </div>
               </div>
 
+              <label className="block">{isAr ? 'المسؤولية التأمينية للشحن' : 'Transit insurance liability'}<select required className="mt-2 block w-full rounded border bg-white ps-3 pe-3 py-2" value={form.shippingLiability ?? ''} onChange={e=>setForm({...form,shippingLiability:e.target.value as 'ARTIST'|'DEPARTMENT'})}><option value="">{isAr ? 'حدد الطرف حسب الاتفاقية' : 'Select the liable party under the agreement'}</option><option value="ARTIST">ARTIST</option><option value="DEPARTMENT">DEPARTMENT</option></select></label>
               {/* Tranche Allocation */}
               <div className="bg-[#F4EDE2] border border-[#D9CEBA] rounded-md p-4 space-y-3">
                 <div className="flex items-center justify-between">
@@ -399,7 +418,7 @@ export function CoordinatorContractWorkspace({
               <div className="pt-2 flex items-center justify-end gap-3 border-t border-[#D9CEBA]">
                 <button
                   type="submit"
-                  disabled={!isTrancheValid || !venueReady || !validParticipationScope(form) || form.participationCategory !== 'SINGLE_WORK'}
+                  disabled={!pipelineReady || !form.shippingLiability || !validCrate(form.crate) || !isTrancheValid || !venueReady || !validParticipationScope(form) || form.participationCategory !== 'SINGLE_WORK'}
                   className="px-5 py-2.5 bg-[#8B261E] hover:bg-[#721F18] text-white text-xs font-semibold rounded-md shadow flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <Send className="w-4 h-4 rtl:rotate-180" />

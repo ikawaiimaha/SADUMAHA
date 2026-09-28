@@ -1,4 +1,11 @@
+import { ConditionReporting } from './ConditionReporting';
+import type { CommissionState } from '../types';
+import { OfficialPressKit } from './OfficialPressKit';
+import { LivingProfileEditor } from './MasterDirectory';
 import { useMockupText } from '../i18n/useMockupText';
+import { TravelVault } from './TravelVault';
+import { TravelStatusTracker } from './TravelStatusTracker';
+import { ProductionBridge } from './ProductionBridge';
 import React, { useState } from 'react';
 import { useI18n } from '../context/I18nContext';
 import { AgreementMilestones } from './CommissionSummary';
@@ -21,6 +28,8 @@ import { NegotiationRound } from '../types';
 import { BilateralContract } from '../types/contractStage6';
 
 export interface ArtistPortalProps {
+  conditionState?: CommissionState;
+  profileArtistId?: string;
   // App-level container props (Stage 6 Multi-contract integration)
   contracts?: BilateralContract[];
   onSignContract?: (contractId?: string, signerName?: string) => void;
@@ -48,6 +57,8 @@ export interface ArtistPortalProps {
 export type ArtistPortalWorkspaceProps = ArtistPortalProps;
 
 export default function ArtistPortalWorkspace({
+  conditionState,
+  profileArtistId,
   contracts,
   onSignContract,
   onRequestAmendment,
@@ -136,10 +147,18 @@ export default function ArtistPortalWorkspace({
     onUploadLogistics?.(type);
   };
 
-  if (contracts && !activeContract) return <p className="ps-6 pe-6 py-6 text-start" dir={isAr ? 'rtl' : 'ltr'}>{isAr ? 'بانتظار إنشاء الاتفاقية في مكتب المنسق.' : 'Waiting for the Coordinator to create the agreement.'}</p>;
+  const directoryArtistId = activeContract?.artistId ?? profileArtistId;
+  if (contracts && !activeContract) return <>{directoryArtistId && <LivingProfileEditor artistId={directoryArtistId} isAr={isAr}/>}<p className="ps-6 pe-6 py-6 text-start" dir={isAr ? 'rtl' : 'ltr'}>{isAr ? 'بانتظار إنشاء الاتفاقية في مكتب المنسق.' : 'Waiting for the Coordinator to create the agreement.'}</p></>;
 
   return (
     <div className="min-h-screen bg-[#F7F1E6] p-6 text-[#2C2A29] font-sans text-start" dir={isAr ? 'rtl' : 'ltr'}>
+      {directoryArtistId && <LivingProfileEditor artistId={directoryArtistId} isAr={isAr}/>}
+      {conditionState && activeContract?.artistId === conditionState.contracts[0]?.artistId && <ConditionReporting state={conditionState} isAr={isAr} actor="ARTIST" />}
+      {activeContract && <>
+        <TravelStatusTracker key={`status:${activeContract.artistId}`} artistId={activeContract.artistId} passportDone={passportDone} isAr={isAr} />
+        <TravelVault key={activeContract.artistId} artistId={activeContract.artistId} isAr={isAr} />
+        <ProductionBridge key={`production:${activeContract.artistId}`} artistId={activeContract.artistId} isAr={isAr} actor="ARTIST" />
+      </>}
       
       {/* Header */}
       <header className="mb-8 border-b border-[#D9D2C5] pb-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -165,6 +184,9 @@ export default function ArtistPortalWorkspace({
           )}
         </div>
       </header>
+
+      {activeContract && <p className="my-3 text-start">{isAr ? 'مسؤولية التأمين أثناء النقل' : 'Transit insurance liability'}: {activeContract.shippingLiability ?? (isAr ? 'غير مسجلة' : 'Not recorded')}</p>}
+      <OfficialPressKit status={activeContract?.status} isAr={isAr} />
 
       {activeContract && <AgreementMilestones contract={activeContract} isAr={isAr} />}
 

@@ -1,4 +1,8 @@
+import { RegionalDelegation } from './RegionalDelegation';
+import type { Region } from '../data/regionalDelegation';
 import React, { useState } from 'react';
+import { SharedSpatialLedger } from './SharedSpatialLedger';
+import { useI18n } from '../context/I18nContext';
 import {
   GitMerge,
   FileSignature,
@@ -17,6 +21,10 @@ import ArtistNominationForm from './ArtistNominationForm';
 import { BilateralContract } from '../types/contractStage6';
 
 export interface CoordinatorWorkspaceProps {
+  canDelegateRegions?: boolean;
+  onDelegateRegion?: (region: Region, target: string) => void;
+  delegationLockedIds?: string[];
+  activeCoordinatorId?: string;
   nominatedArtists: NominatedArtistDossier[];
   contracts: BilateralContract[];
   onNominateArtist: (dossier: NominatedArtistDossier) => void;
@@ -36,6 +44,7 @@ const CANCELLATION_CLAUSE_AR =
   'تحتفظ دائرة الثقافة بالحق في إلغاء أو تعديل أي عمل فني لا يتوافق مع الرؤية المؤسسية للدائرة أو الموجهات التنسيقية العامة للمعرض.';
 
 export const CoordinatorWorkspace: React.FC<CoordinatorWorkspaceProps> = ({
+  activeCoordinatorId, canDelegateRegions = false, onDelegateRegion, delegationLockedIds = [],
   nominatedArtists,
   contracts,
   onNominateArtist,
@@ -45,6 +54,7 @@ export const CoordinatorWorkspace: React.FC<CoordinatorWorkspaceProps> = ({
   blocklist,
   onBackToRoles,
 }) => {
+  const { isAr } = useI18n();
   const [activeTab, setActiveTab] = useState<'dossiers' | 'contracts'>('dossiers');
   const [isNominationModalOpen, setIsNominationModalOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'APPROVED' | 'VETOED'>('ALL');
@@ -101,6 +111,8 @@ export const CoordinatorWorkspace: React.FC<CoordinatorWorkspaceProps> = ({
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6">
+      <RegionalDelegation dossiers={nominatedArtists} isAr={isAr} canDelegate={canDelegateRegions} onDelegate={onDelegateRegion} lockedIds={[...delegationLockedIds,...contracts.map(c=>c.artistId)]} />
+      <SharedSpatialLedger key={activeCoordinatorId} coordinatorId={activeCoordinatorId} dossiers={nominatedArtists} isAr={isAr} />
       {/* 1. Header Bar */}
       <div className="rounded-xl border border-sadu-gold bg-sadu-paper p-6 shadow-xs">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-sadu-gold/40 pb-4">

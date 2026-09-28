@@ -1,3 +1,12 @@
+# 28 September 2026 — Editorial identity-asset lifecycle
+
+The Arabic text lock enables the identity-asset log. Theme text publication no longer freezes asset intake: late design files and replacement versions can be recorded without editing the published bilingual statement. Approved versions remain read-only historical records. Replacement versions require their own inspection confirmation and separate Editorial session approval; later approval supersedes earlier versions without deleting them. Draft removal is reversible.
+
+The log validates filename extension/MIME, nonempty files and a 10 MB per-file limit, with a maximum of 20 stored versions (including history and removed drafts). SHA-256 content digests reject duplicate files even when renamed. Image previews use object URLs in image elements; PDFs have a sandboxed preview and an inspection download fallback. This is local UI validation, not a production malware-scanning or file-storage service.
+
+Records, files and approval timestamps survive desk changes through shared session memory and are explicitly lost on refresh. Sample filenames remain in a separate collapsed examples section with no fictitious verification badges. Before Chairman ratification, Editorial shows a waiting state instead of sample approved prose.
+
+---
 # 28 September 2026 — Executive summaries and operational evidence
 
 The Director can open an automatically generated agreement summary from the shared Stage 4 dossier and any recorded Stage 6 terms. Missing financial terms remain unreported; opening the summary does not sign or approve an agreement.
@@ -174,3 +183,55 @@ The historical specification below remains a record of the earlier design; its c
 4. **Dossier Schema Gate:** Submissions missing `artistName`, `artistCategory` ('Emerging'/'Established'), `cvUpload`, `previousWorks`, or `newWorkMockup` are strictly blocked.
 5. **Director Balance & Veto Gate:** The Director's dashboard renders a visual ratio bar of Emerging vs. Established artists. Vetoes require selecting a reason from a dropdown (Budget, Security, Curatorial Mismatch, Administrative Directive) and routes the status back to Coordinators.
 6. **Financial Lock Gate:** Finance cannot execute payment tranches until contracts are locked post-Chairman budget authorization.
+
+## Spatial request rehearsal and venue calendar
+
+The Technical execution ledger includes an isolated Mounir Fatmi spatial-request rehearsal. Its session draft survives role changes, but not a page refresh. The sequential path is PENDING_CURATOR_REVIEW (Vinyl), REJECTED_ASSET_RISK, then APPROVED_ALTERNATIVE (Carpet). Reviewed requests lock their modification type; repeated actions preserve decision timestamps. The generated work-order badge is simulated and does not dispatch externally or satisfy the commission technical/finance gates.
+
+Below Chairman theme decisions, the Geographic Portfolio displays the supplied EVT-KALBA-13 sample booking for 25 September–1 October 2026. This read-only, unverified reference is distinct from the existing Kalba Cultural Festival reference. It does not establish live reservation enforcement or infer resource conflicts.
+
+## Travel and technical request bridges
+
+PR's recorded evidence gate enables a session-only travel packet keyed by artist ID. Primary visa and itinerary PDFs are required; an escort visa is optional. Dispatch freezes the packet and exposes its actual sample files to the matching Artist portal. These browser-memory downloads are a rehearsal bridge, not authenticated storage, real document dispatch, or a production security boundary. Refresh discards the packet.
+
+The Technical request ledger stores equipment and mounting choices per artist in session state. Each submission produces an inventory task for Technical & AV and a separate pending venue review for the scenario's Sharjah Art Museum curator. Requests do not clear engineering, venue, or financial gates; duplicate equipment/mounting pairs are blocked. The scenario authority must be replaced by verified venue jurisdiction before production use.
+
+## Cultural declaration and production evidence bridges
+
+The initial nomination form requires an explicit Yes/No textual-cultural declaration and a nonblank full translation/context for Yes. HIP reviews the exact stored declaration for every dossier; only HIP can record clearance while it is a draft. Assigned-Coordinator Stage 4 submission and Director approval both guard this clearance. New nominations cannot inherit a caller-supplied clearance. The pre-approved demonstration dossier carries an explicitly seeded sample review. No new global lifecycle status is introduced.
+
+Artist digital masters (.mov/.mp4/.m2v, up to 2 GB each and five records) bridge by artist ID to Technical Digital Deliverables. They are local File references, not remote uploads or malware-scanned storage. There is no external-sharing-link input. Technical can request a titled prototype review with up to five PNG/JPEG sample photos (10 MB each). The Artist records an immutable approve/reject timestamp; this decision does not satisfy venue, engineering or Finance clearance. All production files and tickets are session-only and discarded on refresh.
+
+## Fleet dispatch, deployment phases, and executive installation holds
+
+Stage 6 captures crate reference, external dimensions (cm), and gross packed weight (kg). Fleet tickets require an accepted agreement and valid crate data; missing measurements cannot fall back to artwork weight. Each ticket snapshots the crate specifications, records PENDING_FLEET_ASSIGNMENT, and permits a Logistics-only simulated IN_TRANSIT transition. Fleet state is not physical receipt evidence or a real booking.
+
+Technical equipment requests carry PROTOTYPING or FINAL_INSTALLATION. Duplicate detection includes the phase. Prototyping cards explicitly instruct return to inventory before opening; the badge is not evidence of actual return.
+
+Director installation monitoring includes only accepted, physically received, non-closed commissions. A nonblank executive mandate sets EXECUTIVE_IMPOUND and resets technical evidence. The Technical ledger is disabled and the reducer blocks technical actions, new disbursements, closure, fleet dispatch, and agreement mutation during the hold. Only the assigned Coordinator UI can record explicit alteration acknowledgement; Technical must re-record its checks afterward. Mandate text and decision timestamps remain in the session audit history. None of these controls establishes production authentication or external dispatch.
+
+## Shared venue claims
+
+The 2026 session venue ledger defines Sharjah Art Museum Hall 1, Calligraphy Square Main Atrium, and House of Wisdom Lobby. The Coordinator desk can claim an available space only for an approved artwork dossier assigned to that coordinator, with recorded medium and no pending scope amendment. The atomic functional state update rechecks availability and ownership; existing claims cannot be replaced. Claims snapshot artist, medium, coordinator, and timestamp. HIP and Curatorial Canvas read the same session ledger. This prevents conflicting claims within one demo session, not across browser sessions or concurrent production users; server-side uniqueness and authenticated permissions remain required for production. A claim is not external venue authorization.
+
+## Revision and spatial handoff guards
+
+Stage 6 uses a shared publication eligibility predicate in the Coordinator form and App dispatch handler. Both official theme and HIP guidelines must be published. The explicit isolated rehearsal toggle defaults off and bypasses only these publication checks, leaving dossier and agreement validation intact.
+
+Agreement amendments preserve fleet tickets with their originating agreement revision and a superseded marker. Physical receipts are moved immutably into visible receipt history, also revision-marked and superseded; only newly recorded current evidence qualifies for milestones. Superseded fleet tickets cannot depart or block a replacement request.
+
+Shared space claims snapshot venue jurisdiction and responsible curator role from the session venue registry. Each artist has one claimed room. Venue-modifying technical requests (including Lighting Rig, Ceiling Mount and Wall Anchor) require the matching artist claim and snapshot that routing evidence. Freestanding equipment supply does not invent a structural approval task. Clearance references now derive from claims and remain pending venue review; claiming never implies external authorization.
+
+## Living profile and curatorial directory
+
+Rehearsal artists have a master profile independent of contracts, keyed by dossier artist ID. Biography (Arabic/English), affiliations and up to ten sample PDF publications (20 MB each) are saved explicitly to IndexedDB. HIP and Committee read the same profiles with combined text/medium/nationality/edition filters. Registration retains previously saved profiles and never overwrites artist text; contract biography fields remain separate. PDF File objects survive page reloads on the same browser origin. Clearing browser data removes these prototype records. This is not authenticated departmental storage or cross-device synchronization; server-backed artist identity and private press storage remain necessary for production. Participation metadata reflects registered rehearsal dossiers, not verified historical attendance.
+
+## Geographic delegation rehearsal
+
+The Coordinator desk offers an explicitly labelled General Coordinator rehearsal selection. Only this selection can bulk-delegate a region to a known coordinator. Region tags use exact country/nationality aliases; unknown or ambiguous origins remain unclassified rather than inferred from names. The shared dossier assignment drives coordinator queues and the commission's contracting ownership. Each changed dossier retains an append-only handoff record. Regional transfers are atomic: any affected contract, spatial claim or pending scope amendment blocks the entire batch. Country grouping is operational routing, never a compliance decision. These demo permissions and histories remain session-bound and are separate from authenticated Supabase pilot roles. The reference honored-guest roster is not silently reassigned because its source contains no verified country fields.
+
+## Condition reporting and emergency contingency
+
+Stage 6 explicitly records transit insurance liability (ARTIST or DEPARTMENT), independently of free-text shipping method. Existing agreements without liability cannot infer it from courier descriptions. Logistics records immutable condition reports only after PHYSICAL_ASSET_RECEIVED (the existing delivered-equivalent gate), with a contract revision and receipt reference. Damaged reports require 1–5 sample JPEG/PNG files, each at most 10 MB. Department liability automatically creates an INSURANCE_CLAIM_PENDING queue entry; artist liability allows explicit dispatch of the sample evidence to the matching Artist Portal. No external claim is filed.
+
+Any reported damage locks fleet movement, installation, new tranche recording, closure and contract mutation; changing agreement state cannot erase the hold. Plan B records a priority request with a positive secondary grant, emergency flight details and justification. Director and Finance see the same request immediately; Finance may decide only after Director approval. Decisions are idempotent, timestamped, and do not pay money, book flights, revise the contract or clear the damage hold. A future separately authorized recovery/condition reconciliation workflow is required to release damaged work. Files and emergency records remain session-bound rehearsal data.

@@ -1,4 +1,5 @@
 import type { ScopeAmendment, DossierScope } from '../data/dossierLedger';
+import { validDeclaration, type CulturalDeclaration } from '../data/culturalDeclaration';
 import { COORDINATORS, PARTICIPATION_TRACKS, validSoloCount, type ParticipationTrack } from '../data/participation2026';
 import { useI18n } from '../context/I18nContext';
 import { ASSIGNED_COORDINATOR } from '../data/vetting';
@@ -20,6 +21,10 @@ import {
 export type ArtistCategory = 'Emerging' | 'Established';
 
 export interface NominatedArtistDossier {
+  geographicRegion?: import('../data/regionalDelegation').Region;
+  delegationHistory?: {from?:string;to:string;region:string;at:string;by:string}[];
+  culturalDeclaration?: CulturalDeclaration;
+  culturalClearedAt?: string;
   id: string;
   artistName: string;
   artistCategory: ArtistCategory | 'Not applicable';
@@ -68,6 +73,9 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
   const [participationTrack, setParticipationTrack] = useState<ParticipationTrack>('GENERAL_COMPETITION');
   const [coordinatorId, setCoordinatorId] = useState(ASSIGNED_COORDINATOR);
   const [artworkCount, setArtworkCount] = useState(1);
+  const [textAnswer, setTextAnswer] = useState('');
+  const [textExplanation, setTextExplanation] = useState('');
+  const declaration = textAnswer ? { containsText: textAnswer === 'YES', explanation: textAnswer === 'YES' ? textExplanation : '' } : undefined;
   const honored = participationTrack === 'HONORED_GUEST';
   const [provenance, setProvenance] = useState<File | null>(null);
   const [artistName, setArtistName] = useState('');
@@ -128,11 +136,12 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!isFormValid) return;
+    if (!isFormValid || !validDeclaration(declaration)) return;
 
     setBlocklistAlert(null);
 
     const dossier: NominatedArtistDossier = {
+      culturalDeclaration: declaration,
       id: `dossier-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       artistName: artistName.trim(),
       artistCategory: honored ? 'Not applicable' : artistCategory as ArtistCategory,
@@ -157,6 +166,8 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
       setSubmitSuccess(false);
       // Reset form
       setArtistName('');
+      setTextAnswer('');
+      setTextExplanation('');
       setArtistCategory('');
       setNationality('');
       setMedium('');
@@ -238,6 +249,14 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
 
       {/* Nomination Form */}
       <form onSubmit={handleSubmit} className="rounded-xl border border-sadu-gold bg-white p-6 shadow-xs space-y-6">
+        <fieldset className="space-y-3 rounded border border-[#D9CEBA] bg-[#F7F1E6] ps-4 pe-4 py-4 text-start">
+          <legend className="font-semibold">Textual &amp; Cultural Elements Declaration</legend>
+          <label className="block">{isAr ? 'هل يتضمن العمل نصوصاً دينية أو آيات قرآنية أو أحاديث أو عبارات سياسية؟' : "Does this artwork incorporate religious texts, Qur'anic verses, Hadiths, or political statements?"}
+            <select required value={textAnswer} onChange={e => setTextAnswer(e.target.value)} className="mt-2 block w-full border ps-3 pe-3 py-2"><option value="">{isAr ? 'اختر إجابة' : 'Select an answer'}</option><option value="YES">{isAr ? 'نعم' : 'Yes'}</option><option value="NO">{isAr ? 'لا' : 'No'}</option></select>
+          </label>
+          {textAnswer === 'YES' && <label className="block">{isAr ? 'الترجمة الكاملة والشرح السياقي' : 'Full translation and contextual explanation'}<textarea required value={textExplanation} onChange={e=>setTextExplanation(e.target.value)} className="mt-2 block w-full border ps-3 pe-3 py-2" /></label>}
+          <p>{isAr ? 'تتطلب جميع الإقرارات مراجعة HIP قبل إحالة الملف للتدقيق.' : 'All declarations require explicit HIP review before vetting submission.'}</p>
+        </fieldset>
         <label className="block">{isAr ? 'مسار المشاركة' : 'Participation track'}
           <select className="mt-2 block w-full rounded border ps-3 pe-3 py-2 text-start" value={participationTrack} onChange={e => setParticipationTrack(e.target.value as ParticipationTrack)}>
             {Object.entries(PARTICIPATION_TRACKS).map(([id, label]) => <option key={id} value={id}>{isAr ? label.ar : label.en}</option>)}
@@ -528,7 +547,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
 
           <button
             type="submit"
-            disabled={!isFormValid}
+            disabled={!isFormValid || !validDeclaration(declaration)}
             className="inline-flex items-center justify-center gap-2 rounded-md bg-sadu-brick px-6 py-3 text-xs font-bold text-white shadow-xs transition-colors hover:bg-sadu-brick-dark disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             <Upload className="h-4 w-4" />

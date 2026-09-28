@@ -1,4 +1,6 @@
+import { conditionTransition, damageHold, type ConditionAction } from './conditionReporting';
 import { validParticipationScope } from './soloInvitation2026';
+import { validCrate, vehicleTypes } from './installationOperations';
 import type { CommissionState } from '../types';
 import type { BilateralContract, NegotiationRound } from '../types/contractStage6';
 
@@ -33,6 +35,7 @@ export function validAgreement(contract?: BilateralContract): boolean {
 }
 
 export function advanceEligible(state: CommissionState): boolean {
+  if (state.installationStatus === 'EXECUTIVE_IMPOUND' || damageHold(state)) return false;
   const c = state.contracts[0];
   return validAgreement(c) && (c.status === 'ARTIST_APPROVED' || c.status === 'LOCKED')
     && state.evidence.prEvidenceGate && state.evidence.technicalEvidenceGate
@@ -40,6 +43,7 @@ export function advanceEligible(state: CommissionState): boolean {
 }
 
 export function milestoneEligible(state: CommissionState, tranche: 'delivery' | 'completion'): boolean {
+  if (state.installationStatus === 'EXECUTIVE_IMPOUND' || damageHold(state)) return false;
   const c = state.contracts[0];
   return validAgreement(c) && (c.status === 'ARTIST_APPROVED' || c.status === 'LOCKED')
     && !state.ledger?.some(row => row.tranche === tranche)
@@ -48,7 +52,11 @@ export function milestoneEligible(state: CommissionState, tranche: 'delivery' | 
 }
 
 type Actor = 'PR_PROTOCOL' | 'TECHNICAL' | 'FINANCE' | string;
-export type CommissionAction =
+export type CommissionAction = ConditionAction
+  | { type: 'impound'; actor: Actor; artistId: string; directives: string; id: string; at: string }
+  | { type: 'acknowledge-alterations'; actor: Actor; impoundId: string; confirmed: boolean; at: string }
+  | { type: 'request-fleet'; actor: Actor; contractId: string; vehicle: string; id: string; at: string }
+  | { type: 'fleet-transit'; actor: Actor; ticketId: string; at: string }
   | { type: 'CONTRACT_DISPUTED'; actor: Actor; contractId: string; round: NegotiationRound }
   | { type: 'receive-asset'; actor: Actor; at: string; reference: string }
   | { type: 'close-exhibition'; actor: Actor; at: string; returnReference: string; reconciliationReference: string }
@@ -60,7 +68,7 @@ export type CommissionAction =
   | { type: 'record-pr' | 'record-technical' | 'authorize-advance'; actor: Actor; at: string };
 
 function termsKey(c?: BilateralContract): string {
-  return JSON.stringify(c && [c.id, c.themeArabic, c.participationCategory, c.artworkCount, c.invitationSourceId, c.productionCost, c.shippingTerms, c.specialConditions, c.venue, c.venueClearanceReference,
+  return JSON.stringify(c && [c.id, c.shippingLiability, c.crate, c.themeArabic, c.participationCategory, c.artworkCount, c.invitationSourceId, c.productionCost, c.shippingTerms, c.specialConditions, c.venue, c.venueClearanceReference,
     c.tranches.advancePercentage, c.tranches.advanceAmount, c.tranches.deliveryPercentage,
     c.tranches.deliveryAmount, c.tranches.installationPercentage, c.tranches.installationAmount]);
 }
@@ -77,9 +85,31 @@ function recordLedger(state: CommissionState, tranche: 'advance' | 'delivery' | 
 
 /** Shared transition guard. UI locks are not the only checks; this remains a local demo, not RBAC. */
 export function commissionReducer(state: CommissionState, action: CommissionAction): CommissionState {
+  if (['record-condition','dispatch-damage','request-plan-b','review-plan-b'].includes(action.type)) return conditionTransition(state, action as ConditionAction);
+  if (damageHold(state) && ['request-fleet','fleet-transit','close-exhibition','record-technical','technical-check','contracts','CONTRACT_DISPUTED'].includes(action.type)) return state;
   const e = state.evidence;
   const c = state.contracts[0];
   const accepted = c?.status === 'ARTIST_APPROVED' || c?.status === 'LOCKED';
+  const impounded = state.installationStatus === 'EXECUTIVE_IMPOUND';
+  if (action.type === 'impound') {
+    if (action.actor !== 'BIENNIAL_DIRECTOR' || !accepted || !state.logistics || state.logistics.closedAt || impounded || action.artistId !== c.artistId || !action.directives.trim() || !action.id || !Number.isFinite(Date.parse(action.at)) || state.impounds?.some(r=>r.id===action.id)) return state;
+    return {...state, installationStatus:'EXECUTIVE_IMPOUND', impounds:[...(state.impounds??[]),{id:action.id,artistId:c.artistId,directives:action.directives,issuedAt:action.at}], evidence:{...e,floorLoadVerified:false,mountingVerified:false,technicalEvidenceGate:false,technicalRecordedAt:undefined}};
+  }
+  if (action.type === 'acknowledge-alterations') {
+    const last = state.impounds?.at(-1);
+    if (action.actor !== 'COORDINATOR' || !impounded || !action.confirmed || !last || last.id!==action.impoundId || last.acknowledgedAt || !Number.isFinite(Date.parse(action.at)) || Date.parse(action.at)<Date.parse(last.issuedAt)) return state;
+    return {...state,installationStatus:'CONTRACT_EXECUTED',impounds:state.impounds!.map(r=>r.id===last.id?{...r,acknowledgedAt:action.at}:r)};
+  }
+  if (impounded && ['technical-check','record-technical','request-saf','close-exhibition','CONTRACT_DISPUTED','contracts','request-fleet','fleet-transit'].includes(action.type)) return state;
+  if (action.type === 'request-fleet') {
+    if(action.actor!=='LOGISTICS'||!accepted||state.logistics?.closedAt||c.id!==action.contractId||!validCrate(c.crate)||!vehicleTypes.includes(action.vehicle as typeof vehicleTypes[number])||!action.id||!Number.isFinite(Date.parse(action.at))||state.fleetTickets?.some(r=>r.id===action.id||!r.isSuperseded&&r.contractId===c.id&&r.crate.reference===c.crate!.reference))return state;
+    return {...state,fleetTickets:[...(state.fleetTickets??[]),{appliesToRevision:state.agreementRevision,id:action.id,contractId:c.id,artistId:c.artistId,crate:{...c.crate},vehicle:action.vehicle,status:'PENDING_FLEET_ASSIGNMENT',requestedAt:action.at}]};
+  }
+  if(action.type==='fleet-transit') {
+    const ticket=state.fleetTickets?.find(r=>r.id===action.ticketId);
+    if(action.actor!=='LOGISTICS'||!accepted||state.logistics?.closedAt||!ticket||ticket.isSuperseded||ticket.contractId!==c.id||ticket.status!=='PENDING_FLEET_ASSIGNMENT'||!Number.isFinite(Date.parse(action.at))||Date.parse(action.at)<Date.parse(ticket.requestedAt))return state;
+    return {...state,fleetTickets:state.fleetTickets!.map(r=>r.id===ticket.id?{...r,status:'IN_TRANSIT',transitAt:action.at}:r)};
+  }
   const advanceRecorded = state.ledger?.some(row => row.tranche === 'advance') || c?.tranches.advanceStatus === 'DISBURSED';
   const financeHistory = advanceRecorded
     ? { financeApprovalGate: e.financeApprovalGate, advanceAuthorizedAt: e.advanceAuthorizedAt }
@@ -92,7 +122,7 @@ export function commissionReducer(state: CommissionState, action: CommissionActi
       signedAt: undefined, signatureReference: undefined, auditTrail: [...c.auditTrail, action.round] }] };
   }
   if (action.type === 'receive-asset' && action.actor === 'LOGISTICS' && accepted && action.reference.trim() && !state.logistics) {
-    return { ...state, logistics: { status: 'PHYSICAL_ASSET_RECEIVED', reference: action.reference.trim(), receivedAt: action.at } };
+    return { ...state, logistics: { appliesToRevision: state.agreementRevision, status: 'PHYSICAL_ASSET_RECEIVED', reference: action.reference.trim(), receivedAt: action.at } };
   }
   if (action.type === 'close-exhibition' && action.actor === 'LOGISTICS' && accepted && state.logistics && !state.logistics.closedAt
     && action.returnReference.trim() && action.reconciliationReference.trim()) {
@@ -116,7 +146,11 @@ export function commissionReducer(state: CommissionState, action: CommissionActi
       if (accepted || before?.status === 'SENT_TO_ARTIST') return state;
       if (before && after && ['ARTIST_APPROVED', 'LOCKED'].includes(after.status)) return state;
       if (state.ledger?.length) return state;
-      return { contracts, agreementRevision: state.agreementRevision + 1, evidence: emptyEvidence() };
+      return { ...state, contracts, agreementRevision: state.agreementRevision + 1, evidence: emptyEvidence(),
+        fleetTickets: state.fleetTickets?.map(ticket => ticket.isSuperseded ? ticket : { ...ticket, appliesToRevision: ticket.appliesToRevision ?? state.agreementRevision, isSuperseded: true }),
+        receiptHistory: state.logistics ? [...(state.receiptHistory ?? []), { ...state.logistics, appliesToRevision: state.logistics.appliesToRevision ?? state.agreementRevision, isSuperseded: true }] : state.receiptHistory,
+        logistics: undefined,
+      };
     }
     const passportChanged = before?.documents.passportUploadedAt !== after?.documents.passportUploadedAt
       || before?.documents.passportFileName !== after?.documents.passportFileName;

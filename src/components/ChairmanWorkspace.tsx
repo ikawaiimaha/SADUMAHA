@@ -7,6 +7,8 @@ import { useI18n } from '../context/I18nContext';
 import React from 'react';
 import {
   Wand2,
+  Map,
+  Calendar,
   Lock,
   ShieldCheck,
   CheckCircle2,
@@ -19,6 +21,34 @@ import {
   Banknote,
 } from 'lucide-react';
 import { CommitteeThemeDraft } from './CommitteeThemeWorkspace';
+
+const CONCURRENT_EVENTS = [
+  {
+    id: 'EVT-KALBA-13',
+    department: 'إدارة المسرح',
+    eventName: 'مهرجان كلباء للمسرحيات القصيرة - الدورة 13',
+    venue: 'مسرح المركز الثقافي - مدينة كلباء',
+    startDate: '2026-09-25',
+    endDate: '2026-10-01',
+    status: 'VENUE_LOCKED'
+  }
+];
+
+function ConcurrentVenuePortfolio() {
+  const { isAr } = useI18n();
+  return <section className="my-6 rounded border border-[#D9CEBA] border-s-4 border-s-[#8B261E] bg-[#F7F1E6] ps-5 pe-5 py-5 text-start text-[#1A1817] space-y-4">
+    <h2 className="flex items-center gap-2 text-xl font-semibold"><Map aria-hidden="true" className="size-5" />{isAr ? 'المحفظة الجغرافية للبرامج الثقافية' : 'Geographic Portfolio of Cultural Programs'}</h2>
+    <p>{isAr ? 'مراقبة حجز القاعات ومنع التعارض المكاني بين إدارات الدائرة' : 'Monitor venue allocations and prevent spatial collisions across departments'}</p>
+    <p className="text-sm text-[#736357]">{isAr ? 'بيانات نموذجية / غير متحققة — ليست حجوزات حية. هذا عرض مرجعي وليس محرك حجز.' : 'Sample data / Unverified — not live reservations. This reference view is not a booking engine.'}</p>
+    {CONCURRENT_EVENTS.map(event => <article key={event.id} className="rounded border bg-white ps-4 pe-4 py-4 space-y-3">
+      <h3 dir="auto" className="text-lg font-semibold">{event.eventName}</h3>
+      <p dir="auto">{event.department}</p>
+      <p className="flex flex-wrap items-center gap-2"><Calendar aria-hidden="true" className="size-4" /><time dateTime={event.startDate}><bdi>{event.startDate}</bdi></time><span>—</span><time dateTime={event.endDate}><bdi>{event.endDate}</bdi></time></p>
+      <p className="flex flex-wrap items-center gap-2"><span dir="auto">{event.venue}</span><span className="inline-flex items-center gap-2 rounded bg-red-50 ps-3 pe-3 py-1 text-red-700"><Lock aria-hidden="true" className="size-4" />{isAr ? 'محجوز — نموذج' : 'Locked — sample'}</span></p>
+      <p className="text-sm">{isAr ? 'ضمن هذا السيناريو، القاعة غير متاحة لمنسقي الملتقى خلال الفترة المحددة فقط. يلزم تأكيد الحجز من الجهة المختصة.' : 'In this scenario, the venue is unavailable to Biennial coordinators only during these dates. Confirmation from the responsible department is required.'}</p>
+    </article>)}
+  </section>;
+}
 
 export type ThemeItem = CommitteeThemeDraft | {
   id?: string;
@@ -516,8 +546,8 @@ const ChairmanDecisions: React.FC<ChairmanWorkspaceProps> = ({
 };
 
 export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = (props) => props.oversight
-  ? <ChairmanOversight {...props.oversight}><ChairmanDecisions {...props} /></ChairmanOversight>
-  : <ChairmanDecisions {...props} />;
+  ? <ChairmanOversight {...props.oversight}><ChairmanDecisions {...props} /><ConcurrentVenuePortfolio /></ChairmanOversight>
+  : <><ChairmanDecisions {...props} /><ConcurrentVenuePortfolio /></>;
 
 export default ChairmanWorkspace;
 

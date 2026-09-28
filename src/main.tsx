@@ -1,12 +1,14 @@
-import {StrictMode, useEffect} from 'react';
+import {StrictMode, useEffect, lazy, Suspense} from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 
+const AuthenticatedPilot = lazy(() => import('./components/AuthenticatedPilot'));
+
 function ReadyApp() {
   // Hide the HTML fallback only after React commits the application successfully.
   useEffect(() => { window.dispatchEvent(new Event('sadu:ready')); }, []);
-  return <App />;
+  return window.location.pathname === '/pilot' ? <Suspense fallback={<p>Loading authenticated pilot…</p>}><AuthenticatedPilot /></Suspense> : <App />;
 }
 
 createRoot(document.getElementById('root')!).render(

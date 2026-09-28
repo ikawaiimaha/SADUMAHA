@@ -1,4 +1,10 @@
+import { damageHold } from '../data/conditionReporting';
 import React, { useState } from 'react';
+import { SpatialVarianceTicket } from './SpatialVarianceTicket';
+import { InstallationIntervention } from './InstallationIntervention';
+import { ProductionBridge } from './ProductionBridge';
+import { TechnicalRequestLedger } from './TechnicalRequestLedger';
+import { COMMISSION } from '../data/commissionScenario';
 import type { CommissionState } from '../types';
 import { CommissionSummary, panel, actionButton } from './CommissionSummary';
 
@@ -18,6 +24,9 @@ export default function TechnicalWorkspace({ isAr, state, onCheck, onClearTechni
   return <div dir={isAr ? 'rtl' : 'ltr'} className="max-w-4xl mx-auto ps-4 pe-4 py-6 space-y-5 text-start bg-[#F7F1E6]">
     <h1 className="font-serif text-3xl font-bold">{isAr ? 'الفريق الهندسي والفني' : 'Engineering / Technical Workspace'}</h1>
     <CommissionSummary isAr={isAr} />
+    <InstallationIntervention state={state} isAr={isAr} actor="TECHNICAL" />
+    {damageHold(state) && <p role="status" className="rounded border border-red-300 bg-red-50 ps-4 pe-4 py-3">Artwork damage hold — installation is locked pending a separately authorized resolution.</p>}
+    <fieldset disabled={state.installationStatus === 'EXECUTIVE_IMPOUND' || damageHold(state)} className={`min-w-0 space-y-5 ${state.installationStatus === 'EXECUTIVE_IMPOUND' ? 'rounded border-2 border-red-700 bg-red-50 ps-4 pe-4 py-4' : ''}`}>
     <section className={panel}>
       <h2 className="text-xl font-semibold mb-3">{isAr ? 'أدلة فنية — محاكاة' : 'Technical evidence — simulation'}</h2>
       <p className="text-sm mb-4">{isAr
@@ -43,5 +52,9 @@ export default function TechnicalWorkspace({ isAr, state, onCheck, onClearTechni
       <button className={`${actionButton} mt-3`} disabled={!state.contracts.length || Boolean(state.safRequest) || !Number.isInteger(technicians) || technicians <= 0 || !Number.isFinite(hours) || hours <= 0 || !rationale.trim()} onClick={() => onRequestSAF(technicians, hours, rationale)}>{isAr ? 'تسجيل طلب الموارد' : 'Record resource request'}</button>
       {state.safRequest && <p role="status">{isAr ? 'طلب مسجل؛ تخصيص الجهة الخارجية غير مؤكد' : 'Request recorded; external allocation unconfirmed'} · {state.safRequest.technicians} × {state.safRequest.hours}</p>}
     </section>
+    <SpatialVarianceTicket isAr={isAr} />
+    <ProductionBridge key={`production:${state.contracts[0]?.artistId ?? COMMISSION.id}`} artistId={state.contracts[0]?.artistId ?? COMMISSION.id} isAr={isAr} actor="TECHNICAL" />
+    <TechnicalRequestLedger key={`technical:${state.contracts[0]?.artistId ?? COMMISSION.id}`} artistId={state.contracts[0]?.artistId ?? COMMISSION.id} artistName={state.contracts[0]?.artistName ?? (isAr ? COMMISSION.artistNameAr : COMMISSION.artistName)} isAr={isAr} />
+    </fieldset>
   </div>;
 }

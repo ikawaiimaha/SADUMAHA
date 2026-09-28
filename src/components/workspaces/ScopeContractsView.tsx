@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ClaimedSpatialClearances } from '../SpatialEquipmentClearances';
 import { Language, ExhibitionProgramme, WorkspaceTab } from '../../types';
 import { ARTWORKS, INSTITUTIONAL_INFO } from '../../data/mockData';
 import { useI18n } from '../../context/I18nContext';
@@ -34,6 +35,7 @@ export const ScopeContractsView: React.FC<ScopeContractsViewProps> = (props) => 
       {/* VIEW 1: APPROVED SCOPE */}
       {activeTab === 'approved-scope' && (
         <>
+          <ClaimedSpatialClearances isAr={isAr} />
           <div className="bg-sadu-linen border border-sadu-gold rounded-lg p-6 shadow-xs">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>

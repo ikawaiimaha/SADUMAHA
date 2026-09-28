@@ -1,4 +1,8 @@
+import { MasterDirectory } from './MasterDirectory';
 import { useLocalDraft, isText } from '../hooks/useLocalDraft';
+import { CulturalVerificationCard } from './CulturalVerificationCard';
+import { SharedSpatialLedger } from './SharedSpatialLedger';
+import type { NominatedArtistDossier } from './ArtistNominationForm';
 import { useMockupText } from '../i18n/useMockupText';
 import { useI18n } from '../context/I18nContext';
 import React, { useState } from 'react';
@@ -19,6 +23,8 @@ import { ThemeItem } from './ChairmanWorkspace';
 export type TranslationStatus = 'REQUEST_REVISION' | 'DRAFT' | 'PENDING_TRANSLATION' | 'PUBLISHED';
 
 export interface HIPWorkspaceProps {
+  culturalDossiers?: NominatedArtistDossier[];
+  onClearCultural?: (id: string) => void;
   themeStatus: string;
   themeEssayArabic?: string;
   themeEssayEnglish?: string;
@@ -45,6 +51,7 @@ const PRESET_DIRECTIVES = [
 ];
 
 export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
+  culturalDossiers = [], onClearCultural,
   guidelinesArabic,
   themeStatus,
   themeEssayArabic,
@@ -113,6 +120,9 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6">
+      <MasterDirectory isAr={isAr} />
+      <SharedSpatialLedger isAr={isAr} />
+      {culturalDossiers.map(d => <CulturalVerificationCard key={d.id} dossier={d} isAr={isAr} onClear={onClearCultural ? () => onClearCultural(d.id) : undefined} />)}
       {/* Header */}
       <div className="rounded-xl border border-sadu-gold bg-sadu-paper p-6 shadow-xs">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-sadu-gold/40 pb-4">

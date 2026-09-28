@@ -1,4 +1,5 @@
 import { COORDINATORS, validSoloCount } from './participation2026';
+import { culturalCleared } from './culturalDeclaration';
 import type { NominatedArtistDossier } from '../components/ArtistNominationForm';
 export const ASSIGNED_COORDINATOR = 'demo-coordinator';
 export function validDossier(d: NominatedArtistDossier): boolean {
@@ -15,7 +16,7 @@ export function matchedRestriction(d: NominatedArtistDossier, tags: string[]): s
   });
 }
 export function submitForVetting(d: NominatedArtistDossier, actor: string, coordinatorId: string, tags: string[]): NominatedArtistDossier | null {
-  if (actor !== 'COORDINATOR' || coordinatorId !== d.assignedCoordinatorId || d.status !== 'DRAFT' || !validDossier(d)) return null;
+  if (actor !== 'COORDINATOR' || coordinatorId !== d.assignedCoordinatorId || d.status !== 'DRAFT' || !validDossier(d) || !culturalCleared(d)) return null;
   const match = matchedRestriction(d, tags);
   return { ...d, status: match ? 'REJECTED_COMPLIANCE' : 'PENDING_DIRECTOR_REVIEW', complianceReason: match, submittedBy: 'Coordinator', submittedAt: new Date().toISOString() };
 }

@@ -62,6 +62,7 @@ export interface ArtistDocumentIntake {
 }
 
 export interface BilateralContract {
+  crate?: import('../data/installationOperations').CrateSpec;
   themeArabic?: string;
   participationCategory?: import('../data/soloInvitation2026').ParticipationCategory;
   artworkCount?: number;
@@ -76,6 +77,7 @@ export interface BilateralContract {
   medium: string;
   proposedWorkTitle: string;
   productionCost: number;
+  shippingLiability?: 'ARTIST' | 'DEPARTMENT';
   shippingTerms: string;
   specialConditions?: string;
   cancellationClauseMandatory: boolean;

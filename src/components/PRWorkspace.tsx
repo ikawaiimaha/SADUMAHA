@@ -1,4 +1,5 @@
 import React from 'react';
+import { TravelVault } from './TravelVault';
 import { ArrivalPackagePreview } from './ArrivalPackagePreview';
 import { COMMISSION } from '../data/commissionScenario';
 import type { CommissionState } from '../types';
@@ -16,6 +17,7 @@ export function PRWorkspace({ isAr, state, onCheck, onClearPR }: PRWorkspaceProp
   return <div dir={isAr ? 'rtl' : 'ltr'} className="max-w-4xl mx-auto ps-4 pe-4 py-6 space-y-5 text-start bg-[#F7F1E6]">
     <h1 className="font-serif text-3xl font-bold">{isAr ? 'العلاقات العامة — الهوية والسفر' : 'PR — Identity & Travel'}</h1>
     <CommissionSummary isAr={isAr} showTechnical={false} />
+    {state.contracts[0] && <TravelVault key={state.contracts[0].artistId} artistId={state.contracts[0].artistId} isAr={isAr} dispatcher cleared={e.prEvidenceGate && Boolean(e.prRecordedAt)} />}
     <section className={panel}>
       <h2 className="text-xl font-semibold mb-3">{isAr ? 'مراجعة المستندات البشرية — محاكاة' : 'Human logistics review — simulation'}</h2>
       <p className="text-sm mb-4">{isAr ? 'تسجيل نتيجة فحص خيالية للهوية والسفر فقط. لا تحميل لمستندات شخصية حقيقية ولا اعتماد مالي.' : 'Record a fictional identity and travel review only. No real personal documents are uploaded and no payment is authorized.'}</p>

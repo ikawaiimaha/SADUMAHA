@@ -1,4 +1,4 @@
-import { useSessionDraft } from '../context/SessionDrafts';
+import { EditorialAssetLog } from './EditorialAssetLog';
 import { useLocalDraft, isText } from '../hooks/useLocalDraft';
 import { scrollWorkspaceToTop } from '../utils/scrollWorkspaceToTop';
 import { useMockupText } from '../i18n/useMockupText';
@@ -12,9 +12,7 @@ import {
   Send, 
   Lock,
   AlertCircle,
-  RotateCcw,
-  UploadCloud,
-  FileCheck
+  RotateCcw
 } from 'lucide-react';
 import { ThemeItem } from './ChairmanWorkspace';
 
@@ -48,9 +46,6 @@ export interface EditorialWorkspaceProps {
   onBackToRoles?: () => void;
 }
 
-const DEFAULT_RAW_CHAIRMAN_THEME =
-  'استكشاف الجذور العميقة للخط العربي وتفاعله مع الفنون المعاصرة في بيئة حضرية متغيرة، مع التركيز على التوازن بين الأصالة والابتكار.';
-
 export default function EditorialWorkspace({
   arabicLocked = false,
   onLockArabic,
@@ -79,7 +74,7 @@ export default function EditorialWorkspace({
     approvedTheme?.arabicName ||
     approvedTheme?.titleAr || 
     initialEssayArabic || 
-    DEFAULT_RAW_CHAIRMAN_THEME;
+    '';
 
   const [publishedLocally, setPublishedLocally] = useState(false);
   const isPublished = publishedLocally || isInitiallyPublished || themePolishStatus === 'PUBLISHED' || themePolishStatus === 'PUBLISHED_OFFICIAL';
@@ -89,7 +84,6 @@ export default function EditorialWorkspace({
     englishText: initialEssayEnglish || ''
   }, (value): value is EditorialDraft => Boolean(value) && typeof value === 'object' && isText((value as EditorialDraft).arabicText) && isText((value as EditorialDraft).englishText));
 
-  const [identityAssets, setIdentityAssets] = useSessionDraft<{ file: File; attachedAt: string }[]>(`identity-assets:${rawChairmanTheme}`, []);
 
   const [guidelinesDraftEnglish, setGuidelinesDraftEnglish, guidelineSaveFailed] = useLocalDraft(`sadu:draft:v1:guidelines-english:${guidelinesArabic || ''}`, '', isText);
   const guidelinesPending = isPublished && guidelinesTranslationStatus === 'PENDING_TRANSLATION' && Boolean(guidelinesArabic?.trim());
@@ -186,13 +180,13 @@ export default function EditorialWorkspace({
       </section>}
       {isPublished && guidelinesTranslationStatus === 'PUBLISHED' && <p role="status" className="mb-6 rounded bg-[#EDE4D3] ps-4 pe-4 py-3 text-start">{isAr ? 'نُشر الدليل الثنائي اللغة وأُعيد إلى منسق المعرض.' : 'Bilingual guidelines published and returned to HIP.'}</p>}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         
         {/* Column 1: Source Material (Read-Only) */}
         <section className="bg-white p-5 rounded-lg shadow-sm border border-[#D9D2C5] flex flex-col">
           <div className="flex items-center gap-2 mb-4 border-b border-[#EAE3D9] pb-3">
             <BookOpen className="w-5 h-5 text-[#8B4513]" />
-            <h2 className="text-base font-semibold font-serif">{isArabicLocked ? (isAr ? "النص العربي المعتمد — للقراءة فقط" : "Certified Arabic — read only") : tr("Chairman Ratified Concept")}</h2>
+            <h2 className="text-base font-semibold font-serif">{isArabicLocked ? (isAr ? "النص العربي المعتمد — للقراءة فقط" : "Certified Arabic — read only") : approvedTheme ? tr("Chairman Ratified Concept") : (isAr ? "بانتظار قرار رئيس الدائرة" : "Awaiting Chairman decision")}</h2>
           </div>
 
           {(approvedTheme?.arabicName || approvedTheme?.titleAr) && (
@@ -208,7 +202,7 @@ export default function EditorialWorkspace({
           <div className="bg-[#FAF8F5] border border-[#EAE3D9] p-4 rounded-md mb-4">
             <span className="text-[10px] uppercase font-bold text-[#8C7A6B] mb-2 block">{isArabicLocked ? (isAr ? "البيان الفني المؤسسي المجمّد" : "Locked institutional statement") : tr("Source Text (Raw Arabic)")}</span>
             <p className="text-sm text-[#1A1817] leading-relaxed font-serif text-start" dir="rtl">
-              {isArabicLocked ? certifiedArabic : rawChairmanTheme}
+              {isArabicLocked ? certifiedArabic : approvedTheme ? rawChairmanTheme : (isAr ? "لا توجد ثيمة معتمدة بعد." : "No ratified theme yet.")}
             </p>
           </div>
 
@@ -264,7 +258,7 @@ export default function EditorialWorkspace({
                   dir="rtl"
                   disabled={!approvedTheme}
                   rows={4}
-                  value={draft.arabicText}
+                  value={approvedTheme ? draft.arabicText : ""}
                   onChange={(e) => setDraft({...draft, arabicText: e.target.value})}
                   className="w-full p-4 border border-[#D9D2C5] rounded-md bg-[#FAF8F5] text-sm focus:ring-1 focus:ring-[#8B4513] focus:border-[#8B4513] disabled:opacity-60 disabled:bg-stone-100 outline-hidden resize-none text-start leading-relaxed"
                 />
@@ -292,68 +286,7 @@ export default function EditorialWorkspace({
                 </label>}
               </div>}
 
-              {isArabicLocked && (
-                <section aria-labelledby="identity-assets-heading" className="rounded-lg border border-[#D9D2C5] border-s-4 border-s-[#8C7A6B] bg-[#F7F1E6] ps-4 pe-4 py-5">
-                  <h3 id="identity-assets-heading" className="flex items-center gap-2 font-serif text-base font-bold text-[#1A1817]">
-                    <FileCheck className="size-5 shrink-0 text-[#8C7A6B]" aria-hidden="true" />
-                    {isAr ? 'سجل المرفقات والهوية البصرية' : 'Visual Identity & Asset Log'}
-                  </h3>
-                  <p id="identity-assets-help" className="mt-2 text-base leading-relaxed text-[#6B635B]">
-                    {isAr ? 'المرفقات اختيارية لنشر نص الثيمة. سجل محلي فقط؛ إرفاق الملفات لا يعتمد الهوية البصرية ولا يرفعها إلى خادم.' : 'Optional for theme-text publication. Local identity-asset log only; attaching files does not certify the visual identity or upload them to a server.'}
-                  </p>
-                  <label className={`mt-4 block rounded-md border-2 border-dashed border-[#C8BBA6] bg-[#EDE4D3] ps-4 pe-4 py-5 text-start ${isPublished ? 'opacity-60' : 'cursor-pointer focus-within:ring-2 focus-within:ring-[#8C7A6B]'}`}>
-                    <span className="flex items-center gap-2 text-sm font-semibold text-[#2C2A29]">
-                      <UploadCloud className="size-5 shrink-0" aria-hidden="true" />
-                      {isAr ? 'إرفاق الشعار الرسمي وملفات الهوية البصرية' : 'Attach official logo (Shi’aar) & visual identity assets'}
-                    </span>
-                    <input
-                      type="file"
-                      multiple
-                      accept=".svg,.png,.jpg,.jpeg,.pdf"
-                      disabled={isPublished}
-                      aria-describedby="identity-assets-help"
-                      onChange={event => {
-                        if (!isArabicLocked || isPublished) return;
-                        const attachedAt = new Date().toISOString();
-                        const selected = Array.from(event.target.files ?? []).map(file => ({ file, attachedAt }));
-                        setIdentityAssets(current => [...current, ...selected]);
-                        event.target.value = '';
-                      }}
-                      className="mt-3 block w-full min-w-0 text-xs text-[#6B635B] file:me-3 file:rounded file:border file:border-[#C8BBA6] file:bg-[#F7F1E6] file:ps-3 file:pe-3 file:py-2 file:text-[#2C2A29] disabled:cursor-not-allowed"
-                    />
-                    <span className="mt-2 block text-xs text-[#6B635B]">SVG · PNG · JPG · PDF</span>
-                  </label>
-                  <details className="mt-5 rounded border border-[#D9D2C5] bg-[#EDE4D3] ps-3 pe-3 py-3">
-                  <summary className="cursor-pointer text-sm font-bold text-[#6B635B]">{isAr ? 'أمثلة استرشادية' : 'Reference Examples'}</summary>
-                  <ul className="mt-2 divide-y divide-[#D9D2C5] text-xs">
-                    {[
-                      { name: 'SADU_12th_Logo_Primary.svg', at: '2026-09-27T09:30:00+04:00' },
-                      { name: 'Theme_Typography_Guidelines.pdf', at: '2026-09-27T09:45:00+04:00' },
-                    ].map(asset => (
-                      <li key={asset.name} className="flex flex-wrap items-center gap-2 py-3">
-                        <FileCheck className="size-4 shrink-0 text-[#736357]" aria-hidden="true" />
-                        <bdi className="min-w-0 flex-1 break-all">{asset.name}</bdi>
-                        <span className="rounded bg-[#EDE4D3] ps-2 pe-2 py-1 text-[#594F47]">{isAr ? 'تم التحقق — نموذج' : 'Verified — sample'}</span>
-                        <time dateTime={asset.at} className="w-full text-[#736357]" dir="ltr">{new Date(asset.at).toLocaleString(isAr ? 'ar-AE' : 'en-AE')}</time>
-                      </li>
-                    ))}
-                  </ul>
-                  </details>
-                  <h4 className="mt-5 text-sm font-bold text-[#6B635B]">{isAr ? 'سجل المرفقات' : 'Live Upload Log'}</h4>
-                  {identityAssets.length === 0 && <p role="status" className="mt-2 text-sm text-[#736357]">{isAr ? 'لا توجد مرفقات حتى الآن' : 'No attachments yet'}</p>}
-                  <ul className="mt-2 divide-y divide-[#D9D2C5] text-xs">
-                    {identityAssets.map(({ file, attachedAt }, index) => (
-                      <li key={`${attachedAt}-${index}`} className="flex flex-wrap items-center gap-2 py-3">
-                        <FileText className="size-4 shrink-0 text-[#736357]" aria-hidden="true" />
-                        <bdi className="min-w-0 flex-1 break-all">{file.name}</bdi>
-                        <span className="rounded bg-[#EDE4D3] ps-2 pe-2 py-1 text-[#594F47]">{isAr ? 'مرفق محلياً — بانتظار المراجعة' : 'Attached locally — pending review'}</span>
-                        <time dateTime={attachedAt} className="w-full text-[#736357]" dir="ltr">{new Date(attachedAt).toLocaleString(isAr ? 'ar-AE' : 'en-AE')}</time>
-                      </li>
-                    ))}
-                  </ul>
-                  <p role="status" className="mt-2 text-xs text-[#6B635B]">{isAr ? `الملفات المرفقة محلياً: ${identityAssets.length}` : `Locally attached files: ${identityAssets.length}`}</p>
-                </section>
-              )}
+              <EditorialAssetLog key={rawChairmanTheme} scope={rawChairmanTheme} isAr={isAr} unlocked={isArabicLocked} />
 
               {/* Action Footer */}
               <div className="pt-4 border-t border-[#EAE3D9] flex justify-end">

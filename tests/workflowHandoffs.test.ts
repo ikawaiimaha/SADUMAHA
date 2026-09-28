@@ -65,7 +65,7 @@ test('SAF resource request does not clear structural evidence or Finance', () =>
   assert.equal(advanceEligible(s),false);
 });
 
-const dossier: NominatedArtistDossier={id:'d1',artistName:'Fictional artist',artistCategory:'Emerging',nationality:'Country X',medium:'Bronze',proposedWorkTitle:'Study',isCommissioned:true,cvFileName:'cv.pdf',previousWorksCount:1,mockupCount:1,submittedBy:'Preparatory Committee',submittedAt:at,status:'DRAFT',assignedCoordinatorId:ASSIGNED_COORDINATOR};
+const dossier: NominatedArtistDossier={culturalDeclaration:{containsText:false,explanation:''},culturalClearedAt:at,id:'d1',artistName:'Fictional artist',artistCategory:'Emerging',nationality:'Country X',medium:'Bronze',proposedWorkTitle:'Study',isCommissioned:true,cvFileName:'cv.pdf',previousWorksCount:1,mockupCount:1,submittedBy:'Preparatory Committee',submittedAt:at,status:'DRAFT',assignedCoordinatorId:ASSIGNED_COORDINATOR};
 test('dossier schemas distinguish new and existing work and do not fabricate attachments',()=>{
   assert.equal(validDossier(dossier),true);
   assert.equal(validDossier({...dossier,mockupCount:0}),false);
@@ -197,6 +197,7 @@ test('only solo participation requires 15–20 whole artworks', () => {
 
 test('honored guest vetting needs identity and the assigned coordinator, not invented artwork', () => {
   const d: NominatedArtistDossier = {
+    culturalDeclaration: {containsText:false,explanation:''}, culturalClearedAt: at,
     id: 'test-guest', artistName: 'Fictional guest', artistCategory: 'Not applicable',
     nationality: 'Fictional country', medium: '', proposedWorkTitle: '', cvFileName: '',
     previousWorksCount: 0, mockupCount: 0, submittedBy: 'Coordinator', submittedAt: at,
@@ -330,4 +331,313 @@ test('packing evidence validates image size/type, count, container and reference
  assert.equal(validPacking({...record,files:[]}),false);
  assert.equal(validPacking({...record,files:Array(11).fill(file)}),false);
  assert.equal(validPacking({...record,carrierReference:' '}),false);
+});
+
+import {assetFileError,updateIdentityAssets,ASSET_LIMIT,type IdentityAsset} from '../src/data/identityAssets';
+const identityAsset:IdentityAsset={id:'asset1',groupId:'asset1',version:1,file:{name:'logo.png',type:'image/png',size:100} as File,digest:'hash1',attachedAt:at};
+test('identity assets reject invalid formats, empty/oversized files, duplicate content and locked uploads',()=>{
+ assert.equal(assetFileError({name:'logo.exe',type:'image/png',size:100}),'format');
+ assert.equal(assetFileError({name:'logo.svg',type:'text/html',size:100}),'format');
+ assert.equal(assetFileError({name:'logo.png',type:'image/png',size:0}),'size');
+ assert.equal(assetFileError({name:'logo.png',type:'image/png',size:11*1024*1024}),'size');
+ const empty:IdentityAsset[]=[];
+ assert.equal(updateIdentityAssets(empty,{type:'attach',asset:identityAsset},false),empty);
+ const rows=updateIdentityAssets(empty,{type:'attach',asset:identityAsset},true);
+ assert.equal(rows.length,1);
+ assert.equal(updateIdentityAssets(rows,{type:'attach',asset:{...identityAsset,id:'other'}},true),rows);
+ const full=Array.from({length:ASSET_LIMIT},(_,i)=>({...identityAsset,id:`a${i}`,digest:`h${i}`}));
+ assert.equal(updateIdentityAssets(full,{type:'attach',asset:identityAsset},true),full);
+});
+test('identity review and approval are separate, idempotent; approved versions cannot be removed',()=>{
+ let rows=[identityAsset];
+ assert.equal(updateIdentityAssets(rows,{type:'approve',id:'asset1',at},true),rows);
+ rows=updateIdentityAssets(rows,{type:'review',id:'asset1',at},true);
+ assert.equal(updateIdentityAssets(rows,{type:'review',id:'asset1',at:'2026-10-01T10:00:00Z'},true),rows);
+ rows=updateIdentityAssets(rows,{type:'approve',id:'asset1',at},true);
+ assert.equal(updateIdentityAssets(rows,{type:'remove',id:'asset1',at},true),rows);
+ const next=updateIdentityAssets(rows,{type:'attach',replaceId:'asset1',asset:{...identityAsset,id:'asset2',digest:'hash2'}},true);
+ assert.equal(next[0],rows[0]);assert.equal(next[1].version,2);assert.equal(next[1].groupId,'asset1');assert.equal(next[1].approvedAt,undefined);
+});
+test('removed asset drafts can be restored and obsolete versions cannot supersede later approval',()=>{
+ const removed=updateIdentityAssets([identityAsset],{type:'remove',id:'asset1',at},true);
+ assert.equal(removed[0].removed,true);
+ assert.equal(updateIdentityAssets(removed,{type:'approve',id:'asset1',at},true),removed);
+ const restored=updateIdentityAssets(removed,{type:'restore',id:'asset1',at},true);
+ assert.equal(restored[0].removed,false);
+ const versions=[{...identityAsset,reviewedAt:at},{...identityAsset,id:'asset2',version:2,digest:'hash2',reviewedAt:at,approvedAt:at}];
+ assert.equal(updateIdentityAssets(versions,{type:'approve',id:'asset1',at},true),versions);
+});
+
+import {initialSpatialTicket,transitionSpatialTicket} from '../src/data/spatialTicket';
+test('spatial ticket requires rejection before alternative approval and preserves original decisions',()=>{
+ assert.equal(transitionSpatialTicket(initialSpatialTicket,{type:'approve-alternative',at}),initialSpatialTicket);
+ const rejected=transitionSpatialTicket(initialSpatialTicket,{type:'reject',at});
+ assert.equal(rejected.status,'REJECTED_ASSET_RISK');
+ assert.equal(rejected.workOrder,undefined);
+ assert.equal(transitionSpatialTicket(rejected,{type:'modify',value:'WALL_PAINT'}),rejected);
+ assert.equal(transitionSpatialTicket(rejected,{type:'reject',at}),rejected);
+ const approved=transitionSpatialTicket(rejected,{type:'approve-alternative',at});
+ assert.equal(approved.material,'Carpet');
+ assert.equal(approved.history.length,2);
+ assert.equal(approved.workOrder?.at,at);
+ assert.equal(transitionSpatialTicket(approved,{type:'approve-alternative',at}),approved);
+ assert.equal(initialSpatialTicket.history.length,0);
+ assert.equal(transitionSpatialTicket(initialSpatialTicket,{type:'reject',at:'invalid'}),initialSpatialTicket);
+});
+
+import { dispatchTravel, emptyTravelPacket, addTechnicalRequest, type TravelPacket } from '../src/data/executionBridges';
+test('travel dispatch requires PR clearance and both primary documents, and is immutable after dispatch', () => {
+ const file = {name:'sample.pdf',type:'application/pdf',size:100} as File;
+ assert.equal(dispatchTravel(emptyTravelPacket,true,at),emptyTravelPacket);
+ const draft:TravelPacket={status:'DRAFT',files:{visa:file,flight:file}};
+ assert.equal(dispatchTravel(draft,false,at),draft);
+ const sent=dispatchTravel(draft,true,at);
+ assert.equal(sent.status,'TRAVEL_DOCUMENTS_DISPATCHED');
+ assert.equal(dispatchTravel(sent,true,'2026-10-01T10:00:00Z'),sent);
+ const invalid:TravelPacket={...draft,files:{visa:file,flight:{...file,size:0}}};
+ assert.equal(dispatchTravel(invalid,true,at),invalid);
+});
+test('technical requests validate routing choices and prevent duplicate submissions', () => {
+ const request={id:'demo-1',equipment:'AV Projectors',mounting:'Ceiling Mount',phase:'FINAL_INSTALLATION' as const,at};
+ const rows=addTechnicalRequest([],request,routedClaims,COMMISSION.id);
+ assert.equal(rows.length,1);
+ assert.equal(addTechnicalRequest(rows,{...request,id:'demo-2'},routedClaims,COMMISSION.id),rows);
+ assert.equal(addTechnicalRequest(rows,{...request,mounting:'supplier decides'}),rows);
+});
+
+
+import { clearCultural, culturalCleared } from '../src/data/culturalDeclaration';
+import { ingestMaster, requestPrototype, decidePrototype, type PrototypeTicket } from '../src/data/productionBridge';
+test('cultural review requires a complete declaration and HIP authority before Stage 4',()=>{
+ const draft={...dossier,culturalDeclaration:undefined,culturalClearedAt:undefined};
+ assert.equal(submitForVetting(draft,'COORDINATOR',ASSIGNED_COORDINATOR,[]),null);
+ assert.equal(clearCultural(draft,'HIP',at),draft);
+ const emptyYes={...draft,culturalDeclaration:{containsText:true,explanation:'  '}};
+ assert.equal(clearCultural(emptyYes,'HIP',at),emptyYes);
+ for(const declaration of [{containsText:false,explanation:''},{containsText:true,explanation:'Full translation and context.'}]) {
+  const ready={...draft,culturalDeclaration:declaration};
+  assert.equal(clearCultural(ready,'BIENNIAL_DIRECTOR',at),ready);
+  const reviewed=clearCultural(ready,'HIP',at);
+  assert.equal(culturalCleared(reviewed),true);
+  assert.equal(reviewed.culturalDeclaration,declaration);
+  assert.equal(clearCultural(reviewed,'HIP','2026-10-02T10:00:00Z'),reviewed);
+  assert.equal(submitForVetting(reviewed,'COORDINATOR',ASSIGNED_COORDINATOR,[])?.status,'PENDING_DIRECTOR_REVIEW');
+ }
+});
+test('digital ingestion rejects links, unsupported formats, oversized files and duplicate assets',()=>{
+ const item={id:'video1',file:{name:'master.mp4',size:100,lastModified:1} as File,at};
+ assert.equal(ingestMaster([],item,'TECHNICAL').length,0);
+ const rows=ingestMaster([],item,'ARTIST');
+ assert.equal(rows.length,1);
+ assert.equal(ingestMaster(rows,{...item,id:'copy'},'ARTIST'),rows);
+ for(const file of [{name:'Dropbox.url',size:10},{name:'master.mov',size:3*1024**3},{name:'empty.m2v',size:0}]) assert.equal(ingestMaster(rows,{...item,file:file as File},'ARTIST'),rows);
+});
+test('prototype decisions require artist authority and retain first decision timestamp',()=>{
+ const ticket:PrototypeTicket={id:'sample1',title:'Rust Coating Test #1',photos:[{name:'test.png',type:'image/png',size:100} as File],status:'PENDING_ARTIST_APPROVAL',requestedAt:at};
+ assert.equal(requestPrototype([],ticket,'ARTIST').length,0);
+ const rows=requestPrototype([],ticket,'TECHNICAL');
+ assert.equal(rows.length,1);
+ assert.equal(requestPrototype(rows,ticket,'TECHNICAL'),rows);
+ assert.equal(decidePrototype(rows,ticket.id,true,'TECHNICAL',at),rows);
+ const approved=decidePrototype(rows,ticket.id,true,'ARTIST',at);
+ assert.equal(approved[0].status,'ARTIST_APPROVED');
+ assert.equal(approved[0].decidedAt,at);
+ assert.equal(decidePrototype(approved,ticket.id,false,'ARTIST','2026-10-02T10:00:00Z'),approved);
+ assert.equal(decidePrototype(rows,ticket.id,false,'ARTIST',at)[0].status,'ARTIST_REJECTED');
+});
+
+
+test('deployment phase separates temporary and final equipment requests',()=>{
+ const request={id:'phase1',equipment:'AV Projectors',mounting:'Ceiling Mount',phase:'PROTOTYPING' as const,at};
+ const rows=addTechnicalRequest([],request,routedClaims,COMMISSION.id);
+ assert.equal(addTechnicalRequest(rows,{...request,id:'phase2',phase:'FINAL_INSTALLATION'},routedClaims,COMMISSION.id).length,2);
+ assert.equal(addTechnicalRequest(rows,{...request,id:'phase3'}),rows);
+});
+test('fleet requests use accepted crate snapshots and only Logistics can record departure',()=>{
+ const crate={reference:'DEMO-CRATE-1',lengthCm:140,widthCm:100,heightCm:90,grossWeightKg:110};
+ let s=reduce(createCommission(),{type:'contracts',update:()=>[{...contract,crate}]});
+ const request={type:'request-fleet',actor:'LOGISTICS',contractId:contract.id,vehicle:'3-Ton Hydraulic Pickup',id:'fleet1',at} as const;
+ assert.equal(reduce(accepted(),request).fleetTickets,undefined);
+ assert.equal(reduce(s,{...request,actor:'COORDINATOR'}),s);
+ assert.equal(reduce(s,{...request,contractId:'wrong'}),s);
+ s=reduce(s,request);
+ assert.equal(s.fleetTickets?.[0].crate.grossWeightKg,110);
+ assert.equal(reduce(s,{...request,id:'repeat'}),s);
+ const departed=reduce(s,{type:'fleet-transit',actor:'LOGISTICS',ticketId:'fleet1',at});
+ assert.equal(departed.fleetTickets?.[0].status,'IN_TRANSIT');
+ assert.equal(reduce(departed,{type:'fleet-transit',actor:'LOGISTICS',ticketId:'fleet1',at}),departed);
+ assert.equal(reduce(s,{type:'contracts',update:cs=>cs.map(c=>({...c,crate:{...crate,grossWeightKg:20}}))}),s);
+});
+test('executive impound locks installation and finance until explicit Coordinator acknowledgement',()=>{
+ const action={type:'impound',actor:'BIENNIAL_DIRECTOR',artistId:contract.artistId,directives:'Remove unauthorized text from sculpture base.',id:'hold1',at} as const;
+ let s=accepted();
+ assert.equal(reduce(s,action),s);
+ s=reduce(s,{type:'receive-asset',actor:'LOGISTICS',reference:'CRATE-1',at});
+ assert.equal(reduce(s,{...action,actor:'TECHNICAL'}),s);
+ assert.equal(reduce(s,{...action,directives:' '}),s);
+ const held=reduce(s,action);
+ assert.equal(held.installationStatus,'EXECUTIVE_IMPOUND');
+ assert.equal(held.impounds?.[0].directives,action.directives);
+ assert.equal(advanceEligible(held),false);
+ assert.equal(milestoneEligible(held,'delivery'),false);
+ assert.equal(reduce(held,{type:'technical-check',actor:'TECHNICAL',field:'floorLoadVerified',value:true}),held);
+ assert.equal(reduce(held,{type:'record-technical',actor:'TECHNICAL',at}),held);
+ assert.equal(reduce(held,action),held);
+ const ack={type:'acknowledge-alterations',actor:'COORDINATOR',impoundId:'hold1',confirmed:true,at} as const;
+ assert.equal(reduce(held,{...ack,actor:'TECHNICAL'}),held);
+ assert.equal(reduce(held,{...ack,confirmed:false}),held);
+ const released=reduce(held,ack);
+ assert.equal(released.installationStatus,'CONTRACT_EXECUTED');
+ assert.equal(released.evidence.technicalEvidenceGate,false);
+ assert.equal(released.impounds?.[0].acknowledgedAt,at);
+ assert.equal(reduce(released,ack),released);
+});
+
+import { claimSpace } from '../src/data/spatialClaims';
+test('spatial claims enforce approved ownership and lock the space against competing requests',()=>{
+ const approved={...dossier,status:'APPROVED' as const};
+ const input={spaceId:'sam-hall-1',artistId:approved.id,coordinatorId:ASSIGNED_COORDINATOR,actor:'COORDINATOR',at};
+ const empty: import('../src/data/spatialClaims').SpatialClaim[]=[];
+ assert.equal(claimSpace(empty,input,[dossier]),empty);
+ assert.equal(claimSpace(empty,{...input,actor:'HIP'},[approved]),empty);
+ assert.equal(claimSpace(empty,{...input,coordinatorId:'coordinator-3'},[approved]),empty);
+ assert.equal(claimSpace(empty,{...input,spaceId:'invented-space'},[approved]),empty);
+ const claimed=claimSpace(empty,input,[approved]);
+ assert.equal(claimed.length,1);
+ assert.equal(claimed[0].artistName,approved.artistName);
+ assert.equal(claimed[0].medium,approved.medium);
+ assert.equal(claimSpace(claimed,input,[approved]),claimed);
+ const competitor={...approved,id:'artist2',assignedCoordinatorId:'coordinator-3'};
+ assert.equal(claimSpace(claimed,{...input,artistId:competitor.id,coordinatorId:'coordinator-3'},[competitor]),claimed);
+ assert.equal(claimSpace(claimed,{...input,spaceId:'wisdom-lobby',artistId:competitor.id,coordinatorId:'coordinator-3'},[competitor]).length,2);
+ assert.equal(claimed[0].claimedAt,at);
+});
+
+import { agreementPipelineReady } from '../src/data/workflowEligibility';
+import { type SpatialClaim } from '../src/data/spatialClaims';
+const routedClaims: SpatialClaim[] = [{spaceId:'wisdom-lobby',venueId:'HOUSE_OF_WISDOM',curator:'House of Wisdom — Venue Curator',artistId:COMMISSION.id,artistName:'Demo',medium:'Bronze',coordinatorId:ASSIGNED_COORDINATOR,coordinatorName:'Demo coordinator',claimedAt:at}];
+
+test('agreement publication gate fails closed except explicit isolated rehearsal',()=>{
+ for(const theme of ['DRAFT','CHAIRMAN_APPROVED','PUBLISHED_OFFICIAL']) {
+  for(const guidelines of ['DRAFT','PENDING_TRANSLATION','REQUEST_REVISION','PUBLISHED']) {
+   assert.equal(agreementPipelineReady(theme,guidelines),theme==='PUBLISHED_OFFICIAL'&&guidelines==='PUBLISHED');
+  }
+ }
+ assert.equal(agreementPipelineReady('DRAFT','DRAFT',true),true);
+});
+
+test('amendments retain superseded receipt and fleet history without reusing evidence',()=>{
+ const crate={reference:'history-crate',lengthCm:140,widthCm:100,heightCm:90,grossWeightKg:110};
+ let state=reduce(createCommission(),{type:'contracts',update:()=>[{...contract,crate}]});
+ state=reduce(state,{type:'receive-asset',actor:'LOGISTICS',reference:'receipt-original',at});
+ state=reduce(state,{type:'request-fleet',actor:'LOGISTICS',contractId:contract.id,vehicle:'Standard Transit',id:'fleet-original',at});
+ const original=state;
+ state=reduce(state,{type:'CONTRACT_DISPUTED',actor:'ARTIST',contractId:contract.id,round:{artistJustification:'Amend shipping'} as any});
+ state=reduce(state,{type:'contracts',update:rows=>rows.map(c=>({...c,shippingTerms:'Revised shipping'}))});
+ assert.equal(state.receiptHistory?.[0].reference,'receipt-original');
+ assert.equal(state.receiptHistory?.[0].appliesToRevision,original.agreementRevision);
+ assert.equal(state.receiptHistory?.[0].isSuperseded,true);
+ assert.equal(state.fleetTickets?.[0].isSuperseded,true);
+ assert.equal(original.fleetTickets?.[0].isSuperseded,undefined);
+ assert.equal(state.logistics,undefined);
+ state=reduce(state,{type:'contracts',update:rows=>rows.map(c=>({...c,status:'ARTIST_APPROVED'}))});
+ assert.equal(milestoneEligible(state,'delivery'),false);
+ assert.equal(reduce(state,{type:'fleet-transit',actor:'LOGISTICS',ticketId:'fleet-original',at}),state);
+ state=reduce(state,{type:'request-fleet',actor:'LOGISTICS',contractId:contract.id,vehicle:'Standard Transit',id:'fleet-new',at});
+ assert.equal(state.fleetTickets?.length,2);
+ state=reduce(state,{type:'receive-asset',actor:'LOGISTICS',reference:'receipt-new',at});
+ assert.equal(state.logistics?.appliesToRevision,state.agreementRevision);
+ assert.equal(state.receiptHistory?.length,1);
+});
+
+test('venue modifications require the matching artist claim and snapshot its jurisdiction',()=>{
+ const request={id:'venue-request',equipment:'Lighting Rig',mounting:'Floor Freestanding',phase:'FINAL_INSTALLATION' as const,at};
+ assert.equal(addTechnicalRequest([],request).length,0);
+ assert.equal(addTechnicalRequest([],request,routedClaims,'other-artist').length,0);
+ const rows=addTechnicalRequest([],request,routedClaims,COMMISSION.id);
+ assert.equal(rows[0].venueClaim?.curator,'House of Wisdom — Venue Curator');
+ assert.equal(rows[0].venueClaim?.spaceId,'wisdom-lobby');
+ assert.notEqual(rows[0].venueClaim,routedClaims[0]);
+ assert.equal(addTechnicalRequest([],{...request,equipment:'Pedestal'}).length,1);
+});
+
+import { filterProfiles, validPressFile, type MasterProfile } from '../src/data/masterDirectory';
+test('master directory filters combine without losing bilingual search or affiliations',()=>{
+ const p:MasterProfile={id:'profile',name:'Demo Artist',nationality:'Fictional region',medium:'Video Installation',editions:['12th Edition'],bioAr:'سيرة فنان',bioEn:'Contemporary practice',affiliations:'Demo Gallery',press:[]};
+ assert.equal(filterProfiles([p],'gallery','Video Installation','Fictional region','12th Edition').length,1);
+ assert.equal(filterProfiles([p],'فنان','','','').length,1);
+ assert.equal(filterProfiles([p],'','','','10th Edition').length,0);
+ assert.equal(filterProfiles([p],'','Bronze Sculpture','','').length,0);
+});
+test('press attachments reject non-PDF, empty and oversized files',()=>{
+ const file={name:'press.pdf',type:'application/pdf',size:1024} as File;
+ assert.equal(validPressFile(file),true);
+ assert.equal(validPressFile({...file,name:'press.html'} as File),false);
+ assert.equal(validPressFile({...file,size:0} as File),false);
+ assert.equal(validPressFile({...file,size:21*1024*1024} as File),false);
+});
+
+import { artistRegion, delegateRegion, GENERAL_COORDINATOR_ID } from '../src/data/regionalDelegation';
+test('regional tags use exact origin aliases and leave ambiguous origins unclassified',()=>{
+ assert.equal(artistRegion({nationality:'United Arab Emirates'}),'GCC');
+ assert.equal(artistRegion({nationality:'تركيا'}),'TURKEY_EASTERN_EUROPE');
+ assert.equal(artistRegion({nationality:'Jordan / UAE'}),'UNCLASSIFIED');
+ assert.equal(artistRegion({nationality:'Unknown'}),'UNCLASSIFIED');
+});
+test('regional delegation requires general coordinator, transfers whole group and records history',()=>{
+ const a={id:'regional-a',nationality:'Turkey',assignedCoordinatorId:'coordinator-1'} as NominatedArtistDossier;
+ const b={id:'regional-b',nationality:'Poland',assignedCoordinatorId:'coordinator-2'} as NominatedArtistDossier;
+ const c={id:'regional-c',nationality:'Morocco',assignedCoordinatorId:'coordinator-3'} as NominatedArtistDossier;
+ const rows=[a,b,c];const input={actor:'COORDINATOR',coordinatorId:GENERAL_COORDINATOR_ID,region:'TURKEY_EASTERN_EUROPE' as const,target:'coordinator-6',at};
+ assert.equal(delegateRegion(rows,{...input,coordinatorId:'coordinator-1'},[]),rows);
+ assert.equal(delegateRegion(rows,{...input,actor:'HIP'},[]),rows);
+ assert.equal(delegateRegion(rows,{...input,target:'invalid'},[]),rows);
+ assert.equal(delegateRegion(rows,input,['regional-b']),rows);
+ const next=delegateRegion(rows,input,[]);
+ assert.equal(next[0].assignedCoordinatorId,'coordinator-6');assert.equal(next[1].assignedCoordinatorId,'coordinator-6');assert.equal(next[2],c);
+ assert.equal(next[0].delegationHistory?.[0].from,'coordinator-1');assert.equal(next[0].delegationHistory?.[0].at,at);
+ assert.equal(a.assignedCoordinatorId,'coordinator-1');
+ assert.equal(delegateRegion(next,input,[]),next);
+});
+
+import { canAccessPressKit } from '../src/components/OfficialPressKit';
+test('official press kit is available only after accepted agreement and locks during disputes',()=>{
+ assert.equal(canAccessPressKit('ARTIST_APPROVED'),true);
+ assert.equal(canAccessPressKit('LOCKED'),true);
+ for(const status of [undefined,'NOT_DRAFTED','DRAFT','SENT_TO_ARTIST','CONTRACT_DISPUTED','AMENDMENT_UNDER_REVIEW'] as const)assert.equal(canAccessPressKit(status),false);
+});
+
+import { damageHold } from '../src/data/conditionReporting';
+test('damage requires photo evidence and explicit contractual liability; reports cannot be overwritten',()=>{
+ let s=reduce(createCommission(),{type:'contracts',update:()=>[{...contract,shippingLiability:'DEPARTMENT'}]});
+ s=reduce(s,{type:'receive-asset',actor:'LOGISTICS',reference:'damage-crate',at});
+ const photo={name:'damage.jpg',type:'image/jpeg',size:100} as File;
+ const report={type:'record-condition' as const,actor:'LOGISTICS',id:'damage-report',condition:'DAMAGED' as const,photos:[photo],at};
+ assert.equal(reduce(s,{...report,photos:[]}),s);
+ assert.equal(reduce(s,{...report,actor:'ARTIST'}),s);
+ assert.equal(reduce(s,{...report,photos:[{...photo,size:0} as File]}),s);
+ const damaged=reduce(s,report);
+ assert.equal(damaged.conditionReports?.[0].insuranceStatus,'INSURANCE_CLAIM_PENDING');
+ assert.equal(damageHold(damaged),true);
+ assert.equal(milestoneEligible(damaged,'delivery'),false);
+ assert.equal(reduce(damaged,{...report,condition:'INTACT'}),damaged);
+ assert.equal(reduce(damaged,{type:'close-exhibition',actor:'LOGISTICS',at,returnReference:'return',reconciliationReference:'clear'}),damaged);
+ assert.equal(reduce(damaged,{type:'record-technical',actor:'TECHNICAL',at}),damaged);
+ assert.equal(reduce(damaged,{type:'contracts',update:()=>[]}),damaged);
+});
+test('artist-liable evidence dispatch and emergency approvals are role-bound and idempotent',()=>{
+ let s=reduce(createCommission(),{type:'contracts',update:()=>[{...contract,shippingLiability:'ARTIST'}]});
+ s=reduce(s,{type:'receive-asset',actor:'LOGISTICS',reference:'artist-crate',at});
+ s=reduce(s,{type:'record-condition',actor:'LOGISTICS',id:'artist-damage',condition:'DAMAGED',photos:[{name:'damage.png',type:'image/png',size:100} as File],at});
+ assert.equal(s.conditionReports?.[0].insuranceStatus,undefined);
+ const dispatch={type:'dispatch-damage' as const,actor:'LOGISTICS',reportId:'artist-damage',at};
+ s=reduce(s,dispatch);assert.equal(s.conditionReports?.[0].artistDispatchedAt,at);assert.equal(reduce(s,dispatch),s);
+ const plan={type:'request-plan-b' as const,actor:'LOGISTICS',id:'emergency',reportId:'artist-damage',grant:5000,flight:'Fictional return flight, 10 October',reason:'Reproduction',at};
+ assert.equal(reduce(s,{...plan,grant:NaN}),s);assert.equal(reduce(s,{...plan,flight:''}),s);
+ s=reduce(s,plan);assert.equal(reduce(s,plan),s);
+ const approve={type:'review-plan-b' as const,actor:'FINANCE',requestId:'emergency',approve:true,at};
+ assert.equal(reduce(s,approve),s);
+ s=reduce(s,{...approve,actor:'BIENNIAL_DIRECTOR'});s=reduce(s,approve);
+ assert.equal(s.emergencyRequests?.[0].financeDecision,'APPROVED');assert.equal(reduce(s,approve),s);
+ assert.equal(s.ledger,undefined);assert.equal(damageHold(s),true);
 });
