@@ -667,3 +667,28 @@ test('photography clearance requires current reviewed evidence and deadlines mat
  assert.equal(photographyStatus({...submitted,highResStatus:'REJECTED'}),'REJECTED');
  assert.equal(CATALOG_SCHEDULE.photography,'2026-08-15');assert.equal(CATALOG_SCHEDULE.delivery,'2026-09-10');
 });
+
+import { addNudge, deadlineTime, addFabrication, readyFabrication, type FabricationTicket } from '../src/data/deliverableRouting';
+test('HIP nudges validate deadline, items, actor and duplicate requests',()=>{
+ const n={id:'n1',artistId:'artist-1',items:['VIDEO','SPECS'] as ('VIDEO'|'SPECS')[],deadline:'2026-10-01',createdAt:at};
+ assert.equal(Number.isNaN(deadlineTime('2026-02-30')),true);
+ assert.equal(deadlineTime('2026-10-01'),Date.parse('2026-10-01T19:59:59Z'));
+ assert.equal(addNudge([],n,'COORDINATOR').length,0);
+ assert.equal(addNudge([],{...n,items:[]},'HIP').length,0);
+ assert.equal(addNudge([],{...n,deadline:'2026-01-01'},'HIP').length,0);
+ const rows=addNudge([],n,'HIP');assert.equal(rows.length,1);
+ assert.equal(addNudge(rows,{...n,id:'n2',items:['SPECS','VIDEO']},'HIP'),rows);
+ assert.equal(addNudge(rows,{...n,id:'n2',artistId:'artist-2'},'HIP').length,2);
+});
+test('fabrication requests remain separate from disposal, installation and Finance authority',()=>{
+ const ticket:FabricationTicket={id:'f1',artistId:'artist-1',item:'Custom plinth',vendor:'Sample vendor',disposition:'DISCARD',status:'PENDING_FABRICATION',createdAt:at};
+ assert.equal(addFabrication([],ticket,'TECHNICAL').length,0);
+ assert.equal(addFabrication([],ticket,'COORDINATOR',true).length,0);
+ assert.equal(addFabrication([],{...ticket,vendor:' '},'COORDINATOR').length,0);
+ const rows=addFabrication([],ticket,'COORDINATOR');assert.equal(rows.length,1);
+ assert.equal(addFabrication(rows,{...ticket,id:'f2'},'COORDINATOR'),rows);
+ assert.equal(readyFabrication(rows,'f1','COORDINATOR',at),rows);
+ assert.equal(readyFabrication(rows,'f1','TECHNICAL',at,true),rows);
+ const ready=readyFabrication(rows,'f1','TECHNICAL',at);assert.equal(ready[0].status,'READY_FOR_INSTALL');assert.equal(ready[0].disposition,'DISCARD');
+ assert.equal(readyFabrication(ready,'f1','TECHNICAL',at),ready);
+});

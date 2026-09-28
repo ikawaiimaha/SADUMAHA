@@ -54,7 +54,7 @@ export default function TechnicalWorkspace({ isAr, state, onCheck, onClearTechni
     </section>
     <SpatialVarianceTicket isAr={isAr} />
     <ProductionBridge key={`production:${state.contracts[0]?.artistId ?? COMMISSION.id}`} artistId={state.contracts[0]?.artistId ?? COMMISSION.id} isAr={isAr} actor="TECHNICAL" />
-    <TechnicalRequestLedger key={`technical:${state.contracts[0]?.artistId ?? COMMISSION.id}`} artistId={state.contracts[0]?.artistId ?? COMMISSION.id} artistName={state.contracts[0]?.artistName ?? (isAr ? COMMISSION.artistNameAr : COMMISSION.artistName)} isAr={isAr} />
+    <TechnicalRequestLedger blocked={damageHold(state)||state.installationStatus==='EXECUTIVE_IMPOUND'} key={`technical:${state.contracts[0]?.artistId ?? COMMISSION.id}`} artistId={state.contracts[0]?.artistId ?? COMMISSION.id} artistName={state.contracts[0]?.artistName ?? (isAr ? COMMISSION.artistNameAr : COMMISSION.artistName)} isAr={isAr} />
     </fieldset>
   </div>;
 }

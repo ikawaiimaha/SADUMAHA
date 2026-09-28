@@ -1,3 +1,4 @@
+import { VisaIntakeReview } from './VisaIntake';
 import React from 'react';
 import { TravelVault } from './TravelVault';
 import { ArrivalPackagePreview } from './ArrivalPackagePreview';
@@ -14,8 +15,10 @@ export interface PRWorkspaceProps {
 
 export function PRWorkspace({ isAr, state, onCheck, onClearPR }: PRWorkspaceProps) {
   const e = state.evidence;
+  const intake=state.visaIntakes?.filter(v=>v.contractId===state.contracts[0]?.id).at(-1);
   return <div dir={isAr ? 'rtl' : 'ltr'} className="max-w-4xl mx-auto ps-4 pe-4 py-6 space-y-5 text-start bg-[#F7F1E6]">
     <h1 className="font-serif text-3xl font-bold">{isAr ? 'العلاقات العامة — الهوية والسفر' : 'PR — Identity & Travel'}</h1>
+    {intake && <VisaIntakeReview intake={intake} isAr={isAr}/>}
     <CommissionSummary isAr={isAr} showTechnical={false} />
     {state.contracts[0] && <TravelVault key={state.contracts[0].artistId} artistId={state.contracts[0].artistId} isAr={isAr} dispatcher cleared={e.prEvidenceGate && Boolean(e.prRecordedAt)} />}
     <section className={panel}>

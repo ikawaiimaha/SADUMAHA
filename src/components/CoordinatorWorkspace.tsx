@@ -1,3 +1,4 @@
+import { MissingDeliverables, FabricationLedger } from './DeliverableRouting';
 import { RegionalDelegation } from './RegionalDelegation';
 import type { Region } from '../data/regionalDelegation';
 import React, { useState } from 'react';
@@ -111,6 +112,7 @@ export const CoordinatorWorkspace: React.FC<CoordinatorWorkspaceProps> = ({
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6">
+      {nominatedArtists.filter(d=>d.assignedCoordinatorId===activeCoordinatorId).map(d=><section key={`routing:${d.id}`}><MissingDeliverables artistId={d.id} artistName={d.artistName} isAr={isAr}/>{d.status==='APPROVED'&&<FabricationLedger artistId={d.id} artistName={d.artistName} isAr={isAr} actor="COORDINATOR"/>}</section>)}
       <RegionalDelegation dossiers={nominatedArtists} isAr={isAr} canDelegate={canDelegateRegions} onDelegate={onDelegateRegion} lockedIds={[...delegationLockedIds,...contracts.map(c=>c.artistId)]} />
       <SharedSpatialLedger key={activeCoordinatorId} coordinatorId={activeCoordinatorId} dossiers={nominatedArtists} isAr={isAr} />
       {/* 1. Header Bar */}

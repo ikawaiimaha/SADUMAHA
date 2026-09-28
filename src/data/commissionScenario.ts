@@ -1,3 +1,4 @@
+import { validVisaIntake, type VisaIntake } from './visaIntake';
 import { acceptedForCatalog, validCatalogFields } from './catalogMetadata';
 import { conditionTransition, damageHold, type ConditionAction } from './conditionReporting';
 import { validParticipationScope } from './soloInvitation2026';
@@ -54,6 +55,7 @@ export function milestoneEligible(state: CommissionState, tranche: 'delivery' | 
 
 type Actor = 'PR_PROTOCOL' | 'TECHNICAL' | 'FINANCE' | string;
 export type CommissionAction = ConditionAction
+  | {type:'submit-visa';actor:string;intake:VisaIntake}
   | {type:'submit-catalog';actor:string;contractId:string;titleAr:string;titleEn:string;statement:string;at:string}
   | { type: 'impound'; actor: Actor; artistId: string; directives: string; id: string; at: string }
   | { type: 'acknowledge-alterations'; actor: Actor; impoundId: string; confirmed: boolean; at: string }
@@ -89,6 +91,11 @@ function recordLedger(state: CommissionState, tranche: 'advance' | 'delivery' | 
 export function commissionReducer(state: CommissionState, action: CommissionAction): CommissionState {
   if (['record-condition','dispatch-damage','request-plan-b','review-plan-b'].includes(action.type)) return conditionTransition(state, action as ConditionAction);
   if (damageHold(state) && ['request-fleet','fleet-transit','close-exhibition','record-technical','technical-check','contracts','CONTRACT_DISPUTED'].includes(action.type)) return state;
+  if(action.type==='submit-visa') {
+    const c=state.contracts[0],v=action.intake;
+    if(action.actor!=='ARTIST'||!acceptedForCatalog(c)||v.contractId!==c.id||!validVisaIntake(v)||state.visaIntakes?.some(r=>r.id===v.id))return state;
+    return {...state,visaIntakes:[...(state.visaIntakes??[]),v],evidence:{...state.evidence,passportVerified:false,visaCleared:false,prEvidenceGate:false,prRecordedAt:undefined},contracts:[{...c,documents:{...c.documents,passportFileName:v.passport.name,passportUploadedAt:v.submittedAt,passportStatus:'SUBMITTED',passportVerifiedAt:undefined}}]};
+  }
   if(action.type==='submit-catalog') {
     const contract=state.contracts[0];
     if(action.actor!=='ARTIST'||!acceptedForCatalog(contract)||contract.id!==action.contractId||!validCatalogFields(action)||!Number.isFinite(Date.parse(action.at)))return state;

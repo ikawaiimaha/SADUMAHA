@@ -1,9 +1,10 @@
+import { FabricationLedger } from './DeliverableRouting';
 import { activeSpatialClaim, VENUE_SPACES, type SpatialClaim } from '../data/spatialClaims';
 import { useState } from 'react';
 import { Cpu, Hammer, Settings } from 'lucide-react';
 import { useSessionDraft } from '../context/SessionDrafts';
 import { addTechnicalRequest, requiresVenueApproval, equipmentOptions, mountingOptions, type TechnicalRequest } from '../data/executionBridges';
-export function TechnicalRequestLedger({artistId, artistName, isAr}: {artistId: string; artistName: string; isAr: boolean}) {
+export function TechnicalRequestLedger({artistId, artistName, isAr, blocked = false}: {artistId: string; artistName: string; isAr: boolean; blocked?: boolean}) {
   const [claims] = useSessionDraft<SpatialClaim[]>('spatial-claims:biennial-2026', []);
   const claim = activeSpatialClaim(claims, artistId);
   const [rows, setRows] = useSessionDraft<TechnicalRequest[]>(`technical-requests:${artistId}`, []);
@@ -30,5 +31,6 @@ export function TechnicalRequestLedger({artistId, artistName, isAr}: {artistId: 
       <article className="space-y-2 rounded border bg-white ps-4 pe-4 py-4"><Cpu aria-hidden="true" className="size-5"/><h4 className="font-semibold">Equipment Supply: {row.equipment}</h4><p>{t('الجهة المسؤولة: القسم الفني والمرئي', 'Routed To: Technical & AV Department')}</p><p className="break-all text-amber-800">PENDING_INVENTORY_CHECK</p></article>
       {requiresVenueApproval(row.equipment, row.mounting) && <article className="space-y-2 rounded border border-amber-300 bg-white ps-4 pe-4 py-4"><Hammer aria-hidden="true" className="size-5"/><h4 className="font-semibold">Structural Modification: {row.mounting}</h4><p>Routed To: {row.venueClaim?.curator ?? 'Unassigned'} · {row.venueClaim?.spaceId}</p><p className="break-all text-amber-800">PENDING_VENUE_APPROVAL</p></article>}
     </div>)}
+    <FabricationLedger artistId={artistId} artistName={artistName} isAr={isAr} actor="TECHNICAL" blocked={blocked}/>
   </section>;
 }

@@ -1,3 +1,6 @@
+import { VisaIntakeForm } from './VisaIntake';
+import type { VisaIntake } from '../data/visaIntake';
+import { MissingDeliverables } from './DeliverableRouting';
 import { ExhibitionMetadata } from './CatalogMetadata';
 import type { CommissionAction } from '../data/commissionScenario';
 import { ConditionReporting } from './ConditionReporting';
@@ -31,6 +34,7 @@ import { BilateralContract } from '../types/contractStage6';
 
 export interface ArtistPortalProps {
   conditionState?: CommissionState;
+  onSubmitVisa?: (intake:VisaIntake)=>void;
   onSubmitCatalog?: (action:CommissionAction)=>void;
   profileArtistId?: string;
   // App-level container props (Stage 6 Multi-contract integration)
@@ -60,7 +64,7 @@ export interface ArtistPortalProps {
 export type ArtistPortalWorkspaceProps = ArtistPortalProps;
 
 export default function ArtistPortalWorkspace({
-  conditionState, onSubmitCatalog,
+  conditionState, onSubmitCatalog, onSubmitVisa,
   profileArtistId,
   contracts,
   onSignContract,
@@ -151,10 +155,11 @@ export default function ArtistPortalWorkspace({
   };
 
   const directoryArtistId = activeContract?.artistId ?? profileArtistId;
-  if (contracts && !activeContract) return <>{directoryArtistId && <LivingProfileEditor artistId={directoryArtistId} isAr={isAr}/>}<p className="ps-6 pe-6 py-6 text-start" dir={isAr ? 'rtl' : 'ltr'}>{isAr ? 'بانتظار إنشاء الاتفاقية في مكتب المنسق.' : 'Waiting for the Coordinator to create the agreement.'}</p></>;
+  if (contracts && !activeContract) return <>{directoryArtistId && <MissingDeliverables artistId={directoryArtistId} isAr={isAr}/>} {directoryArtistId && <LivingProfileEditor artistId={directoryArtistId} isAr={isAr}/>}<p className="ps-6 pe-6 py-6 text-start" dir={isAr ? 'rtl' : 'ltr'}>{isAr ? 'بانتظار إنشاء الاتفاقية في مكتب المنسق.' : 'Waiting for the Coordinator to create the agreement.'}</p></>;
 
   return (
     <div className="min-h-screen bg-[#F7F1E6] p-6 text-[#2C2A29] font-sans text-start" dir={isAr ? 'rtl' : 'ltr'}>
+      {directoryArtistId && <MissingDeliverables artistId={directoryArtistId} isAr={isAr}/>}
       {directoryArtistId && <LivingProfileEditor artistId={directoryArtistId} isAr={isAr}/>}
       {conditionState && activeContract?.artistId === conditionState.contracts[0]?.artistId && <ConditionReporting state={conditionState} isAr={isAr} actor="ARTIST" />}
       {activeContract && <>
@@ -383,24 +388,7 @@ export default function ArtistPortalWorkspace({
 
             <div className="space-y-4">
               
-              {/* Passport Upload */}
-              <div className="p-4 border border-[#D9D2C5] rounded-md bg-[#FAF8F5] flex justify-between items-center">
-                <div>
-                  <h4 className="text-xs font-bold text-[#1A1817]">{tr("Official Passport Copy")}</h4>
-                  <p className="text-[11px] text-[#8C7A6B]">{tr("PDF or high-res JPG (Min 300 DPI)")}</p>
-                </div>
-                {passportDone ? (
-                  <span className="flex items-center gap-1 text-xs font-medium text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded border border-emerald-200">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> {tr("Uploaded")} </span>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => handleUpload('passport')}
-                    className="flex items-center gap-1.5 bg-[#2C2A29] hover:bg-[#1A1817] text-white px-3.5 py-1.5 rounded text-xs font-medium transition-colors cursor-pointer"
-                  >
-                    <Upload className="w-3.5 h-3.5" /> {tr("Upload Passport")} </button>
-                )}
-              </div>
+              {activeContract && isSigned && onSubmitVisa && <VisaIntakeForm key={activeContract.id} contractId={activeContract.id} isAr={isAr} onSubmit={onSubmitVisa}/>}
 
               {/* Artwork Images Upload */}
               <div className="p-4 border border-[#D9D2C5] rounded-md bg-[#FAF8F5] flex justify-between items-center">

@@ -1,3 +1,4 @@
+import { MissingDeliverables } from './DeliverableRouting';
 import { LiveCatalogAggregator } from './CatalogMetadata';
 import type { CommissionState } from '../types';
 import { MasterDirectory } from './MasterDirectory';
@@ -127,7 +128,7 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
       {catalogState && <LiveCatalogAggregator state={catalogState} isAr={isAr}/>}
       <MasterDirectory isAr={isAr} />
       <SharedSpatialLedger isAr={isAr} />
-      {culturalDossiers.map(d => <CulturalVerificationCard key={d.id} dossier={d} isAr={isAr} onClear={onClearCultural ? () => onClearCultural(d.id) : undefined} />)}
+      {culturalDossiers.map(d => <section key={d.id}><CulturalVerificationCard dossier={d} isAr={isAr} onClear={onClearCultural ? () => onClearCultural(d.id) : undefined} /><MissingDeliverables artistId={d.id} artistName={d.artistName} isAr={isAr} canRequest /></section>)}
       {/* Header */}
       <div className="rounded-xl border border-sadu-gold bg-sadu-paper p-6 shadow-xs">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-sadu-gold/40 pb-4">

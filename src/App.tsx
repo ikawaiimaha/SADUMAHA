@@ -1,3 +1,5 @@
+import { MissingDeliverables, FabricationLedger } from './components/DeliverableRouting';
+import { damageHold } from './data/conditionReporting';
 import { RegionalDelegation } from './components/RegionalDelegation';
 import { delegateRegion, GENERAL_COORDINATOR_ID } from './data/regionalDelegation';
 import { useSessionDraft } from './context/SessionDrafts';
@@ -777,6 +779,7 @@ function SADUApp() {
               <label className="block">{isAr ? 'اختيار المنسقة للمحاكاة — ليس تسجيل دخول' : 'Demo coordinator selection — not authentication'}
                 <select className="mt-2 block rounded border ps-3 pe-3 py-2" value={activeCoordinatorId} onChange={e => {setActiveCoordinatorId(e.target.value);setDelegationNotice('');}}><option value={GENERAL_COORDINATOR_ID}>{isAr ? 'المنسق العام — محاكاة' : 'General Coordinator — rehearsal'}</option>{COORDINATORS.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
               </label>
+              {assignedTo(nominatedArtists,activeCoordinatorId).map(d=><section key={`deliverables:${d.id}`}><MissingDeliverables artistId={d.id} artistName={d.artistName} isAr={isAr}/>{d.status==='APPROVED'&&<details><summary className="cursor-pointer">{d.artistName} · {isAr?'أوامر التصنيع':'Fabrication orders'}</summary><FabricationLedger artistId={d.id} artistName={d.artistName} isAr={isAr} actor="COORDINATOR" blocked={d.id===COMMISSION.id&&(damageHold(commission)||commission.installationStatus==='EXECUTIVE_IMPOUND')}/></details>}</section>)}
               <RegionalDelegation isAr={isAr} dossiers={activeCoordinatorId === GENERAL_COORDINATOR_ID ? nominatedArtists : assignedTo(nominatedArtists, activeCoordinatorId)} canDelegate={activeCoordinatorId === GENERAL_COORDINATOR_ID} notice={delegationNotice} lockedIds={[...contracts.map(c=>c.artistId),...regionalClaims.map(c=>c.artistId)]} onDelegate={(region,target)=>{
                 if(activeRole !== 'COORDINATOR' || activeCoordinatorId !== GENERAL_COORDINATOR_ID)return;
                 const input={actor:activeRole,coordinatorId:activeCoordinatorId,region,target,at:new Date().toISOString()};
@@ -824,6 +827,7 @@ function SADUApp() {
       case 'ARTIST':
         return (
           <ArtistPortalWorkspace
+            onSubmitVisa={intake=>{if(activeRole==='ARTIST')dispatchCommission({type:'submit-visa',actor:activeRole,intake});}}
             onSubmitCatalog={action=>{if(activeRole==='ARTIST'&&action.type==='submit-catalog')dispatchCommission({...action,actor:activeRole});}}
             conditionState={commission}
             profileArtistId={COMMISSION.id}
@@ -843,10 +847,10 @@ function SADUApp() {
           onClearPR={handleClearPR} />;
 
       case 'TECHNICAL':
-        return <TechnicalWorkspace isAr={isAr} state={commission}
+        return <><TechnicalWorkspace isAr={isAr} state={commission}
           onCheck={(field, value) => dispatchCommission({ type: 'technical-check', actor: activeRole, field, value })}
           onRequestSAF={(technicians, hours, rationale) => dispatchCommission({type: 'request-saf', actor: activeRole, technicians, hours, rationale, at: new Date().toISOString()})}
-          onClearTechnical={handleClearTechnical} />;
+          onClearTechnical={handleClearTechnical} />{nominatedArtists.filter(d=>d.id!==COMMISSION.id&&d.status==='APPROVED').map(d=><FabricationLedger key={d.id} artistId={d.id} artistName={d.artistName} isAr={isAr} actor="TECHNICAL"/>)}</>;
 
       case 'LOGISTICS':
         return <><HonoredGuestRoster isAr={isAr} /><LogisticsWorkspace isAr={isAr} state={commission} onRecord={action => {
