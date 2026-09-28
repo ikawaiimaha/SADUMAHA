@@ -1,3 +1,4 @@
+import { acceptedForCatalog, validCatalogFields } from './catalogMetadata';
 import { conditionTransition, damageHold, type ConditionAction } from './conditionReporting';
 import { validParticipationScope } from './soloInvitation2026';
 import { validCrate, vehicleTypes } from './installationOperations';
@@ -53,6 +54,7 @@ export function milestoneEligible(state: CommissionState, tranche: 'delivery' | 
 
 type Actor = 'PR_PROTOCOL' | 'TECHNICAL' | 'FINANCE' | string;
 export type CommissionAction = ConditionAction
+  | {type:'submit-catalog';actor:string;contractId:string;titleAr:string;titleEn:string;statement:string;at:string}
   | { type: 'impound'; actor: Actor; artistId: string; directives: string; id: string; at: string }
   | { type: 'acknowledge-alterations'; actor: Actor; impoundId: string; confirmed: boolean; at: string }
   | { type: 'request-fleet'; actor: Actor; contractId: string; vehicle: string; id: string; at: string }
@@ -87,6 +89,14 @@ function recordLedger(state: CommissionState, tranche: 'advance' | 'delivery' | 
 export function commissionReducer(state: CommissionState, action: CommissionAction): CommissionState {
   if (['record-condition','dispatch-damage','request-plan-b','review-plan-b'].includes(action.type)) return conditionTransition(state, action as ConditionAction);
   if (damageHold(state) && ['request-fleet','fleet-transit','close-exhibition','record-technical','technical-check','contracts','CONTRACT_DISPUTED'].includes(action.type)) return state;
+  if(action.type==='submit-catalog') {
+    const contract=state.contracts[0];
+    if(action.actor!=='ARTIST'||!acceptedForCatalog(contract)||contract.id!==action.contractId||!validCatalogFields(action)||!Number.isFinite(Date.parse(action.at)))return state;
+    const data={contractId:contract.id,artistId:contract.artistId,agreementRevision:state.agreementRevision,titleAr:action.titleAr.trim(),titleEn:action.titleEn.trim(),statement:action.statement.trim(),submittedAt:action.at};
+    const last=state.catalogSubmissions?.at(-1);
+    if(last&&last.agreementRevision===data.agreementRevision&&last.contractId===data.contractId&&last.titleAr===data.titleAr&&last.titleEn===data.titleEn&&last.statement===data.statement)return state;
+    return {...state,catalogSubmissions:[...(state.catalogSubmissions??[]),data]};
+  }
   const e = state.evidence;
   const c = state.contracts[0];
   const accepted = c?.status === 'ARTIST_APPROVED' || c?.status === 'LOCKED';

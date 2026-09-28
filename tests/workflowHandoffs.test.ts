@@ -641,3 +641,29 @@ test('artist-liable evidence dispatch and emergency approvals are role-bound and
  assert.equal(s.emergencyRequests?.[0].financeDecision,'APPROVED');assert.equal(reduce(s,approve),s);
  assert.equal(s.ledger,undefined);assert.equal(damageHold(s),true);
 });
+
+import { photographyStatus, CATALOG_SCHEDULE } from '../src/data/catalogMetadata';
+test('catalog submissions require accepted agreement, valid fields and artist role; history is preserved',()=>{
+ const action={type:'submit-catalog' as const,actor:'ARTIST',contractId:contract.id,titleAr:'ميزان',titleEn:'Mizan',statement:'Artist concept',at};
+ assert.equal(reduce(createCommission(),action).catalogSubmissions,undefined);
+ let state=accepted();
+ assert.equal(reduce(state,{...action,actor:'COORDINATOR'}),state);
+ assert.equal(reduce(state,{...action,titleAr:' '}),state);
+ assert.equal(reduce(state,{...action,contractId:'someone-else'}),state);
+ state=reduce(state,action);assert.equal(state.catalogSubmissions?.length,1);
+ assert.equal(state.catalogSubmissions?.[0].agreementRevision,state.agreementRevision);
+ assert.equal(reduce(state,action),state);
+ state=reduce(state,{...action,statement:'Updated concept'});assert.equal(state.catalogSubmissions?.length,2);
+ const disputed={...state,contracts:[{...state.contracts[0],status:'CONTRACT_DISPUTED' as const}]};
+ assert.equal(reduce(disputed,action),disputed);
+});
+test('photography clearance requires current reviewed evidence and deadlines match the master schedule',()=>{
+ const d={...contract.documents};assert.equal(photographyStatus(d),'PENDING');
+ const submitted={...d,highResArtworkFileName:'photo.tiff',highResUploadedAt:at,highResStatus:'SUBMITTED' as const};
+ assert.equal(photographyStatus(submitted),'REVIEW');
+ assert.equal(photographyStatus({...submitted,highResStatus:'VERIFIED'}),'REVIEW');
+ assert.equal(photographyStatus({...submitted,highResStatus:'VERIFIED',highResVerifiedAt:at}),'CLEARED');
+ assert.equal(photographyStatus({...submitted,highResStatus:'VERIFIED',highResVerifiedAt:'2026-01-01T00:00:00Z'}),'REVIEW');
+ assert.equal(photographyStatus({...submitted,highResStatus:'REJECTED'}),'REJECTED');
+ assert.equal(CATALOG_SCHEDULE.photography,'2026-08-15');assert.equal(CATALOG_SCHEDULE.delivery,'2026-09-10');
+});

@@ -124,6 +124,7 @@ export interface CommissionEvidence {
 }
 
 export interface CommissionState {
+  catalogSubmissions?: import('./data/catalogMetadata').CatalogMetadata[];
   conditionReports?: import('./data/conditionReporting').ConditionReport[];
   emergencyRequests?: import('./data/conditionReporting').EmergencyRequest[];
   installationStatus?: ArtistStatus;

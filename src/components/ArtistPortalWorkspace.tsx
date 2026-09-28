@@ -1,3 +1,5 @@
+import { ExhibitionMetadata } from './CatalogMetadata';
+import type { CommissionAction } from '../data/commissionScenario';
 import { ConditionReporting } from './ConditionReporting';
 import type { CommissionState } from '../types';
 import { OfficialPressKit } from './OfficialPressKit';
@@ -29,6 +31,7 @@ import { BilateralContract } from '../types/contractStage6';
 
 export interface ArtistPortalProps {
   conditionState?: CommissionState;
+  onSubmitCatalog?: (action:CommissionAction)=>void;
   profileArtistId?: string;
   // App-level container props (Stage 6 Multi-contract integration)
   contracts?: BilateralContract[];
@@ -57,7 +60,7 @@ export interface ArtistPortalProps {
 export type ArtistPortalWorkspaceProps = ArtistPortalProps;
 
 export default function ArtistPortalWorkspace({
-  conditionState,
+  conditionState, onSubmitCatalog,
   profileArtistId,
   contracts,
   onSignContract,
@@ -186,6 +189,7 @@ export default function ArtistPortalWorkspace({
       </header>
 
       {activeContract && <p className="my-3 text-start">{isAr ? 'مسؤولية التأمين أثناء النقل' : 'Transit insurance liability'}: {activeContract.shippingLiability ?? (isAr ? 'غير مسجلة' : 'Not recorded')}</p>}
+      {activeContract && conditionState && onSubmitCatalog && <ExhibitionMetadata key={`${activeContract.id}:${conditionState.agreementRevision}`} state={conditionState} contract={activeContract} isAr={isAr} onSubmit={onSubmitCatalog} />}
       <OfficialPressKit status={activeContract?.status} isAr={isAr} />
 
       {activeContract && <AgreementMilestones contract={activeContract} isAr={isAr} />}

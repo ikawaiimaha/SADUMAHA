@@ -1,3 +1,5 @@
+import { LiveCatalogAggregator } from './CatalogMetadata';
+import type { CommissionState } from '../types';
 import { MasterDirectory } from './MasterDirectory';
 import { useLocalDraft, isText } from '../hooks/useLocalDraft';
 import { CulturalVerificationCard } from './CulturalVerificationCard';
@@ -23,6 +25,7 @@ import { ThemeItem } from './ChairmanWorkspace';
 export type TranslationStatus = 'REQUEST_REVISION' | 'DRAFT' | 'PENDING_TRANSLATION' | 'PUBLISHED';
 
 export interface HIPWorkspaceProps {
+  catalogState?: CommissionState;
   culturalDossiers?: NominatedArtistDossier[];
   onClearCultural?: (id: string) => void;
   themeStatus: string;
@@ -51,6 +54,7 @@ const PRESET_DIRECTIVES = [
 ];
 
 export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
+  catalogState,
   culturalDossiers = [], onClearCultural,
   guidelinesArabic,
   themeStatus,
@@ -120,6 +124,7 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6">
+      {catalogState && <LiveCatalogAggregator state={catalogState} isAr={isAr}/>}
       <MasterDirectory isAr={isAr} />
       <SharedSpatialLedger isAr={isAr} />
       {culturalDossiers.map(d => <CulturalVerificationCard key={d.id} dossier={d} isAr={isAr} onClear={onClearCultural ? () => onClearCultural(d.id) : undefined} />)}

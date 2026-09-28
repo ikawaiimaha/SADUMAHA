@@ -576,7 +576,9 @@ function SADUApp() {
                 highResArtworkFileName: fileName,
                 artworkDpi: dpi,
                 highResStatus: 'SUBMITTED',
-                highResUploadedAt: new Date().toISOString().split('T')[0],
+                highResUploadedAt: new Date().toISOString(),
+                highResVerifiedAt: undefined,
+                highResNotes: undefined,
               },
             }
           : c
@@ -740,6 +742,7 @@ function SADUApp() {
       case 'HIP':
         return (
           <HIPWorkspace
+            catalogState={commission}
             culturalDossiers={nominatedArtists}
             onClearCultural={id => setNominatedArtists(rows => rows.map(d => d.id === id ? clearCultural(d, activeRole, new Date().toISOString()) : d))}
             themeEssayArabic={themeEssayArabic}
@@ -821,6 +824,7 @@ function SADUApp() {
       case 'ARTIST':
         return (
           <ArtistPortalWorkspace
+            onSubmitCatalog={action=>{if(activeRole==='ARTIST'&&action.type==='submit-catalog')dispatchCommission({...action,actor:activeRole});}}
             conditionState={commission}
             profileArtistId={COMMISSION.id}
             contracts={contracts}
