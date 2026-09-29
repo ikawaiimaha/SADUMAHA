@@ -1241,3 +1241,38 @@ test('test-work completion requires current-revision artist approval and preserv
  const rejected=decidePrototype(rows,ticket.id,false,'ARTIST',at,1);
  assert.equal(completePrototype(rejected,ticket.id,'TECHNICAL',at,1),rejected);
 });
+
+import {resourceTransition,contingencyOpen,responseDue,type ResourceTicket} from '../src/data/interAgencyResources';
+import {institutionalMetrics,reassignDossier} from '../src/data/institutionalMetrics';
+test('inter-agency contingency opens at 48 hours or denial, with independent assignment and Finance guards',()=>{
+ const t:ResourceTicket={id:'saf1',artistId:'d1',scopeKey:'c1:1',agency:'SAF',resource:'3-Ton Hydraulic Pickup',requiredAt:'2026-10-10T10:00:00Z',requestedAt:at};
+ const keys={d1:'c1:1'};const apply=(rows:ResourceTicket[],action:Parameters<typeof resourceTransition>[1],actor:string,time=at,assigned=['d1'],scope=keys)=>resourceTransition(rows,action,actor,time,['d1'],assigned,'demo-coordinator',scope);
+ assert.equal(apply([],{type:'request',ticket:t},'COORDINATOR').length,0);
+ const rows=apply([],{type:'request',ticket:t},'TECHNICAL');assert.equal(rows.length,1);
+ assert.equal(apply(rows,{type:'request',ticket:{...t,id:'duplicate'}},'TECHNICAL'),rows);
+ assert.equal(contingencyOpen(t,responseDue(t)-1),false);assert.equal(contingencyOpen(t,responseDue(t)),true);
+ const late=new Date(responseDue(t)).toISOString();const rental={type:'rental',id:t.id,vendor:'Fictional Rental',amount:500,reason:'No agency response'} as const;
+ assert.equal(apply(rows,rental,'COORDINATOR'),rows);assert.equal(apply(rows,rental,'COORDINATOR',late,[]),rows);
+ assert.equal(apply(rows,rental,'COORDINATOR',late,['d1'],{d1:'c1:2'}),rows);
+ const requested=apply(rows,rental,'COORDINATOR',late);assert.equal(requested[0].rental?.amount,500);
+ assert.equal(apply(requested,rental,'COORDINATOR',late),requested);
+ const decision={type:'finance',id:t.id,approve:true,reference:'FIN-01'} as const;
+ assert.equal(apply(requested,decision,'COORDINATOR',late),requested);
+ const funded=apply(requested,decision,'FINANCE',late);assert.equal(funded[0].rental?.decision,'APPROVED');assert.equal(apply(funded,decision,'FINANCE',late),funded);
+ const denied=apply(rows,{type:'response',id:t.id,status:'DENIED',reference:'SAF-response-01'},'TECHNICAL');assert.equal(contingencyOpen(denied[0],Date.parse(at)),true);
+ assert.equal(apply(denied,rental,'COORDINATOR')[0].rental?.amount,500);
+ const confirmed=apply(requested,{type:'response',id:t.id,status:'CONFIRMED',reference:'SAF-response-02',deliveryAt:t.requiredAt},'TECHNICAL',late);
+ assert.equal(contingencyOpen(confirmed[0],Date.parse(late)),false);assert.equal(apply(confirmed,decision,'FINANCE',late),confirmed);
+ assert.equal(apply(rows,{type:'response',id:t.id,status:'CONFIRMED',reference:'Missing date'},'TECHNICAL'),rows);
+});
+test('institutional totals deduplicate people, distinguish accepted/executed and exclude revoked workloads',()=>{
+ const approved={...dossier,id:'a',status:'APPROVED' as const,artworkCount:4};
+ const other={...approved,id:'b',artworkCount:undefined};
+ const metrics=institutionalMetrics([approved,approved,other],[{id:'a',status:'CONTRACT_EXECUTED',prCleared:true},{id:'a',status:'CONTRACT_EXECUTED',prCleared:true},{id:'b',status:'LOGISTICS_PENDING_PR'}]);
+ assert.equal(metrics.executedArtists,1);assert.equal(metrics.clearedGuests,1);assert.equal(metrics.approvedDossiers,2);
+ assert.equal(metrics.workloads[0].artworks,4);assert.equal(metrics.workloads[0].unknownCounts,1);
+ const held=institutionalMetrics([approved],[{id:'a',status:'EXECUTIVE_IMPOUND',prCleared:true}]);assert.equal(held.approvedDossiers,0);assert.equal(held.clearedGuests,1);
+ const cancelled=institutionalMetrics([approved,other],[{id:'a',status:'DIRECTOR_VETOED',prCleared:true},{id:'b',status:'ARCHIVED_CLOSED'}]);assert.equal(cancelled.approvedDossiers,0);assert.equal(cancelled.clearedGuests,0);
+ const rows=[approved];assert.equal(reassignDossier(rows,'a','coordinator-2','Workload','HIP',at,[]),rows);assert.equal(reassignDossier(rows,'a','coordinator-2','Workload','BIENNIAL_DIRECTOR',at,['a']),rows);
+ const moved=reassignDossier(rows,'a','coordinator-2','Workload','BIENNIAL_DIRECTOR',at,[]);assert.equal(moved[0].assignedCoordinatorId,'coordinator-2');assert.equal(moved[0].delegationHistory?.[0].from,ASSIGNED_COORDINATOR);
+});

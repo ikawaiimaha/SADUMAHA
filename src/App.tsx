@@ -1,3 +1,7 @@
+import {InterAgencyResources} from './components/InterAgencyResources';
+import {resourceTransition,type ResourceTicket} from './data/interAgencyResources';
+import {InstitutionalDashboard} from './components/InstitutionalDashboard';
+import {reassignDossier} from './data/institutionalMetrics';
 import {TextualVerificationLedger} from './components/CulturalVerificationCard';
 import {verifyTextualContent, textualCleared} from './data/culturalDeclaration';
 import {physicalAssetCleared, type CommissionAction} from './data/commissionScenario';
@@ -246,6 +250,7 @@ function SADUApp() {
   const [packingEvidence,setPackingEvidence] = useState<PackingEvidence>();
   const [nominatedArtists, setNominatedArtists] = useState<NominatedArtistDossier[]>(INITIAL_NOMINATIONS);
   const [arrivalDispatches,setArrivalDispatches]=useState<ArrivalDispatch[]>([]);
+  const [resourceTickets,setResourceTickets]=useState<ResourceTicket[]>([]);
   const commissionCoordinatorId = nominatedArtists.find(d=>d.id===COMMISSION.id)?.assignedCoordinatorId;
   const [artists, setArtists] = useState<VettedArtist[]>(INITIAL_VETTED_ARTISTS);
   const [isNominationFormOpen, setIsNominationFormOpen] = useState<boolean>(false);
@@ -391,6 +396,8 @@ function SADUApp() {
   // Stage 6: Bilateral Contracts & Disbursements State
   const [commission, dispatchCommission] = useReducer(commissionReducer, undefined, createCommission);
   const contracts = commission.contracts;
+  const resourceEligibleIds = nominatedArtists.filter(d=>d.status==='APPROVED'&&!d.amendments?.some(a=>a.status==='PENDING')&&contracts.some(c=>c.artistId===d.id&&['ARTIST_APPROVED','LOCKED'].includes(c.status))&&!(d.id===COMMISSION.id&&(damageHold(commission)||['EXECUTIVE_IMPOUND','ARCHIVED_CLOSED'].includes(commission.installationStatus??'')))).map(d=>d.id);
+  const resourceScopeKeys = Object.fromEntries(contracts.map(c=>[c.artistId,`${c.id}:${commission.agreementRevision}:${nominatedArtists.find(d=>d.id===c.artistId)?.approvalRevision??1}`]));
   useEffect(() => {
     if (commission.installationStatus) setArtists(rows => rows.map(a => a.id === COMMISSION.id ? {...a, status: commission.installationStatus!} : a));
   }, [commission.installationStatus]);
@@ -1007,7 +1014,9 @@ function SADUApp() {
 
         <DelegatedRoleGate role={activeRole}>
         {activeRole==='COORDINATOR'&&!nominationOpen(publishedBoundaries)?<CuratorialBoundaries isAr={isAr}/>:<>
+        {['BIENNIAL_DIRECTOR','CHAIRMAN','PR_PROTOCOL','FINANCE'].includes(activeRole)&&<InstitutionalDashboard dossiers={nominatedArtists} evidence={artists.map(a=>a.id===COMMISSION.id?{...a,status:commission.installationStatus??a.status,prCleared:commission.evidence.prEvidenceGate}:a)} isAr={isAr} canReassign={activeRole==='BIENNIAL_DIRECTOR'} lockedIds={[...contracts.filter(c=>c.status!=='NOT_DRAFTED').map(c=>c.artistId),...(commission.invitation?[commission.invitation.artistId]:[])]} onReassign={(id,target,reason)=>setNominatedArtists(rows=>reassignDossier(rows,id,target,reason,activeRole,new Date().toISOString(),[...contracts.filter(c=>c.status!=='NOT_DRAFTED').map(c=>c.artistId),...(commission.invitation?[commission.invitation.artistId]:[])]))}/>}
         {renderWorkspace()}{['COORDINATOR','PR_PROTOCOL','LOGISTICS'].includes(activeRole)&&<ArtistMetadataQueue exportLabels={['COORDINATOR','PR_PROTOCOL'].includes(activeRole)}/>}{['COORDINATOR','LOGISTICS'].includes(activeRole)&&<ExhibitionChecklistQueue/>}
+        {['TECHNICAL','COORDINATOR','FINANCE','BIENNIAL_DIRECTOR'].includes(activeRole)&&<InterAgencyResources rows={resourceTickets} dossiers={nominatedArtists} eligibleIds={resourceEligibleIds} scopeKeys={resourceScopeKeys} actor={activeRole} coordinatorId={activeCoordinatorId} isAr={isAr} onAction={action=>{const at=new Date().toISOString();setResourceTickets(rows=>resourceTransition(rows,action.type==='request'?{...action,ticket:{...action.ticket,requestedAt:at}}:action,activeRole,at,resourceEligibleIds,nominatedArtists.filter(d=>d.assignedCoordinatorId===activeCoordinatorId).map(d=>d.id),activeCoordinatorId,resourceScopeKeys));}}/>}
         {activeRole==='EDITORIAL'&&<LiveCatalogAggregator state={commission} isAr={isAr}/>}
         {commission.installationStatus==='ARCHIVED_CLOSED'&&['COORDINATOR','BIENNIAL_DIRECTOR'].includes(activeRole)&&<CollectionCloseout state={commission} actor={activeRole}/>}
         {activeRole === 'BIENNIAL_DIRECTOR' && <ExecutiveContractSummary dossiers={nominatedArtists.filter(d=>commission.installationStatus!=='ARCHIVED_CLOSED'||d.id!==COMMISSION.id)} contracts={contracts} isAr={isAr} />}

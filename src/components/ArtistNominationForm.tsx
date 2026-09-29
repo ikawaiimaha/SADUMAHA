@@ -27,7 +27,7 @@ export interface NominatedArtistDossier {
   technicalRequirements?: TechnicalRequirement[];
   arrivalRecipientTag?: import('../data/arrivalPackage').ArrivalRecipientTag;
   geographicRegion?: import('../data/regionalDelegation').Region;
-  delegationHistory?: {from?:string;to:string;region:string;at:string;by:string}[];
+  delegationHistory?: {from?:string;to:string;region:string;at:string;by:string;reason?:string}[];
   culturalDeclaration?: CulturalDeclaration;
   textualVerification?: import('../data/culturalDeclaration').TextualVerification;
   culturalClearedAt?: string; // Historical legacy record; no longer an approval gate.
