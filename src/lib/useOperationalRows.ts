@@ -1,6 +1,6 @@
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {pilotSupabase as client} from './pilotSupabase';
-export function useOperationalRows<T>(table:'sadu_artwork_checklist'|'sadu_freight_bookings'|'sadu_consignments'|'sadu_condition_reports'|'sadu_asset_scope'|'sadu_artwork_values'|'sadu_visa_notifications'|'sadu_visa_notice_templates'|'sadu_exhibition_titles'|'sadu_arrival_receipts'|'sadu_media_inventory'|'sadu_publication_queue',filter?:{column:string;value:string}) {
+export function useOperationalRows<T>(table:'sadu_artwork_checklist'|'sadu_freight_bookings'|'sadu_consignments'|'sadu_condition_reports'|'sadu_asset_scope'|'sadu_artwork_values'|'sadu_visa_notifications'|'sadu_visa_notice_templates'|'sadu_exhibition_titles'|'sadu_arrival_receipts'|'sadu_media_inventory'|'sadu_publication_queue'|'sadu_freight_assignments'|'sadu_freight_alerts',filter?:{column:string;value:string}) {
  const [rows,setRows]=useState<T[]>([]),[notice,setNotice]=useState(''),[live,setLive]=useState(false),[signedIn,setSignedIn]=useState(false);
  const epoch=useRef(0);const column=filter?.column,value=filter?.value;
  const refresh=useCallback(async()=>{
