@@ -1359,3 +1359,11 @@ test('guest travel validates calendar dates and latest incomplete revisions neve
  assert.equal(guestFilesComplete(row),true);assert.equal(guestFilesComplete({...row,companion_name:'Sample companion'}),false);
  const newer={...row,id:'new',created_at:'2026-09-29T00:00:00Z',passport_uploaded:false};assert.deepEqual(latestGuestRows([row,newer]),[newer]);assert.equal(guestFilesComplete(latestGuestRows([row,newer])[0]),false);
 });
+
+import {validGuestIdentity,guestDeadline} from '../src/data/guestIdentity';
+test('guest deadlines use arrival lead days and identity remains required independently of uploads',()=>{
+ assert.equal(guestDeadline('2026-10-06',30),'2026-09-06');assert.equal(guestDeadline('2026-03-01',30),'2026-01-30');assert.equal(guestDeadline('',30),null);assert.equal(guestDeadline('2026-02-30',30),null);
+ assert.equal(validGuestIdentity({},'2026-10-06'),false);
+ const v={passportNumber:'SAMPLE',passportExpiry:'2030-01-01',nationality:'Sample',birthDate:'1990-01-01',birthPlace:'Sample',email:'sample@example.test',phone:'000'};
+ assert.equal(validGuestIdentity(v,'2026-10-06'),true);assert.equal(validGuestIdentity({...v,passportExpiry:'2026-10-01'},'2026-10-06'),false);assert.equal(validGuestIdentity({...v,email:''},'2026-10-06'),false);
+});

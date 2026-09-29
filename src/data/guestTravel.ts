@@ -1,5 +1,5 @@
 export interface GuestTravelRow {
- id:string;contract_id:string;artist_id:string;artist_name:string;contract_status:string;
+ identity?:Record<string,string>;departure_airport?:string;finalized_at?:string|null;id:string;contract_id:string;artist_id:string;artist_name:string;contract_status:string;
  arrival:string;departure:string;airport:'DXB'|'SHJ'|'OTHER';companion_name:string|null;
  photo_extension:'jpg'|'png';created_at:string;passport_uploaded:boolean;photo_uploaded:boolean;companion_uploaded:boolean;
 }

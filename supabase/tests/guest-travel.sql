@@ -20,9 +20,7 @@ insert into storage.objects(bucket_id,name,metadata) values('logistics-secure','
 select set_config('request.jwt.claims','{"sub":"55555555-5555-4555-8555-555555555555","role":"authenticated","app_metadata":{"institutional_role":"PR_PROTOCOL"}}',true);
 do $$begin
  if (select count(*) from public.sadu_pr_guest_roster() where id='guest-test')<>1 then raise exception 'PR roster hidden';end if;
- if (select count(*) from public.sadu_guest_queue where contract_id='guest-test')<>1 then raise exception 'PR queue hidden';end if;
- if not (select passport_uploaded from public.sadu_guest_queue where contract_id='guest-test') then raise exception 'PR file hidden';end if;
- if (select photo_uploaded from public.sadu_guest_queue where contract_id='guest-test') then raise exception 'Missing photo ready';end if;
+ if exists(select 1 from public.sadu_guest_queue where contract_id='guest-test') or exists(select 1 from storage.objects where name like '%/guest-intake/22222222%') then raise exception 'PR draft packet leak';end if;
  begin
  insert into storage.objects(bucket_id,name) values('logistics-secure','11111111-1111-4111-8111-111111111111/guest-intake/22222222-2222-4222-8222-222222222222/photo.jpg');raise exception 'PR upload bypass';exception when insufficient_privilege then null;end;
 end $$;
