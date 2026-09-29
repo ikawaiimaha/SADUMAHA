@@ -1332,3 +1332,23 @@ test('sculpture rider is mandatory at nomination and must be a bounded PDF',asyn
  assert.equal(queueNomination(d,'COORDINATOR',ASSIGNED_COORDINATOR,[]),null);
  assert.equal(queueNomination({...d,technicalRider:rider!},'COORDINATOR',ASSIGNED_COORDINATOR,[])?.status,'PENDING_COMMITTEE_REVIEW');
 });
+
+import {venueWorkBlock,workerNames,validWorkers} from '../src/data/venueProtocols';
+test('SMA rule 5 blocks declared hall fabrication without banning other venues or outside work',()=>{
+ const claims:SpatialClaim[]=[{...routedClaims[0],spaceId:'sam-hall-1',venueId:'SHARJAH_ART_MUSEUM',curator:'Sharjah Art Museum — Venue Curator'}];
+ for(const activity of ['WELDING','CARPENTRY'] as const){
+  assert.match(venueWorkBlock('SHARJAH_ART_MUSEUM',activity,'INSIDE_HALL')!,/Rule 5/);
+  const request={id:'r',equipment:'AV Projectors',mounting:'Ceiling Mount',phase:'FINAL_INSTALLATION' as const,at,activity,workLocation:'INSIDE_HALL' as const,workers:['Sample Technician']};
+  assert.equal(addTechnicalRequest([],request,claims,COMMISSION.id).length,0);
+  assert.equal(addTechnicalRequest([],{...request,workLocation:'OUTSIDE_HALL'},claims,COMMISSION.id).length,1);
+  const ticket:FabricationTicket={id:'f',artistId:COMMISSION.id,item:'Frame',vendor:'Sample Vendor',workers:['Sample Worker'],venueId:'SHARJAH_ART_MUSEUM',activity,workLocation:'INSIDE_HALL',disposition:'RETURN_TO_ARTIST',status:'PENDING_FABRICATION',createdAt:at};
+  assert.equal(addFabrication([],ticket,'COORDINATOR',false,claims).length,0);
+  assert.equal(addFabrication([],{...ticket,workLocation:'OUTSIDE_HALL'},'COORDINATOR',false,claims).length,1);
+  assert.equal(addFabrication([],{...ticket,venueId:'DEPARTMENT'},'COORDINATOR',false,claims).length,0);
+ }
+ assert.equal(venueWorkBlock('HOUSE_OF_WISDOM','WELDING','INSIDE_HALL'),null);
+ assert.ok(venueWorkBlock(undefined,'WELDING','OUTSIDE_HALL'));
+ assert.deepEqual(workerNames('Sample Worker\nSample Worker\n Sample Other '),['Sample Worker','Sample Other']);
+ assert.equal(validWorkers([]),false);
+ assert.equal(validWorkers(['x'.repeat(151)]),false);
+});
