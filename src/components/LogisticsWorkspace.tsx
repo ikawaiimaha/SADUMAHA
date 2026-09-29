@@ -12,7 +12,7 @@ import type { CommissionState } from '../types';
 import type { CommissionAction } from '../data/commissionScenario';
 import { panel, actionButton } from './CommissionSummary';
 
-export default function LogisticsWorkspace({ state, isAr, onRecord }: { state: CommissionState; isAr: boolean; onRecord: (action: CommissionAction) => void }) {
+export default function LogisticsWorkspace({ state, isAr, onRecord, onClearPhysicalAsset }: { onClearPhysicalAsset?: (artistId:string,action:CommissionAction)=>void; state: CommissionState; isAr: boolean; onRecord: (action: CommissionAction) => void }) {
   const [receipt, setReceipt] = useState('');
   const [returned, setReturned] = useState('');
   const [condition, setCondition] = useState('');
@@ -21,7 +21,7 @@ export default function LogisticsWorkspace({ state, isAr, onRecord }: { state: C
   const input = 'block mt-2 w-full rounded border border-[#D9CEBA] ps-3 pe-3 py-2';
   return <div dir={isAr ? 'rtl' : 'ltr'} className="max-w-4xl mx-auto ps-4 pe-4 py-6 space-y-5 text-start">
     <h1 className="text-3xl font-bold">{isAr ? 'اللوجستيات · الاستلام والإعادة' : 'Logistics · Receipt and Return'}</h1>
-    <FreightPickupScheduler logistics/><GalleryAllocationLedger/><CrateReceiving state={state} onRecord={onRecord}/>
+    <FreightPickupScheduler logistics/><GalleryAllocationLedger/><CrateReceiving key={state.agreementRevision} state={state} onRecord={onRecord} onClearPhysicalAsset={onClearPhysicalAsset}/>
     {!!state.receiptHistory?.length && <section className={panel}><h2>Receipt audit history</h2>{state.receiptHistory.map((row, index) => <p key={index}>{row.reference} · {row.receivedAt} · Revision {row.appliesToRevision} · Superseded{row.closedAt ? ` · Closed ${row.closedAt}` : ''}</p>)}</section>}
 
     {state && <CollectionCloseout state={state} actor="LOGISTICS" onAction={onRecord}/>}

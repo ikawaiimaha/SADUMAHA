@@ -41,6 +41,7 @@ test('delivery and completion require distinct logistics evidence and cannot be 
   s=reduce(s,{type:'receive-asset',actor:'LOGISTICS',reference:'R1',at});
   assert.equal(milestoneEligible(s,'delivery'),false);
   s=reduce(s,{type:'record-condition',actor:'LOGISTICS',id:'inspection',condition:'INTACT',photos:[],at});
+  s=reduce(s,{type:'verify-arrival',actor:'LOGISTICS',token:s.logistics!.reference,inspection:{lengthCm:100,widthCm:80,heightCm:60,grossWeightKg:100,seal:'MATCH',condition:'INTACT'}});
   assert.equal(milestoneEligible(s,'delivery'),true);
   assert.equal(milestoneEligible(s,'completion'),false);
   assert.equal(reduce(s,{type:'close-exhibition',actor:'LOGISTICS',returnReference:'return',reconciliationReference:'',at}),s);
@@ -1002,6 +1003,7 @@ test('two-tranche 30/70 agreements cannot disburse a zero completion milestone',
  let state=reduce(createCommission(),{type:'contracts',update:()=>[two]});
  state={...state,logistics:{appliesToRevision:state.agreementRevision,status:'PHYSICAL_ASSET_RECEIVED',receivedAt:at,reference:'receipt'}};
  state=reduce(state,{type:'record-condition',actor:'LOGISTICS',id:'two-tranche-inspection',condition:'INTACT',photos:[],at});
+ state=reduce(state,{type:'verify-arrival',actor:'LOGISTICS',token:state.logistics!.reference,inspection:{lengthCm:100,widthCm:80,heightCm:60,grossWeightKg:100,seal:'MATCH',condition:'INTACT'}});
  state=reduce(state,{type:'close-exhibition',actor:'LOGISTICS',returnReference:'return',reconciliationReference:'condition',at});
  assert.equal(milestoneEligible(state,'delivery'),true);
  assert.equal(milestoneEligible(state,'completion'),false);
@@ -1093,6 +1095,7 @@ test('local production requires approved vendor proof before delivery and reject
  assert.equal(milestoneEligible(s,'delivery'),false);
  s=reduce(s,{type:'receive-asset',actor:'LOGISTICS',reference:'local receipt',at});
  s=reduce(s,{type:'record-condition',actor:'LOGISTICS',id:'local inspection',condition:'INTACT',photos:[],at});
+ s=reduce(s,{type:'verify-arrival',actor:'LOGISTICS',token:s.logistics!.reference,inspection:{lengthCm:100,widthCm:80,heightCm:60,grossWeightKg:100,seal:'MATCH',condition:'INTACT'}});
  assert.equal(milestoneEligible(s,'delivery'),true);assert.equal(milestoneEligible(s,'completion'),false);
  assert.equal(crateToken(s),null);
  assert.equal(reduce(s,{type:'contracts',update:rows=>rows.map(c=>({...c,localVendorId:'demo-frame'}))}),s);
@@ -1100,7 +1103,7 @@ test('local production requires approved vendor proof before delivery and reject
 test('QR receipt rejects wrong or stale tokens, requires damage evidence and records intact inspection atomically',()=>{
  const c={...contract,productionOrigin:'INTERNATIONAL_FREIGHT' as const,crate:{reference:'crate-1',lengthCm:100,widthCm:80,heightCm:60,grossWeightKg:100}};
  const s=reduce(createCommission(),{type:'contracts',update:()=>[c]});
- const a={type:'receive-crate' as const,actor:'LOGISTICS',token:crateToken(s)!,condition:'INTACT' as const,photos:[],id:'inspection',at};
+ const a={type:'receive-crate' as const,inspection:{lengthCm:100,widthCm:80,heightCm:60,grossWeightKg:100,seal:'MATCH' as const,condition:'INTACT' as const},actor:'LOGISTICS',token:crateToken(s)!,condition:'INTACT' as const,photos:[],id:'inspection',at};
  assert.equal(reduce(s,{...a,actor:'ARTIST'}),s);
  assert.equal(reduce(s,{...a,token:'unknown'}),s);
  const revised={...s,agreementRevision:s.agreementRevision+1};assert.equal(reduce(revised,a),revised);
@@ -1108,7 +1111,7 @@ test('QR receipt rejects wrong or stale tokens, requires damage evidence and rec
  const result=reduce(s,a);assert.ok(result.logistics);assert.equal(result.conditionReports?.length,1);
  assert.equal(milestoneEligible(result,'delivery'),true);assert.equal(milestoneEligible(result,'completion'),false);
  assert.equal(reduce(result,a),result);
- const damaged=reduce(s,{...a,condition:'DAMAGED',photos:[new File(['image'],'damage.png',{type:'image/png'})]});
+ const damaged=reduce(s,{...a,condition:'DAMAGED',inspection:{...a.inspection,condition:'MINOR_DAMAGE'},photos:[new File(['image'],'damage.png',{type:'image/png'})]});
  assert.equal(damaged.conditionReports?.[0].insuranceStatus,'INSURANCE_CLAIM_PENDING');assert.equal(milestoneEligible(damaged,'delivery'),false);
 });
 
@@ -1131,4 +1134,21 @@ test('gallery freight data requires positive measurements, currency and trusted 
  const data={length_cm:100,width_cm:80,height_cm:40,weight_kg:84,insurance_value:8000,currency:'EUR',country:'France',city:'Paris',district:'Test',street:'Test',building:'Test Gallery',map_url:'https://maps.google.com/?q=test',hours:'8 AM - noon',phone:'+33123456789'};
  assert.equal(validConsignment(data),true);
  for(const patch of [{weight_kg:0},{length_cm:-1},{insurance_value:Infinity},{currency:'XYZ'},{phone:''},{map_url:'https://maps.google.com.evil.invalid/'}])assert.equal(validConsignment({...data,...patch}),false);
+});
+
+
+test('dock clearance rejects invalid dimensions and tampering, persists verified measurements and resets on revision',()=>{
+ const c={...contract,productionOrigin:'INTERNATIONAL_FREIGHT' as const,crate:{reference:'dock-crate',lengthCm:100,widthCm:80,heightCm:60,grossWeightKg:100}};
+ const s=reduce(createCommission(),{type:'contracts',update:()=>[c]});
+ const inspection={lengthCm:110,widthCm:85,heightCm:65,grossWeightKg:114,seal:'MATCH' as const,condition:'INTACT' as const};
+ const a={type:'receive-crate' as const,actor:'LOGISTICS',token:crateToken(s)!,inspection,condition:'INTACT' as const,photos:[],id:'dock-inspection',at};
+ assert.equal(reduce(s,{...a,inspection:{...inspection,widthCm:0}}),s);
+ assert.equal(reduce(s,{...a,inspection:{...inspection,grossWeightKg:NaN}}),s);
+ assert.equal(reduce(s,{...a,inspection:{...inspection,seal:'TAMPERED'}}),s);
+ const booked=reduce(s,{type:'request-fleet',actor:'LOGISTICS',contractId:c.id,vehicle:'Standard Transit',id:'old-fleet',at});
+ const measured=reduce(booked,a);assert.equal(measured.fleetTickets?.[0].isSuperseded,true);
+ const cleared=reduce(s,a);assert.equal(milestoneEligible(cleared,'delivery'),true);assert.equal(cleared.logistics?.inspection?.grossWeightKg,114);
+ assert.equal(milestoneEligible({...cleared,agreementRevision:cleared.agreementRevision+1},'delivery'),false);
+ const held=reduce(s,{...a,condition:'DAMAGED',inspection:{...inspection,seal:'TAMPERED'},photos:[new File(['photo'],'seal.png',{type:'image/png'})]});
+ assert.ok(held.logistics);assert.equal(milestoneEligible(held,'delivery'),false);
 });

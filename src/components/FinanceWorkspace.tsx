@@ -14,7 +14,7 @@ export interface FinanceWorkspaceProps {
   onEmergencyAction?: (action:CommissionAction)=>void;
   isAr: boolean;
   state: CommissionState;
-  artist?: Pick<VettedArtist, 'id' | 'prCleared' | 'technicalCleared'>;
+  artist?: Pick<VettedArtist, 'id' | 'prCleared' | 'technicalCleared' | 'physicalAssetCleared'>;
   onAuthorizeAdvance: () => void;
   onRecordTranche: (tranche: 'delivery' | 'completion') => void;
 }
@@ -49,10 +49,11 @@ export default function FinanceWorkspace({ onEmergencyAction, isAr, state, artis
       <p role="status" className="mt-3 text-sm">{e.financeApprovalGate ? (isAr ? 'سُجّل اعتماد المقدّم في العرض المحلي فقط. لا تحويل مالي.' : 'Advance authorization recorded in the local demo only. No money transferred.') : (isAr ? 'لم يُعتمد المقدّم.' : 'Advance not authorized.')}</p>
       {e.advanceAuthorizedAt && <p className="text-sm mt-2"><bdi>{e.advanceAuthorizedAt}</bdi> · {isAr ? 'نسخة الاتفاقية' : 'Agreement revision'} {state.agreementRevision}</p>}
     </section>
+    {artist?.physicalAssetCleared!==true&&<p role="status" className={panel}>{isAr?'بانتظار الاستلام والفحص الفعلي — دفعات ما بعد الوصول مقفلة.':'Awaiting verified dimensions, matching seal and intact artwork. Post-arrival payments remain locked.'}</p>}
     {(['delivery', 'completion'] as const).map(tranche => <section key={tranche} className={panel}>
       <h2 className="text-xl font-semibold">{tranche === 'delivery' ? (isAr ? 'دفعة التسليم' : 'Delivery tranche') : (isAr ? 'المرحلة 8 · دفعة الإكمال' : 'Stage 8 · Completion tranche')}</h2>
       <p className="my-3">{tranche === 'delivery' ? (isAr ? 'تتطلب تسجيل الاستلام الفعلي بواسطة اللوجستيات.' : 'Requires PHYSICAL_ASSET_RECEIVED recorded by Logistics.') : (isAr ? 'تتطلب إغلاق المعرض والإعادة الآمنة وتسوية تقرير الحالة.' : 'Requires exhibition closure, safe return and condition reconciliation.')}</p>
-      <button className={actionButton} disabled={!milestoneEligible(state, tranche)} onClick={() => onRecordTranche(tranche)}>{isAr ? 'تسجيل الدفعة في السجل' : 'Record Disbursement in Ledger'}</button>
+      <button className={actionButton} disabled={!milestoneEligible(state, tranche)||!(artist?.id===c?.artistId&&artist?.physicalAssetCleared===true)} onClick={() => {if(milestoneEligible(state,tranche)&&(artist?.id===c?.artistId&&artist?.physicalAssetCleared===true))onRecordTranche(tranche);}}>{isAr ? 'تسجيل الدفعة في السجل' : 'Record Disbursement in Ledger'}</button>
     </section>)}
     <section className={panel}><h2 className="text-xl font-semibold">{isAr ? 'السجل التجريبي لهذه الجلسة' : 'Session rehearsal ledger'}</h2>
       {(state.ledger || []).map(row => <p key={row.tranche} className="mt-2"><bdi>{row.tranche} · AED {row.amount.toLocaleString()} · {row.at}</bdi></p>)}

@@ -1,3 +1,6 @@
+import {CrateReceiving} from '../CrateReceiving';
+import type {CommissionState} from '../../types';
+import type {CommissionAction} from '../../data/commissionScenario';
 import {FreightPickupScheduler} from '../FreightPickupScheduler';
 import React, { useId, useState } from 'react';
 import { useI18n } from '../../context/I18nContext';
@@ -17,7 +20,7 @@ import {
   PlusCircle
 } from 'lucide-react';
 
-export const LogisticsDashboard: React.FC = () => {
+export const LogisticsDashboard: React.FC<{state?:CommissionState;onRecord?:(action:CommissionAction)=>void;onClearPhysicalAsset?:(id:string,action:CommissionAction)=>void}> = ({state,onRecord,onClearPhysicalAsset}) => {
   const messageId = useId();
   const { isAr, formatNumber } = useI18n();
 
@@ -64,7 +67,7 @@ export const LogisticsDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
-<FreightPickupScheduler logistics/>
+{state&&onRecord?<CrateReceiving key={state.agreementRevision} state={state} onRecord={onRecord} onClearPhysicalAsset={onClearPhysicalAsset}/>:<section className="rounded border bg-[#F7F1E6] ps-4 pe-4 py-4"><h2>منصة استلام الأعمال / Loading Dock Receiving</h2><p>Open the executive workflow Logistics workspace to inspect the active agreement. This overview cannot grant session financial clearance.</p></section>}<FreightPickupScheduler logistics/>
       {/* Toast */}
       {rfqSuccessToast && (
         <div className="fixed top-20 end-6 z-50 bg-sadu-brick text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-2 text-xs font-semibold animate-in fade-in">

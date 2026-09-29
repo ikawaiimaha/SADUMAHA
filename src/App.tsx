@@ -1,3 +1,4 @@
+import {physicalAssetCleared, type CommissionAction} from './data/commissionScenario';
 import {IdleWorkspaceLock} from './components/IdleWorkspaceLock';
 import {CuratorialBoundaries} from './components/CuratorialBoundaries';
 import {publishBoundaries,nominationOpen,type Boundaries} from './data/curatorialBoundaries';
@@ -384,9 +385,17 @@ function SADUApp() {
   // Clearance mirrors the reducer's recorded evidence, including revocation on revised terms.
   useEffect(() => {
     setArtists(current => current.map(artist => artist.id === COMMISSION.id
-      ? { ...artist, prCleared: commission.evidence.prEvidenceGate, technicalCleared: commission.evidence.technicalEvidenceGate }
+      ? { ...artist, prCleared: commission.evidence.prEvidenceGate, technicalCleared: commission.evidence.technicalEvidenceGate, physicalAssetCleared: physicalAssetCleared(commission) }
       : artist));
-  }, [commission.evidence.prEvidenceGate, commission.evidence.technicalEvidenceGate]);
+  }, [commission.evidence.prEvidenceGate, commission.evidence.technicalEvidenceGate, commission.logistics, commission.conditionReports, commission.agreementRevision]);
+
+  const handleClearPhysicalAsset = (artistId:string, action:CommissionAction) => {
+    if(activeRole!=='LOGISTICS'||artistId!==commission.contracts[0]?.artistId||!['receive-crate','verify-arrival'].includes(action.type))return;
+    const next=commissionReducer(commission,action);
+    if(next===commission)return;
+    dispatchCommission(action);
+    setArtists(rows=>rows.map(a=>a.id===artistId?{...a,physicalAssetCleared:physicalAssetCleared(next)}:a));
+  };
 
   const handleClearPR = (artistId: string) => {
     if (artistId !== COMMISSION.id || activeRole !== 'PR_PROTOCOL') return;
@@ -894,7 +903,7 @@ function SADUApp() {
           onClearTechnical={handleClearTechnical} />{nominatedArtists.filter(d=>d.id!==COMMISSION.id&&d.status==='APPROVED').map(d=><FabricationLedger key={d.id} artistId={d.id} artistName={d.artistName} isAr={isAr} actor="TECHNICAL"/>)}</>;
 
       case 'LOGISTICS':
-        return <><HonoredGuestRoster isAr={isAr} /><LogisticsWorkspace isAr={isAr} state={commission} onRecord={action => {
+        return <><HonoredGuestRoster isAr={isAr} /><LogisticsWorkspace isAr={isAr} state={commission} onClearPhysicalAsset={handleClearPhysicalAsset} onRecord={action => {
           if (activeRole === 'LOGISTICS') dispatchCommission({...action,actor:activeRole} as typeof action);
         }} /></>;
       case 'FINANCE':

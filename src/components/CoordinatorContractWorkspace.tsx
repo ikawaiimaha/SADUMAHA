@@ -35,6 +35,7 @@ export interface VettedArtist {
   category: ArtistCategory;
   prCleared?: boolean;
   technicalCleared?: boolean;
+  physicalAssetCleared?: boolean;
   status: string; 
 }
 

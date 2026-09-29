@@ -5,9 +5,9 @@ import { closeoutTransition, type CloseoutAction } from './collectionCloseout';
 import { validBanking, validTransactionDate, validAdministration, normalizeIBAN, metadataUnlocked, type ArtistAdministration } from './artistAdministration';
 import { validVisaIntake, type VisaIntake } from './visaIntake';
 import { acceptedForCatalog, validCatalogFields } from './catalogMetadata';
-import { conditionTransition, damageHold, type ConditionAction } from './conditionReporting';
+import { conditionTransition, damageHold, validDamagePhoto, type ConditionAction } from './conditionReporting';
 import { validParticipationScope } from './soloInvitation2026';
-import { validCrate, vehicleTypes } from './installationOperations';
+import { validDockInspection, type DockInspection, validCrate, vehicleTypes } from './installationOperations';
 import type { CommissionState } from '../types';
 import type { BilateralContract, NegotiationRound } from '../types/contractStage6';
 
@@ -49,10 +49,21 @@ export function advanceEligible(state: CommissionState): boolean {
     && !state.evidence.financeApprovalGate && !state.ledger?.some(row => row.tranche === 'advance');
 }
 
+function bindDockInspection(state:CommissionState,inspection:DockInspection):CommissionState {
+ const keys=['lengthCm','widthCm','heightCm','grossWeightKg'] as const;
+ return {...state,logistics:{...state.logistics!,inspection:{...inspection}},fleetTickets:state.fleetTickets?.map(ticket=>ticket.appliesToRevision===state.agreementRevision&&ticket.status==='PENDING_FLEET_ASSIGNMENT'&&keys.some(k=>ticket.crate[k]!==inspection[k])?{...ticket,isSuperseded:true}:ticket)};
+}
+
+export function physicalAssetCleared(state:CommissionState):boolean {
+ const receipt=state.logistics,c=state.contracts[0];
+ return Boolean(c&&receipt&&!receipt.isSuperseded&&receipt.appliesToRevision===state.agreementRevision&&validDockInspection(receipt.inspection)&&receipt.inspection.seal==='MATCH'&&receipt.inspection.condition==='INTACT'&&!damageHold(state)&&state.conditionReports?.some(r=>r.contractId===c.id&&r.revision===state.agreementRevision&&r.receiptReference===receipt.reference&&r.condition==='INTACT'));
+}
+
 export function milestoneEligible(state: CommissionState, tranche: 'delivery' | 'completion'): boolean {
   if (state.installationStatus === 'EXECUTIVE_IMPOUND' || damageHold(state)) return false;
   const c = state.contracts[0];
   return validAgreement(c) && (c.status === 'ARTIST_APPROVED' || c.status === 'LOCKED')
+    && physicalAssetCleared(state)
     && (tranche === 'delivery' ? c.tranches.deliveryAmount : c.tranches.installationAmount) > 0
     && !state.ledger?.some(row => row.tranche === tranche)
     && (tranche === 'delivery' ? state.logistics?.status === 'PHYSICAL_ASSET_RECEIVED' && state.logistics.appliesToRevision === state.agreementRevision && Boolean(state.conditionReports?.some(r=>r.contractId===c.id&&r.revision===state.agreementRevision&&r.receiptReference===state.logistics?.reference&&r.condition==='INTACT'))
@@ -62,7 +73,8 @@ export function milestoneEligible(state: CommissionState, tranche: 'delivery' | 
 type Actor = 'PR_PROTOCOL' | 'TECHNICAL' | 'FINANCE' | string;
 export type CommissionAction = InvitationAction | ConditionAction | CloseoutAction | ArtistExecutionAction
   | {type:'local-production';actor:string;stage:'PROOF_RECORDED'|'DELIVERED';reference:string;at:string}
-  | {type:'receive-crate';actor:string;token:string;condition:'INTACT'|'DAMAGED';photos:File[];at:string;id:string}
+  | {type:'verify-arrival';actor:string;token:string;inspection:DockInspection;photos?:File[];at?:string;id?:string}
+  | {type:'receive-crate';inspection?:DockInspection;actor:string;token:string;condition:'INTACT'|'DAMAGED';photos:File[];at:string;id:string}
   | {type:'record-payment-receipt';actor:string;tranche:string;date:string;at:string}
   | {type:'save-origin';actor:string;assetId:string;address:string;country:string;at:string}
   | {type:'request-origin-freight';actor:string;assetId:string;at:string}
@@ -109,12 +121,20 @@ export function commissionReducer(state: CommissionState, action: CommissionActi
     if(!['PROOF_RECORDED','DELIVERED'].includes(action.stage)||action.actor!=='COORDINATOR'||!acceptedForCatalog(c)||c.productionOrigin!=='LOCAL_FABRICATION'||!productionReady(c)||damageHold(state)||state.installationStatus==='EXECUTIVE_IMPOUND'||!action.reference.trim()||action.reference.length>200||!Number.isFinite(Date.parse(action.at))||previous.some(r=>r.stage===action.stage)||action.stage==='DELIVERED'&&!previous.some(r=>r.stage==='PROOF_RECORDED')||previous.some(r=>Date.parse(action.at)<Date.parse(r.at)))return state;
     return {...state,localProductionEvents:[...events,{contractId:c.id,revision:state.agreementRevision,vendorId:c.localVendorId!,stage:action.stage,reference:action.reference.trim(),at:action.at}]};
   }
+  if(action.type==='verify-arrival') {
+    if(action.actor!=='LOGISTICS'||state.installationStatus==='EXECUTIVE_IMPOUND'||!state.logistics||state.logistics.inspection||state.logistics.appliesToRevision!==state.agreementRevision||action.token!==state.logistics.reference||!validDockInspection(action.inspection))return state;
+    const c=state.contracts[0];
+    if(!c||!['ARTIST_APPROVED','LOCKED'].includes(c.status)||state.logistics.closedAt)return state;
+    const damaged=action.inspection.seal!=='MATCH'||action.inspection.condition!=='INTACT';
+    if(damaged&&(!action.id||!action.at||!Number.isFinite(Date.parse(action.at))||Date.parse(action.at)<Date.parse(state.logistics.receivedAt)||!action.photos?.length||action.photos.length>5||!action.photos.every(validDamagePhoto)||!['ARTIST','DEPARTMENT'].includes(c.shippingLiability??'')))return state;
+    return bindDockInspection({...state,...(damaged?{conditionReports:[...(state.conditionReports??[]),{id:action.id!,artistId:c.artistId,contractId:c.id,revision:state.agreementRevision,receiptReference:state.logistics.reference,condition:'DAMAGED' as const,liability:c.shippingLiability as 'ARTIST'|'DEPARTMENT',photos:[...action.photos!],at:action.at!,...(c.shippingLiability==='DEPARTMENT'?{insuranceStatus:'INSURANCE_CLAIM_PENDING' as const}:{})}]}:{})},action.inspection);
+  }
   if(action.type==='receive-crate') {
-    if(action.actor!=='LOGISTICS'||!action.token||action.token!==crateToken(state)||!action.id||state.logistics)return state;
+    if(!validDockInspection(action.inspection)||action.condition!==(action.inspection.condition==='INTACT'&&action.inspection.seal==='MATCH'?'INTACT':'DAMAGED')||action.actor!=='LOGISTICS'||!action.token||action.token!==crateToken(state)||!action.id||state.logistics)return state;
     const received=commissionReducer(state,{type:'receive-asset',actor:action.actor,reference:action.token,at:action.at});
     if(received===state)return state;
     const inspected=conditionTransition(received,{type:'record-condition',actor:action.actor,id:action.id,condition:action.condition,photos:action.photos,at:action.at});
-    return inspected===received?state:inspected;
+    return inspected===received?state:bindDockInspection(inspected,action.inspection);
   }
   if (action.type === 'dispatch-invitation') {
     if (action.actor !== 'COORDINATOR' || !action.pipelineReady || state.invitation || state.contracts.length || state.installationStatus === 'EXECUTIVE_IMPOUND' || damageHold(state)
@@ -194,7 +214,7 @@ export function commissionReducer(state: CommissionState, action: CommissionActi
   if (impounded && ['technical-check','record-technical','request-saf','close-exhibition','CONTRACT_DISPUTED','contracts','request-fleet','fleet-transit'].includes(action.type)) return state;
   if (action.type === 'request-fleet') {
     if(c?.productionOrigin==='LOCAL_FABRICATION'||action.actor!=='LOGISTICS'||!accepted||state.logistics?.closedAt||c.id!==action.contractId||!validCrate(c.crate)||!vehicleTypes.includes(action.vehicle as typeof vehicleTypes[number])||!action.id||!Number.isFinite(Date.parse(action.at))||state.fleetTickets?.some(r=>r.id===action.id||!r.isSuperseded&&r.contractId===c.id&&r.crate.reference===c.crate!.reference))return state;
-    return {...state,fleetTickets:[...(state.fleetTickets??[]),{appliesToRevision:state.agreementRevision,id:action.id,contractId:c.id,artistId:c.artistId,crate:{...c.crate},vehicle:action.vehicle,status:'PENDING_FLEET_ASSIGNMENT',requestedAt:action.at}]};
+    return {...state,fleetTickets:[...(state.fleetTickets??[]),{appliesToRevision:state.agreementRevision,id:action.id,contractId:c.id,artistId:c.artistId,crate:{...c.crate,...(state.logistics?.inspection??{})},vehicle:action.vehicle,status:'PENDING_FLEET_ASSIGNMENT',requestedAt:action.at}]};
   }
   if(action.type==='fleet-transit') {
     const ticket=state.fleetTickets?.find(r=>r.id===action.ticketId);

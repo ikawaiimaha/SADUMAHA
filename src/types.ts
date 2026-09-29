@@ -150,7 +150,7 @@ export interface CommissionState {
   impounds?: import('./data/installationOperations').ExecutiveImpound[];
   fleetTickets?: import('./data/installationOperations').FleetTicket[];
   receiptHistory?: NonNullable<CommissionState['logistics']>[];
-  logistics?: { appliesToRevision?: number; isSuperseded?: boolean; status: 'PHYSICAL_ASSET_RECEIVED'; reference: string; receivedAt: string; closedAt?: string; returnReference?: string; reconciliationReference?: string };
+  logistics?: { inspection?: import('./data/installationOperations').DockInspection; appliesToRevision?: number; isSuperseded?: boolean; status: 'PHYSICAL_ASSET_RECEIVED'; reference: string; receivedAt: string; closedAt?: string; returnReference?: string; reconciliationReference?: string };
   safRequest?: { technicians: number; hours: number; rationale: string; requestedAt: string };
   ledger?: { tranche: 'advance' | 'delivery' | 'completion'; amount: number; at: string; revision: number }[];
   contracts: import('./types/contractStage6').BilateralContract[];
