@@ -1,3 +1,4 @@
+import {AssetStateDashboard} from './components/AssetStateDashboard';
 import {PublicationEscrow} from './components/PublicationEscrow';
 import {InterAgencyResources} from './components/InterAgencyResources';
 import {resourceTransition,type ResourceTicket} from './data/interAgencyResources';
@@ -1016,6 +1017,7 @@ function SADUApp() {
         <DelegatedRoleGate role={activeRole}>
         {activeRole==='COORDINATOR'&&!nominationOpen(publishedBoundaries)?<CuratorialBoundaries isAr={isAr}/>:<>
         {['BIENNIAL_DIRECTOR','CHAIRMAN','PR_PROTOCOL','FINANCE'].includes(activeRole)&&<InstitutionalDashboard dossiers={nominatedArtists} evidence={artists.map(a=>a.id===COMMISSION.id?{...a,status:commission.installationStatus??a.status,prCleared:commission.evidence.prEvidenceGate}:a)} isAr={isAr} canReassign={activeRole==='BIENNIAL_DIRECTOR'} lockedIds={[...contracts.filter(c=>c.status!=='NOT_DRAFTED').map(c=>c.artistId),...(commission.invitation?[commission.invitation.artistId]:[])]} onReassign={(id,target,reason)=>setNominatedArtists(rows=>reassignDossier(rows,id,target,reason,activeRole,new Date().toISOString(),[...contracts.filter(c=>c.status!=='NOT_DRAFTED').map(c=>c.artistId),...(commission.invitation?[commission.invitation.artistId]:[])]))}/>}
+        {['HIP','BIENNIAL_DIRECTOR'].includes(activeRole)&&<AssetStateDashboard artists={nominatedArtists}/>}
         {renderWorkspace()}{['COORDINATOR','PR_PROTOCOL'].includes(activeRole)&&<PublicationEscrow assignedArtistIds={activeRole==='COORDINATOR'?assignedTo(nominatedArtists,activeCoordinatorId).map(d=>d.id):undefined}/>}{['COORDINATOR','PR_PROTOCOL','LOGISTICS'].includes(activeRole)&&<ArtistMetadataQueue exportLabels={['COORDINATOR','PR_PROTOCOL'].includes(activeRole)}/>}{['COORDINATOR','LOGISTICS'].includes(activeRole)&&<ExhibitionChecklistQueue/>}
         {['TECHNICAL','COORDINATOR','FINANCE','BIENNIAL_DIRECTOR'].includes(activeRole)&&<InterAgencyResources rows={resourceTickets} dossiers={nominatedArtists} eligibleIds={resourceEligibleIds} scopeKeys={resourceScopeKeys} actor={activeRole} coordinatorId={activeCoordinatorId} isAr={isAr} onAction={action=>{const at=new Date().toISOString();setResourceTickets(rows=>resourceTransition(rows,action.type==='request'?{...action,ticket:{...action.ticket,requestedAt:at}}:action,activeRole,at,resourceEligibleIds,nominatedArtists.filter(d=>d.assignedCoordinatorId===activeCoordinatorId).map(d=>d.id),activeCoordinatorId,resourceScopeKeys));}}/>}
         {activeRole==='EDITORIAL'&&<LiveCatalogAggregator state={commission} isAr={isAr}/>}
