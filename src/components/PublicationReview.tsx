@@ -2,14 +2,17 @@ import { useEffect, useState } from 'react';
 import SpatialPlanner from './SpatialPlanner';
 
 type Account = { id: string; name: string; role: 'Artist' | 'General_Exhibition_Coordinator' | 'Director' };
-type Revision = { number: number; status: string; content: { title: string; concept: string }; critique?: string };
+type LabelFields = { artistName: string; width_cm: number; height_cm: number; year: number; profileUrl?: string };
+type Revision = { number: number; status: string; content: { title: string; concept: string; label?: LabelFields }; critique?: string; profileVerification?: { url: string } };
 type RecordView = {
   version: number; artistId: string; revisions: Revision[];
   events: { id: string; revision: number; action: string; note: string; actorRole: string; at: string }[];
   alerts: { id: string; message: string; resolved: boolean; revision: number }[];
   outbox: { id: string; revision: number; syncStatus: string; delivery: string }[];
   tasks: { revision: number; owner: string; title: string }[];
+  labels: { id: string; revision: number; status: string; current: boolean; sha256: string }[];
 };
+const toDraft = (content?: Revision['content']) => ({ title: content?.title ?? '', concept: content?.concept ?? '', artistName: content?.label?.artistName ?? 'Noura Al Mazrouei', width: content?.label?.width_cm == null ? '' : String(content.label.width_cm), height: content?.label?.height_cm == null ? '' : String(content.label.height_cm), year: content?.label?.year == null ? '' : String(content.label.year), profileUrl: content?.label?.profileUrl ?? '' });
 const label = (value: string) => value.replaceAll('_', ' ');
 const panel = 'rounded-xl border border-[#D9CEBA] bg-white ps-5 pe-5 py-5 space-y-4';
 const input = 'mt-1 block w-full rounded border border-[#8C8173] bg-white ps-3 pe-3 py-2';
@@ -25,14 +28,14 @@ export default function PublicationReview() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [actor, setActor] = useState<Account | null>(null);
   const [record, setRecord] = useState<RecordView | null>(null);
-  const [draft, setDraft] = useState({ title: '', concept: '' });
+  const [draft, setDraft] = useState(() => toDraft());
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [spatialDirty, setSpatialDirty] = useState(false);
   const [spatialReload, setSpatialReload] = useState(0);
-  const apply = (next: RecordView) => { setRecord(next); const r = next.revisions.at(-1); setDraft(r?.content ?? { title: '', concept: '' }); };
+  const apply = (next: RecordView) => { setRecord(next); const r = next.revisions.at(-1); setDraft(toDraft(r?.content)); };
   useEffect(() => {
     let active = true;
     void (async () => {
@@ -59,11 +62,17 @@ export default function PublicationReview() {
   });
   const revision = record?.revisions.at(-1);
   const editable = actor?.role === 'Artist' && revision && ['Draft', 'Revision_Requested'].includes(revision.status);
-  const dirty = Boolean(editable && (draft.title !== revision.content.title || draft.concept !== revision.content.concept));
+  const dirty = Boolean(editable && JSON.stringify(draft) !== JSON.stringify(toDraft(revision.content)));
   const act = (action: string) => run(async () => {
     if (!record || !revision) return;
-    apply(await api<RecordView>('action', { action, version: record.version, revision: revision.number, ...(action === 'save' ? { content: draft } : { note }) }));
+    apply(await api<RecordView>('action', { action, version: record.version, revision: revision.number, ...(action === 'save' ? { content: { title: draft.title, concept: draft.concept, label: { artistName: draft.artistName, width_cm: Number(draft.width), height_cm: Number(draft.height), year: Number(draft.year), profileUrl: draft.profileUrl } } } : { note }) }));
     setNote(''); setNotice(action === 'publish' ? 'Director approval saved. Publication is queued; external delivery remains paused.' : action === 'request_revision' ? 'Critique saved. A new artist revision and portal alert were created.' : 'Saved by the local backend.');
+  });
+  const download = (path: string, filename: string) => run(async () => {
+    const response = await fetch(`/api/review/labels/${path}`, { credentials: 'same-origin' });
+    if (!response.ok) throw new Error((await response.json()).error ?? 'Download failed.');
+    const url = URL.createObjectURL(await response.blob()); const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setNotice('PDF downloaded. Print at actual size, 150 × 100 mm. This is a fictional rehearsal.');
   });
   return <div dir="ltr" lang="en" className="min-h-screen bg-[#F7F1E6] text-[#2C2A29]">
     <header className="border-b border-[#D9CEBA] ps-5 pe-5 py-5 flex flex-wrap gap-4 items-center justify-between"><strong className="font-serif text-3xl text-[#8B261E]">SADU</strong><a className="underline" href="/">Return to the 14-task journey</a></header>
@@ -98,14 +107,28 @@ export default function PublicationReview() {
           {revision && <>
             {revision.critique && <aside className="rounded bg-amber-50 ps-4 pe-4 py-3"><strong>Coordinator critique:</strong><p className="whitespace-pre-wrap">{revision.critique}</p></aside>}
             {editable ? <><label className="block">Artwork title<input className={input} value={draft.title} maxLength={200} disabled={busy} onChange={e => setDraft({ ...draft, title: e.target.value })}/></label><label className="block">Artwork concept<textarea rows={5} className={input} value={draft.concept} maxLength={10000} disabled={busy} onChange={e => setDraft({ ...draft, concept: e.target.value })}/></label><div className="flex flex-wrap gap-3"><button className={button} disabled={busy || !draft.title.trim() || !draft.concept.trim()} onClick={() => void act('save')}>Save draft</button><button className={button} disabled={busy || dirty} onClick={() => void act('submit')}>Submit to Coordinator</button></div></> : <><h3 className="font-semibold">{revision.content.title}</h3><p className="whitespace-pre-wrap break-words">{revision.content.concept}</p></>}
+            {editable && <fieldset disabled={busy} className="space-y-3"><legend className="font-semibold">Gallery label fields</legend>
+              <label className="block">Artist display name<input className={input} maxLength={120} value={draft.artistName} onChange={e => setDraft({ ...draft, artistName: e.target.value })}/></label>
+              <div className="grid gap-3 sm:grid-cols-3"><label>Label width (cm)<input className={input} type="number" min="0" step="any" value={draft.width} onChange={e => setDraft({ ...draft, width: e.target.value })}/></label><label>Label height (cm)<input className={input} type="number" min="0" step="any" value={draft.height} onChange={e => setDraft({ ...draft, height: e.target.value })}/></label><label>Artwork year<input className={input} type="number" min="1000" max="9999" step="1" value={draft.year} onChange={e => setDraft({ ...draft, year: e.target.value })}/></label></div>
+              <label className="block">SDC artist-profile URL (optional until verified)<input className={input} type="url" maxLength={256} value={draft.profileUrl} onChange={e => setDraft({ ...draft, profileUrl: e.target.value })}/></label>
+              <p className="text-sm">Use the approved artwork dimensions, not the separate wall-study dimensions. Save the draft above after completing these fields. In local test mode, the QR uses the configured SDC base URL plus this artist’s ID and is marked as a test URL.</p>
+            </fieldset>}
+            {!editable && revision.content.label && <p>Label: {revision.content.label.artistName} · {revision.content.label.height_cm} × {revision.content.label.width_cm} cm (H × W) · {revision.content.label.year}. {revision.profileVerification ? 'Profile verification recorded.' : 'No live profile verification. Test mode can generate a marked test QR; otherwise the label stays a draft.'}</p>}
             {((actor?.role === 'General_Exhibition_Coordinator' && revision.status === 'Coordinator_Review') || (actor?.role === 'Director' && revision.status === 'Executive_Review')) && <>
               <label className="block">Review or critique notes<textarea className={input} rows={3} maxLength={2000} value={note} disabled={busy} onChange={e => setNote(e.target.value)}/></label>
               <div className="flex flex-wrap gap-3">{actor.role === 'General_Exhibition_Coordinator' ? <><button className={button} disabled={busy || !note.trim()} onClick={() => void act('request_revision')}>Request Revision</button><button className={button} disabled={busy || !note.trim()} onClick={() => void act('ready')}>Ready for Executive Review</button></> : <button className={button} disabled={busy || !note.trim()} onClick={() => void act('publish')}>Approve &amp; Publish</button>}</div>
+              {actor.role === 'General_Exhibition_Coordinator' && revision.content.label?.profileUrl && <><p className="break-words">Submitted profile URL: {revision.content.label.profileUrl}</p><p className="text-sm">Record verification only after checking that this exact official page belongs to this artist. Enter the verification basis in the review notes; this records a human check, not an automated website verification.</p><button className={button} disabled={busy || !note.trim() || Boolean(revision.profileVerification)} onClick={() => void act('verify_profile')}>Record profile verification</button></>}
             </>}
             {revision.status === 'Publication_Approved' && <p>Approval is recorded against this exact revision. Its content is frozen.</p>}
+            {actor?.role === 'General_Exhibition_Coordinator' && ['Publication_Approved', 'Executive_Review'].includes(revision.status) && <><label className="block">Correction or new revision reason<textarea className={input} maxLength={2000} value={note} onChange={e => setNote(e.target.value)}/></label><button className={button} disabled={busy || !note.trim()} onClick={() => void act(revision.status === 'Publication_Approved' ? 'amend' : 'request_revision')}>Request a new artist revision</button></>}
           </>}
         </section>
         <section className={panel}><h2 className="text-xl font-semibold">Publication queue</h2>{record.outbox.length ? <ul>{record.outbox.map(row => <li key={row.id}>Revision {row.revision} · {row.syncStatus} · External delivery {row.delivery.toLowerCase()}</li>)}</ul> : <p>Nothing queued. Only Director approval can create a publication entry.</p>}</section>
+        {actor?.role === 'General_Exhibition_Coordinator' && <section className={panel}><h2 className="text-xl font-semibold">Approved gallery labels</h2><p>Vector PDF, 150 × 100 mm. Test-ready labels use a generated SDC URL and explicitly state that it is not live-verified. Drafts and historical versions are excluded from the batch.</p>
+          {!record.labels?.length && <p>No labels generated yet. Earlier approvals are preserved; request a new artist revision to add label metadata.</p>}
+          <ul className="space-y-3">{record.labels?.map(row => <li key={row.id}>Revision {row.revision} · {label(row.status)} · {row.current ? 'Current' : 'Historical'} <button className={button} disabled={busy} onClick={() => void download(`${encodeURIComponent(row.id)}.pdf`, `SADU-label-r${row.revision}.pdf`)}>Download revision {row.revision} PDF</button></li>)}</ul>
+          <button className={button} disabled={busy || !record.labels?.some(row => row.current && ['Ready', 'Test_Ready'].includes(row.status))} onClick={() => void download('batch.pdf', 'SADU-approved-labels.pdf')}>Download all print-ready labels (rehearsal)</button>
+        </section>}
         <section className={panel}><h2 className="text-xl font-semibold">Revision and decision history</h2><ol className="space-y-3">{record.events.map(event => <li key={event.id} className="border-t border-[#D9CEBA] pt-3"><strong>Revision {event.revision} · {label(event.action)}</strong><p>{label(event.actorRole)} · {new Date(event.at).toLocaleString('en-GB')}</p><p className="whitespace-pre-wrap break-words">{event.note}</p></li>)}</ol></section>
       </>}
     </main>

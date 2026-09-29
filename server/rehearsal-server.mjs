@@ -4,9 +4,11 @@ import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 import { ACCOUNTS, ReviewError, openReviewStore } from './review-store.mjs';
 import { openSpatialStore } from './spatial-store.mjs';
+import { DEFAULT_CMS_BASE_URL, dynamicTestProfileUrl } from './gallery-labels.mjs';
 
-export async function createRehearsalApp({ file, staticRoot, spatialFile } = {}) {
-  const store = await openReviewStore(file ?? fileURLToPath(new URL('../.local/rehearsal-review.json', import.meta.url)));
+export async function createRehearsalApp({ file, staticRoot, spatialFile, labelOptions = { testMode: process.env.SDC_LABEL_TEST_MODE !== 'false', baseUrl: process.env.SDC_CMS_BASE_URL || DEFAULT_CMS_BASE_URL } } = {}) {
+  if (labelOptions.testMode) dynamicTestProfileUrl('configuration-check', labelOptions.baseUrl);
+  const store = await openReviewStore(file ?? fileURLToPath(new URL('../.local/rehearsal-review.json', import.meta.url)), { labelOptions });
   const spatial = await openSpatialStore(spatialFile ?? (file ? `${file}.spatial.json` : fileURLToPath(new URL('../.local/rehearsal-spatial.json', import.meta.url))));
   const app = express(); const sessions = new Map();
   app.disable('x-powered-by');
@@ -41,6 +43,14 @@ export async function createRehearsalApp({ file, staticRoot, spatialFile } = {})
     res.locals.actor = actor; next();
   });
   app.get('/api/review/record', (req, res) => res.json(store.read(res.locals.actor)));
+  app.get('/api/review/labels/batch.pdf', (req, res) => {
+    const bytes = store.batch(res.locals.actor);
+    res.set({ 'Content-Type': 'application/pdf', 'Content-Disposition': 'attachment; filename="SADU-approved-labels.pdf"', 'X-Content-Type-Options': 'nosniff' }).send(bytes);
+  });
+  app.get('/api/review/labels/:id.pdf', (req, res) => {
+    const bytes = store.label(res.locals.actor, req.params.id);
+    res.set({ 'Content-Type': 'application/pdf', 'Content-Disposition': 'attachment; filename="SADU-gallery-label.pdf"', 'X-Content-Type-Options': 'nosniff' }).send(bytes);
+  });
   app.get('/api/review/spatial', (req, res) => res.json(spatial.read(res.locals.actor)));
   app.post('/api/review/spatial', async (req, res, next) => {
     try { res.json(await spatial.act(res.locals.actor, req.body)); } catch (error) { next(error); }

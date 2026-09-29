@@ -3,10 +3,12 @@ import assert from 'node:assert/strict';
 import { mkdtemp, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { ACCOUNTS, ROLES, initialReview, projectReview, transitionReview, openReviewStore } from '../server/review-store.mjs';
+import { ACCOUNTS, ROLES, initialReview as emptyReview, projectReview, transitionReview, openReviewStore } from '../server/review-store.mjs';
 import { createRehearsalApp } from '../server/rehearsal-server.mjs';
 
 const [artist, coordinator, director] = ACCOUNTS;
+const label = { artistName: 'Fictional Artist', width_cm: 80, height_cm: 120, year: 2026 };
+const initialReview = () => { const state = emptyReview(); state.revisions[0].content.label = { ...label }; return state; };
 const command = (state, action, extra = {}) => ({ action, version: state.version, revision: state.revisions.at(-1).number, ...extra });
 const act = (state, actor, action, extra = {}) => transitionReview(state, actor, command(state, action, extra));
 const error = code => e => e.status === code;
@@ -28,7 +30,7 @@ test('critique creates an editable new revision, preserves submitted text and ro
   assert.equal(state.revisions.length, 2);
   assert.equal(state.revisions[1].number, 2);
   assert.equal(projectReview(state, artist).alerts[0].message, 'Explain the mounting concept.');
-  state = act(state, artist, 'save', { content: { title: 'Revised bronze', concept: 'A revised concept with mounting notes.' } });
+  state = act(state, artist, 'save', { content: { title: 'Revised bronze', concept: 'A revised concept with mounting notes.', label } });
   assert.deepEqual(state.revisions[0].content, original);
   assert.equal(projectReview(state, director).revisions.length, 0);
   state = act(state, artist, 'submit');
@@ -64,6 +66,8 @@ test('durable store survives reopen and serializes competing approvals', async (
   const folder = await mkdtemp(join(tmpdir(), 'sadu-review-test-')); const file = join(folder, 'state.json');
   const store = await openReviewStore(file);
   let record = store.read(artist);
+  await store.act(artist, { action: 'save', version: record.version, revision: 1, content: { ...record.revisions[0].content, label } });
+  record = store.read(artist);
   await store.act(artist, { action: 'submit', version: record.version, revision: 1 });
   record = store.read(coordinator);
   await store.act(coordinator, { action: 'ready', version: record.version, revision: 1, note: 'Reviewed.' });
