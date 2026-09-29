@@ -1,5 +1,6 @@
 import {test,expect} from '@playwright/test';
 test('guest uploads validate, resume without duplicate intake and reach sortable PR queue',async({page},info)=>{
+ await page.route('**/src/lib/useOperationalRows.ts*',r=>r.fulfill({contentType:'application/javascript',body:'export function useOperationalRows(){return {rows:[],notice:"",refresh:async()=>{}}}'}));
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('**/src/lib/pilotSupabase.ts*',route=>route.fulfill({contentType:'application/javascript',body:`
  const db=[];const plans=[];const stored=new Map();let failPhoto=true;window.guestRows=db;
