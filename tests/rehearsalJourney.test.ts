@@ -60,3 +60,21 @@ test('unknown tasks, future statements and stale revisions fail closed', () => {
   const old = reported(state, 'brief'); const revised = { ...old, revision: 2 };
   assert.equal(journeyReducer(revised, { type: 'confirm', decisionId: old.decisions[0].id, at, actor: 'Committee', outcome: 'confirmed', note: 'Old scope' }), revised);
 });
+
+import { emptyJournal, journalReducer, restoreJournal, serializeJournal } from '../src/data/journeyJournal';
+test('recorded journey actions survive serialization and corrupt or forged journals fail closed', () => {
+ let journal = emptyJournal();
+ journal = journalReducer(journal, { type: 'record', id: 'persist-brief', at, actor: 'Committee', draft: { taskId: 'brief', source: 'Verbal instruction', speaker: 'Sample reviewer', occurredAt: at, statement: 'Fictional brief reviewed.' } });
+ journal = journalReducer(journal, { type: 'confirm', decisionId: 'persist-brief', at, actor: 'Committee', outcome: 'confirmed', note: 'Confirmed in rehearsal.' });
+ journal = journalReducer(journal, { type: 'complete', decisionId: 'persist-brief', taskId: 'brief', at, actor: 'Committee', checks: [true] });
+ assert.deepEqual(restoreJournal(serializeJournal(journal)).state, journal.state);
+ for (const value of ['broken', JSON.stringify({format:2,actions:[]}), JSON.stringify({format:1,actions:[{type:'complete',taskId:'brief'}]})]) {
+  const restored=restoreJournal(value); assert.ok(restored.recoveryError); assert.deepEqual(restored.state.completed,{});
+ }
+});
+test('physical receipt can be recorded before advance without unlocking Finance payments', () => {
+ const received=complete(createJourney(),'receipt');
+ assert.ok(received.completed.receipt); assert.equal(received.completed.advance,undefined);
+ assert.equal(complete(received,'delivery').completed.delivery,undefined);
+ assert.deepEqual(ledgerRows(received),[]);
+});

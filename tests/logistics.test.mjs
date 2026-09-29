@@ -55,3 +55,12 @@ test('logistics HTTP API requires a session and rejects forged role and cross-or
  assert.equal((await post({role:'General_Exhibition_Coordinator'})).status,403); assert.equal((await post({},'https://example.invalid')).status,403);
  assert.equal((await fetch(`${origin}/api/review/logistics/unknown/manifest.pdf`,{headers:{Cookie:cookie}})).status,404);
 });
+
+test('a shipped crate retains its historical manifest after a publication amendment', async () => {
+ const {store,act,revise}=await setup();await act(artist,{action:'save',logistics});const id=store.read(artist).artwork_records[0].id;
+ await act(coordinator,{action:'status',artwork_id:id,physical_status:'In_Transit',note:'Collected at fictional loading bay'});
+ const before=store.read(artist);revise();
+ assert.equal(store.manifest(artist,id).subarray(0,5).toString(),'%PDF-');
+ assert.deepEqual(store.read(artist),before);
+ await assert.rejects(act(artist,{action:'save',logistics}),e=>e.status===409);
+});

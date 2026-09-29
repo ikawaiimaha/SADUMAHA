@@ -2,7 +2,7 @@
 
 Implemented 29 September 2026. This is a working local backend and frontend, not a production identity service or an activated government integration.
 
-Run `npm run build:rehearsal`, then `npm run start:rehearsal`. Open http://127.0.0.1:3013/review. The root page retains the 14-task journey. A static preview or a static website deployment cannot run this Node backend; it will show an explicit backend-unavailable message on the review page.
+Run `npm run build:rehearsal`, then `npm run start:rehearsal`. Open http://127.0.0.1:3013/review. The root page is the executive presentation; the 14-task journey is at /journey. A static preview or a static website deployment cannot run this Node backend; it will show an explicit backend-unavailable message on the review page.
 
 Three fictional accounts are configured server-side: Artist, General_Exhibition_Coordinator and Director. HIP is absent and rejected by this service. No real staff accounts were created, and historical/paused HIP modules were not migrated or deleted. Selecting an account is intentionally a demo sign-in, not proof of identity. Do not expose this service publicly or enter real personal data.
 
@@ -47,7 +47,7 @@ The approved publication artwork can now be registered by the Artist as one phys
 Authenticated endpoints:
 - GET `/api/review/logistics`: assigned Artist/Coordinator shipment and history.
 - POST `/api/review/logistics`: `{version, action:"save", logistics:{origin,destination,carrier,handling,gross_weight_kg}}` for Artist after Director approval; `{version, action:"arrive", artwork_id, note}` for Coordinator records On_Site_Sharjah; action `status` additionally takes `physical_status` for forward movement.
-- GET `/api/review/logistics/:id/manifest.pdf`: assigned Artist/Coordinator downloads the current approved revision's manifest. New printing is blocked when approval is superseded until shipment metadata is refreshed.
+- GET `/api/review/logistics/:id/manifest.pdf`: assigned Artist/Coordinator downloads the current approved revision's manifest. For pending shipments, printing is blocked when approval is superseded until metadata is refreshed. Once movement has begun, the original snapshot remains downloadable with a historical notice.
 
 The QR contains only the stable artwork UUID, never a mutating URL or private contact details. Coordinator UI supports keyboard scanners/manual entry and camera QR detection where BarcodeDetector is available. Camera activation requires a user click; frames stay local, and tracks stop on recognition, cancellation or unmount. A scan fills the ID; an explicit arrival action records the observation/location with server actor and timestamp. Unknown IDs, wrong roles, stale versions, invalid transitions and backward changes fail. Repeated arrival scans are idempotent. On-site receipt may be recorded without asserting an unobserved customs stage. Installed requires prior on-site receipt and means a recorded physical observation, not technical acceptance.
 
@@ -64,3 +64,7 @@ The Coordinator-only `curationArtworks` projection contains the current submitte
 The unapplied SQL proposal adds `thematic_tag` and an `artwork_tag` relation keyed by submission, artwork and revision. Local persistence remains the review JSON store. There is no production migration, new institutional authority or integration activation. Tests cover deterministic ranking, empty/noisy text, Unicode, tag limits, exact multi-tag filtering, role denial, forged input, revision freshness, legacy approval preservation and reopening persisted tags.
 
 Smart curation verification: 173 tests, TypeScript and rehearsal production build passed. Browser checks extracted themes for the existing approved revision, selected architecture + bronze together, cleared selections and reloaded the saved suggestions. Multi-record and no-match behavior are covered by tests; the local demo has one record.
+
+## Audit remediation (29 September 2026)
+
+See `reviews/SADU_Fictional_Audit_2026-09-29.md` for current scope, defect findings and the implemented/proposed feature matrix. The 14-task checklist now replays a validated session journal across same-tab refresh/navigation; it remains separate from backend review, wall-study and crate state. Physical receipt no longer depends on advance payment, while delivery authorization still requires the advance and receipt. The review UI selects the actual current revision, resolves superseded alerts, reflects test-mode batch policy, protects shipment edits and puts review work before auxiliary tools. Shipped crates retain a marked historical manifest when publication changes; long details move QR identification onto another page. Landing-page background motion has a pause control. None of these changes activate the real application or integrations.

@@ -94,3 +94,12 @@ test('PDF download endpoints require Coordinator session and return a single bat
   assert.equal(response.status, 200); assert.equal(response.headers.get('content-type'), 'application/pdf');
   assert.equal(Buffer.from(await response.arrayBuffer()).subarray(0, 5).toString(), '%PDF-');
 });
+
+test('batch eligibility exposes current test-mode policy and blocks old test PDFs when disabled', async () => {
+ const {store,file,command}=await prepare({labelOptions:{testMode:true}});
+ await command(director,'publish',{note:'Test approval'});
+ const reopened=await openReviewStore(file,{labelOptions:{testMode:false}});
+ assert.equal(store.read(coordinator).labelTestMode,true);
+ assert.equal(reopened.read(coordinator).labelTestMode,false);
+ assert.throws(()=>reopened.batch(coordinator),e=>e.status===409);
+});

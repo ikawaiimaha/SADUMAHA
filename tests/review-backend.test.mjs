@@ -104,3 +104,16 @@ test('HTTP sessions reject absent identity, cross-origin writes, HIP and forged 
   const view = await (await request('record', null, directorCookie)).json();
   assert.equal(view.revisions.length, 0);
 });
+
+test('Director projection identifies historical approval and resolves superseded review alerts', () => {
+ let state=act(initialReview(),artist,'submit');
+ state=act(state,coordinator,'ready',{note:'Ready for review'});
+ assert.equal(projectReview(state,director).alerts.filter(a=>!a.resolved).length,1);
+ state=act(state,coordinator,'request_revision',{note:'Correct the submitted details'});
+ assert.equal(projectReview(state,director).alerts.filter(a=>!a.resolved).length,0);
+ state=act(state,artist,'submit');state=act(state,coordinator,'ready',{note:'Ready again'});
+ state=act(state,director,'publish',{note:'Approved'});state=act(state,coordinator,'amend',{note:'New revision needed'});
+ const view=projectReview(state,director);
+ assert.equal(view.currentRevision,3);assert.equal(view.revisions.find(r=>r.number===view.currentRevision),undefined);
+ assert.equal(view.revisions[0].number,2);assert.equal(view.revisions[0].status,'Publication_Approved');
+});

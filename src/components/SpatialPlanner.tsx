@@ -38,7 +38,7 @@ export default function SpatialPlanner({ role, onDirtyChange }: { role: string; 
   const wallDirty = Boolean(data && (Number(wallDraft.width) !== data.wall_space.max_width_cm || Number(wallDraft.height) !== data.wall_space.max_height_cm));
   const artworkDirty = Boolean(artworkDraft.id || artworkDraft.title || artworkDraft.width || artworkDraft.height);
   const dirty = layoutDirty || wallDirty || artworkDirty;
-  useEffect(() => { onDirtyChange(dirty); }, [dirty, onDirtyChange]);
+  useEffect(() => { onDirtyChange(dirty || busy); }, [dirty, busy, onDirtyChange]);
   const run = async (action?: object) => {
     if (busy) return;
     setBusy(true); setError(''); setNotice('');

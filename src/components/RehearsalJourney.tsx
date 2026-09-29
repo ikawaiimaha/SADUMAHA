@@ -1,4 +1,5 @@
-import { useReducer, useState } from 'react';
+import { JOURNEY_STORAGE_KEY, emptyJournal, restoreJournal, serializeJournal, journalReducer } from '../data/journeyJournal';
+import { useEffect, useReducer, useState } from 'react';
 import { DEMO_ARTIST, DESKS, SOURCES, JOURNEY_TASKS, createJourney, currentDecision, journeyReducer, ledgerRows, missingTasks, taskById, taskStatus, type DecisionDraft, type Desk, type JourneyAction, type JourneyState, type JourneyTask, type TaskId } from '../data/rehearsalJourney';
 
 const panel = 'rounded-xl border border-[#D9CEBA] bg-white ps-5 pe-5 py-5';
@@ -10,7 +11,17 @@ type TaskForm = { draft: DecisionDraft; when: string; note: string; checks: bool
 const createForms = () => Object.fromEntries(JOURNEY_TASKS.map(task => [task.id, { draft: { taskId: task.id, source: 'Verbal instruction', speaker: '', occurredAt: '', statement: '', reference: '' }, when: localDateTime(), note: '', checks: task.checks.map(() => false) }])) as Record<TaskId, TaskForm>;
 
 export default function RehearsalJourney() {
-  const [state, dispatch] = useReducer(journeyReducer, undefined, createJourney);
+  const [journal, dispatch] = useReducer(journalReducer, undefined, () => {
+    try { return restoreJournal(sessionStorage.getItem(JOURNEY_STORAGE_KEY)); }
+    catch { return { ...emptyJournal(), recoveryError: 'Browser session storage is unavailable. Export your review record before leaving.' }; }
+  });
+  const state = journal.state;
+  const [storageError, setStorageError] = useState('');
+  useEffect(() => {
+    if (journal.recoveryError) return;
+    try { sessionStorage.setItem(JOURNEY_STORAGE_KEY, serializeJournal(journal)); setStorageError(''); }
+    catch { setStorageError('Unable to save this browser session. Export the review record before leaving.'); }
+  }, [journal]);
   const [desk, setDesk] = useState<Desk>('Committee');
   const [selected, setSelected] = useState<TaskId>('brief');
   const [filter, setFilter] = useState<'All tasks' | 'Outstanding' | 'My desk'>('All tasks');
@@ -32,7 +43,8 @@ export default function RehearsalJourney() {
         <a href="/review" className="inline-block underline font-semibold">Open the two-tier submission review</a>
         <p><strong>{DEMO_ARTIST.name}</strong> · {DEMO_ARTIST.work} · {DEMO_ARTIST.weight} kg</p>
         <p className="max-w-4xl">A guided rehearsal from brief to safe return. Use fictional statements only. Nothing is emailed, uploaded to a server, signed or paid. Desk switching simulates responsibilities; it is not authentication.</p>
-        <p className="text-sm">Records stay in this page until refresh. Download a review record before leaving. Real application and external integrations remain paused.</p>
+        <p className="text-sm">Recorded decisions and task completion survive refresh in this browser tab. Unsaved form text is not retained. Export a review record before closing the tab. This checklist remains separate from the server-backed submission and crate records.</p>
+        {(journal.recoveryError || storageError) && <p role="alert">{journal.recoveryError || storageError}</p>}
         <div className="flex flex-wrap items-center gap-3"><progress aria-label="Completed rehearsal tasks" max={JOURNEY_TASKS.length} value={complete} className="h-4 w-64 accent-[#8B261E]"/><span>{complete} of {JOURNEY_TASKS.length} tasks complete</span></div>
         {complete === JOURNEY_TASKS.length && <p role="status" className="rounded border border-green-700 bg-green-50 ps-4 pe-4 py-3">Journey complete. All three fictional tranches are recorded and return is reconciled.</p>}
       </section>

@@ -33,7 +33,7 @@ export function projectReview(state, actor) {
   const r = current(state);
   const owner = ['Draft', 'Revision_Requested'].includes(r.status) ? 'Artist' : r.status === 'Coordinator_Review' ? 'General_Exhibition_Coordinator' : r.status === 'Executive_Review' ? 'Director' : null;
   return structuredClone({
-    version: state.version, artistId: state.artistId, revisions,
+    version: state.version, artistId: state.artistId, currentRevision: r.number, revisions,
     curationArtworks: actor.role === 'General_Exhibition_Coordinator' && ['Coordinator_Review', 'Executive_Review', 'Publication_Approved'].includes(r.status) ? [{ id: `${state.artistId}:publication-artwork`, revision: r.number, title: r.content.title, concept: r.content.concept, tags: r.tagging?.tags ?? [], extracted: Boolean(r.tagging), extractorVersion: r.tagging?.extractorVersion }] : [],
     events: state.events.filter(e => visible.has(e.revision)),
     alerts: state.alerts.filter(a => a.accountId === actor.id),
@@ -84,6 +84,7 @@ export function transitionReview(state, actor, command, at = new Date().toISOStr
       r.critique = command.note.trim();
       if (command.action === 'amend') next.outbox.filter(row => row.revision === r.number && row.delivery === 'Paused').forEach(row => { row.delivery = 'Cancelled'; });
       event('Revision_Requested', r.critique); resolve();
+      next.alerts.filter(a => a.revision === r.number).forEach(a => { a.resolved = true; });
       next.revisions.push({ number: r.number + 1, status: 'Revision_Requested', content: { ...r.content }, critique: r.critique });
       alert('Artist', r.critique); break;
     case 'tag_existing':
@@ -127,7 +128,7 @@ export async function openReviewStore(file, { labelGenerator = generateLabelArti
   if (state.format !== 1 || !Number.isInteger(state.version) || !Array.isArray(state.revisions) || !state.revisions.length) throw new Error('Unsupported local review data. Preserve it and inspect before continuing.');
   let queue = Promise.resolve();
   return {
-    read: actor => projectReview(state, actor),
+    read: actor => ({ ...projectReview(state, actor), labelTestMode: labelOptions.testMode === true }),
     label(actor, id) {
       authorize(state, actor);
       if (actor.role !== 'General_Exhibition_Coordinator') fail(403, 'Only the assigned Coordinator can download gallery labels.');
@@ -157,7 +158,7 @@ export async function openReviewStore(file, { labelGenerator = generateLabelArti
         const temp = `${file}.${randomUUID()}.tmp`;
         await writeFile(temp, JSON.stringify(next, null, 2), { mode: 0o600 });
         await rename(temp, file); // Publish the state only after durable file replacement succeeds.
-        state = next; return projectReview(state, actor);
+        state = next; return { ...projectReview(state, actor), labelTestMode: labelOptions.testMode === true };
       });
       queue = result.catch(() => {}); return result;
     },

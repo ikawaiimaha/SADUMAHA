@@ -10,23 +10,32 @@ const required = (v, max = 180) => typeof v === 'string' && v.trim().length > 0 
 function authorize(actor) {
   if (!actor || actor.exhibitionId !== 'demo-exhibition' || !['Artist', 'General_Exhibition_Coordinator'].includes(actor.role) || (actor.role === 'Artist' && actor.artistId !== 'demo-kufic-horizon')) fail(403, 'Only the assigned artist and Coordinator can access this shipment.');
 }
-export function shippingManifest(record) {
+export function shippingManifest(record, historical = false) {
   const pdf = new jsPDF({ unit: 'mm', format: 'a4', compress: true });
   pdf.setFont('helvetica', 'bold'); pdf.setFontSize(22); pdf.text('SADU | Shipping Manifest', 18, 23);
   pdf.setFont('helvetica', 'normal'); pdf.setFontSize(10); pdf.text('FICTIONAL LOCAL REHEARSAL - NOT A CUSTOMS OR SHIPPING AUTHORIZATION', 18, 33);
-  let y = 48;
+  if (historical) { pdf.setTextColor(150, 40, 30); pdf.setFontSize(9); pdf.text('HISTORICAL SHIPMENT SNAPSHOT - PUBLICATION REVISION HAS CHANGED', 18, 40); pdf.setTextColor(0, 0, 0); }
+  let y = 50;
   const rows = [['Artist', record.artist_name], ['Artwork', record.title], ['Artwork Record ID', record.id], ['Approved revision', String(record.approved_revision)], ['Collection point', record.logistics.origin], ['Delivery point', record.logistics.destination], ['Carrier / reference', record.logistics.carrier], ['Package', `1 of 1 - ${record.logistics.gross_weight_kg} kg gross`], ['Handling', record.logistics.handling]];
   for (const [label, value] of rows) {
     pdf.setFont('helvetica', 'bold'); pdf.text(label, 18, y);
     pdf.setFont('helvetica', 'normal'); const lines = pdf.splitTextToSize(value, 120);
     pdf.text(lines, 70, y); y += Math.max(9, lines.length * 4.5 + 4);
   }
+  let qrTop = 173;
+  if (y > 160) {
+    pdf.addPage(); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(20); pdf.text('SADU | Crate identification', 18, 25);
+    pdf.setFont('helvetica', 'normal'); pdf.setFontSize(10); pdf.text(`Artwork Record ID: ${record.id}`, 18, 40);
+    pdf.text('Fictional rehearsal - attach together with the shipment detail page.', 18, 50);
+    if (historical) pdf.text('HISTORICAL SHIPMENT SNAPSHOT', 18, 60);
+    qrTop = 90;
+  }
   const qr = QRCode.create(record.id, { errorCorrectionLevel: 'M' });
-  const size = 76, x = 67, top = 173, unit = size / (qr.modules.size + 8);
+  const size = 76, x = 67, top = qrTop, unit = size / (qr.modules.size + 8);
   pdf.setFillColor(0, 0, 0);
   for (let r = 0; r < qr.modules.size; r++) for (let c = 0; c < qr.modules.size; c++) if (qr.modules.get(r, c)) pdf.rect(x + (c + 4) * unit, top + (r + 4) * unit, unit, unit, 'F');
-  pdf.setFontSize(10); pdf.text(record.id, 105, 259, { align: 'center' });
-  pdf.text('Scan on the Coordinator crate-tracking screen, or type this ID.', 105, 267, { align: 'center' });
+  pdf.setFontSize(10); pdf.text(record.id, 105, top + 86, { align: 'center' });
+  pdf.text('Scan on the Coordinator crate-tracking screen, or type this ID.', 105, top + 94, { align: 'center' });
   pdf.setFontSize(9); pdf.text('Receipt does not confirm condition, customs clearance, installation safety or payment.', 18, 282);
   return Buffer.from(pdf.output('arraybuffer'));
 }
@@ -43,8 +52,9 @@ export async function openLogisticsStore(file, reviewFor) {
       authorize(actor); const record = state.artwork_records.find(r => r.id === id);
       if (!record) fail(404, 'Unknown artwork ID.');
       const revision = reviewFor(actor).revisions.at(-1);
-      if (revision?.status !== 'Publication_Approved' || revision.number !== record.approved_revision) fail(409, 'The artwork revision changed. Update its shipment record after approval before printing.');
-      return shippingManifest(record);
+      const changed = revision?.status !== 'Publication_Approved' || revision.number !== record.approved_revision;
+      if (changed && record.physical_status === 'Pending_Shipment') fail(409, 'The artwork revision changed. Update its shipment record after approval before printing.');
+      return shippingManifest(record, changed);
     },
     act(actor, command) {
       const result = queue.then(async () => {
