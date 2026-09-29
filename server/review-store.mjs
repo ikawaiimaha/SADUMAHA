@@ -1,3 +1,4 @@
+import { extractKeywords, EXTRACTOR_VERSION } from '../src/curation/keywords.mjs';
 import { randomUUID } from 'node:crypto';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
@@ -33,6 +34,7 @@ export function projectReview(state, actor) {
   const owner = ['Draft', 'Revision_Requested'].includes(r.status) ? 'Artist' : r.status === 'Coordinator_Review' ? 'General_Exhibition_Coordinator' : r.status === 'Executive_Review' ? 'Director' : null;
   return structuredClone({
     version: state.version, artistId: state.artistId, revisions,
+    curationArtworks: actor.role === 'General_Exhibition_Coordinator' && ['Coordinator_Review', 'Executive_Review', 'Publication_Approved'].includes(r.status) ? [{ id: `${state.artistId}:publication-artwork`, revision: r.number, title: r.content.title, concept: r.content.concept, tags: r.tagging?.tags ?? [], extracted: Boolean(r.tagging), extractorVersion: r.tagging?.extractorVersion }] : [],
     events: state.events.filter(e => visible.has(e.revision)),
     alerts: state.alerts.filter(a => a.accountId === actor.id),
     outbox: state.outbox.map(({ payload, ...receipt }) => receipt),
@@ -71,6 +73,7 @@ export function transitionReview(state, actor, command, at = new Date().toISOStr
     case 'submit':
       assert('Artist', ['Draft', 'Revision_Requested']);
       if (!text(r.content.title, 200) || !text(r.content.concept, 10000)) fail(422, 'Save complete artwork text first.');
+      r.tagging = { tags: extractKeywords(r.content.concept), extractorVersion: EXTRACTOR_VERSION, source: 'concept', at };
       r.status = 'Coordinator_Review'; event('Submitted', 'Artist submitted this immutable review snapshot.'); resolve();
       alert('General_Exhibition_Coordinator', `Revision ${r.number} is ready for critique.`); break;
     case 'amend':
@@ -83,6 +86,11 @@ export function transitionReview(state, actor, command, at = new Date().toISOStr
       event('Revision_Requested', r.critique); resolve();
       next.revisions.push({ number: r.number + 1, status: 'Revision_Requested', content: { ...r.content }, critique: r.critique });
       alert('Artist', r.critique); break;
+    case 'tag_existing':
+      assert('General_Exhibition_Coordinator', ['Coordinator_Review', 'Executive_Review', 'Publication_Approved']);
+      if (r.tagging) fail(409, 'This revision already has extracted tags.');
+      r.tagging = { tags: extractKeywords(r.content.concept), extractorVersion: EXTRACTOR_VERSION, source: 'concept', at };
+      event('Thematic_Tags_Extracted', 'Generated local keyword suggestions for an existing submission; content and approvals unchanged.'); break;
     case 'verify_profile': {
       assert('General_Exhibition_Coordinator', ['Coordinator_Review']);
       if (!text(command.note, 2000)) fail(422, 'Record how the profile URL and artist identity were verified.');

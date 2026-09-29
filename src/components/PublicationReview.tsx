@@ -1,3 +1,4 @@
+import SmartCuration, { type CuratedArtwork } from './SmartCuration';
 import { useEffect, useState } from 'react';
 import CrateTracking from './CrateTracking';
 import SpatialPlanner from './SpatialPlanner';
@@ -6,6 +7,7 @@ type Account = { id: string; name: string; role: 'Artist' | 'General_Exhibition_
 type LabelFields = { artistName: string; width_cm: number; height_cm: number; year: number; profileUrl?: string };
 type Revision = { number: number; status: string; content: { title: string; concept: string; label?: LabelFields }; critique?: string; profileVerification?: { url: string } };
 type RecordView = {
+  curationArtworks: CuratedArtwork[];
   version: number; artistId: string; revisions: Revision[];
   events: { id: string; revision: number; action: string; note: string; actorRole: string; at: string }[];
   alerts: { id: string; message: string; resolved: boolean; revision: number }[];
@@ -97,6 +99,7 @@ export default function PublicationReview() {
       {error && <p role="alert" className="rounded border border-red-800 bg-red-50 ps-4 pe-4 py-3">{error}</p>}
       <p role="status" aria-live="polite">{busy ? 'Saving or loading…' : notice}</p>
       {record && <>
+        {actor?.role === 'General_Exhibition_Coordinator' && <SmartCuration key={`curation-${actor.id}-${revision?.number}`} artworks={record.curationArtworks ?? []} busy={busy} onExtractExisting={() => void act('tag_existing')}/>}
         {actor && actor.role !== 'Director' && <CrateTracking key={`crate-${actor.id}-${spatialReload}`} role={actor.role}/>}
 
         {actor && actor.role !== 'Director' && <SpatialPlanner key={`${actor.id}-${spatialReload}`} role={actor.role} onDirtyChange={setSpatialDirty}/>}

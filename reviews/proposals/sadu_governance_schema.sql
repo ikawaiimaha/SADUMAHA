@@ -90,6 +90,21 @@ CREATE TABLE sadu_proposal.artwork_record (
   PRIMARY KEY (submission_id, revision, artwork_id),
   FOREIGN KEY (submission_id, revision) REFERENCES sadu_proposal.submission_revision
 );
+-- Suggested themes belong to the exact artwork revision, not an approval.
+CREATE TABLE sadu_proposal.thematic_tag (
+  keyword text PRIMARY KEY CHECK (length(keyword) BETWEEN 1 AND 40)
+);
+CREATE TABLE sadu_proposal.artwork_tag (
+  submission_id uuid NOT NULL,
+  revision integer NOT NULL,
+  artwork_id uuid NOT NULL,
+  keyword text NOT NULL REFERENCES sadu_proposal.thematic_tag,
+  extractor_version integer NOT NULL CHECK (extractor_version > 0),
+  extracted_at timestamptz NOT NULL,
+  PRIMARY KEY (submission_id, revision, artwork_id, keyword),
+  FOREIGN KEY (submission_id, revision, artwork_id)
+    REFERENCES sadu_proposal.artwork_record (submission_id, revision, artwork_id)
+);
 CREATE TABLE sadu_proposal.artwork_image (
   id uuid PRIMARY KEY,
   submission_id uuid NOT NULL,
