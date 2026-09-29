@@ -1,0 +1,61 @@
+-- Requires installation-manifest.sql. Rollback-only fixtures.
+begin;
+insert into auth.users(id) values('11111111-1111-4111-8111-111111111111');
+insert into public.bilateral_contracts(id,artist_id,artist_name,status) values('catalog-test','11111111-1111-4111-8111-111111111111','Fictional metadata test','ARTIST_APPROVED');
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","institutional_role":"ARTIST"}',true);
+insert into public.sadu_exhibition_scenarios(id,contract_id,artist_id,artwork_checklist) values('22222222-2222-4222-8222-222222222222','catalog-test','11111111-1111-4111-8111-111111111111','[{"id":"33333333-3333-4333-8333-333333333333","name":"Wall 1","artworkCount":1,"medium":"Print","displaySpecifications":"Matte glass","printRequired":true,"avRequired":false,"darkRoom":false}]');
+insert into public.sadu_scenario_media values('11111111-1111-4111-8111-111111111111/scenarios/22222222-2222-4222-8222-222222222222/33333333-3333-4333-8333-333333333333/PRINT/test.png','22222222-2222-4222-8222-222222222222','33333333-3333-4333-8333-333333333333','PRINT','test.png','{"title":"Balance","medium":"Ink","year":"2026","height":"100","width":"80","depth":"2"}');
+insert into storage.objects(bucket_id,name,metadata) values('logistics-secure','11111111-1111-4111-8111-111111111111/scenarios/22222222-2222-4222-8222-222222222222/33333333-3333-4333-8333-333333333333/PRINT/test.png','{"size":100,"mimetype":"image/png"}');
+do $$begin begin insert into public.sadu_artwork_checklist(id,scenario_id,zone_id,media_object_name,source,production_year,height_cm,width_cm,weight_kg,crate_count,religious_text) values('44444444-4444-4444-8444-444444444444','22222222-2222-4222-8222-222222222222','33333333-3333-4333-8333-333333333333','11111111-1111-4111-8111-111111111111/scenarios/22222222-2222-4222-8222-222222222222/33333333-3333-4333-8333-333333333333/PRINT/test.png','{"title":"Balance","language":"ar","medium":"Ink","concept":"A study of balance","bio":"Fictional biography"}',2026,100,80,20,1,null); raise exception 'Missing declaration accepted';exception when others then if SQLERRM not like 'Explicit religious text declaration required%' then raise;end if;end;end $$;
+insert into public.sadu_artwork_checklist(id,scenario_id,zone_id,media_object_name,source,production_year,height_cm,width_cm,weight_kg,crate_count,religious_text) values('44444444-4444-4444-8444-444444444444','22222222-2222-4222-8222-222222222222','33333333-3333-4333-8333-333333333333','11111111-1111-4111-8111-111111111111/scenarios/22222222-2222-4222-8222-222222222222/33333333-3333-4333-8333-333333333333/PRINT/test.png','{"title":"Balance","language":"ar","medium":"Ink","concept":"A study of balance","bio":"Fictional biography"}',2026,100,80,20,1,false);
+
+do $$begin begin update public.sadu_exhibition_scenarios set status='SUBMITTED' where contract_id='catalog-test';raise exception 'Missing scope allowed';exception when others then if SQLERRM not like 'Approved artwork count%' then raise;end if;end;end $$;
+select set_config('request.jwt.claims','{"sub":"55555555-5555-4555-8555-555555555555","role":"authenticated","app_metadata":{"institutional_role":"BIENNIAL_DIRECTOR"}}',true);
+insert into public.sadu_asset_scope(scenario_id,expected_count,approval_reference) values('22222222-2222-4222-8222-222222222222',3,'Reviewed test');
+select set_config('request.jwt.claims','{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","app_metadata":{"institutional_role":"ARTIST"}}',true);
+do $$begin begin update public.sadu_exhibition_scenarios set status='SUBMITTED' where contract_id='catalog-test';raise exception 'Partial set allowed';exception when others then if SQLERRM not like 'Approved artwork count%' then raise;end if;end;end $$;
+reset role;update public.sadu_asset_scope set expected_count=1 where scenario_id='22222222-2222-4222-8222-222222222222';set local role authenticated;
+do $$begin begin update public.sadu_exhibition_scenarios set status='SUBMITTED' where contract_id='catalog-test';raise exception 'Missing value allowed';exception when others then if SQLERRM not like 'Every artwork requires a structured%' then raise;end if;end;end $$;
+insert into public.sadu_artwork_values(artwork_id,amount_minor,currency,purpose) values('44444444-4444-4444-8444-444444444444',0,'USD','DECLARED_SALE_VALUE');
+select set_config('request.jwt.claims','{"sub":"55555555-5555-4555-8555-555555555555","role":"authenticated","app_metadata":{"institutional_role":"FINANCE"}}',true);
+do $$begin if exists(select 1 from public.sadu_artwork_values) then raise exception 'Finance sees unfinished dossier';end if;end $$;
+select set_config('request.jwt.claims','{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","app_metadata":{"institutional_role":"ARTIST"}}',true);
+select set_config('request.jwt.claims','{"sub":"55555555-5555-4555-8555-555555555555","role":"authenticated","app_metadata":{"institutional_role":"TECHNICAL"}}',true);
+do $$begin if exists(select 1 from public.sadu_artwork_checklist) then raise exception 'Technical sees draft labels';end if;end $$;
+select set_config('request.jwt.claims','{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","app_metadata":{"institutional_role":"ARTIST"}}',true);
+update public.sadu_exhibition_scenarios set status='SUBMITTED' where contract_id='catalog-test';
+select set_config('request.jwt.claims','{"sub":"55555555-5555-4555-8555-555555555555","role":"authenticated","app_metadata":{"institutional_role":"TECHNICAL"}}',true);
+do $$begin if not exists(select 1 from public.sadu_artwork_checklist where id='44444444-4444-4444-8444-444444444444') then raise exception 'Technical missing submitted label';end if;end $$;
+select set_config('request.jwt.claims','{"sub":"55555555-5555-4555-8555-555555555555","role":"authenticated","app_metadata":{"institutional_role":"FINANCE"}}',true);
+do $$begin
+ if not exists(select 1 from public.sadu_artwork_values where amount_minor=0 and title='Balance') then raise exception 'Finance missing submitted value';end if;
+ begin update public.sadu_artwork_values set amount_minor=20;raise exception 'Value mutation';exception when insufficient_privilege then null;end;
+end $$;
+reset role;
+do $$begin begin update public.sadu_artwork_checklist set religious_text=true where id='44444444-4444-4444-8444-444444444444';raise exception 'Declaration overwritten';exception when others then if SQLERRM not like 'Submitted formatting declaration is immutable%' then raise;end if;end;end $$;
+
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","app_metadata":{"institutional_role":"ARTIST"}}',true);
+insert into public.sadu_exhibition_titles(scenario_id,title_ar,title_en) values('22222222-2222-4222-8222-222222222222','معرض','Exhibition');
+do $$begin begin insert into public.sadu_publication_queue(scenario_id) values('22222222-2222-4222-8222-222222222222');raise exception 'Artist publication';exception when insufficient_privilege then null;end;end $$;
+select set_config('request.jwt.claims','{"sub":"55555555-5555-4555-8555-555555555555","role":"authenticated","app_metadata":{"institutional_role":"EDITORIAL"}}',true);
+do $$begin begin insert into public.sadu_publication_queue(scenario_id) values('22222222-2222-4222-8222-222222222222');raise exception 'Unlocked title published';exception when others then if SQLERRM not like 'Locked bilingual%' then raise;end if;end;end $$;
+select set_config('request.jwt.claims','{"sub":"55555555-5555-4555-8555-555555555555","role":"authenticated","app_metadata":{"institutional_role":"HIP"}}',true);
+update public.sadu_exhibition_titles set status='LOCKED';
+select set_config('request.jwt.claims','{"sub":"55555555-5555-4555-8555-555555555555","role":"authenticated","app_metadata":{"institutional_role":"EDITORIAL"}}',true);
+update public.sadu_artwork_checklist set translation_en='{"title":"Balance","medium":"Ink","concept":"Balance study","bio":"Fictional biography"}',translation_status='TRANSLATION_COMPLETED' where id='44444444-4444-4444-8444-444444444444';
+do $$begin begin insert into public.sadu_publication_queue(scenario_id) values('22222222-2222-4222-8222-222222222222');raise exception 'Unreviewed media published';exception when others then if SQLERRM not like 'Bilingual text%' then raise;end if;end;end $$;
+insert into public.sadu_media_reviews(object_name) values('11111111-1111-4111-8111-111111111111/scenarios/22222222-2222-4222-8222-222222222222/33333333-3333-4333-8333-333333333333/PRINT/test.png');
+insert into public.sadu_publication_queue(scenario_id) values('22222222-2222-4222-8222-222222222222');
+do $$begin
+ if not exists(select 1 from public.sadu_publication_queue where status='PENDING_CMS_CONNECTION' and delivered_at is null) then raise exception 'False delivery';end if;
+ if exists(select 1 from public.sadu_publication_queue where payload::text like '%insurance%' or payload::text like '%passport%') then raise exception 'Extra data leaked';end if;
+ begin update public.sadu_publication_queue set status='DELIVERED',delivered_at=now();raise exception 'Client claimed delivery';exception when insufficient_privilege then null;end;
+ begin insert into public.sadu_publication_queue(scenario_id) values('22222222-2222-4222-8222-222222222222');raise exception 'Duplicate publication';exception when unique_violation then null;end;
+end $$;
+select set_config('request.jwt.claims','{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","app_metadata":{"institutional_role":"ARTIST"}}',true);
+do $$begin if not exists(select 1 from public.sadu_media_inventory where received and reviewed_at is not null) then raise exception 'Artist missing review receipt';end if;end $$;
+select set_config('request.jwt.claims','{"sub":"77777777-7777-4777-8777-777777777777","role":"authenticated","app_metadata":{"institutional_role":"ARTIST"}}',true);
+do $$begin if exists(select 1 from public.sadu_publication_queue) or exists(select 1 from public.sadu_media_inventory) then raise exception 'Other artist data leak';end if;end $$;
+rollback;

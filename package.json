@@ -4,6 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "cms:worker": "node scripts/cms-publication-worker.mjs",
+    "test:cms": "node --test tests/cms-publication.test.mjs",
     "dev": "vite --port=3000 --host=127.0.0.1",
     "build": "npm run lint && npm run test:guards && vite build",
     "preview": "vite preview",
@@ -11,7 +13,7 @@
     "lint": "tsc --noEmit",
     "test:demo": "node --import tsx --test tests/livingRecord.test.ts tests/artistIntake.test.ts tests/intakeWorkflow.test.ts tests/bilingualTimeline.test.tsx tests/prWorkspace.test.tsx",
     "test:e2e": "playwright test",
-    "test:guards": "node --import tsx --test tests/demoBoundaries.test.ts tests/localDraft.test.ts tests/workflowHandoffs.test.ts tests/arrivalPackage.test.tsx tests/governanceMiddleware.test.ts",
+    "test:guards": "node --import tsx --test tests/demoBoundaries.test.ts tests/localDraft.test.ts tests/workflowHandoffs.test.ts tests/arrivalPackage.test.tsx tests/governanceMiddleware.test.ts tests/cms-publication.test.mjs",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "chromatic": "npx chromatic --project-token=chpt_b93f012ea65c898"
