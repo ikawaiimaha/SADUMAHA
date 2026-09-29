@@ -29,6 +29,7 @@ export default function RehearsalJourney() {
     <main className="mx-auto max-w-7xl ps-4 pe-4 py-6 space-y-6">
       <section className="space-y-3">
         <h1 className="text-3xl font-serif">One artist. One shared journey.</h1>
+        <a href="/review" className="inline-block underline font-semibold">Open the two-tier submission review</a>
         <p><strong>{DEMO_ARTIST.name}</strong> · {DEMO_ARTIST.work} · {DEMO_ARTIST.weight} kg</p>
         <p className="max-w-4xl">A guided rehearsal from brief to safe return. Use fictional statements only. Nothing is emailed, uploaded to a server, signed or paid. Desk switching simulates responsibilities; it is not authentication.</p>
         <p className="text-sm">Records stay in this page until refresh. Download a review record before leaving. Real application and external integrations remain paused.</p>

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { JOURNEY_TASKS, createJourney, currentDecision, journeyReducer, ledgerRows, taskById, taskStatus, type JourneyState, type TaskId } from '../src/data/rehearsalJourney';
 const at = '2026-09-29T18:00:00Z';
 function reported(state: JourneyState, id: TaskId, source: 'Verbal instruction' | 'Email' = 'Verbal instruction') {
-  return journeyReducer(state, { type: 'record', id: `${id}-${state.decisions.length}`, at, actor: 'Coordinator', draft: { taskId: id, source, speaker: 'Sample colleague', occurredAt: at, statement: `Review ${id} for the sample artist.` } });
+  return journeyReducer(state, { type: 'record', id: `${id}-${state.decisions.length}`, at, actor: 'General Exhibition Coordinator', draft: { taskId: id, source, speaker: 'Sample colleague', occurredAt: at, statement: `Review ${id} for the sample artist.` } });
 }
 function complete(state: JourneyState, id: TaskId) {
   const task = taskById(id); let next = reported(state, id);
@@ -49,7 +49,7 @@ test('materials do not wait for Finance and checks cannot be skipped or complete
   state = reported(state, 'materials'); const id = currentDecision(state, 'materials')!.id;
   state = journeyReducer(state, { type: 'confirm', decisionId: id, at, actor: 'Artist', outcome: 'confirmed', note: 'Reviewed' });
   for (const checks of [[], [true], [true, false, true]]) assert.equal(journeyReducer(state, { type: 'complete', taskId: 'materials', decisionId: id, at, actor: 'Artist', checks }), state);
-  assert.equal(journeyReducer(state, { type: 'complete', taskId: 'materials', decisionId: id, at, actor: 'Coordinator', checks: [true, true, true] }), state);
+  assert.equal(journeyReducer(state, { type: 'complete', taskId: 'materials', decisionId: id, at, actor: 'General Exhibition Coordinator', checks: [true, true, true] }), state);
 });
 test('unknown tasks, future statements and stale revisions fail closed', () => {
   const state = createJourney();

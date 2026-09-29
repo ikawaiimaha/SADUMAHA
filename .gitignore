@@ -1,6 +1,8 @@
 # Dependencies and generated output
 node_modules/
 dist/
+dist-rehearsal/
+.local/
 .build/
 coverage/
 test-results/
@@ -31,4 +33,3 @@ storybook-static
 sadu-app/
 
 repomix-output.md
-

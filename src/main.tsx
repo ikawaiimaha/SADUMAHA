@@ -6,10 +6,12 @@ import './index.css';
 const GalleryConsignmentForm = lazy(() => import('./components/GalleryConsignmentForm'));
 const AuthenticatedPilot = lazy(() => import('./components/AuthenticatedPilot'));
 const Workbench = lazy(() => import('./App'));
+const PublicationReview = lazy(() => import('./components/PublicationReview'));
 
 function ReadyApp() {
   // Hide the HTML fallback only after React commits the application successfully.
   useEffect(() => { window.dispatchEvent(new Event('sadu:ready')); }, []);
+  if (window.location.pathname === '/review') return <Suspense fallback={<p>Loading submission review…</p>}><PublicationReview /></Suspense>;
   if(window.location.pathname === '/gallery-consignment') return <Suspense fallback={<p>Loading gallery form...</p>}><GalleryConsignmentForm /></Suspense>;
   if (window.location.pathname === '/workbench') return <Suspense fallback={<p>Loading earlier workbench…</p>}><Workbench /></Suspense>;
   if (window.location.pathname === '/pilot') return <Suspense fallback={<p>Loading authenticated pilot…</p>}><AuthenticatedPilot /></Suspense>;
