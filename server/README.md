@@ -68,3 +68,7 @@ Smart curation verification: 173 tests, TypeScript and rehearsal production buil
 ## Audit remediation (29 September 2026)
 
 See `reviews/SADU_Fictional_Audit_2026-09-29.md` for current scope, defect findings and the implemented/proposed feature matrix. The 14-task checklist now replays a validated session journal across same-tab refresh/navigation; it remains separate from backend review, wall-study and crate state. Physical receipt no longer depends on advance payment, while delivery authorization still requires the advance and receipt. The review UI selects the actual current revision, resolves superseded alerts, reflects test-mode batch policy, protects shipment edits and puts review work before auxiliary tools. Shipped crates retain a marked historical manifest when publication changes; long details move QR identification onto another page. Landing-page background motion has a pause control. None of these changes activate the real application or integrations.
+
+## Stable entity revisions and change impacts
+
+See [ENTITY_GOVERNANCE.md](ENTITY_GOVERNANCE.md) for the implemented graph schema, safe decision codes, invalidation matrix, API and local provider adapters. The review service now returns the governance projection and Logistics impact array; external providers remain paused.

@@ -1,3 +1,4 @@
+import { ensureGovernance, syncReviewGovernance, governanceCommand, governanceProjection } from './entity-governance.mjs';
 import { extractKeywords, EXTRACTOR_VERSION } from '../src/curation/keywords.mjs';
 import { randomUUID } from 'node:crypto';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
@@ -33,8 +34,8 @@ export function projectReview(state, actor) {
   const r = current(state);
   const owner = ['Draft', 'Revision_Requested'].includes(r.status) ? 'Artist' : r.status === 'Coordinator_Review' ? 'General_Exhibition_Coordinator' : r.status === 'Executive_Review' ? 'Director' : null;
   return structuredClone({
-    version: state.version, artistId: state.artistId, currentRevision: r.number, revisions,
-    curationArtworks: actor.role === 'General_Exhibition_Coordinator' && ['Coordinator_Review', 'Executive_Review', 'Publication_Approved'].includes(r.status) ? [{ id: `${state.artistId}:publication-artwork`, revision: r.number, title: r.content.title, concept: r.content.concept, tags: r.tagging?.tags ?? [], extracted: Boolean(r.tagging), extractorVersion: r.tagging?.extractorVersion }] : [],
+    version: state.version, artistId: state.artistId, governance: governanceProjection(state, actor), currentRevision: r.number, revisions,
+    curationArtworks: actor.role === 'General_Exhibition_Coordinator' && ['Coordinator_Review', 'Executive_Review', 'Publication_Approved'].includes(r.status) ? [{ id: state.artworkId ?? `${state.artistId}:publication-artwork`, revision: r.number, title: r.content.title, concept: r.content.concept, tags: r.tagging?.tags ?? [], extracted: Boolean(r.tagging), extractorVersion: r.tagging?.extractorVersion }] : [],
     events: state.events.filter(e => visible.has(e.revision)),
     alerts: state.alerts.filter(a => a.accountId === actor.id),
     outbox: state.outbox.map(({ payload, ...receipt }) => receipt),
@@ -46,7 +47,7 @@ export function transitionReview(state, actor, command, at = new Date().toISOStr
   authorize(state, actor);
   if (!command || typeof command !== 'object') fail(400, 'An action is required.');
   if (command.version !== state.version || command.revision !== current(state).number) fail(409, 'This record changed. Refresh before acting.');
-  const next = structuredClone(state); const r = current(next);
+  const next = structuredClone(state); ensureGovernance(next, at); const r = current(next);
   const assert = (role, statuses) => {
     if (actor.role !== role) fail(403, 'Your role cannot perform this action.');
     if (!statuses.includes(r.status)) fail(409, 'This action is not available in the current state.');
@@ -117,6 +118,10 @@ export function transitionReview(state, actor, command, at = new Date().toISOStr
     }
     default: fail(400, 'Unknown action.');
   }
+  syncReviewGovernance(next, actor, command, at);
+  if (command.action === 'publish') {
+    Object.assign(next.outbox.at(-1), { entityId: next.artworkId, versionHash: current(next).entityRevisionHash });
+  }
   next.version++; return next;
 }
 
@@ -126,6 +131,12 @@ export async function openReviewStore(file, { labelGenerator = generateLabelArti
   try { state = JSON.parse(await readFile(file, 'utf8')); }
   catch (error) { if (error.code !== 'ENOENT') throw error; state = initialReview(); await writeFile(file, JSON.stringify(state, null, 2), { flag: 'wx', mode: 0o600 }); }
   if (state.format !== 1 || !Number.isInteger(state.version) || !Array.isArray(state.revisions) || !state.revisions.length) throw new Error('Unsupported local review data. Preserve it and inspect before continuing.');
+  if (!state.governance) {
+    ensureGovernance(state);
+    const migration = `${file}.${randomUUID()}.tmp`;
+    await writeFile(migration, JSON.stringify(state, null, 2), { mode: 0o600 });
+    await rename(migration, file);
+  }
   let queue = Promise.resolve();
   return {
     read: actor => ({ ...projectReview(state, actor), labelTestMode: labelOptions.testMode === true }),
@@ -144,6 +155,24 @@ export async function openReviewStore(file, { labelGenerator = generateLabelArti
       if (!eligible.length) fail(409, 'No current QR-verified labels are ready for a print batch.');
       return renderLabelBatch(eligible.map(label => label.snapshot));
     },
+    governance(actor, command) {
+      authorize(state, actor);
+      const result = queue.then(async () => {
+        const next = governanceCommand(state, actor, command);
+        const temp = `${file}.${randomUUID()}.tmp`;
+        await writeFile(temp, JSON.stringify(next, null, 2), { mode: 0o600 });
+        await rename(temp, file);
+        state = next; return { version: state.version, ...governanceProjection(state, actor) };
+      });
+      queue = result.catch(() => {}); return result;
+    },
+    entity(actor, id) {
+      authorize(state, actor);
+      if (actor.role === 'Director') fail(403, 'Use the finalized executive review projection.');
+      const entity = state.governance.entities.find(e => e.id === id);
+      if (!entity) fail(404, 'Entity not found.');
+      return structuredClone({ entity, revisions: state.governance.revisions.filter(r => r.entityId === id) });
+    },
     act(actor, command) {
       const result = queue.then(async () => {
         const next = transitionReview(state, actor, command);
@@ -153,7 +182,7 @@ export async function openReviewStore(file, { labelGenerator = generateLabelArti
           let artifact;
           try { artifact = await labelGenerator({ artistId: next.artistId, revision: r.number, approvalId: approval.id, content: r.content, profileVerification: r.profileVerification, labelOptions }); }
           catch (error) { throw new ReviewError(422, `Label generation failed; approval was not saved. ${error.message}`); }
-          next.labels = [...(next.labels ?? []), { ...artifact, createdAt: approval.at }];
+          next.labels = [...(next.labels ?? []), { ...artifact, entityId: next.artworkId, versionHash: r.entityRevisionHash, createdAt: approval.at }];
         }
         const temp = `${file}.${randomUUID()}.tmp`;
         await writeFile(temp, JSON.stringify(next, null, 2), { mode: 0o600 });

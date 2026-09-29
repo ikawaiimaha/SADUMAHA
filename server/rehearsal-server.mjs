@@ -1,5 +1,5 @@
+import { LocalAuthProvider } from '../src/governance/localAdapters.ts';
 import express from 'express';
-import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 import { ACCOUNTS, ReviewError, openReviewStore } from './review-store.mjs';
@@ -7,12 +7,13 @@ import { openLogisticsStore } from './logistics-store.mjs';
 import { openSpatialStore } from './spatial-store.mjs';
 import { DEFAULT_CMS_BASE_URL, dynamicTestProfileUrl } from './gallery-labels.mjs';
 
-export async function createRehearsalApp({ file, staticRoot, spatialFile, labelOptions = { testMode: process.env.SDC_LABEL_TEST_MODE !== 'false', baseUrl: process.env.SDC_CMS_BASE_URL || DEFAULT_CMS_BASE_URL } } = {}) {
+export async function createRehearsalApp({ file, staticRoot, spatialFile, authProvider = new LocalAuthProvider(ACCOUNTS), labelOptions = { testMode: process.env.SDC_LABEL_TEST_MODE !== 'false', baseUrl: process.env.SDC_CMS_BASE_URL || DEFAULT_CMS_BASE_URL } } = {}) {
   if (labelOptions.testMode) dynamicTestProfileUrl('configuration-check', labelOptions.baseUrl);
   const store = await openReviewStore(file ?? fileURLToPath(new URL('../.local/rehearsal-review.json', import.meta.url)), { labelOptions });
   const spatial = await openSpatialStore(spatialFile ?? (file ? `${file}.spatial.json` : fileURLToPath(new URL('../.local/rehearsal-spatial.json', import.meta.url))));
   const logistics = await openLogisticsStore(file ? `${file}.logistics.json` : fileURLToPath(new URL('../.local/rehearsal-logistics.json', import.meta.url)), actor => store.read(actor));
-  const app = express(); const sessions = new Map();
+  const app = express();
+  if (authProvider.mode !== 'fictional-local') throw new Error('External authentication remains paused.');
   app.disable('x-powered-by');
   app.use('/api/review', (req, res, next) => {
     const host = req.get('host') ?? '';
@@ -22,27 +23,28 @@ export async function createRehearsalApp({ file, staticRoot, spatialFile, labelO
     next();
   });
   app.use(express.json({ limit: '24kb' }));
-  const actorFor = req => {
+  const actorFor = async req => {
     const token = (req.headers.cookie ?? '').split(';').map(v => v.trim()).find(v => v.startsWith('sadu_review='))?.slice(12);
-    const session = sessions.get(token);
-    if (!session || session.expires < Date.now()) { if (token) sessions.delete(token); return null; }
-    return ACCOUNTS.find(a => a.id === session.accountId) ?? null;
+    return token ? authProvider.authenticate(token) : null;
   };
-  app.get('/api/review/session', (req, res) => res.json({ actor: actorFor(req), accounts: ACCOUNTS, mode: 'fictional-local' }));
-  app.post('/api/review/session', (req, res) => {
-    const account = ACCOUNTS.find(a => a.id === req.body?.accountId);
-    if (!account) return res.status(403).json({ error: 'Unknown fictional account. HIP is not an available role.' });
-    // Explicit demo account selection, not identity verification or production sign-in.
-    for (const [token, session] of sessions) if (session.expires < Date.now()) sessions.delete(token);
-    if (sessions.size >= 100) return res.status(429).json({ error: 'Too many local sessions. Restart the local server to reset sessions.' });
-    const token = randomUUID(); sessions.set(token, { accountId: account.id, expires: Date.now() + 8 * 3600000 });
-    res.cookie('sadu_review', token, { httpOnly: true, sameSite: 'strict', path: '/api/review', maxAge: 8 * 3600000 });
-    res.json({ actor: account });
+  app.get('/api/review/session', async (req, res, next) => {
+    try { res.json({ actor: await actorFor(req), accounts: ACCOUNTS, mode: 'fictional-local' }); } catch (error) { next(error); }
   });
-  app.use('/api/review', (req, res, next) => {
-    const actor = actorFor(req);
-    if (!actor) return res.status(401).json({ error: 'Choose a fictional account to continue.' });
-    res.locals.actor = actor; next();
+  app.post('/api/review/session', async (req, res, next) => {
+    try {
+      const account = ACCOUNTS.find(a => a.id === req.body?.accountId);
+      if (!account) return res.status(403).json({ error: 'Unknown fictional account. HIP is not an available role.' });
+      const token = await authProvider.selectAccount(account.id);
+      res.cookie('sadu_review', token, { httpOnly: true, sameSite: 'strict', path: '/api/review', maxAge: 8 * 3600000 });
+      res.json({ actor: account });
+    } catch (error) { next(error); }
+  });
+  app.use('/api/review', async (req, res, next) => {
+    try {
+      const actor = await actorFor(req);
+      if (!actor) return res.status(401).json({ error: 'Choose a fictional account to continue.' });
+      res.locals.actor = actor; next();
+    } catch (error) { next(error); }
   });
   app.get('/api/review/logistics', (req, res) => res.json(logistics.read(res.locals.actor)));
   app.post('/api/review/logistics', async (req, res, next) => {
@@ -50,6 +52,15 @@ export async function createRehearsalApp({ file, staticRoot, spatialFile, labelO
   });
   app.get('/api/review/logistics/:id/manifest.pdf', (req, res) => {
     res.set({ 'Content-Type': 'application/pdf', 'Content-Disposition': 'attachment; filename="SADU-shipping-manifest.pdf"', 'X-Content-Type-Options': 'nosniff' }).send(logistics.manifest(res.locals.actor, req.params.id));
+  });
+  app.get('/api/review/governance', (req, res) => {
+    const record = store.read(res.locals.actor);
+    if (!record.governance) return res.status(403).json({ error: 'Use the finalized executive review projection.' });
+    res.json({ version: record.version, ...record.governance });
+  });
+  app.get('/api/review/entities/:id', (req, res) => res.json(store.entity(res.locals.actor, req.params.id)));
+  app.post('/api/review/governance', async (req, res, next) => {
+    try { res.json(await store.governance(res.locals.actor, req.body)); } catch (error) { next(error); }
   });
   app.get('/api/review/record', (req, res) => res.json(store.read(res.locals.actor)));
   app.get('/api/review/labels/batch.pdf', (req, res) => {
@@ -73,8 +84,8 @@ export async function createRehearsalApp({ file, staticRoot, spatialFile, labelO
   app.get('*', (req, res) => res.sendFile(resolve(root, 'index.html')));
   app.use((error, req, res, next) => {
     if (res.headersSent) return next(error);
-    res.status(error instanceof ReviewError ? error.status : error.status === 400 || error.status === 413 ? error.status : 500)
-      .json({ error: error instanceof ReviewError ? error.message : 'The local request could not be saved. Retry or check the server.' });
+    res.status(error instanceof ReviewError || error.governance ? error.status : error.status === 400 || error.status === 413 || error.status === 429 ? error.status : 500)
+      .json({ error: error instanceof ReviewError || error.governance ? error.message : 'The local request could not be saved. Retry or check the server.' });
   });
   return app;
 }

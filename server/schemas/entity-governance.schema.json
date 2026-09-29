@@ -1,0 +1,277 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Fictional SADU entity revision graph",
+  "description": "Embedded atomically in the local review file. Runtime validates entity/revision relations; this is not a production SQL migration.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": 1
+    },
+    "entities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "enum": [
+              "Artwork",
+              "Contract"
+            ]
+          },
+          "currentRevisionHash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "currentRevisionHash"
+        ]
+      }
+    },
+    "revisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "entityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "parentHash": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "hash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "content": {
+            "type": "object"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "entityId",
+          "parentHash",
+          "hash",
+          "content",
+          "createdAt"
+        ]
+      }
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "actorId": {
+            "enum": [
+              "demo-artist",
+              "demo-coordinator",
+              "demo-director",
+              "system-local-migration"
+            ]
+          },
+          "actionType": {
+            "enum": [
+              "CREATED",
+              "REVISED",
+              "APPROVED",
+              "REJECTED",
+              "REVIEW_REQUESTED"
+            ]
+          },
+          "targetEntityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "versionHash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "purpose": {
+            "enum": [
+              "BASELINE_CAPTURE",
+              "CONTENT_UPDATE",
+              "CONTRACT_UPDATE",
+              "CURATORIAL_REVIEW",
+              "PUBLICATION_REVIEW",
+              "REVISION_REQUEST",
+              "FICTIONAL_SPECIALIST_REVIEW"
+            ]
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "actorId",
+          "actionType",
+          "targetEntityId",
+          "versionHash",
+          "purpose",
+          "at"
+        ]
+      }
+    },
+    "approvals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "entityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "domain": {
+            "enum": [
+              "Technical",
+              "Logistics",
+              "Editorial",
+              "Publication",
+              "Finance"
+            ]
+          },
+          "versionHash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "decisionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "enum": [
+              "APPROVED",
+              "STALE",
+              "SUPERSEDED"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "entityId",
+          "domain",
+          "versionHash",
+          "decisionId",
+          "status"
+        ]
+      }
+    },
+    "impacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "entityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fromHash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "toHash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "domain": {
+            "type": "string"
+          },
+          "changedFields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "approvalId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "enum": [
+              "STALE",
+              "REQUIRES_RE_APPROVAL",
+              "RESOLVED"
+            ]
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "resolvedBy": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "id",
+          "entityId",
+          "fromHash",
+          "toHash",
+          "domain",
+          "changedFields",
+          "approvalId",
+          "status",
+          "at"
+        ]
+      }
+    }
+  },
+  "required": [
+    "format",
+    "entities",
+    "revisions",
+    "decisions",
+    "approvals",
+    "impacts"
+  ]
+}

@@ -45,7 +45,11 @@ export async function openLogisticsStore(file, reviewFor) {
   try { state = JSON.parse(await readFile(file, 'utf8')); } catch (e) { if (e.code !== 'ENOENT') throw e; state = { format: 1, version: 0, artwork_records: [], events: [] }; }
   if (state.format !== 1 || !Array.isArray(state.artwork_records)) throw new Error('Unsupported logistics store.');
   let queue = Promise.resolve();
-  const read = actor => { authorize(actor); return structuredClone(state); };
+  const read = actor => {
+    authorize(actor); const review = reviewFor(actor);
+    return structuredClone({ ...state, artworkEntityId: review.governance?.artworkId ?? null,
+      changeImpacts: review.governance?.impacts.filter(i => i.domain === 'Logistics' && i.status !== 'RESOLVED') ?? [] });
+  };
   return {
     read,
     manifest(actor, id) {
@@ -69,7 +73,7 @@ export async function openLogisticsStore(file, reviewFor) {
           if (!details || !['origin','destination','carrier','handling'].every(k => required(details[k], 150)) || typeof details.gross_weight_kg !== 'number' || !Number.isFinite(details.gross_weight_kg) || details.gross_weight_kg <= 0 || details.gross_weight_kg > 100000) fail(422, 'Provide collection, delivery, carrier/reference, handling and positive gross package weight. Use basic Latin text, maximum 150 characters per field.');
           record = next.artwork_records[0];
           if (record && record.physical_status !== 'Pending_Shipment') fail(409, 'Shipment details are frozen after movement begins.');
-          record = { id: record?.id ?? randomUUID(), artist_id: 'demo-kufic-horizon', exhibition_id: 'demo-exhibition', artist_name: revision.content.label.artistName, title: revision.content.title, approved_revision: revision.number, physical_status: 'Pending_Shipment', logistics: Object.fromEntries(['origin','destination','carrier','handling','gross_weight_kg'].map(k => [k, typeof details[k] === 'string' ? details[k].trim() : details[k]])) };
+          record = { id: record?.id ?? randomUUID(), artist_id: 'demo-kufic-horizon', exhibition_id: 'demo-exhibition', artist_name: revision.content.label.artistName, title: revision.content.title, approved_revision: revision.number, artwork_entity_id: reviewFor(actor).governance?.artworkId ?? null, entity_revision_hash: revision.entityRevisionHash ?? null, physical_status: 'Pending_Shipment', logistics: Object.fromEntries(['origin','destination','carrier','handling','gross_weight_kg'].map(k => [k, typeof details[k] === 'string' ? details[k].trim() : details[k]])) };
           next.artwork_records = [record];
         } else {
           if (actor.role !== 'General_Exhibition_Coordinator') fail(403, 'Only the assigned Coordinator can record physical movement.');
