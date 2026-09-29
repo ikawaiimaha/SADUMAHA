@@ -37,5 +37,5 @@ try{
 }finally{
  if(channel)await viewer.removeChannel(channel);
  viewer.realtime.disconnect();logistics.realtime.disconnect();
- if(seeded)sql(`begin;set local storage.allow_delete_query='true';delete from public.sadu_freight_bookings where id='${booking}';delete from public.sadu_artwork_checklist where id='${artwork}';delete from storage.objects where bucket_id='logistics-secure' and name='${artist}/scenarios/${scenario}/${zone}/PRINT/test.png';delete from public.sadu_scenario_media where scenario_id='${scenario}';delete from public.sadu_exhibition_scenarios where id='${scenario}';delete from public.bilateral_contracts where id='${contract}';delete from auth.users where id='${artist}';commit;`);
+ if(seeded)sql(`begin;set local storage.allow_delete_query='true';delete from public.sadu_freight_bookings where id='${booking}';delete from public.sadu_consignments where artwork_id='${artwork}';delete from public.sadu_artwork_checklist where id='${artwork}';delete from storage.objects where bucket_id='logistics-secure' and name='${artist}/scenarios/${scenario}/${zone}/PRINT/test.png';delete from public.sadu_scenario_media where scenario_id='${scenario}';delete from public.sadu_exhibition_scenarios where id='${scenario}';delete from public.bilateral_contracts where id='${contract}';delete from auth.users where id='${artist}';commit;`);
 }

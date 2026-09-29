@@ -11,6 +11,7 @@ do $$begin
 end$$;
 insert into public.sadu_artwork_checklist(id,scenario_id,zone_id,media_object_name,source,production_year,height_cm,width_cm,weight_kg,crate_count) values('44444444-4444-4444-8444-444444444444','22222222-2222-4222-8222-222222222222','33333333-3333-4333-8333-333333333333','11111111-1111-4111-8111-111111111111/scenarios/22222222-2222-4222-8222-222222222222/33333333-3333-4333-8333-333333333333/PRINT/test.png','{"title":"Balance","language":"en","medium":"Ink","concept":"A study of balance","bio":"Fictional biography"}',2026,100,80,20,1);
 update public.sadu_exhibition_scenarios set status='SUBMITTED' where contract_id='catalog-test';
+select public.sadu_issue_consignment('44444444-4444-4444-8444-444444444444','ARTIST_STUDIO',null,null);
 insert into public.sadu_freight_bookings(id,artwork_id,artist_id,ready_date,address,map_url) values('66666666-6666-4666-8666-666666666666','44444444-4444-4444-8444-444444444444','11111111-1111-4111-8111-111111111111',current_date+7,'{"country":"France","city":"Paris","district":"Test","street":"Test","building":"Test"}','https://maps.google.com/?q=fictional');
 do $$begin
  begin update public.sadu_artwork_checklist set width_cm=1;raise exception 'TEST: source mutation';exception when insufficient_privilege then null;end;
