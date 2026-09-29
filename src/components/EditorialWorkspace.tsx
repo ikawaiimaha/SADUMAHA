@@ -1,3 +1,4 @@
+import {ArtistMetadataQueue} from './ArtworkMetadataLedger';
 import { ArtworkRosterQueue } from './ArtworkRoster';
 import { EditorialAssetLog } from './EditorialAssetLog';
 import { useLocalDraft, isText } from '../hooks/useLocalDraft';
@@ -152,6 +153,7 @@ export default function EditorialWorkspace({
           )}
         </div>
       </header>
+      <details className="rounded border ps-4 pe-4 py-4"><summary className="cursor-pointer text-lg">ترجمة بيانات الفنانين / Artist Metadata Translation</summary><ArtistMetadataQueue translate/></details>
 
       {approvedTheme && <section aria-labelledby="executive-directives-heading" className="mb-6 rounded-xl border border-[#D9D2C5] bg-[#F7F1E6] ps-6 pe-6 py-5 text-start">
         <h2 id="executive-directives-heading" className="text-xl font-bold">{isAr ? 'التوجيهات التنفيذية' : 'Executive Directives'}</h2>

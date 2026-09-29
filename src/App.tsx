@@ -1,6 +1,7 @@
 import {IdleWorkspaceLock} from './components/IdleWorkspaceLock';
 import {CuratorialBoundaries} from './components/CuratorialBoundaries';
 import {publishBoundaries,nominationOpen,type Boundaries} from './data/curatorialBoundaries';
+import {ArtistMetadataQueue} from './components/ArtworkMetadataLedger';
 import {ExhibitionChecklistQueue} from './components/LazyExhibitionScenario';
 import { GovernanceDesk, DelegatedRoleGate } from './components/VenueGovernance';
 import { CollectionCloseout } from './components/CollectionCloseout';
@@ -980,7 +981,7 @@ function SADUApp() {
 
         <DelegatedRoleGate role={activeRole}>
         {activeRole==='COORDINATOR'&&!nominationOpen(publishedBoundaries)?<CuratorialBoundaries isAr={isAr}/>:<>
-        {renderWorkspace()}{['COORDINATOR','LOGISTICS'].includes(activeRole)&&<ExhibitionChecklistQueue/>}
+        {renderWorkspace()}{['COORDINATOR','PR_PROTOCOL','HIP','LOGISTICS'].includes(activeRole)&&<ArtistMetadataQueue exportLabels={['COORDINATOR','PR_PROTOCOL'].includes(activeRole)}/>}{['COORDINATOR','LOGISTICS'].includes(activeRole)&&<ExhibitionChecklistQueue/>}
         {activeRole==='EDITORIAL'&&<LiveCatalogAggregator state={commission} isAr={isAr}/>}
         {commission.installationStatus==='ARCHIVED_CLOSED'&&['COORDINATOR','BIENNIAL_DIRECTOR'].includes(activeRole)&&<CollectionCloseout state={commission} actor={activeRole}/>}
         {activeRole === 'BIENNIAL_DIRECTOR' && <ExecutiveContractSummary dossiers={nominatedArtists.filter(d=>commission.installationStatus!=='ARCHIVED_CLOSED'||d.id!==COMMISSION.id)} contracts={contracts} isAr={isAr} />}

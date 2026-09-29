@@ -1,3 +1,4 @@
+import {FreightPickupScheduler} from '../FreightPickupScheduler';
 import React, { useId, useState } from 'react';
 import { useI18n } from '../../context/I18nContext';
 import { RfqGeneratorModal } from '../common/RfqGeneratorModal';
@@ -63,6 +64,7 @@ export const LogisticsDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
+<FreightPickupScheduler logistics/>
       {/* Toast */}
       {rfqSuccessToast && (
         <div className="fixed top-20 end-6 z-50 bg-sadu-brick text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-2 text-xs font-semibold animate-in fade-in">

@@ -1111,3 +1111,16 @@ test('QR receipt rejects wrong or stale tokens, requires damage evidence and rec
  const damaged=reduce(s,{...a,condition:'DAMAGED',photos:[new File(['image'],'damage.png',{type:'image/png'})]});
  assert.equal(damaged.conditionReports?.[0].insuranceStatus,'INSURANCE_CLAIM_PENDING');assert.equal(milestoneEligible(damaged,'delivery'),false);
 });
+
+import {conceptWords,validConcept,safeMapUrl,labelCSV} from '../src/data/catalogFreight';
+test('catalog concepts enforce 50 words, map links reject credentials and lookalike hosts',()=>{
+ assert.equal(conceptWords('  two   words '),2);assert.equal(validConcept(''),false);
+ assert.equal(validConcept(Array(50).fill('word').join(' ')),true);assert.equal(validConcept(Array(51).fill('word').join(' ')),false);
+ assert.equal(safeMapUrl('https://maps.app.goo.gl/test'),true);
+ for(const url of ['javascript:alert(1)','https://maps.google.com.evil.org/','https://user:pass@www.google.com/maps','http://www.google.com/maps'])assert.equal(safeMapUrl(url),false);
+});
+test('wall-label CSV exports only translated records and neutralizes spreadsheet formulas',()=>{
+ const label={id:'id',source:{title:'  =HYPERLINK("bad")',language:'en',medium:'Ink',concept:'Study'},translation_ar:{title:'ميزان',medium:'حبر',concept:'دراسة'},translation_status:'TRANSLATION_COMPLETED'} as any;
+ const csv=labelCSV([label,{...label,id:'pending-id',translation_status:'PENDING_TRANSLATION'}]);
+ assert.ok(csv.startsWith('\uFEFF'));assert.ok(csv.includes("'  =HYPERLINK"));assert.ok(!csv.includes('pending-id'));assert.ok(csv.includes('ميزان'));
+});
