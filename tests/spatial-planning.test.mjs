@@ -1,0 +1,90 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtemp, readFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { validateLayout } from '../src/spatial/geometry.mjs';
+import { ACCOUNTS } from '../server/review-store.mjs';
+import { initialSpatial, transitionSpatial, projectSpatial, openSpatialStore } from '../server/spatial-store.mjs';
+import { createRehearsalApp } from '../server/rehearsal-server.mjs';
+const [artist, coordinator, director] = ACCOUNTS;
+const wall = { max_width_cm: 300, max_height_cm: 200 };
+const a = { id: 'a', title: 'A', width_cm: 100, height_cm: 100 };
+const b = { id: 'b', title: 'B', width_cm: 100, height_cm: 100 };
+const p = (id, x, y) => ({ artwork_id: id, x_cm: x, y_cm: y });
+const mutate = (state, actor, command) => transitionSpatial(state, actor, { version: state.version, ...command });
+const add = (state, title = 'A') => mutate(state, artist, { action: 'save_artwork', artwork: { title, width_cm: 100, height_cm: 100 } });
+const status = code => e => e.status === code;
+
+test('bounding boxes reject area-only false positives and every out-of-wall edge', () => {
+  const wide = { ...a, width_cm: 350, height_cm: 100 };
+  assert.ok(wide.width_cm * wide.height_cm < wall.max_width_cm * wall.max_height_cm);
+  assert.equal(validateLayout(wall, [wide], [p('a', 0, 0)])[0].kind, 'boundary');
+  for (const [x, y] of [[-1, 0], [0, -1], [201, 0], [0, 101]]) assert.equal(validateLayout(wall, [a], [p('a', x, y)])[0].kind, 'boundary');
+  assert.deepEqual(validateLayout(wall, [a], [p('a', 200, 100)]), []);
+});
+test('overlap detection permits touching edges and handles decimal centimetres', () => {
+  assert.ok(validateLayout(wall, [a, b], [p('a', 0, 0), p('b', 99.9, 0)]).some(i => i.kind === 'overlap'));
+  assert.deepEqual(validateLayout(wall, [a, b], [p('a', 0, 0), p('b', 100, 0)]), []);
+  assert.deepEqual(validateLayout(wall, [a, b], [p('a', 0, 0), p('b', 0, 100)]), []);
+  assert.deepEqual(validateLayout(wall, [{ ...a, width_cm: 0.3 }], [p('a', 0.1 + 0.2, 0)]), []);
+});
+test('missing, forged, duplicate and non-finite placements cannot pass geometry validation', () => {
+  assert.equal(validateLayout(wall, [a], [])[0].kind, 'unplaced');
+  for (const positions of [[p('a', NaN, 0)], [p('a', Infinity, 0)], [p('unknown', 0, 0)], [p('a', 0, 0), p('a', 1, 1)], [p('a', '2', 0)]]) assert.ok(validateLayout(wall, [a], positions).some(i => i.kind === 'invalid'));
+});
+test('required artwork dimensions, role scope and stale versions are enforced server-side', () => {
+  const state = initialSpatial();
+  for (const width of [undefined, 0, -2, NaN, Infinity, '100', 100001]) assert.throws(() => mutate(state, artist, { action: 'save_artwork', artwork: { title: 'Test', height_cm: 100, width_cm: width } }), status(422));
+  assert.throws(() => mutate(state, coordinator, { action: 'save_artwork', artwork: { title: 'Test', height_cm: 100, width_cm: 100 } }), status(403));
+  assert.throws(() => mutate(state, artist, { action: 'save_wall', max_width_cm: 300, max_height_cm: 200 }), status(403));
+  assert.throws(() => projectSpatial(state, director), status(403));
+  assert.throws(() => projectSpatial(state, { ...artist, artistId: 'other' }), status(403));
+  assert.throws(() => projectSpatial(state, { ...coordinator, exhibitionId: 'other' }), status(403));
+  const next = add(state);
+  assert.throws(() => transitionSpatial(next, coordinator, { version: 0, action: 'save_layout', placements: [] }), status(409));
+});
+test('layout persistence validates every block; dimension updates invalidate positions and preserve history', () => {
+  let state = add(add(initialSpatial(), 'A'), 'B');
+  const [one, two] = state.artwork_records;
+  for (const positions of [[], [p(one.id, 0, 0)], [p(one.id, 0, 0), p(two.id, 1, 1)], [p(one.id, 0, 0), p(two.id, 550, 0)]]) assert.throws(() => mutate(state, coordinator, { action: 'save_layout', placements: positions }), status(422));
+  state = mutate(state, coordinator, { action: 'save_layout', placements: [p(one.id, 0, 0), p(two.id, 200, 0)] });
+  assert.equal(projectSpatial(state, coordinator).issues.length, 0);
+  const placed = state;
+  state = mutate(state, artist, { action: 'save_artwork', artwork: { ...one, width_cm: 120.5 } });
+  assert.equal(state.placements.length, 1);
+  assert.deepEqual(state.history.at(-1).previous.placements, placed.placements);
+  assert.equal(state.artwork_records[0].width_cm, 120.5);
+  state = mutate(state, coordinator, { action: 'save_wall', max_width_cm: 250, max_height_cm: 200 });
+  assert.ok(projectSpatial(state, coordinator).issues.some(i => i.kind === 'boundary'));
+});
+test('spatial store survives reopen; concurrent updates cannot overwrite each other', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'sadu-spatial-')); const file = join(dir, 'spatial.json');
+  const store = await openSpatialStore(file);
+  const command = { version: 0, action: 'save_artwork', artwork: { title: 'Example', width_cm: 100.5, height_cm: 90.25 } };
+  const results = await Promise.allSettled([store.act(artist, command), store.act(artist, command)]);
+  assert.equal(results.filter(r => r.status === 'fulfilled').length, 1);
+  const reopened = await openSpatialStore(file); const record = reopened.read(coordinator);
+  assert.equal(record.artwork_records.length, 1);
+  assert.equal(record.artwork_records[0].height_cm, 90.25);
+  const schema = JSON.parse(await readFile(new URL('../server/schemas/spatial.schema.json', import.meta.url), 'utf8'));
+  assert.ok(schema.$defs.Artwork_Record.required.includes('height_cm'));
+  assert.ok(schema.$defs.Wall_Space.required.includes('max_width_cm'));
+});
+test('spatial HTTP endpoints use server sessions and reject role spoofing and invalid layouts', async t => {
+  const dir = await mkdtemp(join(tmpdir(), 'sadu-spatial-http-'));
+  const app = await createRehearsalApp({ file: join(dir, 'review.json'), staticRoot: dir });
+  const server = await new Promise(resolve => { const s = app.listen(0, '127.0.0.1', () => resolve(s)); });
+  t.after(() => new Promise(resolve => server.close(resolve)));
+  const origin = `http://127.0.0.1:${server.address().port}`;
+  const call = (path, body, cookie) => fetch(`${origin}/api/review/${path}`, { headers: { Origin: origin, 'Content-Type': 'application/json', ...(cookie ? { Cookie: cookie } : {}) }, ...(body ? { method: 'POST', body: JSON.stringify(body) } : {}) });
+  assert.equal((await call('spatial')).status, 401);
+  const login = async id => (await call('session', { accountId: id })).headers.get('set-cookie').split(';')[0];
+  const artistCookie = await login(artist.id);
+  assert.equal((await call('spatial', { action: 'save_wall', version: 0, max_width_cm: 100, max_height_cm: 100, role: coordinator.role }, artistCookie)).status, 403);
+  const created = await (await call('spatial', { action: 'save_artwork', version: 0, artwork: { title: 'Wall print', width_cm: 200, height_cm: 100 } }, artistCookie)).json();
+  const coordinatorCookie = await login(coordinator.id);
+  assert.equal((await call('spatial', { action: 'save_layout', version: 1, placements: [p(created.artwork_records[0].id, 590, 0)] }, coordinatorCookie)).status, 422);
+  assert.equal((await call('spatial', { action: 'save_layout', version: 1, placements: [p(created.artwork_records[0].id, 0, 0)] }, coordinatorCookie)).status, 200);
+  assert.equal((await call('spatial', null, await login(director.id))).status, 403);
+});

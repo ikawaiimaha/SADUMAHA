@@ -3,9 +3,11 @@ import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 import { ACCOUNTS, ReviewError, openReviewStore } from './review-store.mjs';
+import { openSpatialStore } from './spatial-store.mjs';
 
-export async function createRehearsalApp({ file, staticRoot } = {}) {
+export async function createRehearsalApp({ file, staticRoot, spatialFile } = {}) {
   const store = await openReviewStore(file ?? fileURLToPath(new URL('../.local/rehearsal-review.json', import.meta.url)));
+  const spatial = await openSpatialStore(spatialFile ?? (file ? `${file}.spatial.json` : fileURLToPath(new URL('../.local/rehearsal-spatial.json', import.meta.url))));
   const app = express(); const sessions = new Map();
   app.disable('x-powered-by');
   app.use('/api/review', (req, res, next) => {
@@ -39,6 +41,10 @@ export async function createRehearsalApp({ file, staticRoot } = {}) {
     res.locals.actor = actor; next();
   });
   app.get('/api/review/record', (req, res) => res.json(store.read(res.locals.actor)));
+  app.get('/api/review/spatial', (req, res) => res.json(spatial.read(res.locals.actor)));
+  app.post('/api/review/spatial', async (req, res, next) => {
+    try { res.json(await spatial.act(res.locals.actor, req.body)); } catch (error) { next(error); }
+  });
   app.post('/api/review/action', async (req, res, next) => {
     try { res.json(await store.act(res.locals.actor, req.body)); } catch (error) { next(error); }
   });

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import SpatialPlanner from './SpatialPlanner';
 
 type Account = { id: string; name: string; role: 'Artist' | 'General_Exhibition_Coordinator' | 'Director' };
 type Revision = { number: number; status: string; content: { title: string; concept: string }; critique?: string };
@@ -29,6 +30,8 @@ export default function PublicationReview() {
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [spatialDirty, setSpatialDirty] = useState(false);
+  const [spatialReload, setSpatialReload] = useState(0);
   const apply = (next: RecordView) => { setRecord(next); const r = next.revisions.at(-1); setDraft(r?.content ?? { title: '', concept: '' }); };
   useEffect(() => {
     let active = true;
@@ -69,19 +72,22 @@ export default function PublicationReview() {
       <p>Noura Al Mazrouei · Kufic Horizon · Fictional local accounts. Account selection simulates sign-in; it does not verify a real identity.</p>
       <p>Reviews and revisions are saved on this computer. The real application, email and government website remain paused. “Approve &amp; Publish” queues a local public snapshot only.</p>
       <section className={panel} aria-label="Account selection">
-        <label>Fictional account<select className={input} value={actor?.id ?? ''} disabled={busy || dirty} onChange={e => void choose(e.target.value)}><option value="" disabled>Choose an account</option>{accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}</select></label>
+        <label>Fictional account<select className={input} value={actor?.id ?? ''} disabled={busy || dirty || spatialDirty} onChange={e => void choose(e.target.value)}><option value="" disabled>Choose an account</option>{accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}</select></label>
         {actor && <p><strong>Active role:</strong> {label(actor.role)}</p>}
         {dirty && <p>Save your draft before switching accounts or refreshing.</p>}
-        <button className={button} disabled={busy || dirty} onClick={() => void run(async () => {
+        {spatialDirty && <p>Save or discard spatial changes before switching accounts or refreshing.</p>}
+        <button className={button} disabled={busy || dirty || spatialDirty} onClick={() => void run(async () => {
           const session = await api<{ accounts: Account[]; actor: Account | null }>('session');
           setAccounts(session.accounts); setActor(session.actor); setRecord(null);
           if (session.actor) apply(await api<RecordView>('record'));
+          setSpatialReload(value => value + 1);
           setNotice('Latest server record loaded.');
         })}>Refresh server record</button>
       </section>
       {error && <p role="alert" className="rounded border border-red-800 bg-red-50 ps-4 pe-4 py-3">{error}</p>}
       <p role="status" aria-live="polite">{busy ? 'Saving or loading…' : notice}</p>
       {record && <>
+        {actor && actor.role !== 'Director' && <SpatialPlanner key={`${actor.id}-${spatialReload}`} role={actor.role} onDirtyChange={setSpatialDirty}/>}
         <section className={panel}><h2 className="text-xl font-semibold">Outstanding tasks and alerts</h2>
           {record.tasks.length ? <ul>{record.tasks.map(t => <li key={t.revision}>{t.title} · {label(t.owner)} · Revision {t.revision}</li>)}</ul> : <p>No outstanding tasks for this view.</p>}
           <ul className="space-y-2">{record.alerts.filter(a => !a.resolved).map(a => <li key={a.id}>Revision {a.revision}: {a.message}</li>)}</ul>

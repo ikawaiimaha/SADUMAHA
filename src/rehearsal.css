@@ -1,3 +1,4 @@
 @import "./index.css";
 @source "./components/RehearsalJourney.tsx";
 @source "./components/PublicationReview.tsx";
+@source "./components/SpatialPlanner.tsx";

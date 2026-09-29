@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SADU local spatial record, centimetres",
+  "type": "object",
+  "required": ["format", "version", "artist_id", "exhibition_id", "wall_space", "artwork_records", "placements", "history"],
+  "properties": {
+    "format": { "const": 1 },
+    "version": { "type": "integer", "minimum": 0 },
+    "artist_id": { "type": "string", "minLength": 1 },
+    "exhibition_id": { "type": "string", "minLength": 1 },
+    "wall_space": { "$ref": "#/$defs/Wall_Space" },
+    "artwork_records": { "type": "array", "maxItems": 50, "items": { "$ref": "#/$defs/Artwork_Record" } },
+    "placements": { "type": "array", "maxItems": 50, "items": { "$ref": "#/$defs/Placement" } },
+    "history": { "type": "array", "items": { "type": "object" } }
+  },
+  "$defs": {
+    "Dimension": { "type": "number", "exclusiveMinimum": 0, "maximum": 100000 },
+    "Artwork_Record": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "artist_id", "exhibition_id", "title", "height_cm", "width_cm", "revision"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 }, "artist_id": { "type": "string", "minLength": 1 }, "exhibition_id": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1, "maxLength": 200 }, "revision": { "type": "integer", "minimum": 1 },
+        "height_cm": { "$ref": "#/$defs/Dimension" }, "width_cm": { "$ref": "#/$defs/Dimension" }
+      }
+    },
+    "Wall_Space": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "artist_id", "exhibition_id", "max_height_cm", "max_width_cm"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 }, "artist_id": { "type": "string", "minLength": 1 }, "exhibition_id": { "type": "string", "minLength": 1 },
+        "max_height_cm": { "$ref": "#/$defs/Dimension" }, "max_width_cm": { "$ref": "#/$defs/Dimension" }
+      }
+    },
+    "Placement": {
+      "type": "object", "additionalProperties": false,
+      "required": ["artwork_id", "x_cm", "y_cm"],
+      "properties": { "artwork_id": { "type": "string", "minLength": 1 }, "x_cm": { "type": "number" }, "y_cm": { "type": "number" } }
+    }
+  }
+}

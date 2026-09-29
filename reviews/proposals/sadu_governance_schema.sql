@@ -56,6 +56,7 @@ CREATE TABLE sadu_proposal.submission (
   id uuid PRIMARY KEY,
   exhibition_id uuid NOT NULL REFERENCES sadu_proposal.exhibition,
   artist_id uuid NOT NULL REFERENCES sadu_proposal.person,
+  UNIQUE (id, artist_id),
   UNIQUE (exhibition_id, artist_id)
 );
 CREATE TABLE sadu_proposal.submission_revision (
@@ -80,9 +81,9 @@ CREATE TABLE sadu_proposal.artwork_record (
   artwork_id uuid NOT NULL,
   title text NOT NULL CHECK (length(trim(title)) > 0),
   description text NOT NULL CHECK (length(trim(description)) > 0),
-  width_mm numeric NOT NULL CHECK (width_mm > 0),
-  height_mm numeric NOT NULL CHECK (height_mm > 0),
-  depth_mm numeric CHECK (depth_mm > 0),
+  width_cm numeric NOT NULL CHECK (width_cm > 0 AND width_cm <= 100000),
+  height_cm numeric NOT NULL CHECK (height_cm > 0 AND height_cm <= 100000),
+  depth_cm numeric CHECK (depth_cm > 0),
   display_kind text NOT NULL CHECK (display_kind IN ('Wall','Floor','Other')),
   PRIMARY KEY (submission_id, revision, artwork_id),
   FOREIGN KEY (submission_id, revision) REFERENCES sadu_proposal.submission_revision
@@ -101,15 +102,30 @@ CREATE TABLE sadu_proposal.artwork_image (
     REFERENCES sadu_proposal.artwork_record (submission_id, revision, artwork_id)
   -- Upload issuance must require this scoped parent; storage orphan cleanup is separate.
 );
-CREATE TABLE sadu_proposal.spatial_assignment (
+CREATE TABLE sadu_proposal.wall_space (
   id uuid PRIMARY KEY,
   submission_id uuid NOT NULL,
+  artist_id uuid NOT NULL REFERENCES sadu_proposal.person,
   revision integer NOT NULL,
-  available_width_mm numeric NOT NULL CHECK (available_width_mm > 0),
-  available_height_mm numeric NOT NULL CHECK (available_height_mm > 0),
-  assessment text NOT NULL DEFAULT 'Unreviewed' CHECK (assessment IN ('Unreviewed','Warning','Specialist_Accepted')),
+  max_width_cm numeric NOT NULL CHECK (max_width_cm > 0 AND max_width_cm <= 100000),
+  max_height_cm numeric NOT NULL CHECK (max_height_cm > 0 AND max_height_cm <= 100000),
+  UNIQUE (id, submission_id, revision),
+  FOREIGN KEY (submission_id, artist_id) REFERENCES sadu_proposal.submission (id, artist_id),
   FOREIGN KEY (submission_id, revision) REFERENCES sadu_proposal.submission_revision
-  -- Area comparison is a warning only; layout, spacing, load and mounting need Technical.
+  -- AABB layout checks are implemented in the separate local spatial service.
+  -- A 2D fit is not load, mounting or structural acceptance.
+);
+CREATE TABLE sadu_proposal.wall_placement (
+  wall_id uuid NOT NULL,
+  submission_id uuid NOT NULL,
+  revision integer NOT NULL,
+  artwork_id uuid NOT NULL,
+  x_cm numeric NOT NULL CHECK (x_cm >= 0),
+  y_cm numeric NOT NULL CHECK (y_cm >= 0),
+  PRIMARY KEY (submission_id, revision, artwork_id),
+  FOREIGN KEY (wall_id, submission_id, revision) REFERENCES sadu_proposal.wall_space (id, submission_id, revision),
+  FOREIGN KEY (submission_id, revision, artwork_id) REFERENCES sadu_proposal.artwork_record (submission_id, revision, artwork_id)
+  -- Wall bounds and pairwise overlap require transactional validation, not a row CHECK.
 );
 
 CREATE TABLE sadu_proposal.decision_record (
