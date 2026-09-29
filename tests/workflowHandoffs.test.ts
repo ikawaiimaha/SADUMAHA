@@ -8,7 +8,7 @@ import type { NominatedArtistDossier } from '../src/components/ArtistNominationF
 const at = '2026-09-28T10:00:00Z';
 const contract: BilateralContract = {
   id: 'contract-demo', artistId: COMMISSION.id, artistName: COMMISSION.artistName, artistCategory: 'Emerging', nationality: 'Fictional country', medium: 'Bronze', proposedWorkTitle: COMMISSION.title,
-  productionCost: 10000, shippingTerms: 'Fictional courier', cancellationClauseMandatory: true, status: 'ARTIST_APPROVED', auditTrail: [],
+  productionCost: 10000, shippingLiability: 'DEPARTMENT', shippingTerms: 'Fictional courier', cancellationClauseMandatory: true, status: 'ARTIST_APPROVED', auditTrail: [],
   tranches: {advancePercentage:30,advanceAmount:3000,advanceStatus:'PENDING',deliveryPercentage:40,deliveryAmount:4000,deliveryStatus:'PENDING',installationPercentage:30,installationAmount:3000,installationStatus:'PENDING'},
   documents: {passportStatus:'SUBMITTED',artworkDpi:300,highResStatus:'NOT_UPLOADED',catalogBioStatus:'DRAFT'}
 };
@@ -39,6 +39,8 @@ test('delivery and completion require distinct logistics evidence and cannot be 
   assert.equal(reduce(s,{type:'receive-asset',actor:'FINANCE',reference:'R1',at}),s);
   assert.equal(reduce(s,{type:'receive-asset',actor:'LOGISTICS',reference:' ',at}),s);
   s=reduce(s,{type:'receive-asset',actor:'LOGISTICS',reference:'R1',at});
+  assert.equal(milestoneEligible(s,'delivery'),false);
+  s=reduce(s,{type:'record-condition',actor:'LOGISTICS',id:'inspection',condition:'INTACT',photos:[],at});
   assert.equal(milestoneEligible(s,'delivery'),true);
   assert.equal(milestoneEligible(s,'completion'),false);
   assert.equal(reduce(s,{type:'close-exhibition',actor:'LOGISTICS',returnReference:'return',reconciliationReference:'',at}),s);
@@ -998,7 +1000,9 @@ test('two-tranche 30/70 agreements cannot disburse a zero completion milestone',
  const two={...contract,tranches:{...contract.tranches,deliveryPercentage:70,deliveryAmount:7000,installationPercentage:0,installationAmount:0}};
  assert.equal(validAgreement(two),true);
  let state=reduce(createCommission(),{type:'contracts',update:()=>[two]});
- state={...state,logistics:{status:'PHYSICAL_ASSET_RECEIVED',receivedAt:at,reference:'receipt',closedAt:at,returnReference:'return',reconciliationReference:'condition'}};
+ state={...state,logistics:{appliesToRevision:state.agreementRevision,status:'PHYSICAL_ASSET_RECEIVED',receivedAt:at,reference:'receipt'}};
+ state=reduce(state,{type:'record-condition',actor:'LOGISTICS',id:'two-tranche-inspection',condition:'INTACT',photos:[],at});
+ state=reduce(state,{type:'close-exhibition',actor:'LOGISTICS',returnReference:'return',reconciliationReference:'condition',at});
  assert.equal(milestoneEligible(state,'delivery'),true);
  assert.equal(milestoneEligible(state,'completion'),false);
  assert.equal(reduce(state,{type:'record-tranche',actor:'FINANCE',tranche:'completion',at}),state);
@@ -1066,4 +1070,44 @@ test('idle warning begins at nine minutes and locks at ten',()=>{
 });
 test('sleep and timer throttling do not bypass idle lock, and activity cannot unlock it',()=>{
  assert.equal(idlePhase(1000,1000+60*60*1000),'locked');assert.equal(idlePhase(1000,1000,true),'locked');assert.equal(idlePhase(1000,1000,false),'active');
+});
+
+
+import {requiredWallMeters,crateToken} from '../src/data/logisticsExpansion';
+test('wall planning adds 40cm for every work and fails closed for missing widths',()=>{
+ assert.equal(requiredWallMeters([{width:'100'},{width:'200'}]),3.8);
+ for(const width of ['', '0', '-5', 'Infinity','abc'])assert.equal(requiredWallMeters([{width}]),null);
+ assert.equal(requiredWallMeters([]),null);
+});
+test('local production requires approved vendor proof before delivery and rejects freight paths',()=>{
+ const local={...contract,productionOrigin:'LOCAL_FABRICATION' as const,localVendorId:'demo-print'};
+ let s=reduce(createCommission(),{type:'contracts',update:()=>[local]});
+ const delivery={type:'local-production' as const,actor:'COORDINATOR',stage:'DELIVERED' as const,reference:'Vendor receipt',at};
+ assert.equal(reduce(s,delivery),s);
+ assert.equal(reduce(s,{type:'save-origin',actor:'ARTIST',assetId:`${local.id}:1`,address:'A valid physical location',country:'France',at}),s);
+ assert.equal(reduce(s,{type:'receive-asset',actor:'LOGISTICS',reference:'local receipt',at}),s);
+ const proof={...delivery,stage:'PROOF_RECORDED' as const};
+ assert.equal(reduce(s,{...proof,actor:'ARTIST'}),s);
+ s=reduce(s,proof);assert.equal(reduce(s,proof),s);
+ s=reduce(s,delivery);assert.equal(s.localProductionEvents?.length,2);
+ assert.equal(milestoneEligible(s,'delivery'),false);
+ s=reduce(s,{type:'receive-asset',actor:'LOGISTICS',reference:'local receipt',at});
+ s=reduce(s,{type:'record-condition',actor:'LOGISTICS',id:'local inspection',condition:'INTACT',photos:[],at});
+ assert.equal(milestoneEligible(s,'delivery'),true);assert.equal(milestoneEligible(s,'completion'),false);
+ assert.equal(crateToken(s),null);
+ assert.equal(reduce(s,{type:'contracts',update:rows=>rows.map(c=>({...c,localVendorId:'demo-frame'}))}),s);
+});
+test('QR receipt rejects wrong or stale tokens, requires damage evidence and records intact inspection atomically',()=>{
+ const c={...contract,productionOrigin:'INTERNATIONAL_FREIGHT' as const,crate:{reference:'crate-1',lengthCm:100,widthCm:80,heightCm:60,grossWeightKg:100}};
+ const s=reduce(createCommission(),{type:'contracts',update:()=>[c]});
+ const a={type:'receive-crate' as const,actor:'LOGISTICS',token:crateToken(s)!,condition:'INTACT' as const,photos:[],id:'inspection',at};
+ assert.equal(reduce(s,{...a,actor:'ARTIST'}),s);
+ assert.equal(reduce(s,{...a,token:'unknown'}),s);
+ const revised={...s,agreementRevision:s.agreementRevision+1};assert.equal(reduce(revised,a),revised);
+ assert.equal(reduce(s,{...a,condition:'DAMAGED'}),s);
+ const result=reduce(s,a);assert.ok(result.logistics);assert.equal(result.conditionReports?.length,1);
+ assert.equal(milestoneEligible(result,'delivery'),true);assert.equal(milestoneEligible(result,'completion'),false);
+ assert.equal(reduce(result,a),result);
+ const damaged=reduce(s,{...a,condition:'DAMAGED',photos:[new File(['image'],'damage.png',{type:'image/png'})]});
+ assert.equal(damaged.conditionReports?.[0].insuranceStatus,'INSURANCE_CLAIM_PENDING');assert.equal(milestoneEligible(damaged,'delivery'),false);
 });

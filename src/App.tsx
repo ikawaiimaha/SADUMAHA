@@ -14,6 +14,8 @@ import { MasterDirectoryProvider, DirectoryRegistration } from './context/Master
 import { MasterDirectory } from './components/MasterDirectory';
 import { agreementPipelineReady } from './data/workflowEligibility';
 import { CommitteeNominationLedger } from './components/PrepCommitteeWorkspace';
+import {LocalProductionLedger} from './components/LocalProductionLedger';
+import {productionReady} from './data/logisticsExpansion';
 import { CommitteeNominationOutcome } from './components/CoordinatorWorkspace';
 import { LiveCatalogAggregator } from './components/CatalogMetadata';
 import { validCrate } from './data/installationOperations';
@@ -409,7 +411,7 @@ function SADUApp() {
   ) => {
     if (damageHold(commission) || ['ARCHIVED_CLOSED','EXECUTIVE_IMPOUND'].includes(commission.installationStatus ?? '') || !agreementPipelineReady(themePolishStatus, translationStatus, isIsolatedRehearsalMode)) return;
     const terms = contractTerms as ContractFormState;
-    if (!['ARTIST','DEPARTMENT'].includes(terms.shippingLiability ?? '') || !validCrate(terms.crate) || commission.installationStatus === 'EXECUTIVE_IMPOUND') return;
+    if (!['ARTIST','DEPARTMENT'].includes(terms.shippingLiability ?? '') || (!terms.productionOrigin || !productionReady(terms)) || commission.installationStatus === 'EXECUTIVE_IMPOUND') return;
     const approvedDossier = nominatedArtists.find(d => d.id === artistId);
     if (!approvedDossier || approvedDossier.status !== 'APPROVED' || approvedDossier.assignedCoordinatorId !== activeCoordinatorId || approvedDossier.amendments?.some(a => a.status === 'PENDING') || approvedDossier.artworkCount !== terms.artworkCount) return;
     if (artistId !== COMMISSION.id || activeRole !== 'COORDINATOR' || activeCoordinatorId !== commissionCoordinatorId) return;
@@ -460,6 +462,8 @@ function SADUApp() {
         proposedWorkTitle: approvedDossier.proposedWorkTitle,
         themeArabic: themePolishStatus === 'PUBLISHED_OFFICIAL' ? ratifiedTheme?.arabicName : undefined,
         productionCost,
+        productionOrigin: terms.productionOrigin,
+        localVendorId: terms.localVendorId,
         shippingLiability: terms.shippingLiability,
         shippingTerms: shippingMethod,
         specialConditions: terms.specialConditions,
@@ -833,6 +837,7 @@ function SADUApp() {
             {/* Stage 6: Bilateral Contracting Workspace */}
             {activeRole === 'COORDINATOR' && activeCoordinatorId === commissionCoordinatorId && commission.installationStatus !== 'ARCHIVED_CLOSED' && (
               <>
+              <LocalProductionLedger state={commission} onRecord={action=>{if(activeRole==='COORDINATOR'&&activeCoordinatorId===commissionCoordinatorId&&action.type==='local-production')dispatchCommission({...action,actor:activeRole});}}/>
               <InstallationIntervention key={commission.impounds?.slice(-1)[0]?.id ?? 'no-impound'} state={commission} isAr={isAr} actor="COORDINATOR" onRecord={action => { if (activeRole === 'COORDINATOR' && activeCoordinatorId === commissionCoordinatorId && action.type === 'acknowledge-alterations') dispatchCommission({...action,actor:activeRole}); }} />
               <label className="flex items-center gap-2 rounded border border-amber-300 bg-amber-50 ps-4 pe-4 py-3 text-start"><input type="checkbox" checked={isIsolatedRehearsalMode} onChange={e => setIsolatedRehearsalMode(e.target.checked)} />Isolated rehearsal — bypass theme and guidelines publication for component testing only</label>
               <CoordinatorContractWorkspace

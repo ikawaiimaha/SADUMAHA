@@ -62,6 +62,8 @@ export interface ArtistDocumentIntake {
 }
 
 export interface BilateralContract {
+  productionOrigin?: import('../data/logisticsExpansion').ProductionOrigin;
+  localVendorId?: string;
   crate?: import('../data/installationOperations').CrateSpec;
   themeArabic?: string;
   participationCategory?: import('../data/soloInvitation2026').ParticipationCategory;

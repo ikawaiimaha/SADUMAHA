@@ -7,7 +7,7 @@ import { validCrate, vehicleTypes } from '../data/installationOperations';
 export function FleetDispatch({state,isAr,onRecord}:{state:CommissionState;isAr:boolean;onRecord:(action:CommissionAction)=>void}) {
  const [vehicle,setVehicle]=useState<string>(vehicleTypes[0]);
  const c=state.contracts[0],crate=c?.crate;
- const eligible=Boolean(!damageHold(state)&&c&&['ARTIST_APPROVED','LOCKED'].includes(c.status)&&validCrate(crate)&&!state.logistics?.closedAt&&state.installationStatus!=='EXECUTIVE_IMPOUND');
+ const eligible=Boolean(!damageHold(state)&&c&&c.productionOrigin!=='LOCAL_FABRICATION'&&['ARTIST_APPROVED','LOCKED'].includes(c.status)&&validCrate(crate)&&!state.logistics?.closedAt&&state.installationStatus!=='EXECUTIVE_IMPOUND');
  const exists=state.fleetTickets?.some(row=>!row.isSuperseded&&row.contractId===c?.id&&row.crate.reference===crate?.reference);
  const t=(ar:string,en:string)=>isAr?ar:en;
  return <section className="space-y-4 rounded border border-[#D9CEBA] bg-[#F7F1E6] ps-5 pe-5 py-5 text-start"><h2 className="flex items-center gap-2 text-xl font-semibold"><Truck aria-hidden="true" className="size-5"/>{t('أوامر النقل الداخلي','Internal Fleet & Transport Dispatch')}</h2>

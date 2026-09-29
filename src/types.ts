@@ -128,6 +128,7 @@ export interface CommissionEvidence {
 }
 
 export interface CommissionState {
+  localProductionEvents?: import('./data/logisticsExpansion').LocalProductionEvent[];
   invitation?: import('./data/portalInvitation').PortalInvitation;
   layoutBlueprints?: import('./data/artistExecution').LayoutBlueprint[];
   domesticPickups?: import('./data/artistExecution').DomesticPickup[];

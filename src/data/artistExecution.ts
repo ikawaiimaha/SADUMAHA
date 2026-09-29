@@ -16,7 +16,7 @@ export function artistExecutionTransition(s:CommissionState,a:ArtistExecutionAct
   return {...s,layoutBlueprints:[...(s.layoutBlueprints??[]),{id:a.id,contractId:c.id,revision:s.agreementRevision,file:a.file,at:a.at}]};
  }
  const p=a.input;
- if(p.contractId!==c.id||!p.id||!domesticCountry(s.administration?.country)||s.administration?.contractId!==c.id||!validCrate(c.crate)||s.logistics||s.acquisition||s.domesticPickups?.some(r=>r.id===p.id||r.contractId===c.id&&r.revision===s.agreementRevision))return s;
+ if(c.productionOrigin==='LOCAL_FABRICATION'||p.contractId!==c.id||!p.id||!domesticCountry(s.administration?.country)||s.administration?.contractId!==c.id||!validCrate(c.crate)||s.logistics||s.acquisition||s.domesticPickups?.some(r=>r.id===p.id||r.contractId===c.id&&r.revision===s.agreementRevision))return s;
  const ticket:DomesticPickup={...p,crate:{...c.crate},revision:s.agreementRevision,status:'PENDING_COLLECTION'};
  return validPickup(ticket)?{...s,domesticPickups:[...(s.domesticPickups??[]),ticket]}:s;
 }

@@ -1,3 +1,4 @@
+import {LOCAL_VENDORS, productionReady, type ProductionOrigin} from '../data/logisticsExpansion';
 import type { PortalInvitation } from '../data/portalInvitation';
 import { agreementPipelineReady } from '../data/workflowEligibility';
 import { useSessionDraft } from '../context/SessionDrafts';
@@ -38,6 +39,8 @@ export interface VettedArtist {
 }
 
 export interface ContractFormState {
+  productionOrigin?: ProductionOrigin;
+  localVendorId?: string;
   crate?: CrateSpec;
   participationCategory: ParticipationCategory;
   artworkCount: number;
@@ -111,7 +114,7 @@ export function CoordinatorContractWorkspace({
 
   useEffect(() => {
     if (existingAgreement?.status !== 'CONTRACT_DISPUTED' || hasDraft) return;
-    setForm({ shippingLiability: existingAgreement.shippingLiability, crate: existingAgreement.crate, participationCategory: existingAgreement.participationCategory ?? 'SINGLE_WORK', artworkCount: existingAgreement.artworkCount ?? 1, productionGrant: existingAgreement.productionCost, shippingMethod: existingAgreement.shippingTerms,
+    setForm({ productionOrigin: existingAgreement.productionOrigin ?? 'INTERNATIONAL_FREIGHT', localVendorId: existingAgreement.localVendorId, shippingLiability: existingAgreement.shippingLiability, crate: existingAgreement.crate, participationCategory: existingAgreement.participationCategory ?? 'SINGLE_WORK', artworkCount: existingAgreement.artworkCount ?? 1, productionGrant: existingAgreement.productionCost, shippingMethod: existingAgreement.shippingTerms,
       advancePercentage: existingAgreement.tranches.advancePercentage, interimPercentage: existingAgreement.tranches.deliveryPercentage,
       finalPercentage: existingAgreement.tranches.installationPercentage, specialConditions: existingAgreement.specialConditions || '',
       venue: existingAgreement.venue || '', venueClearanceReference: existingAgreement.venueClearanceReference || '' });
@@ -120,7 +123,7 @@ export function CoordinatorContractWorkspace({
 
   const handleDispatch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (dispatchedSuccess === selectedArtistId || !editableArtists.some(a => a.id === selectedArtistId) || !pipelineReady || !form.shippingMethod.trim() || !form.shippingLiability || !selectedArtistId || !validCrate(form.crate) || !isTrancheValid || !venueReady || !validParticipationScope(form) || form.participationCategory !== 'SINGLE_WORK') return;
+    if (dispatchedSuccess === selectedArtistId || !editableArtists.some(a => a.id === selectedArtistId) || !pipelineReady || !form.shippingMethod.trim() || !form.shippingLiability || !selectedArtistId || (!form.productionOrigin || !productionReady(form)) || !isTrancheValid || !venueReady || !validParticipationScope(form) || form.participationCategory !== 'SINGLE_WORK') return;
 
     
     // 1. Pass the data UP to App.tsx instead of handling it locally
@@ -280,10 +283,12 @@ export function CoordinatorContractWorkspace({
         <div className="lg:col-span-8">
           {selectedArtist ? (
             <form onSubmit={handleDispatch} className="bg-[#FAF7F2] border border-[#D9CEBA] rounded-lg p-6 space-y-6">
-              <fieldset className="rounded border border-[#D9CEBA] ps-4 pe-4 py-4 space-y-3"><legend className="font-semibold">{isAr ? 'مواصفات الصندوق للنقل الداخلي' : 'Crate specifications for fleet dispatch'}</legend>
+              <label className="block">Production origin / مصدر الإنتاج<select required className="block w-full rounded border ps-3 pe-3 py-2" value={form.productionOrigin??''} onChange={e=>setForm({...form,productionOrigin:e.target.value as ProductionOrigin,crate:undefined,localVendorId:undefined,shippingMethod:e.target.value==='LOCAL_FABRICATION'?'Local vendor delivery':'Fine Art Dedicated Freight (Climate Controlled)'})}><option value="">Select production route</option><option value="INTERNATIONAL_FREIGHT">International Freight / شحن دولي</option><option value="LOCAL_FABRICATION">Local Fabrication / إنتاج محلي</option></select></label>
+              {form.productionOrigin==='LOCAL_FABRICATION'&&<label className="block">Local vendor / المورد المحلي<select required className="block w-full rounded border ps-3 pe-3 py-2" value={form.localVendorId??''} onChange={e=>setForm({...form,localVendorId:e.target.value})}><option value="">Select approved sample vendor</option>{LOCAL_VENDORS.map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></label>}
+              {form.productionOrigin==='INTERNATIONAL_FREIGHT'&&<><fieldset className="rounded border border-[#D9CEBA] ps-4 pe-4 py-4 space-y-3"><legend className="font-semibold">{isAr ? 'مواصفات الصندوق للنقل الداخلي' : 'Crate specifications for fleet dispatch'}</legend>
                 <p>{isAr ? 'أدخل الأبعاد الخارجية والوزن الإجمالي مع التغليف، وليس وزن العمل وحده.' : 'Record external dimensions and gross packed weight, not artwork weight alone.'}</p>
                 {(['reference','lengthCm','widthCm','heightCm','grossWeightKg'] as const).map((field,index)=><label key={field} className="block">{(isAr?['مرجع الصندوق','الطول (سم)','العرض (سم)','الارتفاع (سم)','الوزن الإجمالي (كغ)']:['Crate reference','Length (cm)','Width (cm)','Height (cm)','Gross weight (kg)'])[index]}<input required type={field==='reference'?'text':'number'} min={field==='reference'?undefined:0.01} step={field==='reference'?undefined:'any'} value={form.crate?.[field]??''} className="block w-full border ps-3 pe-3 py-2" onChange={e=>setForm(current=>({...current,crate:{reference:'',lengthCm:0,widthCm:0,heightCm:0,grossWeightKg:0,...current.crate,[field]:field==='reference'?e.target.value:Number(e.target.value)}}))}/></label>)}
-              </fieldset>
+              </fieldset></>}
               <section className="space-y-3 rounded border border-[#D9CEBA] bg-[#F7F1E6] ps-4 pe-4 py-4">
                 <h3 className="text-lg font-semibold">{isAr ? 'ملخص السجل الحالي' : 'Current record'}</h3>
                 <p>{isAr ? 'الثيمة المنشورة:' : 'Published theme:'} <bdi>{officialTheme ?? (isAr ? 'لم تُنشر بعد' : 'Not published yet')}</bdi></p>
@@ -328,7 +333,7 @@ export function CoordinatorContractWorkspace({
                   </label>
                   <div className="relative">
                     <Truck className="w-4 h-4 absolute start-3 top-2.5 text-[#736357]" />
-                    <select id="deal-shipping" value={form.shippingMethod} required
+                    <select id="deal-shipping" disabled={form.productionOrigin==='LOCAL_FABRICATION'} value={form.shippingMethod} required
                       onChange={e => setForm({...form, shippingMethod:e.target.value})}
                       className="w-full ps-9 pe-3 py-2 bg-white border border-[#D9CEBA] rounded text-sm">
                       <option value="Fine Art Dedicated Freight (Climate Controlled)">{isAr ? 'شحن فني متخصص — منظم من الدائرة' : 'Fine Art Dedicated Freight — SDC Arranged'}</option>
@@ -445,7 +450,7 @@ export function CoordinatorContractWorkspace({
               <div className="pt-2 flex items-center justify-end gap-3 border-t border-[#D9CEBA]">
                 <button
                   type="submit"
-                  disabled={dispatchedSuccess === selectedArtistId || !pipelineReady || !form.shippingMethod.trim() || !form.shippingLiability || !validCrate(form.crate) || !isTrancheValid || !venueReady || !validParticipationScope(form) || form.participationCategory !== 'SINGLE_WORK'}
+                  disabled={dispatchedSuccess === selectedArtistId || !pipelineReady || !form.shippingMethod.trim() || !form.shippingLiability || (!form.productionOrigin || !productionReady(form)) || !isTrancheValid || !venueReady || !validParticipationScope(form) || form.participationCategory !== 'SINGLE_WORK'}
                   className="ps-5 pe-5 py-2.5 bg-[#8B261E] enabled:hover:bg-[#721F18] text-white text-xs font-semibold rounded-md shadow flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <Send className="w-4 h-4 rtl:rotate-180" />
