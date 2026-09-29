@@ -1378,3 +1378,16 @@ test('bilingual export rejects missing English and retains source-language text'
  assert.equal(bilingualComplete({...complete,source:{...text,language:'fr'},translation_ar:null}),false);
  assert.equal(bilingualComplete({...complete,translation_en:{...text,bio:''}}),false);
 });
+
+test('asset metadata and extra-night approvals fail closed and preserve separation of powers',async()=>{
+ const {validBundle}=await import('../src/components/AssetBundleFields');
+ assert.equal(validBundle(undefined),false);
+ assert.equal(validBundle({title:'Work',medium:'Ink',year:'2026',height:'10',width:'20',depth:'0'}),false);
+ assert.equal(validBundle({title:'Work',medium:'Ink',year:'2026',height:'10',width:'20',depth:'1'}),true);
+ const {extraNights,decideStay}=await import('../src/data/hospitalityExceptions');
+ assert.equal(extraNights('2026-10-16'),5);assert.equal(extraNights('2026-02-31'),0);
+ const row={id:'x',artistId:'a',departure:'2026-10-16',nightlyAED:100,reason:'Quote',status:'DIRECTOR_REVIEW' as const,events:[]};
+ assert.equal(decideStay(row,'FINANCE',true,'2026-09-29'),row);
+ const director=decideStay(row,'BIENNIAL_DIRECTOR',true,'2026-09-29');assert.equal(director.status,'FINANCE_REVIEW');
+ const approved=decideStay(director,'FINANCE',true,'2026-09-29');assert.equal(approved.status,'APPROVED');assert.equal(approved.events.length,2);assert.equal(decideStay(approved,'FINANCE',false,'2026-09-29'),approved);
+});
