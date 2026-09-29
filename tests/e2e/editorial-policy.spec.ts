@@ -1,0 +1,11 @@
+import {test,expect} from '@playwright/test';
+test('Arabic public text requests English and approval locks the translation card',async({page},info)=>{
+ const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.route('**/src/lib/pilotSupabase.ts*',r=>r.fulfill({contentType:'application/javascript',body:`export const pilotSupabase={from(){return {update(v){window.approval=v;return this},eq(){return this},select(){return this},single:async()=>({data:{id:'a'},error:null})}}};`}));
+ await page.route('**/src/main.tsx*',r=>r.fulfill({contentType:'application/javascript',body:`import React from '/node_modules/.vite/deps/react.js';import ReactDOM from '/node_modules/.vite/deps/react-dom_client.js';import {TranslationCard,TranslationPolicy} from '/src/components/ArtworkMetadataLedger.tsx';import '/src/index.css';const h=React.createElement;const row={id:'a',scenario_id:'dossier',source:{language:'ar',title:'ميزان',medium:'حبر',concept:'دراسة التوازن',bio:'سيرة الفنان'},translation_status:'PENDING_TRANSLATION'};function App(){const [done,set]=React.useState(false);return h('main',{dir:'rtl',style:{padding:16}},h(TranslationPolicy),done?h('p',null,'Approved and locked'):h(TranslationCard,{row,onSaved:()=>set(true)}));}ReactDOM.createRoot(document.getElementById('root')).render(h(App));window.dispatchEvent(new Event('sadu:ready'));`}));
+ await page.goto('/');await expect(page.getByText('Official English translation')).toBeVisible();await expect(page.getByRole('button',{name:/Approve Translation/})).toBeDisabled();
+ for(const [label,value] of [['Artwork title','Balance'],['Materials','Ink'],['Concept','Study of balance'],['Biography','Artist biography']])await page.getByLabel(new RegExp('en · '+label)).fill(value);
+ await page.getByRole('button',{name:/Approve Translation/}).click();await expect(page.getByText('Approved and locked')).toBeVisible();
+ expect(await page.evaluate(()=>(window as any).approval)).toEqual({translation_en:{title:'Balance',medium:'Ink',concept:'Study of balance',bio:'Artist biography'},translation_status:'TRANSLATION_COMPLETED'});
+ expect(errors).toEqual([]);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:info.outputPath('editorial.png'),fullPage:true});
+});

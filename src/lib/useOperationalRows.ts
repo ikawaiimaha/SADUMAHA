@@ -15,7 +15,7 @@ export function useOperationalRows<T>(table:'sadu_artwork_checklist'|'sadu_freig
  },[table,column,value]);
  useEffect(()=>{
   let active=true;setRows([]);void refresh();if(!client)return;
-  const auth=client.auth.onAuthStateChange(()=>{setRows([]);window.setTimeout(()=>{if(active)void refresh();},0);});
+  const auth=client.auth.onAuthStateChange(()=>{epoch.current++;setRows([]);window.setTimeout(()=>{if(active)void refresh();},0);});
   const channel=client.channel(`${table}:${crypto.randomUUID()}`).on('postgres_changes',{event:'*',schema:'public',table},()=>void refresh()).subscribe(status=>{if(!active)return;setLive(status==='SUBSCRIBED');if(status==='SUBSCRIBED')void refresh();});
   const timer=window.setInterval(()=>void refresh(),15000);
   return()=>{active=false;epoch.current++;clearInterval(timer);auth.data.subscription.unsubscribe();void client.removeChannel(channel);};

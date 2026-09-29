@@ -1367,3 +1367,14 @@ test('guest deadlines use arrival lead days and identity remains required indepe
  const v={passportNumber:'SAMPLE',passportExpiry:'2030-01-01',nationality:'Sample',birthDate:'1990-01-01',birthPlace:'Sample',email:'sample@example.test',phone:'000'};
  assert.equal(validGuestIdentity(v,'2026-10-06'),true);assert.equal(validGuestIdentity({...v,passportExpiry:'2026-10-01'},'2026-10-06'),false);assert.equal(validGuestIdentity({...v,email:''},'2026-10-06'),false);
 });
+
+test('bilingual export rejects missing English and retains source-language text',async()=>{
+ const {bilingualComplete,labelCSV,publicText}=await import('../src/data/catalogFreight');
+ const text={title:'Sample',medium:'Ink',concept:'A study',bio:'Biography'};
+ const row={id:'a',scenario_id:'s',zone_id:'z',media_object_name:'f',source:{...text,language:'ar'},translation_ar:text,translation_en:null,translation_status:'TRANSLATION_COMPLETED' as const,production_year:2026,height_cm:1,width_cm:2,weight_kg:3,crate_count:1};
+ assert.equal(bilingualComplete(row),false);assert.equal(labelCSV([row]).includes('Sample'),false);
+ const complete={...row,translation_en:{...text,title:'English title'}};
+ assert.equal(bilingualComplete(complete),true);assert.equal(publicText(complete,'ar'),complete.source);assert.ok(labelCSV([complete]).includes('English title'));
+ assert.equal(bilingualComplete({...complete,source:{...text,language:'fr'},translation_ar:null}),false);
+ assert.equal(bilingualComplete({...complete,translation_en:{...text,bio:''}}),false);
+});

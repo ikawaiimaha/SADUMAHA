@@ -1,12 +1,12 @@
 import {CATALOG_SCHEDULE} from './catalogMetadata';
 export type TextMetadata={title:string;medium:string;concept:string;bio?:string;language?:string;title_ar?:string};
-export type CatalogArtwork={id:string;scenario_id:string;zone_id:string;media_object_name:string;source:TextMetadata;translation_ar:TextMetadata|null;production_year:number;height_cm:number;width_cm:number;weight_kg:number;crate_count:number;translation_status:'PENDING_TRANSLATION'|'TRANSLATION_COMPLETED';translated_at?:string};
+export type CatalogArtwork={id:string;scenario_id:string;zone_id:string;media_object_name:string;source:TextMetadata;translation_ar:TextMetadata|null;translation_en?:TextMetadata|null;production_year:number;height_cm:number;width_cm:number;weight_kg:number;crate_count:number;translation_status:'PENDING_TRANSLATION'|'TRANSLATION_COMPLETED';translated_at?:string};
 export const conceptWords=(text:string)=>text.trim()?text.trim().split(/\s+/u).length:0;
 export const validConcept=(text:string)=>Boolean(text.trim()&&conceptWords(text)<=50);
 export function safeMapUrl(value:string){try{const url=new URL(value);return url.protocol==='https:'&&!url.username&&!url.password&&['maps.google.com','www.google.com','maps.app.goo.gl','goo.gl','www.makani.ae','makani.ae'].includes(url.hostname);}catch{return false;}}
 export function labelCSV(rows:CatalogArtwork[]){
  const cell=(value:unknown)=>'"'+String(value??'').replace(/^[\s]*[=+@\-]/,"'$&").replace(/"/g,'""')+'"';
- return '\uFEFF'+[['Artwork ID','Title Arabic','Original title','Source language','Year','Medium Arabic','Original medium','Concept Arabic','Original concept','Height cm','Width cm','Weight kg','Approved at'],...rows.filter(r=>r.translation_status==='TRANSLATION_COMPLETED').map(r=>[r.id,r.translation_ar?.title,r.source.title,r.source.language,r.production_year,r.translation_ar?.medium,r.source.medium,r.translation_ar?.concept,r.source.concept,r.height_cm,r.width_cm,r.weight_kg,r.translated_at])].map(row=>row.map(cell).join(',')).join('\r\n');
+ return '\uFEFF'+[['Artwork ID','Title Arabic','Original title','Source language','Year','Medium Arabic','Original medium','Concept Arabic','Original concept','Height cm','Width cm','Weight kg','Approved at','Title English','Medium English','Concept English','Biography Arabic','Biography English'],...rows.filter(bilingualComplete).map(r=>[r.id,r.translation_ar?.title,r.source.title,r.source.language,r.production_year,r.translation_ar?.medium,r.source.medium,r.translation_ar?.concept,r.source.concept,r.height_cm,r.width_cm,r.weight_kg,r.translated_at,publicText(r,'en')?.title,publicText(r,'en')?.medium,publicText(r,'en')?.concept,publicText(r,'ar')?.bio,publicText(r,'en')?.bio])].map(row=>row.map(cell).join(',')).join('\r\n');
 }
 export const shipmentStatuses=['PENDING_ORIGIN_DISPATCH','IN_TRANSIT','CUSTOMS_CLEARANCE','RECEIVED_CONDITION_CHECKED'] as const;
 export type FreightBooking={id:string;artwork_id:string;artist_id:string;ready_date:string;unavailable_start:string|null;unavailable_end:string|null;address:Record<string,string>;map_url:string;status:typeof shipmentStatuses[number];requested_date:string|null;change_reason:string|null;change_status:string|null;condition_reference:string|null;history:{event:string;at:string;date:string;requested_date?:string}[]};
@@ -22,3 +22,7 @@ export const dubaiToday=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Duba
 export function pickupWithinSchedule(date:string,start?:string|null,end?:string|null,today=dubaiToday()){
  return pickupDateAllowed(date,start,end)&&date>=today&&date<=PICKUP_DEADLINE;
 }
+
+export const translationFields=['title','medium','concept','bio'] as const;
+export function publicText(row:CatalogArtwork,language:'ar'|'en'){return row.source.language===language?row.source:language==='ar'?row.translation_ar:row.translation_en;}
+export function bilingualComplete(row:CatalogArtwork){return row.translation_status==='TRANSLATION_COMPLETED'&&(['ar','en'] as const).every(language=>{const text=publicText(row,language);return text&&['title','medium','concept'].every(k=>Boolean(text[k as keyof TextMetadata]?.trim()))&&(!row.source.bio?.trim()||text.bio?.trim());});}
