@@ -968,7 +968,7 @@ test('vault notification repeats notice, escapes body and rejects unsafe links a
 });
 test('resumable upload retains task for retry, uses 6 MiB chunks and cancels without overwrite',async()=>{
  let starts=0;const progress:number[]=[];
- class SimulatedUpload extends Upload {start(){starts++;assert.equal(this.options.chunkSize,6*1024*1024);assert.equal(this.options.storeFingerprintForResuming,false);this.options.onProgress?.(5,10);if(starts===1)this.options.onError?.(new Error('Network interrupted'));else this.options.onSuccess?.({lastResponse:null});}async abort(){}}
+ class SimulatedUpload extends Upload {async findPreviousUploads(){return [];}start(){starts++;assert.equal(this.options.chunkSize,6*1024*1024);assert.equal(this.options.storeFingerprintForResuming,true);this.options.onProgress?.(5,10);if(starts===1)this.options.onError?.(new Error('Network interrupted'));else this.options.onSuccess?.({lastResponse:null});}async abort(){}}
  const task=createMediaTransfer(new File(['sample'],'a.png'),'user/path/a.png','image/png','user',p=>progress.push(p),{client:{} as SupabaseClient,url:'http://127.0.0.1:54321',UploadClass:SimulatedUpload});
  await assert.rejects(task.start(),/interrupted/);await task.start();assert.equal(starts,2);assert.deepEqual(progress,[50,50]);task.cancel();await assert.rejects(task.start(),/cancelled/);
  assert.equal(tusEndpoint('https://abc.supabase.co'),'https://abc.storage.supabase.co/storage/v1/upload/resumable');
@@ -1027,4 +1027,35 @@ test('automated compliance holds cannot be manually endorsed by Committee or HIP
  assert.equal(reviewByCommittee(held,'PREP_COMMITTEE',true,'Override',[],at),held);
  assert.equal(reviewByCommittee(held,'HIP',false,'Reject',[],at),held);
  assert.equal(directorEligible(held,[]),false);
+});
+
+import {dossierEvents} from '../src/data/dossierTimeline';
+import {DossierTimeline} from '../src/components/DossierTimeline';
+import {readRecovery,saveRecovery,recoveryKey,validZoneDraft} from '../src/lib/mediaRecovery';
+test('timeline uses dated evidence only, preserves order and does not infer compliance',()=>{
+ const d={id:'a',submittedBy:'Coordinator',submittedAt:'2026-01-02T00:00:00Z',status:'APPROVED',committeeReview:{decision:'ENDORSED',actor:'PREP_COMMITTEE',at:'2026-01-03T00:00:00Z'},decisionAt:'bad'} as any;
+ const before=JSON.stringify(d);const events=dossierEvents(d);
+ assert.deepEqual(events.map(e=>e.id),['submission','committee']);assert.equal(JSON.stringify(d),before);
+ const html=renderToStaticMarkup(createElement(DossierTimeline,{dossier:d,isAr:false}));assert.match(html,/not an immutable legal ledger/);assert.doesNotMatch(html,/Blocklist cleared/);
+ const ar=renderToStaticMarkup(createElement(DossierTimeline,{dossier:d,isAr:true}));assert.match(ar,/dir="rtl"/);
+});
+test('timeline contract events are scoped to artist and retain amendment requests',()=>{
+ const d={id:'a',submittedAt:'bad'} as any;
+ const contract={id:'c',artistId:'a',auditTrail:[{id:'r',requestedAt:'2026-02-01T00:00:00Z',resolvedAt:'2026-02-02T00:00:00Z'}]} as any;
+ assert.equal(dossierEvents(d,[contract]).length,2);assert.equal(dossierEvents({...d,id:'other'},[contract]).length,0);
+});
+test('recovery isolates projects and users and safely handles malformed browser storage',()=>{
+ const original=Object.getOwnPropertyDescriptor(globalThis,'localStorage');const map=new Map<string,string>();
+ Object.defineProperty(globalThis,'localStorage',{configurable:true,value:{getItem:(k:string)=>map.get(k)??null,setItem:(k:string,v:string)=>map.set(k,v)}});
+ try{const key=recoveryKey('p','a','draft');assert.equal(saveRecovery(key,{name:'draft'}),true);assert.deepEqual(readRecovery(key),{name:'draft'});assert.equal(readRecovery(recoveryKey('p','b','draft')),null);assert.equal(readRecovery(recoveryKey('q','a','draft')),null);map.set(key,'invalid');assert.equal(readRecovery(key),null);map.set(key,JSON.stringify({at:0,value:'expired'}));assert.equal(readRecovery(key),null);assert.equal(validZoneDraft([null]),false);assert.equal(validZoneDraft([{id:'x'}]),false);}finally{if(original)Object.defineProperty(globalThis,'localStorage',original);else Reflect.deleteProperty(globalThis,'localStorage');}
+});
+test('restart resumes only a matching server URL and concurrent starts share one transfer',async()=>{
+ let resumed='';let starts=0;let options:any;
+ class RecoveryUpload extends Upload {
+  async findPreviousUploads(){return [{uploadUrl:'https://wrong.example/upload',urlStorageKey:'bad'},{uploadUrl:'http://127.0.0.1:54321/storage/v1/upload/resumable/saved',urlStorageKey:'ok'}] as any;}
+  resumeFromPreviousUpload(p:any){resumed=p.uploadUrl;}
+  start(){starts++;options=this.options;this.options.onSuccess?.({lastResponse:null});}
+ }
+ const file=new File(['a'],'a.png');const task=createMediaTransfer(file,'u/path','image/png','u',()=>{}, {client:{} as SupabaseClient,url:'http://127.0.0.1:54321',UploadClass:RecoveryUpload});
+ const first=task.start();assert.equal(task.start(),first);await first;assert.equal(starts,1);assert.match(resumed,/resumable\/saved$/);const fingerprint=await options.fingerprint();assert.match(fingerprint,/u\/path/);assert.equal(options.removeFingerprintOnSuccess,true);
 });

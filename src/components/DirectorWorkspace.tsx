@@ -1,3 +1,4 @@
+import {DossierTimeline} from './DossierTimeline';
 import { CollectionCloseout } from './CollectionCloseout';
 import { ConditionReporting } from './ConditionReporting';
 import { directorEligible } from '../data/vetting';
@@ -511,7 +512,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
                 <div className="space-y-3">
                   <div className="flex items-start justify-between gap-2 border-b border-sadu-gold/20 pb-2">
                     <div>
-                      <h3 className="font-editorial text-lg font-bold text-sadu-charcoal">{tr(artist.artistName)}</h3>
+                      <h3 className="font-editorial text-lg font-bold text-sadu-charcoal">{tr(artist.artistName)}</h3><DossierTimeline dossier={artist} isAr={isAr}/>
                       <span className="text-[11px] text-sadu-muted block">
                         {tr(artist.nationality)} &middot; {tr(artist.medium)}
                       </span>

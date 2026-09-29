@@ -1,9 +1,11 @@
+import {DossierTimeline} from './DossierTimeline';
 import type { NominatedArtistDossier } from './ArtistNominationForm';
 import { COORDINATORS, PARTICIPATION_TRACKS } from '../data/participation2026';
 import { readyForDispatch, scopeOf, type DossierScope } from '../data/dossierLedger';
 import { useSessionDraft } from '../context/SessionDrafts';
 
 interface Props {
+  contracts?: import('../types/contractStage6').BilateralContract[];
   dossiers: NominatedArtistDossier[]; isAr: boolean; actor: string; publicationReady: boolean;
   onRequest: (id:string,scope:DossierScope,reason:string) => void;
   onReview: (id:string, amendmentId:string, approve:boolean) => void;
@@ -35,6 +37,7 @@ function DossierRow({d, ...props}: Omit<Props,'dossiers'> & {d:NominatedArtistDo
       {actor==='BIENNIAL_DIRECTOR' && <div className="mt-2 flex gap-2"><button disabled={lockedIds.includes(d.id)} className="rounded border ps-3 pe-3 py-2 disabled:opacity-50" onClick={()=>onReview(d.id,pending.id,true)}>{label('اعتماد التعديل بعد التدقيق','Approve amendment after compliance check')}</button><button className="rounded border ps-3 pe-3 py-2" onClick={()=>onReview(d.id,pending.id,false)}>{label('رفض التعديل','Reject amendment')}</button></div>}
       {lockedIds.includes(d.id) && <p>{label('توجد اتفاقية نشطة؛ لا يمكن تغيير نطاقها عبر هذا السجل. يلزم مسار تعديل الاتفاقية.','An active agreement exists; this ledger cannot change its scope. The agreement amendment workflow is required.')}</p>}
     </section>}
+    <DossierTimeline dossier={d} isAr={isAr} contracts={props.contracts}/>
     <details><summary className="cursor-pointer">{label('سجل المراجعات والإرسال','Revision and dispatch history')}</summary><ul>{d.amendments?.map(a=><li key={a.id}>{a.status} · {a.reason} · {a.requestedAt}<p>{scopeText(a.before)} → {scopeText(a.proposed)}</p></li>)}{d.dispatchHistory?.map(r=><li key={`${r.revision}:${r.at}`}>{label('إرسال المراجعة','Dispatched revision')} {r.revision} · {r.at}<p>{scopeText(r.scope)}</p></li>)}</ul></details>
   </article>;
 }
