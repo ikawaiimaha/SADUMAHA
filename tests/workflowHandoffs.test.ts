@@ -1310,3 +1310,13 @@ test('edition calendar rejects December typo, expired intake and stale approval 
  assert.equal(pickupWithinSchedule('2026-09-03',null,null,'2026-09-29'),false);
  assert.equal(pickupWithinSchedule('2026-09-03','2026-09-03','2026-09-05','2026-09-01'),false);
 });
+
+test('spatial planning requires a PDF blueprint separate from print/video media',async()=>{
+ const z:SpatialZone={id:'z',name:'Wall',artworkCount:1,medium:'Ink',displaySpecifications:'Wall mount',printRequired:true,avRequired:false,darkRoom:false,requires_spatial_planning:true};
+ const print:ScenarioMedia={scenario_id:'s',zone_id:'z',object_name:'print',category:'PRINT',file_name:'a.png'};
+ assert.equal(completeScenario([z],[print]),false);
+ assert.equal(completeScenario([z],[print,{...print,category:'BLUEPRINT',object_name:'pdf',file_name:'layout.pdf'}]),true);
+ assert.equal(await mediaContentType(new File(['not PDF'],'layout.pdf'),'BLUEPRINT'),null);
+ assert.equal(await mediaContentType(new File(['%PDF-1.7'],'layout.pdf'),'BLUEPRINT'),'application/pdf');
+ const large=new File(['%PDF-1.7'],'layout.pdf');Object.defineProperty(large,'size',{value:20971521});assert.equal(await mediaContentType(large,'BLUEPRINT'),null);
+});

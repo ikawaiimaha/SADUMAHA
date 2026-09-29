@@ -9,5 +9,5 @@ export function clearRecovery(key:string){try{localStorage.removeItem(key);}catc
 export const recoveryKey=(project:string,user:string,scope:string)=>JSON.stringify(['sadu-media-v1',project,user,scope]);
 
 export function validZoneDraft(value:unknown):value is import('../data/exhibitionScenario').SpatialZone[]{
- return Array.isArray(value)&&value.length<=30&&new Set(value.map(z=>z?.id)).size===value.length&&value.every(z=>z&&typeof z.id==='string'&&z.id.length>0&&['name','medium','displaySpecifications'].every(k=>typeof z[k]==='string'&&z[k].length<=4000)&&Number.isFinite(z.artworkCount)&&['printRequired','avRequired','darkRoom'].every(k=>typeof z[k]==='boolean'));
+ return Array.isArray(value)&&value.length<=30&&new Set(value.map(z=>z?.id)).size===value.length&&value.every(z=>z&&typeof z.id==='string'&&z.id.length>0&&['name','medium','displaySpecifications'].every(k=>typeof z[k]==='string'&&z[k].length<=4000)&&(z.requires_spatial_planning===undefined||typeof z.requires_spatial_planning==='boolean')&&Number.isFinite(z.artworkCount)&&['printRequired','avRequired','darkRoom'].every(k=>typeof z[k]==='boolean'));
 }

@@ -1,3 +1,12 @@
+# 29 September 2026 — Required blueprint and private execution evidence
+
+Authenticated scenario zones may declare requires_spatial_planning=true. Each such zone requires a private BLUEPRINT PDF (maximum 20 MiB) alongside its declared print/video media. Header checking is an intake check, not malware scanning or engineering approval. Final submission and live escrow readiness enforce the PDF requirement at the database layer. A blueprint cannot substitute for artwork/catalog media. The submitted requirement and media registry remain immutable.
+
+The local blueprint-escrow.sql adds an additional prerequisite for entering CONTRACT_EXECUTED: a visible submitted escrow receipt with all declared files present. It never grants execution authority or bypasses other contract guards, nor does acceptance alone indicate execution. Stage 4 session nominations are not automatically mapped to authenticated database scenarios; the requirement is explicitly recorded in this authenticated Stage 6 checklist. A production intake must map approved dossier requirements before enabling external artist self-service.
+
+Existing trusted TECHNICAL app_metadata authorization allows another authorized technician to read submitted artwork assets through the same ledger and short-lived private links. This does not grant anonymous or role-agnostic public access, and does not implement production delegation provisioning. No claim of government-owned hosting is made. Schema changes are applied/tested locally only; hosted rollout remains pending.
+
+---
 # 29 September 2026 — Edition-bounded pickup calendar
 
 The 2026 freight scheduler uses the existing CATALOG_SCHEDULE delivery deadline, 10 September 2026, as the latest permissible pickup date. New bookings and artist date-change requests must be today or later (Asia/Dubai), on/before that cutoff, and outside the inclusive travel blackout. After the cutoff the intake is visibly closed; an approved schedule update is required rather than inventing an extension. September 3 is a historical example, not a newly bookable date after the deadline.

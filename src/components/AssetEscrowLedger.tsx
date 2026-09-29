@@ -27,12 +27,12 @@ export function AssetEscrowLedger({contractId}:{contractId?:string}) {
  }catch(error){if(gen===epoch.current)setNotice(error instanceof Error?error.message:'Download failed.');}finally{if(gen===epoch.current)setBusy(false);}}
  return <section className="my-5 space-y-4 rounded border border-[#D9CEBA] bg-[#F7F1E6] ps-5 pe-5 py-5 text-start">
   <h2 className="flex items-center gap-2 text-xl font-semibold"><Lock aria-hidden="true"/>عهدة الأصول الرقمية / Digital Asset Escrow</h2>
-  <p>Agreement acceptance alone does not establish execution readiness. Every declared print/video zone requires a completed private upload and a locked final checklist. Local sample files and external links do not qualify.</p>
+  <p>Agreement acceptance alone does not establish execution readiness. Every declared print/video zone and required spatial PDF blueprint needs a completed private upload and a locked final checklist. Local sample files and external links do not qualify.</p>
   <button type="button" disabled={busy} className="rounded border ps-4 pe-4 py-2 disabled:opacity-50" onClick={()=>void refresh()}>تحديث الأدلة / Refresh Escrow Evidence</button>
   <p role="status" aria-live="polite">{notice}</p>
   {rows.map(row=><article key={row.scenario_id} className="space-y-3 rounded border bg-[#FFFDF7] ps-4 pe-4 py-4"><h3>Contract <bdi>{row.contract_id}</bdi></h3><p role="status">{row.escrow_ready?'الأصول مكتملة / Asset escrow ready':'مقفل — ملفات ناقصة / Locked — missing final assets'}</p>{row.submitted_at&&<time dateTime={row.submitted_at}>{row.submitted_at}</time>}
    {row.escrow_ready&&files.filter(f=>f.scenario_id===row.scenario_id).map(file=><button key={file.object_name} type="button" disabled={busy} className="flex max-w-full items-center gap-2 rounded border ps-3 pe-3 py-2 text-start disabled:opacity-50" onClick={()=>void download(file)}><HardDriveDownload aria-hidden="true" className="shrink-0"/><span className="break-all">{file.category} · {file.file_name}</span></button>)}
   </article>)}
-  <p className="text-sm text-[#736357]">Storage evidence only; contract acceptance, cultural review, venue safety and Finance approval remain separate. Private links expire after one minute.</p>
+  <p className="text-sm text-[#736357]">Authorized Technical accounts access the same artwork files, independent of the uploader. Storage evidence only; contract acceptance, cultural review, venue safety and Finance approval remain separate. Private links expire after one minute.</p>
  </section>;
 }
