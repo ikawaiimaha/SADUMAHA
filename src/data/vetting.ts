@@ -1,8 +1,10 @@
 import { COORDINATORS, validSoloCount } from './participation2026';
 import { validDeclaration } from './culturalDeclaration';
+import {validTechnicalRequirements} from './technicalMatrix';
 import type { NominatedArtistDossier } from '../components/ArtistNominationForm';
 export const ASSIGNED_COORDINATOR = 'demo-coordinator';
 export function validDossier(d: NominatedArtistDossier): boolean {
+  if(!validTechnicalRequirements(d.technicalRequirements??[]))return false;
   if (!validDeclaration(d.culturalDeclaration)) return false;
   if (!COORDINATORS.some(c => c.id === d.assignedCoordinatorId) || !validSoloCount(d.participationTrack, d.artworkCount)) return false;
   if (d.participationTrack === 'HONORED_GUEST') return Boolean(d.artistName.trim() && d.nationality.trim());

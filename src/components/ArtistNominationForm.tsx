@@ -1,4 +1,6 @@
 import { safePortfolioUrl } from '../data/vetting';
+import {TechnicalRequirementsEditor} from './TechnicalRequirements';
+import {validTechnicalRequirements,type TechnicalRequirement} from '../data/technicalMatrix';
 import type { ScopeAmendment, DossierScope } from '../data/dossierLedger';
 import { validDeclaration, type CulturalDeclaration } from '../data/culturalDeclaration';
 import { COORDINATORS, PARTICIPATION_TRACKS, validSoloCount, type ParticipationTrack } from '../data/participation2026';
@@ -22,6 +24,7 @@ import {
 export type ArtistCategory = 'Emerging' | 'Established';
 
 export interface NominatedArtistDossier {
+  technicalRequirements?: TechnicalRequirement[];
   arrivalRecipientTag?: import('../data/arrivalPackage').ArrivalRecipientTag;
   geographicRegion?: import('../data/regionalDelegation').Region;
   delegationHistory?: {from?:string;to:string;region:string;at:string;by:string}[];
@@ -80,6 +83,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
   const [coordinatorId, setCoordinatorId] = useState(ASSIGNED_COORDINATOR);
   const [artworkCount, setArtworkCount] = useState(1);
   const [textAnswer, setTextAnswer] = useState('');
+  const [technicalRequirements,setTechnicalRequirements]=useState<TechnicalRequirement[]>([]);
   const [textExplanation, setTextExplanation] = useState('');
   const declaration = textAnswer ? { containsText: textAnswer === 'YES', explanation: textAnswer === 'YES' ? textExplanation : '' } : undefined;
   const honored = participationTrack === 'HONORED_GUEST';
@@ -145,11 +149,12 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!isFormValid || !validDeclaration(declaration) || (portfolioUrl.trim() && !safePortfolioUrl(portfolioUrl))) return;
+    if (!isFormValid || (!honored&&!validTechnicalRequirements(technicalRequirements)) || !validDeclaration(declaration) || (portfolioUrl.trim() && !safePortfolioUrl(portfolioUrl))) return;
 
     setBlocklistAlert(null);
 
     const dossier: NominatedArtistDossier = {
+      technicalRequirements:honored?[]:technicalRequirements.map(r=>({...r,specifications:r.specifications.trim()})),
       culturalDeclaration: declaration, portfolioUrl:portfolioUrl.trim() || undefined, portfolioFiles,
       id: `dossier-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       artistName: artistName.trim(),
@@ -175,6 +180,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
       setSubmitSuccess(false);
       // Reset form
       setArtistName('');
+      setTechnicalRequirements([]);
       setTextAnswer('');
       setTextExplanation('');
       setArtistCategory('');
@@ -268,6 +274,8 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
           {textAnswer === 'YES' && <label className="block">{isAr ? 'الترجمة الكاملة والشرح السياقي' : 'Full translation and contextual explanation'}<textarea required value={textExplanation} onChange={e=>setTextExplanation(e.target.value)} className="mt-2 block w-full border ps-3 pe-3 py-2" /></label>}
           <p>{isAr ? 'تراجع اللجنة التحضيرية الإقرارات ضمن مداولات الترشيح.' : 'The Preparatory Committee reviews declarations collectively during nomination deliberations.'}</p>
         </fieldset>
+
+        {!honored&&<TechnicalRequirementsEditor rows={technicalRequirements} onChange={setTechnicalRequirements} isAr={isAr}/>}
         <label className="block">{isAr ? 'مسار المشاركة' : 'Participation track'}
           <select className="mt-2 block w-full rounded border ps-3 pe-3 py-2 text-start" value={participationTrack} onChange={e => setParticipationTrack(e.target.value as ParticipationTrack)}>
             {Object.entries(PARTICIPATION_TRACKS).map(([id, label]) => <option key={id} value={id}>{isAr ? label.ar : label.en}</option>)}
@@ -559,7 +567,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
 
           <button
             type="submit"
-            disabled={!isFormValid || !validDeclaration(declaration)}
+            disabled={!isFormValid || (!honored&&!validTechnicalRequirements(technicalRequirements)) || !validDeclaration(declaration)}
             className="inline-flex items-center justify-center gap-2 rounded-md bg-sadu-brick px-6 py-3 text-xs font-bold text-white shadow-xs transition-colors hover:bg-sadu-brick-dark disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             <Upload className="h-4 w-4" />

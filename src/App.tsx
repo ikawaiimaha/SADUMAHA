@@ -72,6 +72,7 @@ import React, { useState, useEffect, useReducer, useRef, useCallback } from 'rea
 import RoleSelection, { AppRole } from './components/RoleSelection';
 import CommitteeThemeWorkspace, { CommitteeThemeDraft, isThemeBatchComplete } from './components/CommitteeThemeWorkspace';
 import { ArrivalDispatchPanel } from './components/ArrivalDispatchPanel';
+import {GreenlightedTechnicalMatrix} from './components/TechnicalRequirements';
 import { ArrivalPackagePreview } from './components/ArrivalPackagePreview';
 import { recordArrivalDispatch, type ArrivalDispatch, type ArrivalRecipientTag } from './data/arrivalPackage';
 import ChairmanWorkspace, { ThemeItem } from './components/ChairmanWorkspace';
@@ -844,7 +845,7 @@ function SADUApp() {
                 setNominatedArtists(rows=>delegateRegion(rows,input,locked));
               }}/>
               <HonoredGuestRoster coordinatorId={activeCoordinatorId} isAr={isAr} />
-              <SharedSpatialLedger key={activeCoordinatorId} coordinatorId={activeCoordinatorId} dossiers={nominatedArtists.filter(d=>commission.installationStatus!=='ARCHIVED_CLOSED'||d.id!==COMMISSION.id)} isAr={isAr} />
+              <SharedSpatialLedger key={activeCoordinatorId} coordinatorId={activeCoordinatorId} dossiers={nominatedArtists.filter(d=>commission.installationStatus!=='ARCHIVED_CLOSED'||d.id!==COMMISSION.id)} isAr={isAr} blockedArtistIds={damageHold(commission)||commission.installationStatus==='EXECUTIVE_IMPOUND'?[COMMISSION.id]:[]} />
               {activeCoordinatorId !== GENERAL_COORDINATOR_ID && <details><summary className="cursor-pointer">{isAr ? 'إعداد ملف ترشيح' : 'Prepare nomination dossier'}</summary><ArtistNominationForm key={activeCoordinatorId} assignedCoordinatorId={activeCoordinatorId} submittedBy="Coordinator" onSubmitNomination={handleNominateArtist} /></details>}
               {assignedTo(nominatedArtists, activeCoordinatorId).filter(d => d.status === 'DRAFT' || d.status === 'REJECTED_COMPLIANCE').map(d => <article key={d.id} className="border-t border-[#D9CEBA] py-3"><h3 className="font-semibold">{d.artistName} · {d.proposedWorkTitle}</h3><p>{d.status} · {d.assignedCoordinatorId}</p>{d.status === 'REJECTED_COMPLIANCE' && <p>{isAr ? 'قيد امتثال نشط' : 'Active compliance restriction'}</p>}
                 <button disabled={d.status !== 'DRAFT' || d.assignedCoordinatorId !== activeCoordinatorId} className="mt-2 rounded bg-[#8B261E] text-white ps-4 pe-4 py-2 disabled:opacity-50" onClick={() => {
@@ -911,7 +912,7 @@ function SADUApp() {
           onClearPR={handleClearPR} />;
 
       case 'TECHNICAL':
-        return <><TechnicalWorkspace isAr={isAr} state={commission}
+        return <>{nominatedArtists.filter(d=>d.status==='APPROVED').map(d=><GreenlightedTechnicalMatrix key={d.id} dossier={d} isAr={isAr} blocked={d.id===COMMISSION.id&&(damageHold(commission)||['EXECUTIVE_IMPOUND','ARCHIVED_CLOSED'].includes(commission.installationStatus??''))}/>)}<TechnicalWorkspace isAr={isAr} state={commission}
           onCheck={(field, value) => dispatchCommission({ type: 'technical-check', actor: activeRole, field, value })}
           onRequestSAF={(technicians, hours, rationale) => dispatchCommission({type: 'request-saf', actor: activeRole, technicians, hours, rationale, at: new Date().toISOString()})}
           onClearTechnical={handleClearTechnical} />{nominatedArtists.filter(d=>d.id!==COMMISSION.id&&d.status==='APPROVED').map(d=><FabricationLedger key={d.id} artistId={d.id} artistName={d.artistName} isAr={isAr} actor="TECHNICAL"/>)}</>;

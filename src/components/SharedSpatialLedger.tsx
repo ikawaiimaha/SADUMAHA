@@ -1,14 +1,15 @@
 import { useState } from 'react';
+import {GreenlightedTechnicalMatrix} from './TechnicalRequirements';
 import { Map, Lock, Unlock, Layout } from 'lucide-react';
 import { useSessionDraft } from '../context/SessionDrafts';
 import { claimSpace, VENUE_SPACES, type SpatialClaim } from '../data/spatialClaims';
 import type { NominatedArtistDossier } from './ArtistNominationForm';
 
-export function SharedSpatialLedger({isAr, coordinatorId, dossiers = []}: {isAr: boolean; coordinatorId?: string; dossiers?: NominatedArtistDossier[]}) {
+export function SharedSpatialLedger({isAr, coordinatorId, dossiers = [], blockedArtistIds=[]}: {isAr: boolean; coordinatorId?: string; dossiers?: NominatedArtistDossier[];blockedArtistIds?:string[]}) {
   const [claims, setClaims] = useSessionDraft<SpatialClaim[]>('spatial-claims:biennial-2026', []);
   const [selected, setSelected] = useState<Record<string, string>>({});
   const t = (ar: string, en: string) => isAr ? ar : en;
-  const eligible = dossiers.filter(d => d.status === 'APPROVED' && d.assignedCoordinatorId === coordinatorId && d.medium.trim() && !d.amendments?.some(a => a.status === 'PENDING'));
+  const eligible = dossiers.filter(d => d.status === 'APPROVED' && d.assignedCoordinatorId === coordinatorId && d.medium.trim() && !d.amendments?.some(a => a.status === 'PENDING') && !blockedArtistIds.includes(d.id));
   const warning = t('حجزت هذه المساحة منسقة أخرى. تواصل معها مباشرة للتفاوض على تبديل.', 'This space has been claimed by another coordinator. Contact them directly to negotiate a swap.');
   return <section className="my-5 space-y-4 rounded-lg border border-[#D9CEBA] border-s-4 border-s-[#8B261E] bg-[#F7F1E6] ps-5 pe-5 py-5 text-start text-[#1A1817]">
     <h2 className="flex items-center gap-2 text-xl font-semibold"><Map aria-hidden="true" className="size-5"/>{t('سجل توزيع القاعات والمساحات', 'Shared Venue & Spatial Ledger')}</h2>
@@ -38,5 +39,6 @@ export function SharedSpatialLedger({isAr, coordinatorId, dossiers = []}: {isAr:
         </article>;
       })}
     </div>
+    {dossiers.filter(d=>d.status==='APPROVED'&&d.assignedCoordinatorId===coordinatorId).map(d=><GreenlightedTechnicalMatrix key={d.id} dossier={d} isAr={isAr} blocked={blockedArtistIds.includes(d.id)} register/>)}
   </section>;
 }

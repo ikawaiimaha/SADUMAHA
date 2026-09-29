@@ -21,6 +21,7 @@ function Candidate({d,isAr,tags,onReview}:{d:NominatedArtistDossier;isAr:boolean
   const url=safePortfolioUrl(d.portfolioUrl);
   return <article className="space-y-4 rounded-lg border border-[#D9CEBA] bg-white ps-5 pe-5 py-5 text-start">
     <h3 className="text-xl font-semibold" dir="auto">{d.artistName}</h3>
+    {!!d.technicalRequirements?.length&&<section><h4 className="font-semibold">{t('المتطلبات التقنية','Technical Requirements')}</h4><ul className="list-disc ps-5">{d.technicalRequirements.map(r=><li key={r.id}>{r.equipment} · {r.specifications} · {r.mounting}</li>)}</ul></section>}
     <p>{d.nationality} · {d.medium||t('لا ينطبق','Not applicable')}</p><p dir="auto">{d.proposedWorkTitle}</p>
     <span className={`inline-flex items-center gap-2 rounded ps-3 pe-3 py-2 ${blocked?'bg-red-50 text-red-800':'bg-emerald-50 text-emerald-800'}`}><ShieldCheck aria-hidden="true" size={18}/>{blocked?t('مطابقة لقيد امتثال نشط — الإحالة محظورة','Active compliance restriction matched — endorsement blocked'):t('لا تطابق مع القيود النشطة حالياً','No match against current active restrictions')}</span>
     <p className="text-sm text-[#736357]">{t('فحص آلي لقواعد المحاكاة؛ ليس اعتماداً أمنياً. لا تعرض معايير القائمة السرية.','Automated rehearsal rule check, not security certification. Confidential rule details are not displayed.')}</p>

@@ -1,3 +1,11 @@
+# 29 September 2026 — Dossier-to-venue technical matrix
+
+Stage 4 dossiers can record a structured technicalRequirements array (hardware, specifications, mounting). Declared entries require complete specifications; Committee and Director read the same data during review. The assigned Coordinator's Stage 6 room claim registers exact-scope venue clearance tickets from those requirements. Claiming a room is not approval. The designated Venue Host records clearance using the existing rehearsal authority/delegation gate.
+
+Stage 7 Technical reads a Greenlighted Technical Matrix from the same dossier, claim and approval records. CLEARED_BY_CURATOR appears only after venue approval for that precise scope, with authority and timestamp. No repeat request is needed for unchanged requirements. Specification, mounting, room-allocation or approved-scope revision changes require their own clearance. Pending amendments, damage and executive holds prevent a green state. Equipment inventory, technical evidence, and Finance approvals remain separate.
+
+This does not establish named officials' delegation, ingest undocumented conversations, or create production authorization. All claims and approvals remain session-only rehearsal records. No permission is inferred from artwork approval alone.
+
 # 29 September 2026 — Role-based arrival dispatch rehearsal
 
 Director approval records GUEST_ARTIST or JURY_MEMBER as a recipient designation; this is separate from artist category and workflow status. Coordinators cannot edit that designation or the generated arrival text. Existing fictional commission seed is explicitly GUEST_ARTIST; unknown designations fail closed.

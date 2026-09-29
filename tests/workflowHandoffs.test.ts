@@ -1,4 +1,5 @@
 import { isThemeBatchComplete } from '../src/components/CommitteeThemeWorkspace';
+import {validTechnicalRequirements,technicalMatrixTicket,matrixCleared,type TechnicalRequirement} from '../src/data/technicalMatrix';
 import { operationalHandoff } from '../src/data/operationalHandoff';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -70,6 +71,31 @@ test('SAF resource request does not clear structural evidence or Finance', () =>
 });
 
 const dossier: NominatedArtistDossier={culturalDeclaration:{containsText:false,explanation:''},culturalClearedAt:at,id:'d1',artistName:'Fictional artist',artistCategory:'Emerging',nationality:'Country X',medium:'Bronze',proposedWorkTitle:'Study',isCommissioned:true,cvFileName:'cv.pdf',previousWorksCount:1,mockupCount:1,submittedBy:'Preparatory Committee',submittedAt:at,status:'DRAFT',assignedCoordinatorId:ASSIGNED_COORDINATOR};
+test('technical matrix requires exact approved requirements, room and recorded venue authority',()=>{
+ const req:TechnicalRequirement={id:'projector',equipment:'AV_PROJECTOR',specifications:'4K projector',mounting:'CEILING_MOUNT'};
+ assert.equal(validTechnicalRequirements([{...req,specifications:' '}]),false);
+ assert.equal(validTechnicalRequirements([req,req]),false);
+ assert.equal(validDossier({...dossier,technicalRequirements:[{...req,specifications:''}]}),false);
+ const approved:NominatedArtistDossier={...dossier,status:'APPROVED',approvalRevision:1,technicalRequirements:[req]};
+ const claims=claimSpace([],{spaceId:'sam-hall-1',artistId:approved.id,coordinatorId:ASSIGNED_COORDINATOR,actor:'COORDINATOR',at},[approved]);
+ assert.equal(technicalMatrixTicket(approved,req,[]),null);
+ assert.equal(technicalMatrixTicket({...approved,status:'DRAFT'},req,claims),null);
+ const ticket=technicalMatrixTicket(approved,req,claims)!;
+ let state:Governance={...emptyGovernance,tickets:{[ticket.id]:{...ticket,status:'PENDING_VENUE_APPROVAL'}}};
+ assert.equal(matrixCleared(ticket,state),false);
+ assert.equal(clearVenue(state,ticket.id,'TECHNICAL:primary',at),state);
+ state=clearVenue(state,ticket.id,'VENUE:SHARJAH_ART_MUSEUM:primary',at);
+ assert.equal(matrixCleared(ticket,state),true);
+ assert.equal(matrixCleared({...ticket,blocked:true},state),false);
+ assert.equal(clearVenue(state,ticket.id,'VENUE:SHARJAH_ART_MUSEUM:primary',at),state);
+ for(const changed of [{...req,specifications:'8K projector'},{...req,mounting:'WALL_ANCHOR' as const}]){
+   const next=technicalMatrixTicket({...approved,technicalRequirements:[changed]},changed,claims)!;
+   assert.notEqual(next.id,ticket.id);assert.equal(matrixCleared(next,state),false);
+ }
+ assert.equal(matrixCleared(technicalMatrixTicket({...approved,approvalRevision:2},req,claims),state),false);
+ assert.equal(matrixCleared(technicalMatrixTicket(approved,req,claims.map(c=>({...c,claimedAt:'2026-10-01T10:00:00Z'}))),state),false);
+ assert.equal(technicalMatrixTicket({...approved,assignedCoordinatorId:'other'},req,claims),null);
+});
 test('dossier schemas distinguish new and existing work and do not fabricate attachments',()=>{
   assert.equal(validDossier(dossier),true);
   assert.equal(validDossier({...dossier,mockupCount:0}),false);
