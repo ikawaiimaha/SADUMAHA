@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import CrateTracking from './CrateTracking';
 import SpatialPlanner from './SpatialPlanner';
 
 type Account = { id: string; name: string; role: 'Artist' | 'General_Exhibition_Coordinator' | 'Director' };
@@ -96,6 +97,8 @@ export default function PublicationReview() {
       {error && <p role="alert" className="rounded border border-red-800 bg-red-50 ps-4 pe-4 py-3">{error}</p>}
       <p role="status" aria-live="polite">{busy ? 'Saving or loading…' : notice}</p>
       {record && <>
+        {actor && actor.role !== 'Director' && <CrateTracking key={`crate-${actor.id}-${spatialReload}`} role={actor.role}/>}
+
         {actor && actor.role !== 'Director' && <SpatialPlanner key={`${actor.id}-${spatialReload}`} role={actor.role} onDirtyChange={setSpatialDirty}/>}
         <section className={panel}><h2 className="text-xl font-semibold">Outstanding tasks and alerts</h2>
           {record.tasks.length ? <ul>{record.tasks.map(t => <li key={t.revision}>{t.title} · {label(t.owner)} · Revision {t.revision}</li>)}</ul> : <p>No outstanding tasks for this view.</p>}

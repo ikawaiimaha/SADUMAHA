@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Fictional SADU physical Artwork_Record",
+  "type": "object",
+  "required": ["id", "artist_id", "exhibition_id", "approved_revision", "physical_status", "logistics"],
+  "properties": {
+    "id": {"type": "string", "format": "uuid"},
+    "artist_id": {"type": "string"},
+    "exhibition_id": {"type": "string"},
+    "approved_revision": {"type": "integer", "minimum": 1},
+    "physical_status": {"enum": ["Pending_Shipment", "In_Transit", "Customs_Clearance", "On_Site_Sharjah", "Installed"]},
+    "logistics": {
+      "type": "object", "additionalProperties": false,
+      "required": ["origin", "destination", "carrier", "handling", "gross_weight_kg"],
+      "properties": {
+        "origin": {"type": "string", "minLength": 1, "maxLength": 150},
+        "destination": {"type": "string", "minLength": 1, "maxLength": 150},
+        "carrier": {"type": "string", "minLength": 1, "maxLength": 150},
+        "handling": {"type": "string", "minLength": 1, "maxLength": 150},
+        "gross_weight_kg": {"type": "number", "exclusiveMinimum": 0, "maximum": 100000}
+      }
+    }
+  }
+}

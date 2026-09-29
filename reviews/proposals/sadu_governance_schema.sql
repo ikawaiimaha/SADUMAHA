@@ -75,10 +75,12 @@ CREATE TABLE sadu_proposal.submission_revision (
   -- Empty/short drafts are allowed. Boundaries derive from the confirmed policy.
 );
 
+CREATE TYPE sadu_proposal.physical_status AS ENUM ('Pending_Shipment', 'In_Transit', 'Customs_Clearance', 'On_Site_Sharjah', 'Installed');
 CREATE TABLE sadu_proposal.artwork_record (
   submission_id uuid NOT NULL,
   revision integer NOT NULL,
   artwork_id uuid NOT NULL,
+  physical_status sadu_proposal.physical_status NOT NULL DEFAULT 'Pending_Shipment',
   title text NOT NULL CHECK (length(trim(title)) > 0),
   description text NOT NULL CHECK (length(trim(description)) > 0),
   width_cm numeric NOT NULL CHECK (width_cm > 0 AND width_cm <= 100000),

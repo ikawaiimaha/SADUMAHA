@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 import { ACCOUNTS, ReviewError, openReviewStore } from './review-store.mjs';
+import { openLogisticsStore } from './logistics-store.mjs';
 import { openSpatialStore } from './spatial-store.mjs';
 import { DEFAULT_CMS_BASE_URL, dynamicTestProfileUrl } from './gallery-labels.mjs';
 
@@ -10,6 +11,7 @@ export async function createRehearsalApp({ file, staticRoot, spatialFile, labelO
   if (labelOptions.testMode) dynamicTestProfileUrl('configuration-check', labelOptions.baseUrl);
   const store = await openReviewStore(file ?? fileURLToPath(new URL('../.local/rehearsal-review.json', import.meta.url)), { labelOptions });
   const spatial = await openSpatialStore(spatialFile ?? (file ? `${file}.spatial.json` : fileURLToPath(new URL('../.local/rehearsal-spatial.json', import.meta.url))));
+  const logistics = await openLogisticsStore(file ? `${file}.logistics.json` : fileURLToPath(new URL('../.local/rehearsal-logistics.json', import.meta.url)), actor => store.read(actor));
   const app = express(); const sessions = new Map();
   app.disable('x-powered-by');
   app.use('/api/review', (req, res, next) => {
@@ -41,6 +43,13 @@ export async function createRehearsalApp({ file, staticRoot, spatialFile, labelO
     const actor = actorFor(req);
     if (!actor) return res.status(401).json({ error: 'Choose a fictional account to continue.' });
     res.locals.actor = actor; next();
+  });
+  app.get('/api/review/logistics', (req, res) => res.json(logistics.read(res.locals.actor)));
+  app.post('/api/review/logistics', async (req, res, next) => {
+    try { res.json(await logistics.act(res.locals.actor, req.body)); } catch (error) { next(error); }
+  });
+  app.get('/api/review/logistics/:id/manifest.pdf', (req, res) => {
+    res.set({ 'Content-Type': 'application/pdf', 'Content-Disposition': 'attachment; filename="SADU-shipping-manifest.pdf"', 'X-Content-Type-Options': 'nosniff' }).send(logistics.manifest(res.locals.actor, req.params.id));
   });
   app.get('/api/review/record', (req, res) => res.json(store.read(res.locals.actor)));
   app.get('/api/review/labels/batch.pdf', (req, res) => {
