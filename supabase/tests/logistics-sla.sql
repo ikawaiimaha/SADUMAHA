@@ -44,4 +44,26 @@ do $$begin
  if not exists(select 1 from public.sadu_consignments where details->>'currency'='EUR' and details->>'weight_kg'='84') then raise exception 'Vendor missing direct gallery data';end if;
  if not exists(select 1 from public.sadu_freight_alerts where status='RESOLVED' and resolved_at is not null) then raise exception 'Alert not resolved';end if;
 end $$;
+
+reset role;
+insert into auth.users(id,raw_app_meta_data) values('55555555-5555-4555-8555-555555555555','{"institutional_role":"LOGISTICS"}'),('66666666-6666-4666-8666-666666666666','{"institutional_role":"BIENNIAL_DIRECTOR"}');
+insert into public.sadu_logistics_routing(officer_id,head_id) values('55555555-5555-4555-8555-555555555555','66666666-6666-4666-8666-666666666666');
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","app_metadata":{"institutional_role":"ARTIST"}}',true);
+insert into public.sadu_logistics_tickets(consignment_id) select id from public.sadu_consignments;
+reset role;update public.sadu_logistics_tickets set ready_at=clock_timestamp()-interval '49 hours';
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"55555555-5555-4555-8555-555555555555","role":"authenticated","app_metadata":{"institutional_role":"LOGISTICS"}}',true);
+update public.sadu_logistics_tickets set opened_at='2000-01-01';
+do $$begin if exists(select 1 from public.sadu_logistics_tickets where opened_at<'2026-01-01' or actioned_at is not null) then raise exception 'Opening falsely counted as action or spoofed';end if;end $$;
+reset role;select sadu_private.escalate_logistics_sla();select sadu_private.escalate_logistics_sla();
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"66666666-6666-4666-8666-666666666666","role":"authenticated","app_metadata":{"institutional_role":"BIENNIAL_DIRECTOR"}}',true);
+do $$begin if not exists(select 1 from public.sadu_logistics_tickets where escalated_at is not null) then raise exception 'Head missing escalation';end if;end $$;
+select set_config('request.jwt.claims','{"sub":"55555555-5555-4555-8555-555555555555","role":"authenticated","app_metadata":{"institutional_role":"LOGISTICS"}}',true);
+do $$begin begin update public.sadu_logistics_tickets set action_note='ok';raise exception 'Trivial action accepted';exception when others then if SQLERRM not like 'Meaningful action%' then raise;end if;end;end $$;
+update public.sadu_logistics_tickets set action_note='Carrier contacted; case reference TEST-01';
+do $$begin if not exists(select 1 from public.sadu_logistics_tickets where actioned_at is not null and escalated_at is not null) then raise exception 'Action or history lost';end if;end $$;
+select set_config('request.jwt.claims','{"sub":"77777777-7777-4777-8777-777777777777","role":"authenticated","app_metadata":{"institutional_role":"TECHNICAL"}}',true);
+do $$begin if exists(select 1 from public.sadu_logistics_tickets) then raise exception 'Technical freight ticket leak';end if;end $$;
 rollback;

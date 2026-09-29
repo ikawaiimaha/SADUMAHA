@@ -15,7 +15,7 @@ update public.sadu_exhibition_scenarios set status='SUBMITTED' where contract_id
 do $$begin perform set_config('test.gallery.token',public.sadu_issue_consignment('44444444-4444-4444-8444-444444444444','THIRD_PARTY_GALLERY','Fictional Gallery','gallery@example.invalid'),true); end$$;
 do $$begin perform set_config('test.gallery.old',current_setting('test.gallery.token'),true); end$$;
 do $$begin perform set_config('test.gallery.token',public.sadu_issue_consignment('44444444-4444-4444-8444-444444444444','THIRD_PARTY_GALLERY','Fictional Gallery','gallery@example.invalid'),true); end$$;
-do $$begin perform set_config('test.gallery.payload','{"length_cm":100,"width_cm":80,"height_cm":40,"weight_kg":84,"insurance_value":5000,"currency":"AED","country":"France","city":"Paris","district":"Test","street":"Test","building":"Gallery","map_url":"https://maps.google.com/?q=test","hours":"8 AM - noon, call one hour prior","phone":"+33123456789"}',true); end$$;
+do $$begin perform set_config('test.gallery.payload','{"packing_list":"Crate 1: artwork A","length_cm":100,"width_cm":80,"height_cm":40,"weight_kg":84,"insurance_value":5000,"currency":"AED","country":"France","city":"Paris","district":"Test","street":"Test","building":"Gallery","map_url":"https://maps.google.com/?q=test","hours":"8 AM - noon, call one hour prior","phone":"+33123456789"}',true); end$$;
 reset role;
 update sadu_private.consignment_tokens set expires_at=now()-interval '1 second';
 set local role anon;

@@ -1,5 +1,6 @@
 import {safeMapUrl} from './catalogFreight';
 export const consignmentFields = {
+ packing_list:'Packing list / Contents per crate / قائمة التعبئة',
  length_cm:'Crate length (cm) / طول الصندوق',width_cm:'Crate width (cm) / العرض',height_cm:'Crate height (cm) / الارتفاع',weight_kg:'Gross weight (kg) / الوزن الإجمالي',insurance_value:'Insurance value / قيمة التأمين',
  country:'Country / البلد',city:'City / المدينة',district:'District / المنطقة',street:'Street / الشارع',building:'Facility / Building / المنشأة',map_url:'Google Maps / Makani URL',hours:'Operating hours & collection instructions / ساعات العمل',phone:'Courier contact phone / هاتف التواصل'
 } as const;

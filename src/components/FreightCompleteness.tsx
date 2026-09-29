@@ -1,0 +1,6 @@
+import {CheckCircle,AlertTriangle} from 'lucide-react';
+export function FreightCompleteness({data,draft=false}:{data:Record<string,unknown>|null;draft?:boolean}){
+ const present=(k:string)=>typeof data?.[k]==='number'?Number(data[k])>0:typeof data?.[k]==='string'&&String(data[k]).trim().length>0;
+ const groups:[string,string[]][]=[['Dimensions & weight / القياسات والوزن',['length_cm','width_cm','height_cm','weight_kg']],['Pickup address / عنوان الاستلام',['country','city','district','street','building','map_url']],['Declared value & currency / القيمة والعملة',['insurance_value','currency']],['Packing list / قائمة التعبئة',['packing_list']]];
+ return <section className="rounded border ps-3 pe-3 py-3"><h3>Freight information checklist / قائمة اكتمال بيانات الشحن</h3><p>{draft?'Draft entries — receipt is confirmed only after submission.':'Recorded data completeness; not insurance or carrier approval.'}</p><ul>{groups.map(([label,keys])=>{const ok=keys.every(present);return <li key={label} className={ok?'text-green-800':'text-red-800'}>{ok?<CheckCircle className="inline size-4" aria-hidden="true"/>:<AlertTriangle className="inline size-4" aria-hidden="true"/>} {label}: {ok?'Present / موجود':'Missing / ناقص'}</li>})}</ul></section>;
+}
