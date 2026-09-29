@@ -1371,7 +1371,7 @@ test('guest deadlines use arrival lead days and identity remains required indepe
 test('bilingual export rejects missing English and retains source-language text',async()=>{
  const {bilingualComplete,labelCSV,publicText}=await import('../src/data/catalogFreight');
  const text={title:'Sample',medium:'Ink',concept:'A study',bio:'Biography'};
- const row={id:'a',scenario_id:'s',zone_id:'z',media_object_name:'f',source:{...text,language:'ar'},translation_ar:text,translation_en:null,translation_status:'TRANSLATION_COMPLETED' as const,production_year:2026,height_cm:1,width_cm:2,weight_kg:3,crate_count:1};
+ const row={id:'a',religious_text:false,scenario_id:'s',zone_id:'z',media_object_name:'f',source:{...text,language:'ar'},translation_ar:text,translation_en:null,translation_status:'TRANSLATION_COMPLETED' as const,production_year:2026,height_cm:1,width_cm:2,weight_kg:3,crate_count:1};
  assert.equal(bilingualComplete(row),false);assert.equal(labelCSV([row]).includes('Sample'),false);
  const complete={...row,translation_en:{...text,title:'English title'}};
  assert.equal(bilingualComplete(complete),true);assert.equal(publicText(complete,'ar'),complete.source);assert.ok(labelCSV([complete]).includes('English title'));
@@ -1395,6 +1395,17 @@ test('asset metadata and extra-night approvals fail closed and preserve separati
 test('declared values preserve zero and export requires the entire approved bilingual set',async()=>{
  const {amountMinor,completeLabelGroups}=await import('../src/data/catalogFreight');
  assert.equal(amountMinor('0'),0);assert.equal(amountMinor('20000.25'),2000025);assert.equal(amountMinor('20.001'),null);assert.equal(amountMinor('-1'),null);assert.equal(amountMinor('1e3'),null);
- const text={title:'Title',medium:'Ink',concept:'Study'};const row={id:'a',scenario_id:'s',zone_id:'z',media_object_name:'f',source:{...text,language:'en'},translation_ar:text,translation_status:'TRANSLATION_COMPLETED' as const,production_year:2026,height_cm:1,width_cm:1,weight_kg:1,crate_count:1};
+ const text={title:'Title',medium:'Ink',concept:'Study'};const row={id:'a',religious_text:false,scenario_id:'s',zone_id:'z',media_object_name:'f',source:{...text,language:'en'},translation_ar:text,translation_status:'TRANSLATION_COMPLETED' as const,production_year:2026,height_cm:1,width_cm:1,weight_kg:1,crate_count:1};
  assert.equal(completeLabelGroups([row],[{scenario_id:'s',expected_count:3}]).length,0);assert.equal(completeLabelGroups([row],[]).length,0);assert.equal(completeLabelGroups([row],[{scenario_id:'s',expected_count:1}]).length,1);
+});
+
+test('label formatting normalizes brackets and inventory preserves unknown counts',async()=>{
+ const {formatLabelTitle,csvCell}=await import('../src/data/labelFormatting');
+ const {inventoryCSV}=await import('../src/data/institutionalMetrics');
+ assert.equal(formatLabelTitle(')And the heaven he raised…)',true),'(And the heaven he raised…)');
+ assert.equal(formatLabelTitle('(Title)',true),'(Title)');
+ assert.equal(formatLabelTitle('Title',false),'Title');
+ assert.ok(csvCell('=SUM(A1)').startsWith("\"'"));
+ const report=inventoryCSV([{id:'one',artistName:'Artist',nationality:'AE',medium:'Ink',status:'APPROVED',artworkCount:0},{id:'two',artistName:'Unknown',nationality:'AE',medium:'Ink',status:'APPROVED'}] as NominatedArtistDossier[],'2026-09-29');
+ assert.match(report,/"0"/);assert.match(report,/Not reported/);assert.match(report,/Current session/);
 });

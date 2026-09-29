@@ -1,3 +1,4 @@
+import {csvCell} from './labelFormatting';
 import type {NominatedArtistDossier} from '../components/ArtistNominationForm';
 import {COORDINATORS} from './participation2026';
 type Evidence={id:string;status:string;prCleared?:boolean};
@@ -14,4 +15,9 @@ export function reassignDossier(rows:NominatedArtistDossier[],id:string,target:s
  const d=rows.find(d=>d.id===id);
  if(actor!=='BIENNIAL_DIRECTOR'||!d||d.status!=='APPROVED'||lockedIds.includes(id)||d.amendments?.some(a=>a.status==='PENDING')||d.assignedCoordinatorId===target||!COORDINATORS.some(c=>c.id===target)||!reason.trim()||reason.length>1000||!Number.isFinite(Date.parse(at)))return rows;
  return rows.map(row=>row.id===id?{...row,assignedCoordinatorId:target,delegationHistory:[...(row.delegationHistory??[]),{from:row.assignedCoordinatorId,to:target,region:'INDIVIDUAL_TRANSFER',reason:reason.trim(),by:actor,at}]}:row);
+}
+
+export function inventoryCSV(dossiers:NominatedArtistDossier[],at:string){
+ const rows=[...new Map(dossiers.map(d=>[d.id,d])).values()];
+ return '\uFEFF'+[['Source','Snapshot UTC','Dossier ID','Artist','Nationality','Artwork count','Medium','Dossier status','Coordinator'],...rows.map(d=>['Current session',at,d.id,d.artistName,d.nationality,Number.isInteger(d.artworkCount)&&d.artworkCount!>=0?d.artworkCount:'Not reported',d.medium,d.status,COORDINATORS.find(c=>c.id===d.assignedCoordinatorId)?.name??'Unassigned'])].map(r=>r.map(csvCell).join(',')).join('\r\n');
 }

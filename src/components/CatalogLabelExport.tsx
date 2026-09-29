@@ -1,0 +1,11 @@
+import {useEffect,useRef,useState} from 'react';
+import {Download} from 'lucide-react';
+import type {CatalogArtwork} from '../data/catalogFreight';
+export function CatalogLabelExport({rows}:{rows:CatalogArtwork[]}){
+ const [scenario,setScenario]=useState(''),[busy,setBusy]=useState(false),[message,setMessage]=useState('');const latest=useRef(rows),running=useRef(false);latest.current=rows;
+ const mounted=useRef(true);useEffect(()=>{mounted.current=true;return ()=>{mounted.current=false;};},[]);
+ async function download(){if(running.current)return;const selected=rows.filter(r=>r.scenario_id===scenario);if(!selected.length)return;running.current=true;setBusy(true);const snapshot=JSON.stringify(selected);
+  try{const {catalogLabelsPdf}=await import('../utils/catalogLabelsPdf');const blob=await catalogLabelsPdf(selected);if(!mounted.current)return;if(JSON.stringify(latest.current.filter(r=>r.scenario_id===scenario))!==snapshot)throw new Error('Approval changed');const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`SADU-labels-${scenario}.pdf`;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);setMessage('Label proof exported from the current approved data. Downloaded copies are snapshots.');}catch{if(mounted.current)setMessage('Export blocked: data changed or PDF generation failed. Refresh and retry.');}finally{running.current=false;if(mounted.current)setBusy(false);}
+ }
+ return <section className="space-y-2 rounded border bg-[#FFFDF7] ps-3 pe-3 py-3"><label>Exhibition label set / مجموعة ملصقات المعرض<select className="block w-full border ps-2 pe-2 py-2" value={scenario} disabled={busy} onChange={e=>setScenario(e.target.value)}><option value="">Select complete approved exhibition</option>{[...new Set(rows.map(r=>r.scenario_id))].map(id=><option key={id}>{id}</option>)}</select></label><button className="rounded border ps-3 pe-3 py-2 disabled:opacity-50" disabled={busy||!rows.some(r=>r.scenario_id===scenario)} onClick={()=>void download()}><Download aria-hidden="true" className="inline size-4"/>Export bilingual labels PDF / تصدير الملصقات</button><p>Template-inspired proof. Museum layout approval and image-quality inspection remain separate.</p><p role="status">{message}</p></section>;
+}

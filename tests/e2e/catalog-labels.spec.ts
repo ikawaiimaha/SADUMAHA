@@ -1,0 +1,7 @@
+import {test,expect} from '@playwright/test';
+test('approved bilingual labels export a PDF proof',async({page},info)=>{
+ await page.route('**/src/main.tsx*',r=>r.fulfill({contentType:'application/javascript',body:`import React from '/node_modules/.vite/deps/react.js';import ReactDOM from '/node_modules/.vite/deps/react-dom_client.js';import {CatalogLabelExport} from '/src/components/CatalogLabelExport.tsx';import '/src/index.css';const rows=[{id:'FAT-001',scenario_id:'exhibition',religious_text:true,source:{language:'en',title:'And the heaven He raised',medium:'Ahar bamboo paper & Japanese ink',concept:'Study'},translation_ar:{title:'والسماء رفعها',medium:'ورق بامبو مقهر وحبر ياباني',concept:'دراسة'},translation_status:'TRANSLATION_COMPLETED',production_year:2026,height_cm:80,width_cm:50,translated_at:'2026-09-29T10:00:00Z'}];ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(CatalogLabelExport,{rows}));window.dispatchEvent(new Event('sadu:ready'));`}));
+ await page.goto('/');const button=page.getByRole('button',{name:/Export bilingual/});await expect(button).toBeDisabled();await page.getByRole('combobox').selectOption('exhibition');
+ const wait=page.waitForEvent('download');await button.click();const download=await wait;await download.saveAs(info.outputPath('labels.pdf'));expect(download.suggestedFilename()).toBe('SADU-labels-exhibition.pdf');await expect(page.getByRole('status')).toContainText('proof exported');
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});

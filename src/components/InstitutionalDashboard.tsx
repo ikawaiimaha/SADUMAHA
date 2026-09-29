@@ -1,6 +1,6 @@
 import {useState} from 'react';
-import {BarChart3,Users} from 'lucide-react';
-import {institutionalMetrics} from '../data/institutionalMetrics';
+import {BarChart3,Users,Download} from 'lucide-react';
+import {institutionalMetrics,inventoryCSV} from '../data/institutionalMetrics';
 import {COORDINATORS} from '../data/participation2026';
 import type {NominatedArtistDossier} from './ArtistNominationForm';
 export function InstitutionalDashboard({dossiers,evidence,isAr,canReassign,lockedIds,onReassign}:{dossiers:NominatedArtistDossier[];evidence:{id:string;status:string;prCleared?:boolean}[];isAr:boolean;canReassign:boolean;lockedIds:string[];onReassign:(id:string,target:string,reason:string)=>void}){
@@ -8,10 +8,12 @@ export function InstitutionalDashboard({dossiers,evidence,isAr,canReassign,locke
  const [showInactive,setShowInactive]=useState(false);
  const stats=institutionalMetrics(dossiers,evidence),tr=(ar:string,en:string)=>isAr?ar:en;
  const selected=dossiers.find(d=>d.id===artist);const allowed=selected?.status==='APPROVED'&&!lockedIds.includes(artist)&&!selected.amendments?.some(a=>a.status==='PENDING');
+ function exportInventory(){const url=URL.createObjectURL(new Blob([inventoryCSV(dossiers,new Date().toISOString())],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='SADU-session-inventory.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);}
  const max=Math.max(1,...stats.workloads.map(c=>c.dossiers));
  return <section className="mx-auto my-6 max-w-5xl space-y-5 rounded border border-[#D9CEBA] bg-[#F7F1E6] ps-5 pe-5 py-5 text-start" dir={isAr?'rtl':'ltr'}>
  <h2 className="flex items-center gap-2 text-2xl font-semibold"><BarChart3 aria-hidden="true"/>{tr('الإحصاءات المؤسسية الحية','Live Institutional Dashboard')}</h2>
  <p>{tr('محسوبة من سجلات الجلسة الحالية، وليست أعداد الحضور أو حجوزات الفنادق المعتمدة.','Calculated from current session records; these are not attendance totals or approved hotel bookings.')}</p>
+ <button disabled={!dossiers.length} onClick={exportInventory} className="flex items-center gap-2 rounded border ps-4 pe-4 py-2 disabled:opacity-50"><Download aria-hidden="true"/>{tr('تنزيل تقرير جرد الجلسة','Download session inventory report')}</button>
  <dl className="grid gap-3 sm:grid-cols-3">{[[tr('عقود منفذة مسجلة','Recorded executed artists'),stats.executedArtists],[tr('ضيوف تحقق منهم التشريفات','PR-cleared primary guests'),stats.clearedGuests],[tr('ملفات معتمدة نشطة','Active approved dossiers'),stats.approvedDossiers]].map(([label,value])=><div key={label} className="rounded border bg-[#FFFDF7] ps-4 pe-4 py-3"><dt>{label}</dt><dd className="text-3xl font-semibold">{value}</dd></div>)}</dl>
  <p className="text-sm text-[#736357]">{tr('قبول الاتفاقية لا يعني تنفيذها. المرافقون لا يحسبون تلقائياً ضمن الضيوف المعتمدين.','Agreement acceptance is not execution. Companions are not automatically counted as cleared guests.')}</p>
  <h3 className="flex items-center gap-2 text-xl"><Users aria-hidden="true"/>{tr('عبء عمل المنسقين','Coordinator workload')}</h3>
