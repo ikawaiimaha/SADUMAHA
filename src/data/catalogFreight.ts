@@ -26,3 +26,6 @@ export function pickupWithinSchedule(date:string,start?:string|null,end?:string|
 export const translationFields=['title','medium','concept','bio'] as const;
 export function publicText(row:CatalogArtwork,language:'ar'|'en'){return row.source.language===language?row.source:language==='ar'?row.translation_ar:row.translation_en;}
 export function bilingualComplete(row:CatalogArtwork){return row.translation_status==='TRANSLATION_COMPLETED'&&(['ar','en'] as const).every(language=>{const text=publicText(row,language);return text&&['title','medium','concept'].every(k=>Boolean(text[k as keyof TextMetadata]?.trim()))&&(!row.source.bio?.trim()||text.bio?.trim());});}
+
+export function amountMinor(value:string){const s=value.trim();if(!/^\d{1,9}(\.\d{1,2})?$/.test(s))return null;const [whole,fraction='']=s.split('.');const n=Number(whole)*100+Number(fraction.padEnd(2,'0'));return Number.isSafeInteger(n)&&n<=100000000000?n:null;}
+export function completeLabelGroups(rows:CatalogArtwork[],scopes:{scenario_id:string;expected_count:number}[]){return rows.filter(row=>{const scope=scopes.find(s=>s.scenario_id===row.scenario_id),group=rows.filter(r=>r.scenario_id===row.scenario_id);return scope&&scope.expected_count>0&&group.length===scope.expected_count&&group.every(bilingualComplete);});}

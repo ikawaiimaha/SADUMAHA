@@ -270,7 +270,7 @@ export default function ArtistPortalWorkspace({
                   ? 'bg-amber-100 text-amber-800'
                   : 'bg-blue-100 text-blue-800'
               }`}>
-                {isSigned ? tr('Status: Signed & Active') : isUnderReview ? tr('Status: Under Coordinator Review') : isDisputed ? tr('Status: Amendment Requested') : tr('Status: Pending Signature')}
+                {isSigned ? (isAr?'الحالة: قبول محاكى — ليس توقيعاً موثقاً':'Status: Simulated acceptance — not a verified signature') : isUnderReview ? tr('Status: Under Coordinator Review') : isDisputed ? tr('Status: Amendment Requested') : tr('Status: Pending Signature')}
               </span>
             </div>
 

@@ -1391,3 +1391,10 @@ test('asset metadata and extra-night approvals fail closed and preserve separati
  const director=decideStay(row,'BIENNIAL_DIRECTOR',true,'2026-09-29');assert.equal(director.status,'FINANCE_REVIEW');
  const approved=decideStay(director,'FINANCE',true,'2026-09-29');assert.equal(approved.status,'APPROVED');assert.equal(approved.events.length,2);assert.equal(decideStay(approved,'FINANCE',false,'2026-09-29'),approved);
 });
+
+test('declared values preserve zero and export requires the entire approved bilingual set',async()=>{
+ const {amountMinor,completeLabelGroups}=await import('../src/data/catalogFreight');
+ assert.equal(amountMinor('0'),0);assert.equal(amountMinor('20000.25'),2000025);assert.equal(amountMinor('20.001'),null);assert.equal(amountMinor('-1'),null);assert.equal(amountMinor('1e3'),null);
+ const text={title:'Title',medium:'Ink',concept:'Study'};const row={id:'a',scenario_id:'s',zone_id:'z',media_object_name:'f',source:{...text,language:'en'},translation_ar:text,translation_status:'TRANSLATION_COMPLETED' as const,production_year:2026,height_cm:1,width_cm:1,weight_kg:1,crate_count:1};
+ assert.equal(completeLabelGroups([row],[{scenario_id:'s',expected_count:3}]).length,0);assert.equal(completeLabelGroups([row],[]).length,0);assert.equal(completeLabelGroups([row],[{scenario_id:'s',expected_count:1}]).length,1);
+});
