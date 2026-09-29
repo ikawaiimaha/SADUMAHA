@@ -24,7 +24,7 @@ export function submitForVetting(d: NominatedArtistDossier, actor: string, coord
 export function queueNomination(d:NominatedArtistDossier,actor:string,coordinatorId:string,tags:string[]):NominatedArtistDossier|null {
   if (!['COORDINATOR','PREP_COMMITTEE'].includes(actor) || !validDossier(d) || !d.id || d.status !== 'DRAFT'
     || (actor==='COORDINATOR' && coordinatorId!==d.assignedCoordinatorId)) return null;
-  return {...d,committeeReview:undefined,culturalClearedAt:undefined,status:'PENDING_COMMITTEE_REVIEW',
+  return {...d,committeeReview:undefined,culturalClearedAt:undefined,status:matchedRestriction(d,tags)?'HIP_BLOCKED':'PENDING_COMMITTEE_REVIEW',
     complianceReason:matchedRestriction(d,tags),submittedBy:actor==='COORDINATOR'?'Coordinator':'Preparatory Committee'};
 }
 export function reviewByCommittee(d:NominatedArtistDossier,actor:string,endorse:boolean,minutes:string,tags:string[],at:string):NominatedArtistDossier {

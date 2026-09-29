@@ -15,6 +15,7 @@ import {
 import { Language } from '../types';
 
 export interface DossierForm {
+  status?: 'PENDING_COMMITTEE_REVIEW' | 'HIP_BLOCKED';
   nameEn: string;
   nameAr: string;
   nationality: string;
@@ -88,13 +89,14 @@ export default function ArtistNominationBuilder({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isDossierComplete) return;
+    if (!isDossierComplete || currentUserRole !== 'COORDINATOR' || !onSubmitNomination) return;
     if (isBlocklisted) {
+      onSubmitNomination({...form,status:'HIP_BLOCKED'});
       alert("System Action: Dossier quarantined due to active HIP Blocklist parameters.");
       return;
     }
-    onSubmitNomination?.(form);
-    alert("Dossier locked and submitted to Stage 5: Pending Director Review.");
+    onSubmitNomination({...form,status:'PENDING_COMMITTEE_REVIEW'});
+    alert("Dossier locked and submitted to Stage 4: Pending Committee Review.");
     onSuccess?.();
   };
 
@@ -343,10 +345,10 @@ export default function ArtistNominationBuilder({
             ) : (
               <button
                 type="submit"
-                disabled={!isDossierComplete}
+                disabled={!isDossierComplete || !onSubmitNomination}
                 className="w-full bg-[#1A1817] hover:bg-black disabled:bg-stone-300 disabled:text-stone-500 text-white py-3 rounded-md text-xs font-bold transition-colors shadow-sm cursor-pointer"
               >
-                {isDossierComplete ? 'Lock Dossier & Submit to Director' : 'Complete Dossier to Submit'}
+                {isDossierComplete ? 'Lock Dossier & Submit to Committee' : 'Complete Dossier to Submit'}
               </button>
             )}
           </div>

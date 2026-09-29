@@ -75,7 +75,7 @@ test('dossier schemas distinguish new and existing work and do not fabricate att
 test('only assigned Coordinator submits; active compliance matches never reach Director',()=>{
   assert.equal(submitForVetting(dossier,'PREP_COMMITTEE',ASSIGNED_COORDINATOR,[]),null);
   assert.equal(submitForVetting(dossier,'COORDINATOR','other',[]),null);
-  assert.equal(submitForVetting(dossier,'COORDINATOR',ASSIGNED_COORDINATOR,['Restricted Nationality: Country X'])?.status,'PENDING_COMMITTEE_REVIEW');
+  assert.equal(submitForVetting(dossier,'COORDINATOR',ASSIGNED_COORDINATOR,['Restricted Nationality: Country X'])?.status,'HIP_BLOCKED');
   const passed=submitForVetting(dossier,'COORDINATOR',ASSIGNED_COORDINATOR,[]);
   assert.equal(passed?.status,'PENDING_COMMITTEE_REVIEW');
   assert.equal(submitForVetting(passed!,'COORDINATOR',ASSIGNED_COORDINATOR,[]),null);
@@ -206,7 +206,7 @@ test('honored guest vetting needs identity and the assigned coordinator, not inv
   assert.equal(validDossier(d), true);
   assert.equal(submitForVetting(d, 'COORDINATOR', COORDINATORS[2].id, []), null);
   assert.equal(submitForVetting(d, 'COORDINATOR', COORDINATORS[1].id, [])?.status, 'PENDING_COMMITTEE_REVIEW');
-  assert.equal(submitForVetting(d, 'COORDINATOR', COORDINATORS[1].id, ['Fictional country'])?.status, 'PENDING_COMMITTEE_REVIEW');
+  assert.equal(submitForVetting(d, 'COORDINATOR', COORDINATORS[1].id, ['Fictional country'])?.status, 'HIP_BLOCKED');
   assert.equal(validDossier({...d, nationality: ''}), false);
   assert.equal(validDossier({...d, assignedCoordinatorId: undefined}), false);
 });
@@ -1018,4 +1018,13 @@ test('secure intake never offers unauthenticated uploads',()=>{
  const html=renderToStaticMarkup(createElement(ContractSecureIntake));
  assert.equal((html.match(/type="file" disabled=""/g)??[]).length,2);
  assert.match(html,/Sign in at \/pilot/);
+});
+
+
+test('automated compliance holds cannot be manually endorsed by Committee or HIP',()=>{
+ const held=queueNomination(dossier,'COORDINATOR',ASSIGNED_COORDINATOR,['Restricted Nationality: Country X'])!;
+ assert.equal(held.status,'HIP_BLOCKED');
+ assert.equal(reviewByCommittee(held,'PREP_COMMITTEE',true,'Override',[],at),held);
+ assert.equal(reviewByCommittee(held,'HIP',false,'Reject',[],at),held);
+ assert.equal(directorEligible(held,[]),false);
 });

@@ -1,3 +1,10 @@
+# 29 September 2026 — Database Committee decision gate
+
+`migration.sql` is a manual deployment script, tested locally only. It creates/extends artist_status while retaining the inspected legacy TEXT status column, replaces dossier mutation policies, and enforces Coordinator submission → Committee decision → Director decision. Rejections require consensus minutes, and the server records reviewer/time. HIP has no dossier write/delete policy; an invoker trigger also rejects HIP mutations if a broad policy is introduced. Existing rows are not reclassified and historic approvals are not fabricated.
+
+Automated restriction matches now enter HIP_BLOCKED in the session workflow. Clean dossiers enter PENDING_COMMITTEE_REVIEW. HIP_BLOCKED is a hold, not a manual HIP veto or mandatory intermediate state for clean dossiers. Database hold release remains a trusted compliance-service operation; no database blocklist engine or frontend persistence is introduced by this migration.
+
+---
 # 28 September 2026 — Stage 6 configuration and secure intake
 
 Director-approved candidates and disputed agreements have separate Coordinator queues. Dispatch puts the artist in CONTRACT_PENDING_SIGNATURE while the invitation record separately retains the identity-confirmation prerequisite. The legal name remains required before generating the localized, watermarked rehearsal PDF. Amendments preserve Director approval, name and history and return through CONTRACT_DISPUTED; accepted terms are not silently editable.

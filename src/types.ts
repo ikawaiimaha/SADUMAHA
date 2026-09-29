@@ -89,6 +89,8 @@ export type ArtistStatus =
   | 'LOGISTICS_PENDING_PR'
   | 'INCOMPLETE_DOSSIER'
   | 'HIP_BLOCKED'
+  | 'PENDING_COMMITTEE_REVIEW'
+  | 'COMMITTEE_REJECTED'
   | 'PENDING_DIRECTOR_REVIEW'
   | 'CONTRACT_DISPUTED' // Hardening #2: Contract amendment negotiation loop
   | 'AMENDMENT_UNDER_REVIEW' // Active coordinator renegotiation loop

@@ -1,0 +1,10 @@
+# Stage 4 database gate audit
+
+- Inspected local artist_dossiers: status is TEXT; no artist_status enum existed. The manual migration creates/extends the enum without changing the text column or dropping its dependencies. Enum-backed installations use the same text-cast policy/trigger comparisons.
+- Mutation policies are replaced, including broad FOR ALL policies; their SELECT clauses are preserved. Review current policy output before hosted rollout. No rows are deleted or automatically reclassified.
+- Coordinator writes are restricted to incomplete dossiers and submission to Committee. Committee can change only decision/minutes; Director only decision/rejection reason after Committee evidence exists. Server-generated reviewer/timestamp and nonempty rejection minutes prevent fabricated or overwritten decisions.
+- HIP UPDATE/DELETE is absent; trigger denies it even under a deliberately broad test policy. user_metadata never supplies authority.
+- New ArtistStatus values, legacy builder payload/label and Coordinator submissions align with Committee routing. Automated rule matches enter HIP_BLOCKED. Such holds cannot be endorsed by HIP, Committee or Director.
+- Local transactional SQL tests cover successful submission/endorsement/rejection, missing minutes, collateral edits, replay, Director bypass, HIP writes/deletes, untrusted metadata and an unsafe-policy regression. Migration rerun is tested.
+
+Limits: local schema/policies tested, hosted schema not inspected or modified. Script is outside automatic migrations and is intended for manual SQL Editor execution. Legacy TEXT remains TEXT; existing PENDING_DIRECTOR_REVIEW rows without Committee evidence remain unapprovable and require explicit administrative reconciliation. Privileged maintenance/service roles remain trusted; no database blocklist evaluator is added. The legacy database dossier schema does not yet model participation-track-specific attachment requirements or per-Coordinator ownership. Frontend demo state remains separate from database persistence.

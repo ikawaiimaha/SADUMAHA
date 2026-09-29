@@ -51,7 +51,7 @@ export interface NominatedArtistDossier {
   provenanceFileName?: string;
   complianceReason?: string;
   decisionAt?: string;
-  status: 'DRAFT' | 'REJECTED_COMPLIANCE' | 'PENDING_COMMITTEE_REVIEW' | 'COMMITTEE_REJECTED' | 'PENDING_DIRECTOR_REVIEW' | 'VETOED' | 'APPROVED';
+  status: 'DRAFT' | 'HIP_BLOCKED' | 'REJECTED_COMPLIANCE' | 'PENDING_COMMITTEE_REVIEW' | 'COMMITTEE_REJECTED' | 'PENDING_DIRECTOR_REVIEW' | 'VETOED' | 'APPROVED';
   vetoReason?: string;
   vetoNotes?: string;
 }
