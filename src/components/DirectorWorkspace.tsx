@@ -1,3 +1,4 @@
+import {NativeModal} from './common/NativeModal';
 import {DossierTimeline} from './DossierTimeline';
 import { CollectionCloseout } from './CollectionCloseout';
 import { ConditionReporting } from './ConditionReporting';
@@ -627,18 +628,19 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
 
       {/* Document Preview Modal for PDF CV & Mockups */}
       {previewDoc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+        <NativeModal isOpen onClose={()=>setPreviewDoc(null)} labelledBy="director-preview-title" className="max-w-lg">
           <div className="w-full max-w-lg rounded-xl border-2 border-sadu-gold bg-white p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-sadu-gold/30 pb-3">
               <div className="flex items-center gap-2.5">
                 <FileText className="h-5 w-5 text-sadu-brick" />
                 <div>
-                  <h4 className="font-editorial text-base font-bold text-sadu-charcoal">{previewDoc.type === 'cv' ? previewDoc.title : `${tr(previewDoc.artistName)} — ${tr('Sketches & Mockups')}`}</h4>
+                  <h4 id="director-preview-title" className="font-editorial text-base font-bold text-sadu-charcoal">{previewDoc.type === 'cv' ? previewDoc.title : `${tr(previewDoc.artistName)} — ${tr('Sketches & Mockups')}`}</h4>
                   <span className="text-xs text-sadu-muted">{tr("Candidate:")} {tr(previewDoc.artistName)}</span>
                 </div>
               </div>
               <button
                 type="button"
+                data-modal-close aria-label={isAr ? "إغلاق المعاينة" : "Close preview"}
                 onClick={() => setPreviewDoc(null)}
                 className="text-sadu-muted hover:text-sadu-charcoal cursor-pointer"
               >
@@ -663,20 +665,20 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
               > {tr("Close Preview")} </button>
             </div>
           </div>
-        </div>
+        </NativeModal>
       )}
 
 
       {/* Veto Reason Modal Dialog */}
       {activeVetoArtistId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+        <NativeModal isOpen onClose={()=>{setActiveVetoArtistId(null);setVetoNotes('');}} labelledBy="director-veto-title" className="max-w-md">
           <div className="w-full max-w-md rounded-xl border-2 border-red-500 bg-white p-6 shadow-2xl space-y-4">
             <div className="flex items-center gap-3 border-b border-sadu-gold/30 pb-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-100 text-red-700">
                 <ShieldAlert className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="font-editorial text-lg font-bold text-sadu-charcoal"> {tr("Executive Veto Enforcement")} </h3>
+                <h3 id="director-veto-title" className="font-editorial text-lg font-bold text-sadu-charcoal"> {tr("Executive Veto Enforcement")} </h3>
                 <p className="text-xs text-sadu-muted"> {tr("Mohammed Al Qaseer · Absolute Directorate Authority")} </p>
               </div>
             </div>
@@ -732,7 +734,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
               </div>
             </form>
           </div>
-        </div>
+        </NativeModal>
       )}
     </div>
   );

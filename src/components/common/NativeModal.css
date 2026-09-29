@@ -2,6 +2,7 @@
 .sadu-native-modal::backdrop { background:rgb(33 27 23 / .7); backdrop-filter:blur(2px); }
 .sadu-native-modal :focus-visible { outline:3px solid #2f6178; outline-offset:2px; }
 .sadu-native-modal [data-modal-close] { flex-shrink:0; }
+.sadu-native-modal.sadu-native-drawer { margin-block:0; margin-inline-start:auto; margin-inline-end:0; height:100dvh; max-height:100dvh; }
 .sadu-native-modal .contract-instrument:focus-within { outline:3px solid #2f6178; outline-offset:2px; }
 @media print {
   .sadu-native-modal[open] { position:static!important; width:100%!important; max-width:none!important; max-height:none!important; overflow:visible!important; margin:0!important; }

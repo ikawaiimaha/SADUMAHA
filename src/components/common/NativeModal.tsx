@@ -34,7 +34,7 @@ export function NativeModal({ isOpen, onClose, labelledBy, children, className =
     };
   }, [isOpen, returnFocusSelector]);
 
-  return <dialog ref={ref} id={id} aria-labelledby={labelledBy}
+  return <dialog ref={ref} id={id} tabIndex={-1} aria-labelledby={labelledBy}
     className={`sadu-native-modal ${className}`}
     onKeyDown={event => {
       if (event.key !== 'Tab') return;
@@ -42,6 +42,7 @@ export function NativeModal({ isOpen, onClose, labelledBy, children, className =
       const controls = Array.from(dialog.querySelectorAll<HTMLElement>('button, a[href], input, select, textarea, [tabindex]'))
         .filter(element => element.tabIndex >= 0 && !element.matches(':disabled') && element.getClientRects().length > 0);
       const first = controls[0]; const last = controls.at(-1);
+      if (!first || !last) { event.preventDefault(); dialog.focus(); return; }
       // Native modality makes the page inert; wrap Tab before it moves into browser chrome.
       if (first && last && (event.shiftKey ? document.activeElement === first : document.activeElement === last)) {
         event.preventDefault();

@@ -1,5 +1,6 @@
+import {NativeModal} from './common/NativeModal';
 import { useMockupText } from '../i18n/useMockupText';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Send, AlertCircle, X } from 'lucide-react';
 import { NegotiationRound } from '../types';
 
@@ -25,15 +26,6 @@ export default function ContractDisputeModal({
   const [justification, setJustification] = useState('');
   const [proposedGrant, setProposedGrant] = useState<number>(currentGrant);
 
-  // Close on Escape key press
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!justification.trim()) return;
@@ -47,15 +39,7 @@ export default function ContractDisputeModal({
   };
 
   return (
-    <div
-      className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 font-sans"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="dispute-modal-title"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
+    <NativeModal isOpen onClose={onClose} labelledBy="dispute-modal-title" className="max-w-lg">
       <div className="bg-white max-w-lg w-full rounded-lg shadow-xl border border-[#D9D2C5] p-6 space-y-5 text-start">
         
         {/* Header */}
@@ -68,7 +52,7 @@ export default function ContractDisputeModal({
             type="button"
             onClick={onClose}
             className="text-stone-400 hover:text-stone-600 p-1 rounded-md transition-colors cursor-pointer"
-            aria-label={tr("Close modal")}
+            data-modal-close aria-label={tr("Close modal")}
           >
             <X className="w-4 h-4" />
           </button>
@@ -86,8 +70,8 @@ export default function ContractDisputeModal({
           
           {/* Category Dropdown */}
           <div>
-            <label className="block text-xs font-bold text-[#1A1817] mb-1"> {tr("Disputed Term Category (بند التعديل المطلوب)")} </label>
-            <select
+            <label htmlFor="dispute-category" className="block text-xs font-bold text-[#1A1817] mb-1"> {tr("Disputed Term Category (بند التعديل المطلوب)")} </label>
+            <select id="dispute-category"
               value={category}
               onChange={e => setCategory(e.target.value as NegotiationRound['disputedCategory'])}
               className="w-full rounded-md border border-[#D9D2C5] bg-[#FAF8F5] p-2.5 text-xs font-medium text-[#1A1817] focus:ring-1 focus:ring-[#8B4513] focus:border-[#8B4513] outline-hidden cursor-pointer"
@@ -102,10 +86,10 @@ export default function ContractDisputeModal({
           {/* Conditional Proposed Grant Field */}
           {category === 'PRODUCTION_GRANT' && (
             <div>
-              <label className="block text-xs font-bold text-[#1A1817] mb-1"> {tr("Proposed Counter-Allocation (المبلغ المقترح بالدرهم)")} </label>
+              <label htmlFor="dispute-grant" className="block text-xs font-bold text-[#1A1817] mb-1"> {tr("Proposed Counter-Allocation (المبلغ المقترح بالدرهم)")} </label>
               <div className="relative">
                 <span className="absolute start-3 top-2.5 text-stone-400 font-mono text-xs">{tr("AED")}</span>
-                <input
+                <input id="dispute-grant"
                   type="number"
                   min="0"
                   step="1000"
@@ -119,8 +103,8 @@ export default function ContractDisputeModal({
 
           {/* Justification Text Area */}
           <div>
-            <label className="block text-xs font-bold text-[#1A1817] mb-1"> {tr("Formal Institutional Justification (المبررات التفصيلية للطلب)")} </label>
-            <textarea
+            <label htmlFor="dispute-justification" className="block text-xs font-bold text-[#1A1817] mb-1"> {tr("Formal Institutional Justification (المبررات التفصيلية للطلب)")} </label>
+            <textarea id="dispute-justification"
               rows={4}
               value={justification}
               onChange={e => setJustification(e.target.value)}
@@ -149,6 +133,6 @@ export default function ContractDisputeModal({
         </form>
 
       </div>
-    </div>
+    </NativeModal>
   );
 }

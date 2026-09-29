@@ -1,3 +1,4 @@
+import {NativeModal} from './common/NativeModal';
 import React, { useState } from 'react';
 import { Language } from '../types';
 import { AuthoredBand } from './AuthoredBand';
@@ -29,19 +30,19 @@ export const PresenterDrawer: React.FC<PresenterDrawerProps> = ({ isOpen, onClos
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-sadu-charcoal/50 backdrop-blur-xs flex justify-end" dir={isAr ? 'rtl' : 'ltr'}>
+    <NativeModal isOpen={isOpen} onClose={onClose} labelledBy="presenter-title" className="sadu-native-drawer max-w-2xl">
       <div className="bg-sadu-linen border-s border-sadu-gold w-full max-w-2xl h-full shadow-2xl overflow-y-auto p-6 sm:p-8 flex flex-col justify-between text-sadu-charcoal">
         <div className="space-y-6">
           {/* Header */}
           <div className="flex items-center justify-between pb-4 border-b border-sadu-gold">
             <div className="flex items-center gap-2 text-xs font-bold text-sadu-brick uppercase tracking-wider">
               <Compass className="w-4 h-4" />
-              <span>{isAr ? 'لوحة الشرح المعماري والمواءمة الحكومية' : 'Presenter Architecture & Strategic Alignment'}</span>
+              <span id="presenter-title">{isAr ? 'لوحة الشرح المعماري والمواءمة الحكومية' : 'Presenter Architecture & Strategic Alignment'}</span>
             </div>
             <button
+              data-modal-close aria-label={isAr ? "إغلاق لوحة العرض" : "Close presenter panel"}
               onClick={onClose}
               className="p-1 rounded-md text-sadu-muted hover:bg-sadu-sand/70 hover:text-sadu-charcoal transition-colors cursor-pointer"
-              aria-label={isAr ? 'إغلاق' : 'Close'}
             >
               <X className="w-5 h-5" />
             </button>
@@ -202,6 +203,6 @@ export const PresenterDrawer: React.FC<PresenterDrawerProps> = ({ isOpen, onClos
           </button>
         </div>
       </div>
-    </div>
+    </NativeModal>
   );
 };

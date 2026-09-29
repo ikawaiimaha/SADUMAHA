@@ -1,3 +1,4 @@
+import {NativeModal} from './common/NativeModal';
 import {DossierTimeline} from './DossierTimeline';
 import {queueNomination} from '../data/vetting';
 import {CuratorialBoundaries} from './CuratorialBoundaries';
@@ -707,7 +708,8 @@ export const CoordinatorWorkspace: React.FC<CoordinatorWorkspaceProps> = ({
 
       {/* 3. Strict Dossier Nomination Modal */}
       {isNominationModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <NativeModal isOpen onClose={()=>setIsNominationModalOpen(false)} labelledBy="coordinator-nomination-title" className="max-w-2xl">
+          <h2 id="coordinator-nomination-title" className="sr-only">{isAr?"ترشيح فنان":"Artist nomination"}</h2>
           <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
             <ArtistNominationForm
               curatorialBrief={curatorialBrief}
@@ -722,7 +724,7 @@ export const CoordinatorWorkspace: React.FC<CoordinatorWorkspaceProps> = ({
               onCancel={() => setIsNominationModalOpen(false)}
             />
           </div>
-        </div>
+        </NativeModal>
       )}
     </div>
   );
