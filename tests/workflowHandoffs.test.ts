@@ -1059,3 +1059,11 @@ test('restart resumes only a matching server URL and concurrent starts share one
  const file=new File(['a'],'a.png');const task=createMediaTransfer(file,'u/path','image/png','u',()=>{}, {client:{} as SupabaseClient,url:'http://127.0.0.1:54321',UploadClass:RecoveryUpload});
  const first=task.start();assert.equal(task.start(),first);await first;assert.equal(starts,1);assert.match(resumed,/resumable\/saved$/);const fingerprint=await options.fingerprint();assert.match(fingerprint,/u\/path/);assert.equal(options.removeFingerprintOnSuccess,true);
 });
+
+import {idlePhase,IDLE_WARNING_MS,IDLE_LOCK_MS} from '../src/data/idleLock';
+test('idle warning begins at nine minutes and locks at ten',()=>{
+ const start=1000;assert.equal(idlePhase(start,start+IDLE_WARNING_MS-1),'active');assert.equal(idlePhase(start,start+IDLE_WARNING_MS),'warning');assert.equal(idlePhase(start,start+IDLE_LOCK_MS-1),'warning');assert.equal(idlePhase(start,start+IDLE_LOCK_MS),'locked');
+});
+test('sleep and timer throttling do not bypass idle lock, and activity cannot unlock it',()=>{
+ assert.equal(idlePhase(1000,1000+60*60*1000),'locked');assert.equal(idlePhase(1000,1000,true),'locked');assert.equal(idlePhase(1000,1000,false),'active');
+});

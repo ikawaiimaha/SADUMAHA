@@ -1,3 +1,4 @@
+import {IdleWorkspaceLock} from './IdleWorkspaceLock';
 import {ExhibitionScenario,ExhibitionChecklistQueue} from './ExhibitionScenario';
 import { useEffect, useState, useRef } from 'react';
 import type { Session } from '@supabase/supabase-js';
@@ -14,7 +15,7 @@ export default function AuthenticatedPilot() {
  const [busy,setBusy]=useState(false),[message,setMessage]=useState(''),[ready,setReady]=useState(false);
  const [artist,setArtist]=useState(''),[nationality,setNationality]=useState(''),[medium,setMedium]=useState('');
  const [selected,setSelected]=useState(''),[claimId,setClaimId]=useState(''),[equipment,setEquipment]=useState('AV Projectors'),[mounting,setMounting]=useState('Floor Freestanding'),[phase,setPhase]=useState('FINAL_INSTALLATION');
- useEffect(()=>{if(!client)return; const {data}=client.auth.onAuthStateChange((_event,next)=>{currentUser.current=next?.user.id;setSession(next);setReady(true);setRole('');setDossiers([]);setClaims([]);setRequests([]);});return()=>data.subscription.unsubscribe();},[]);
+ useEffect(()=>{if(!client)return; const {data}=client.auth.onAuthStateChange((_event,next)=>{const changed=currentUser.current!==next?.user.id;currentUser.current=next?.user.id;setSession(next);setReady(true);if(changed){setRole('');setDossiers([]);setClaims([]);setRequests([]);}});return()=>data.subscription.unsubscribe();},[]);
  async function refresh() {
   if(!client)return;
   const userAtStart=currentUser.current;
@@ -32,7 +33,7 @@ export default function AuthenticatedPilot() {
  const button='rounded bg-[#8B261E] ps-4 pe-4 py-2 text-white disabled:opacity-50 disabled:cursor-not-allowed';
  const panel='space-y-4 rounded border border-[#D9CEBA] bg-[#F7F1E6] ps-5 pe-5 py-5';
  if(!client)return <main className={panel}><h1>Authenticated pilot is not configured</h1><p>Configure VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY, then restart Vite.</p><a href="/">Return to rehearsal</a></main>;
- return <main className="mx-auto max-w-5xl space-y-6 ps-5 pe-5 py-8 text-start text-[#1A1817]">
+ return <IdleWorkspaceLock enabled={!!session} identity={session?.user.id??'signed-out'} reauthenticate={async password=>{if(!session?.user.email)return false;const expected=session.user.id;const {data,error}=await client.auth.signInWithPassword({email:session.user.email,password});return !error&&data.user?.id===expected;}}><main className="mx-auto max-w-5xl space-y-6 ps-5 pe-5 py-8 text-start text-[#1A1817]">
   <header className={panel}><h1 className="text-3xl font-semibold">SADU · Authenticated spatial pilot</h1><p>Persistent pilot records • spatial workflow and accepted-contract exhibition checklists • no external dispatch</p><p>This pilot approval tests ownership and routing; it does not replace the full institutional vetting process.</p><a className="underline" href="/">Return to session rehearsal</a></header>
   <p role="status" aria-live="polite">{message}</p>
   <ExhibitionScenario/>{session&&<ExhibitionChecklistQueue/>}{!session ? <form className={panel} onSubmit={async e=>{e.preventDefault();if(busy)return;setBusy(true);const {error}=await client.auth.signInWithPassword({email,password});setPassword('');setMessage(error?'Sign-in failed. Check your credentials.':'');setBusy(false);}}><h2 className="text-xl">Sign in</h2><label>Email<input required type="email" autoComplete="username" className={field} value={email} onChange={e=>setEmail(e.target.value)}/></label><label>Password<input required type="password" autoComplete="current-password" className={field} value={password} onChange={e=>setPassword(e.target.value)}/></label><button className={button} disabled={busy||!ready}>Sign in</button></form> : <>
@@ -43,5 +44,5 @@ export default function AuthenticatedPilot() {
    {['COORDINATOR','TECHNICAL'].includes(role)&&<form className={panel} onSubmit={e=>{e.preventDefault();void run(()=>client.from('sadu_pilot_requests').insert({claim_id:claimId,equipment,mounting,phase}),'Technical request saved');}}><h2 className="text-xl">Technical request</h2><label>Claimed room<select required className={field} value={claimId} onChange={e=>setClaimId(e.target.value)}><option value="">Select claimed room</option>{claims.filter(c=>role==='TECHNICAL'||c.claimed_by===session.user.id).map(c=><option key={c.id} value={c.id}>{spaces.find(s=>s.id===c.space_id)?.venue} · {c.space_id}</option>)}</select></label>{[{label:'Equipment',value:equipment,set:setEquipment,options:['AV Projectors','Lighting Rig','Pedestal']},{label:'Mounting',value:mounting,set:setMounting,options:['Floor Freestanding','Ceiling Mount','Wall Anchor']},{label:'Phase',value:phase,set:setPhase,options:['PROTOTYPING','FINAL_INSTALLATION']}].map(f=><label className="block" key={f.label}>{f.label}<select className={field} value={f.value} onChange={e=>f.set(e.target.value)}>{f.options.map(o=><option key={o}>{o}</option>)}</select></label>)}<button className={button} disabled={busy||!claimId}>Record request</button></form>}
    <section className={panel}><h2 className="text-xl">Execution ledger</h2>{!requests.length&&<p>No requests recorded.</p>}{requests.map(r=>{const claim=claims.find(c=>c.id===r.claim_id),space=spaces.find(s=>s.id===claim?.space_id);return <article key={r.id} className="border-b py-3"><p>{r.equipment} · {r.mounting} · {r.phase}</p><p>Equipment: Technical & AV · PENDING_INVENTORY_CHECK</p>{(r.mounting!=='Floor Freestanding'||r.equipment==='Lighting Rig')&&<p>Structural: {space?.curator} · {space?.room} · PENDING_VENUE_APPROVAL</p>}</article>})}</section>
   </>}
- </main>;
+ </main></IdleWorkspaceLock>;
 }

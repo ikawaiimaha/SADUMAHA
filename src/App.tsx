@@ -1,3 +1,4 @@
+import {IdleWorkspaceLock} from './components/IdleWorkspaceLock';
 import {CuratorialBoundaries} from './components/CuratorialBoundaries';
 import {publishBoundaries,nominationOpen,type Boundaries} from './data/curatorialBoundaries';
 import {ExhibitionChecklistQueue} from './components/LazyExhibitionScenario';
@@ -1014,10 +1015,12 @@ function SADUApp() {
   );
 }
 
+function RehearsalLock(){const {isAr}=useI18n();return <IdleWorkspaceLock isAr={isAr}><SADUApp /></IdleWorkspaceLock>;}
+
 export default function App() {
   return (
     <I18nProvider initialLang="ar">
-      <MasterDirectoryProvider><SessionDraftProvider><SADUApp /></SessionDraftProvider></MasterDirectoryProvider>
+      <MasterDirectoryProvider><SessionDraftProvider><RehearsalLock /></SessionDraftProvider></MasterDirectoryProvider>
     </I18nProvider>
   );
 }
