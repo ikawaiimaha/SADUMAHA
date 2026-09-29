@@ -1,3 +1,4 @@
+import {DigitalConditionReports} from './DigitalConditionReports';
 import { ProductionSpecsLedger } from './ProductionSpecs';
 import { ArtistExecutionBridge } from './ArtistExecutionBridge';
 import { damageHold } from '../data/conditionReporting';
@@ -27,7 +28,7 @@ export default function TechnicalWorkspace({ isAr, state, onCheck, onClearTechni
     <h1 className="font-serif text-3xl font-bold">{isAr ? 'الفريق الهندسي والفني' : 'Engineering / Technical Workspace'}</h1>
     {state.contracts[0]&&<ProductionSpecsLedger artistId={state.contracts[0].artistId} contractId={state.contracts[0].id} isAr={isAr}/>}
     <ArtistExecutionBridge state={state} actor="TECHNICAL"/>
-    <CommissionSummary isAr={isAr} />
+    <DigitalConditionReports actor="TECHNICAL"/><CommissionSummary isAr={isAr} />
     <InstallationIntervention state={state} isAr={isAr} actor="TECHNICAL" />
     {damageHold(state) && <p role="status" className="rounded border border-red-300 bg-red-50 ps-4 pe-4 py-3">Artwork damage hold — installation is locked pending a separately authorized resolution.</p>}
     <fieldset disabled={state.installationStatus === 'EXECUTIVE_IMPOUND' || damageHold(state)} className={`min-w-0 space-y-5 ${state.installationStatus === 'EXECUTIVE_IMPOUND' ? 'rounded border-2 border-red-700 bg-red-50 ps-4 pe-4 py-4' : ''}`}>

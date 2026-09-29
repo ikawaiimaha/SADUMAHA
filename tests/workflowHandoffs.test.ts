@@ -708,7 +708,7 @@ test('fabrication requests remain separate from disposal, installation and Finan
  assert.equal(readyFabrication(ready,'f1','TECHNICAL',at),ready);
 });
 import { validVisaIntake, validPassportPDF, pdfHasSignature, type VisaIntake } from '../src/data/visaIntake';
-const visa = ():VisaIntake => ({id:'visa-1',contractId:contract.id,passportNumber:'DEMO123',expiryDate:'2028-10-01',motherName:'Sample',nationality:'Sample',passport:new File(['%PDF-1.4 sample'], 'sample.pdf',{type:'application/pdf'}),submittedAt:at});
+const visa = ():VisaIntake => ({id:'visa-1',contractId:contract.id,passportNumber:'DEMO123',expiryDate:'2028-10-01',motherName:'Sample',nationality:'Sample',personalPhoto:new File(['test image'],'portrait.jpg',{type:'image/jpeg'}),photoDimensions:{width:1200,height:1600},passport:new File(['%PDF-1.4 sample'], 'sample.pdf',{type:'application/pdf'}),submittedAt:at});
 test('visa intake rejects invalid dates, incomplete companion consent and non-PDF files',async()=>{
  const v=visa();assert.equal(validVisaIntake(v),true);
  for(const expiryDate of ['2027-02-30','2026-01-01','invalid'])assert.equal(validVisaIntake({...v,expiryDate}),false);
@@ -1151,4 +1151,22 @@ test('dock clearance rejects invalid dimensions and tampering, persists verified
  assert.equal(milestoneEligible({...cleared,agreementRevision:cleared.agreementRevision+1},'delivery'),false);
  const held=reduce(s,{...a,condition:'DAMAGED',inspection:{...inspection,seal:'TAMPERED'},photos:[new File(['photo'],'seal.png',{type:'image/png'})]});
  assert.ok(held.logistics);assert.equal(milestoneEligible(held,'delivery'),false);
+});
+
+
+test('repair authorization is artist-only, immutable and does not clear damaged artwork',()=>{
+ let s=accepted();s=reduce(s,{type:'receive-asset',actor:'LOGISTICS',reference:'damage-receipt',at});
+ s=reduce(s,{type:'record-condition',actor:'LOGISTICS',id:'damage-review',condition:'DAMAGED',photos:[new File(['photo'],'damage.png',{type:'image/png'})],at});
+ const a={type:'authorize-repair' as const,actor:'ARTIST',reportId:'damage-review',choice:'DEPARTMENT' as const,at};
+ assert.equal(reduce(s,{...a,actor:'TECHNICAL'}),s);
+ const decided=reduce(s,a);assert.equal(decided.conditionReports?.[0].repairChoice,'DEPARTMENT');
+ assert.equal(reduce(decided,{...a,choice:'ARTIST'}),decided);
+ assert.equal(milestoneEligible(decided,'delivery'),false);
+});
+test('PR intake rejects absent MIME, wrong photo format and insufficient pixels',()=>{
+ const v=visa();
+ assert.equal(validPassportPDF(new File(['%PDF-'],'passport.pdf')),false);
+ assert.equal(validVisaIntake({...v,personalPhoto:undefined}),false);
+ assert.equal(validVisaIntake({...v,photoDimensions:{width:100,height:100}}),false);
+ assert.equal(validVisaIntake({...v,personalPhoto:new File(['x'],'photo.png',{type:'image/jpeg'})}),false);
 });

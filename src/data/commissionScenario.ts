@@ -115,6 +115,7 @@ function recordLedger(state: CommissionState, tranche: 'advance' | 'delivery' | 
 /** Shared transition guard. UI locks are not the only checks; this remains a local demo, not RBAC. */
 export function commissionReducer(state: CommissionState, action: CommissionAction): CommissionState {
   if(state.installationStatus==='ARCHIVED_CLOSED')return state;
+  if('actor' in action&&action.actor==='ARTIST'&&action.type!=='authorize-repair'&&state.conditionReports?.some(r=>r.contractId===state.contracts[0]?.id&&r.condition==='DAMAGED'&&!r.repairChoice))return state;
   if(action.type==='local-production') {
     const c=state.contracts[0],events=state.localProductionEvents??[];
     const previous=events.filter(r=>r.contractId===c?.id&&r.revision===state.agreementRevision);
@@ -127,7 +128,7 @@ export function commissionReducer(state: CommissionState, action: CommissionActi
     if(!c||!['ARTIST_APPROVED','LOCKED'].includes(c.status)||state.logistics.closedAt)return state;
     const damaged=action.inspection.seal!=='MATCH'||action.inspection.condition!=='INTACT';
     if(damaged&&(!action.id||!action.at||!Number.isFinite(Date.parse(action.at))||Date.parse(action.at)<Date.parse(state.logistics.receivedAt)||!action.photos?.length||action.photos.length>5||!action.photos.every(validDamagePhoto)||!['ARTIST','DEPARTMENT'].includes(c.shippingLiability??'')))return state;
-    return bindDockInspection({...state,...(damaged?{conditionReports:[...(state.conditionReports??[]),{id:action.id!,artistId:c.artistId,contractId:c.id,revision:state.agreementRevision,receiptReference:state.logistics.reference,condition:'DAMAGED' as const,liability:c.shippingLiability as 'ARTIST'|'DEPARTMENT',photos:[...action.photos!],at:action.at!,...(c.shippingLiability==='DEPARTMENT'?{insuranceStatus:'INSURANCE_CLAIM_PENDING' as const}:{})}]}:{})},action.inspection);
+    return bindDockInspection({...state,...(damaged?{installationStatus:'DAMAGED_PENDING_ARTIST_APPROVAL' as const,conditionReports:[...(state.conditionReports??[]),{id:action.id!,artistId:c.artistId,contractId:c.id,revision:state.agreementRevision,receiptReference:state.logistics.reference,condition:'DAMAGED' as const,liability:c.shippingLiability as 'ARTIST'|'DEPARTMENT',photos:[...action.photos!],at:action.at!,...(c.shippingLiability==='DEPARTMENT'?{insuranceStatus:'INSURANCE_CLAIM_PENDING' as const}:{})}]}:{})},action.inspection);
   }
   if(action.type==='receive-crate') {
     if(!validDockInspection(action.inspection)||action.condition!==(action.inspection.condition==='INTACT'&&action.inspection.seal==='MATCH'?'INTACT':'DAMAGED')||action.actor!=='LOGISTICS'||!action.token||action.token!==crateToken(state)||!action.id||state.logistics)return state;
@@ -158,7 +159,7 @@ export function commissionReducer(state: CommissionState, action: CommissionActi
 
   if(action.type==='upload-layout'||action.type==='request-domestic-pickup')return damageHold(state)?state:artistExecutionTransition(state,action);
   if(['collection-terms','acquire','return-ticket','return-awb','archive'].includes(action.type))return damageHold(state)?state:closeoutTransition(state,action as CloseoutAction);
-  if (['record-condition','dispatch-damage','request-plan-b','review-plan-b'].includes(action.type)) return conditionTransition(state, action as ConditionAction);
+  if (['authorize-repair','record-condition','dispatch-damage','request-plan-b','review-plan-b'].includes(action.type)) return conditionTransition(state, action as ConditionAction);
   if (damageHold(state) && ['request-fleet','fleet-transit','close-exhibition','record-technical','technical-check','contracts','CONTRACT_DISPUTED'].includes(action.type)) return state;
   if(action.type==='record-payment-receipt') {
     const bank=state.administration,c=state.contracts[0];

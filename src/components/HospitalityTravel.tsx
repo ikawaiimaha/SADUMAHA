@@ -1,3 +1,4 @@
+import {validatePassport,INVALID_PR_FORMAT} from '../data/prFileValidation';
 import {useEffect, useRef, useState} from 'react';
 import {Plane, FileCheck, RefreshCw} from 'lucide-react';
 import {pilotSupabase as client} from '../lib/pilotSupabase';
@@ -11,7 +12,7 @@ export function HospitalityTravel({review=false}:{review?:boolean}) {
  const [contract,setContract]=useState(''),[name,setName]=useState(''),[agreed,setAgreed]=useState(false);
  const [file,setFile]=useState<File|null>(null),[requests,setRequests]=useState<Request[]>([]);
  const [message,setMessage]=useState(''),[busy,setBusy]=useState(false);
- const running=useRef(false),generation=useRef(0);
+ const running=useRef(false),generation=useRef(0),fileVersion=useRef(0);
  async function reload() {
   const epoch=++generation.current;
   setRequests([]);setContracts([]);setContract('');setFile(null);setName('');setAgreed(false);
@@ -44,7 +45,7 @@ export function HospitalityTravel({review=false}:{review?:boolean}) {
   if(!client||running.current||!contract||!name.trim()||!agreed||!file)return;
   running.current=true;setBusy(true);const epoch=generation.current;
   try{
-   if(!/\.pdf$/i.test(file.name)||file.size<=0||file.size>10*1024*1024||(await file.slice(0,5).text())!=='%PDF-')throw new Error('Choose a valid PDF scan, up to 10 MB.');
+   await validatePassport(file);
    const {data:{user}}=await client.auth.getUser();
    if(!user||epoch!==generation.current)return;
    const id=crypto.randomUUID(),file_name=file.name.replace(/[^a-zA-Z0-9._-]/g,'_').slice(-180);
@@ -74,7 +75,7 @@ export function HospitalityTravel({review=false}:{review?:boolean}) {
    <legend className="font-semibold">Request Companion Visa (Self-Funded) / طلب تأشيرة مرافق (على النفقة الخاصة)</legend>
    <label className="block">Accepted database agreement<select className={input} value={contract} onChange={e=>setContract(e.target.value)}><option value="">Select agreement</option>{contracts.map(c=><option key={c.id} value={c.id}>{c.proposed_work_title}</option>)}</select></label>
    <label className="block">Companion’s full name<input className={input} maxLength={200} value={name} onChange={e=>setName(e.target.value)}/></label>
-   <label className="block rounded border-2 border-dashed ps-4 pe-4 py-4">Companion passport — PDF scan, maximum 10 MB<input key={generation.current} className="block max-w-full" type="file" accept=".pdf,application/pdf" onChange={e=>setFile(e.target.files?.[0]??null)}/></label>
+   <label className="block rounded border-2 border-dashed ps-4 pe-4 py-4">Companion passport — PDF scan, maximum 10 MB<input key={generation.current} className="block max-w-full" type="file" accept=".pdf,application/pdf" onChange={async e=>{const candidate=e.target.files?.[0],version=++fileVersion.current,epoch=generation.current;setFile(null);if(!candidate)return;try{await validatePassport(candidate);if(version===fileVersion.current&&epoch===generation.current){setFile(candidate);setMessage('');}}catch{if(version===fileVersion.current&&epoch===generation.current)setMessage(INVALID_PR_FORMAT);}}}/></label>
    <label className="flex gap-2"><input type="checkbox" checked={agreed} onChange={e=>setAgreed(e.target.checked)}/>I accept financial responsibility for all companion expenses. This request does not approve travel or guarantee a visa.</label>
    <button type="button" className="rounded bg-[#8B261E] text-white ps-4 pe-4 py-2 disabled:opacity-50" disabled={!client||!contract||!name.trim()||!agreed||!file||busy} onClick={()=>void submit()}>{busy?'Uploading…':'Upload & route to PR / إرسال إلى التشريفات'}</button>
   </fieldset>}

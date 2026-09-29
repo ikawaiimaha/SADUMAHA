@@ -1,3 +1,4 @@
+import {DigitalConditionReports} from './DigitalConditionReports';
 import {FreightPickupScheduler} from './FreightPickupScheduler';
 import {GalleryAllocationLedger} from './GalleryAllocationLedger';
 import {CrateReceiving} from './CrateReceiving';
@@ -21,7 +22,7 @@ export default function LogisticsWorkspace({ state, isAr, onRecord, onClearPhysi
   const input = 'block mt-2 w-full rounded border border-[#D9CEBA] ps-3 pe-3 py-2';
   return <div dir={isAr ? 'rtl' : 'ltr'} className="max-w-4xl mx-auto ps-4 pe-4 py-6 space-y-5 text-start">
     <h1 className="text-3xl font-bold">{isAr ? 'اللوجستيات · الاستلام والإعادة' : 'Logistics · Receipt and Return'}</h1>
-    <FreightPickupScheduler logistics/><GalleryAllocationLedger/><CrateReceiving key={state.agreementRevision} state={state} onRecord={onRecord} onClearPhysicalAsset={onClearPhysicalAsset}/>
+    <DigitalConditionReports actor="LOGISTICS"/><FreightPickupScheduler logistics/><GalleryAllocationLedger/><CrateReceiving key={state.agreementRevision} state={state} onRecord={onRecord} onClearPhysicalAsset={onClearPhysicalAsset}/>
     {!!state.receiptHistory?.length && <section className={panel}><h2>Receipt audit history</h2>{state.receiptHistory.map((row, index) => <p key={index}>{row.reference} · {row.receivedAt} · Revision {row.appliesToRevision} · Superseded{row.closedAt ? ` · Closed ${row.closedAt}` : ''}</p>)}</section>}
 
     {state && <CollectionCloseout state={state} actor="LOGISTICS" onAction={onRecord}/>}

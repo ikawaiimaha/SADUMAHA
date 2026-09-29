@@ -1,3 +1,4 @@
+import {DigitalConditionReports} from '../DigitalConditionReports';
 import {CrateReceiving} from '../CrateReceiving';
 import type {CommissionState} from '../../types';
 import type {CommissionAction} from '../../data/commissionScenario';
@@ -67,7 +68,7 @@ export const LogisticsDashboard: React.FC<{state?:CommissionState;onRecord?:(act
 
   return (
     <div className="space-y-6">
-{state&&onRecord?<CrateReceiving key={state.agreementRevision} state={state} onRecord={onRecord} onClearPhysicalAsset={onClearPhysicalAsset}/>:<section className="rounded border bg-[#F7F1E6] ps-4 pe-4 py-4"><h2>منصة استلام الأعمال / Loading Dock Receiving</h2><p>Open the executive workflow Logistics workspace to inspect the active agreement. This overview cannot grant session financial clearance.</p></section>}<FreightPickupScheduler logistics/>
+{state&&onRecord?<CrateReceiving key={state.agreementRevision} state={state} onRecord={onRecord} onClearPhysicalAsset={onClearPhysicalAsset}/>:<section className="rounded border bg-[#F7F1E6] ps-4 pe-4 py-4"><h2>منصة استلام الأعمال / Loading Dock Receiving</h2><p>Open the executive workflow Logistics workspace to inspect the active agreement. This overview cannot grant session financial clearance.</p></section>}<DigitalConditionReports actor="LOGISTICS"/><FreightPickupScheduler logistics/>
       {/* Toast */}
       {rfqSuccessToast && (
         <div className="fixed top-20 end-6 z-50 bg-sadu-brick text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-2 text-xs font-semibold animate-in fade-in">

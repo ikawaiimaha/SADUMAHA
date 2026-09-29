@@ -77,6 +77,9 @@ export type ThemeStatus =
   | 'PUBLISHED_OFFICIAL';
 
 export type ArtistStatus = 
+  | 'DAMAGED_PENDING_ARTIST_APPROVAL'
+  | 'REPAIR_AUTHORIZED'
+  | 'ARTIST_REPAIR_PLANNED'
   | 'ARCHIVED_CLOSED'
   | 'EXECUTIVE_IMPOUND'
   | 'NOMINATED'

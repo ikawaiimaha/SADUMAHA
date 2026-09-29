@@ -1,3 +1,4 @@
+import {passportFormat,INVALID_PR_FORMAT} from '../data/prFileValidation';
 import {useEffect,useRef,useState} from 'react';
 import {UploadCloud,ShieldCheck} from 'lucide-react';
 import {pilotSupabase as client} from '../lib/pilotSupabase';
@@ -33,6 +34,7 @@ export function ContractSecureIntake(){
  }
  async function upload(kind:Kind,file:File){
   if(!client||!contract||pending.current)return;
+  if(kind==='PASSPORT'&&!passportFormat(file)){setMessage(INVALID_PR_FORMAT);return;}
   const allowed=kind==='PASSPORT'?/\.pdf$/i:/\.(png|tif|tiff)$/i;
   const limit=kind==='PASSPORT'?10*1024*1024:MEDIA_LIMIT;
   if(!allowed.test(file.name)||file.size<=0||file.size>limit){setMessage(kind==='PASSPORT'?'Choose a nonempty PDF up to 10 MB.':'Choose a TIFF/PNG up to 2 GiB.');return;}

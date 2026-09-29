@@ -1,3 +1,4 @@
+import {validVisaIntake} from '../data/visaIntake';
 import {HospitalityTravel} from './HospitalityTravel';
 import { VisaIntakeReview } from './VisaIntake';
 import React from 'react';
@@ -22,7 +23,8 @@ export function PRWorkspace({ isAr, state, onCheck, onClearPR }: PRWorkspaceProp
     <HospitalityTravel review/>
     {intake && <VisaIntakeReview intake={intake} isAr={isAr}/>}
     <CommissionSummary isAr={isAr} showTechnical={false} />
-    {state.contracts[0] && <TravelVault key={state.contracts[0].artistId} artistId={state.contracts[0].artistId} isAr={isAr} dispatcher cleared={e.prEvidenceGate && Boolean(e.prRecordedAt)} />}
+    {(!intake||!validVisaIntake(intake))&&<p role="status">Travel dispatch locked: valid passport PDF and high-resolution personal photo intake required.</p>}
+    {state.contracts[0] && <TravelVault key={state.contracts[0].artistId} artistId={state.contracts[0].artistId} isAr={isAr} dispatcher cleared={e.prEvidenceGate && Boolean(e.prRecordedAt) && Boolean(intake&&validVisaIntake(intake))} />}
     <section className={panel}>
       <h2 className="text-xl font-semibold mb-3">{isAr ? 'مراجعة المستندات البشرية — محاكاة' : 'Human logistics review — simulation'}</h2>
       <p className="text-sm mb-4">{isAr ? 'تسجيل نتيجة فحص خيالية للهوية والسفر فقط. لا تحميل لمستندات شخصية حقيقية ولا اعتماد مالي.' : 'Record a fictional identity and travel review only. No real personal documents are uploaded and no payment is authorized.'}</p>

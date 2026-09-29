@@ -1,3 +1,4 @@
+import {DigitalConditionReports} from './DigitalConditionReports';
 import {FreightPickupScheduler} from './FreightPickupScheduler';
 import {HospitalityTravel} from './HospitalityTravel';
 import {GalleryAllocationLedger} from './GalleryAllocationLedger';
@@ -176,12 +177,13 @@ export default function ArtistPortalWorkspace({
   const directoryArtistId = activeContract?.artistId ?? profileArtistId;
   if (contracts && !activeContract) return <>{directoryArtistId && <MissingDeliverables artistId={directoryArtistId} isAr={isAr}/>} {directoryArtistId && <LivingProfileEditor artistId={directoryArtistId} isAr={isAr} legalName={invitation?.legalName}/>}<p className="ps-6 pe-6 py-6 text-start" dir={isAr ? 'rtl' : 'ltr'}>{isAr ? 'بانتظار إنشاء الاتفاقية في مكتب المنسق.' : 'Waiting for the Coordinator to create the agreement.'}</p></>;
 
+  if(conditionState?.conditionReports?.some(r=>r.artistId===activeContract?.artistId&&r.condition==='DAMAGED'&&!r.repairChoice))return <div className="bg-red-50 ps-6 pe-6 py-6"><h1 className="text-2xl text-red-900">Damage report requires your review / تقرير ضرر يستلزم المراجعة</h1><ConditionReporting state={conditionState} isAr={isAr} actor="ARTIST" onRecord={onSubmitCatalog}/></div>;
   return (
-    <div className="min-h-screen bg-[#F7F1E6] p-6 text-[#2C2A29] font-sans text-start" dir={isAr ? 'rtl' : 'ltr'}>
+    <DigitalConditionReports actor="ARTIST"><div className="min-h-screen bg-[#F7F1E6] p-6 text-[#2C2A29] font-sans text-start" dir={isAr ? 'rtl' : 'ltr'}>
       {activeContract && invitation?.status === 'IDENTITY_CONFIRMED' && <ConfirmedAgreementDocument contract={activeContract} invitation={invitation} isAr={isAr} />}
       {directoryArtistId && <MissingDeliverables artistId={directoryArtistId} isAr={isAr}/>}
       {directoryArtistId && <LivingProfileEditor artistId={directoryArtistId} isAr={isAr} legalName={invitation?.legalName}/>}
-      {conditionState && activeContract?.artistId === conditionState.contracts[0]?.artistId && <ConditionReporting state={conditionState} isAr={isAr} actor="ARTIST" />}
+      {conditionState && activeContract?.artistId === conditionState.contracts[0]?.artistId && <ConditionReporting state={conditionState} isAr={isAr} actor="ARTIST" onRecord={onSubmitCatalog} />}
       {activeContract && <>
         <TravelStatusTracker key={`status:${activeContract.artistId}`} artistId={activeContract.artistId} passportDone={passportDone} isAr={isAr} />
         <TravelVault key={activeContract.artistId} artistId={activeContract.artistId} isAr={isAr} />
@@ -463,6 +465,6 @@ export default function ArtistPortalWorkspace({
         />
       )}
 
-    </div>
+    </div></DigitalConditionReports>
   );
 }
