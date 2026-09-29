@@ -1,3 +1,4 @@
+import {requiresTechnicalRider,validTechnicalRider} from './technicalRider';
 import type {NominatedArtistDossier} from '../components/ArtistNominationForm';
 import {activeSpatialClaim,type SpatialClaim} from './spatialClaims';
 import type {Governance,VenueApproval} from './venueGovernance';
@@ -16,7 +17,7 @@ export function technicalMatrixTicket(d:NominatedArtistDossier,requirement:Techn
   return {id:`matrix:${d.id}:${encodeURIComponent(binding)}`,artistId:d.id,venueId:claim.venueId,authority:claim.curator,coordinator:claim.coordinatorName,
     title:`${d.artistName} · ${claim.spaceId} · ${requirement.equipment} · ${requirement.specifications}`,
     constraints:[`Room: ${claim.spaceId}`,`Equipment: ${requirement.equipment}`,`Specifications: ${requirement.specifications}`,`Mounting: ${requirement.mounting}`, 'Confirm suitability and all required mounting/safety conditions before clearing.'],
-    blocked:blocked||Boolean(d.amendments?.some(a=>a.status==='PENDING'))};
+    blocked:blocked||(requiresTechnicalRider(d.medium,d.mediumTag)&&!validTechnicalRider(d.technicalRider))||Boolean(d.amendments?.some(a=>a.status==='PENDING'))};
 }
 export function matrixCleared(ticket:Omit<VenueApproval,'status'>|null,state:Governance):boolean {
   if(!ticket||ticket.blocked)return false;

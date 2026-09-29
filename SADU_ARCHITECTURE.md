@@ -1,3 +1,10 @@
+# 29 September 2026 — Stage 4 technical safety rider
+
+Sculpture and 3D Installation medium tags, plus explicit English/Arabic sculpture labels in the medium field, require a Technical & Safety Rider PDF before nomination submission, Committee endorsement or Director eligibility. The rehearsal checks PDF header/extension/type and a 20 MiB limit. Changing the medium/tag clears the draft attachment. Existing approved sample dossiers without a required rider are not fabricated as compliant; their dispatch is blocked. Scope amendments cannot silently change to a new sculptural medium and reuse the old rider.
+
+The same dossier File is read by Committee/Director and the Technical matrix. The rehearsal Venue Host panel automatically displays riders only for approved dossiers with an active room claim matching the selected venue, providing the museum operations/assigned-curator view. No manual forwarding or per-file sharing action is required. This is explicitly browser-session routing, not backend ACL provisioning; files disappear on refresh. Production museum supervisor/curator identities and authenticated assignment mapping remain unimplemented. Upload is evidence, never structural or installation approval.
+
+---
 # 29 September 2026 — Required blueprint and private execution evidence
 
 Authenticated scenario zones may declare requires_spatial_planning=true. Each such zone requires a private BLUEPRINT PDF (maximum 20 MiB) alongside its declared print/video media. Header checking is an intake check, not malware scanning or engineering approval. Final submission and live escrow readiness enforce the PDF requirement at the database layer. A blueprint cannot substitute for artwork/catalog media. The submitted requirement and media registry remain immutable.

@@ -1,3 +1,4 @@
+import {TechnicalRiderReference} from './TechnicalRider';
 import {MonitorPlay,Plus,Trash2,ShieldCheck} from 'lucide-react';
 import {HARDWARE,MOUNTING,technicalMatrixTicket,matrixCleared,type TechnicalRequirement} from '../data/technicalMatrix';
 import {useSessionDraft} from '../context/SessionDrafts';
@@ -21,7 +22,7 @@ export function GreenlightedTechnicalMatrix({dossier,isAr,blocked=false,register
  const [claims]=useSessionDraft<SpatialClaim[]>('spatial-claims:biennial-2026',[]);
  const [governance]=useSessionDraft<Governance>('venue-governance:v1',emptyGovernance);
  const claim=activeSpatialClaim(claims,dossier.id);
- return <section className="my-4 space-y-3 rounded border border-[#D9CEBA] bg-[#F7F1E6] ps-5 pe-5 py-5 text-start"><h2 className="flex items-center gap-2 text-xl"><ShieldCheck aria-hidden="true"/>{isAr?'مصفوفة التصاريح التقنية':'Greenlighted Technical Matrix'}</h2><h3>{dossier.artistName}</h3>
+ return <section className="my-4 space-y-3 rounded border border-[#D9CEBA] bg-[#F7F1E6] ps-5 pe-5 py-5 text-start"><h2 className="flex items-center gap-2 text-xl"><ShieldCheck aria-hidden="true"/>{isAr?'مصفوفة التصاريح التقنية':'Greenlighted Technical Matrix'}</h2><h3>{dossier.artistName}</h3><TechnicalRiderReference dossier={dossier}/>
  <p className="text-sm">{isAr?'سجل محاكاة مشترك — اعتماد العمل أو حجز القاعة لا يمنح تصريح تركيب.':'Shared rehearsal record — artwork approval or a room claim does not grant installation clearance.'}</p>
  <p>{claim?`${VENUE_SPACES.find(v=>v.id===claim.spaceId)?.[isAr?'ar':'en']} · ${claim.curator}`:(isAr?'بانتظار تخصيص القاعة':'Awaiting room allocation')}</p>
  {!dossier.technicalRequirements?.length&&<p>{isAr?'لم تسجل متطلبات تقنية؛ لا يفترض النظام تصريحاً.':'No technical requirements recorded; clearance is not inferred.'}</p>}

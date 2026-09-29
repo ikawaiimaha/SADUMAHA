@@ -1,3 +1,4 @@
+import {TechnicalRiderReference} from './TechnicalRider';
 import {NativeModal} from './common/NativeModal';
 import {DossierTimeline} from './DossierTimeline';
 import { CollectionCloseout } from './CollectionCloseout';
@@ -591,7 +592,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
                 </div>
 
                 {/* Director Actions: Approve (Green) & Veto / Reject (Red) */}
-                <CulturalVerificationCard dossier={artist} isAr={isAr} />
+                <TechnicalRiderReference dossier={artist}/><CulturalVerificationCard dossier={artist} isAr={isAr} />
                 {!!artist.technicalRequirements?.length&&<section className="mt-3 text-sm"><h4 className="font-semibold">{isAr?'المتطلبات التقنية المسجلة':'Recorded technical requirements'}</h4><ul className="list-disc ps-5">{artist.technicalRequirements.map(r=><li key={r.id}>{r.equipment} · {r.specifications} · {r.mounting}</li>)}</ul></section>}
                 <label className="mt-3 block text-sm">{isAr?'صفة المستلم المعتمدة لحزمة الوصول':'Approved arrival recipient designation'}
                   <select disabled={!directorEligible(artist,blocklist)} value={artist.status==='APPROVED'?(artist.arrivalRecipientTag??''):(arrivalTags[artist.id]??'GUEST_ARTIST')} onChange={e=>setArrivalTags(tags=>({...tags,[artist.id]:e.target.value as 'GUEST_ARTIST'|'JURY_MEMBER'}))} className="block w-full rounded border border-sadu-gold bg-[#F7F1E6] ps-3 pe-3 py-2 disabled:opacity-60">

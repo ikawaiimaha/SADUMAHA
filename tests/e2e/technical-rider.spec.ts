@@ -1,0 +1,12 @@
+import {test,expect} from '@playwright/test';
+test('safety rider reaches technical and only the assigned venue reader',async({page})=>{
+ await page.route('**/src/main.tsx*',route=>route.fulfill({contentType:'application/javascript',body:`
+ import React from '/node_modules/.vite/deps/react.js';import ReactDOM from '/node_modules/.vite/deps/react-dom_client.js';import {SessionDraftProvider,useSessionDraft} from '/src/context/SessionDrafts.tsx';import {TechnicalRiderUpload,TechnicalRiderReference} from '/src/components/TechnicalRider.tsx';import {GovernanceDesk} from '/src/components/VenueGovernance.tsx';import '/src/index.css';const h=React.createElement;
+ function App(){const [rider,setRider]=React.useState();const [desk,setDesk]=React.useState('upload');const [,setClaims]=useSessionDraft('spatial-claims:biennial-2026',[]);React.useEffect(()=>setClaims([{artistId:'a',spaceId:'sam-hall-1',venueId:'SHARJAH_ART_MUSEUM',curator:'Sharjah Art Museum — Venue Curator'}]),[]);const d={id:'a',artistName:'Fictional sculpture',medium:'Sculpture',status:'APPROVED',technicalRider:rider};return h('main',{style:{padding:16}},...['upload','technical','venue'].map(v=>h('button',{onClick:()=>setDesk(v),key:v},v)),desk==='upload'?h(TechnicalRiderUpload,{value:rider,onChange:setRider}):desk==='technical'?h(TechnicalRiderReference,{dossier:d}):h(GovernanceDesk,{role:'TECHNICAL',pending:[],dossiers:[d]}));}
+ ReactDOM.createRoot(document.getElementById('root')).render(h(SessionDraftProvider,null,h(App)));window.dispatchEvent(new Event('sadu:ready'));
+ `}));
+ await page.goto('/');const input=page.getByLabel('Safety rider PDF');await input.setInputFiles({name:'bad.pdf',mimeType:'application/pdf',buffer:Buffer.from('not PDF')});await expect(page.getByRole('status')).toContainText('Choose a PDF');
+ await input.setInputFiles({name:'rider.pdf',mimeType:'application/pdf',buffer:Buffer.from('%PDF-1.7 sample')});await expect(page.getByRole('status')).toContainText('recorded');
+ await page.getByRole('button',{name:'technical',exact:true}).click();await expect(page.getByRole('link',{name:'Download safety instructions'})).toBeVisible();
+ await page.getByRole('button',{name:'venue',exact:true}).click();await page.locator('summary').click();await expect(page.getByRole('link',{name:'Download safety instructions'})).toBeVisible();await page.getByRole('combobox',{name:/Venue authority/}).selectOption('HOUSE_OF_WISDOM');await expect(page.getByRole('link',{name:'Download safety instructions'})).toHaveCount(0);
+});

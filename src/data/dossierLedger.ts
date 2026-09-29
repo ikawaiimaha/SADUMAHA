@@ -1,3 +1,4 @@
+import {requiresTechnicalRider,validTechnicalRider} from './technicalRider';
 import type { NominatedArtistDossier } from '../components/ArtistNominationForm';
 import { matchedRestriction } from './vetting';
 import { validSoloCount } from './participation2026';
@@ -14,10 +15,11 @@ export function requestScopeChange(d: NominatedArtistDossier, coordinatorId: str
 export function reviewScopeChange(d: NominatedArtistDossier, id: string, approve: boolean, actor: string, tags: string[], contractLocked: boolean, at: string): NominatedArtistDossier {
   const a = d.amendments?.find(a => a.id === id);
   if (actor !== 'BIENNIAL_DIRECTOR' || d.status !== 'APPROVED' || !a || a.status !== 'PENDING' || a.baseRevision !== (d.approvalRevision ?? 1) || !Number.isFinite(Date.parse(at)) || (approve && (contractLocked || matchedRestriction({...d,...a.proposed},tags)))) return d;
+  if(approve&&requiresTechnicalRider(a.proposed.medium,d.mediumTag)&&(a.proposed.medium!==d.medium||!validTechnicalRider(d.technicalRider)))return d;
   return {...d,...(approve ? a.proposed : {}), approvalRevision:(d.approvalRevision ?? 1) + (approve ? 1 : 0), amendments:d.amendments!.map(row => row.id === id ? {...row,status:approve ? 'APPROVED' : 'REJECTED',decidedAt:at} : row)};
 }
 export function readyForDispatch(d: NominatedArtistDossier): boolean {
-  return d.status === 'APPROVED' && Boolean(d.assignedCoordinatorId) && !d.amendments?.some(a => a.status === 'PENDING') && !d.dispatchHistory?.some(row => row.revision === (d.approvalRevision ?? 1));
+  return (!requiresTechnicalRider(d.medium,d.mediumTag)||validTechnicalRider(d.technicalRider)) && d.status === 'APPROVED' && Boolean(d.assignedCoordinatorId) && !d.amendments?.some(a => a.status === 'PENDING') && !d.dispatchHistory?.some(row => row.revision === (d.approvalRevision ?? 1));
 }
 export function recordDossierDispatch(d: NominatedArtistDossier, actor: string, publicationReady: boolean, at: string, coordinatorId?:string): NominatedArtistDossier {
   if (actor !== 'COORDINATOR' || coordinatorId !== d.assignedCoordinatorId || !publicationReady || !readyForDispatch(d) || !Number.isFinite(Date.parse(at))) return d;

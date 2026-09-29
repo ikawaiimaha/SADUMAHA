@@ -1,3 +1,4 @@
+import {TechnicalRiderReference} from './TechnicalRider';
 import {textualCleared} from '../data/culturalDeclaration';
 import {DossierTimeline} from './DossierTimeline';
 import { useEffect, useState } from 'react';
@@ -32,7 +33,7 @@ function Candidate({d,isAr,tags,onReview}:{d:NominatedArtistDossier;isAr:boolean
       {!url&&!d.portfolioFiles?.length&&<p>{t('لم يسجل رابط أو مرفق قابل للعرض في هذا الملف.','No viewable portfolio link or attachment recorded for this dossier.')}</p>}
     </div>
     <DossierTimeline dossier={d} isAr={isAr}/>
-    <CulturalVerificationCard dossier={d} isAr={isAr}/>
+    <TechnicalRiderReference dossier={d}/><CulturalVerificationCard dossier={d} isAr={isAr}/>
     {pending?<><label className="block">{t('محضر اجتماع اللجنة — إلزامي للرفض','Committee consensus minutes — required for rejection')}<textarea maxLength={4000} rows={3} value={minutes} onChange={e=>setMinutes(e.target.value)} className="mt-2 w-full rounded border border-[#736357] bg-[#F7F1E6] ps-3 pe-3 py-2 text-start"/></label>
       <div className="flex flex-wrap gap-3"><button disabled={blocked||!validDossier(d)||!textualCleared(d)} onClick={()=>onReview(d.id,true,minutes)} className="inline-flex items-center gap-2 rounded sadu-action-approve ps-4 pe-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"><Vote aria-hidden="true" size={18}/>{t('اعتماد الترشيح للإدارة','Endorse to Director')}</button>
       <button disabled={!minutes.trim()} onClick={()=>onReview(d.id,false,minutes)} className="inline-flex items-center gap-2 rounded sadu-action-reject ps-4 pe-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"><FileX2 aria-hidden="true" size={18}/>{t('رفض بقرار اللجنة','Committee Rejection')}</button></div></>:<div role="status"><p>{d.status==='COMMITTEE_REJECTED'?t('مرفوض بقرار اللجنة التحضيرية','Rejected by Committee Consensus'):t('أحيل إلى المدير بعد اعتماد اللجنة','Endorsed to Director by the Committee')}</p><p className="whitespace-pre-wrap">{d.committeeReview?.minutes}</p><time>{d.committeeReview?.at&&new Date(d.committeeReview.at).toLocaleString(isAr?'ar-AE':'en-GB')}</time></div>}

@@ -1320,3 +1320,15 @@ test('spatial planning requires a PDF blueprint separate from print/video media'
  assert.equal(await mediaContentType(new File(['%PDF-1.7'],'layout.pdf'),'BLUEPRINT'),'application/pdf');
  const large=new File(['%PDF-1.7'],'layout.pdf');Object.defineProperty(large,'size',{value:20971521});assert.equal(await mediaContentType(large,'BLUEPRINT'),null);
 });
+
+import {requiresTechnicalRider,readTechnicalRider,validTechnicalRider} from '../src/data/technicalRider';
+test('sculpture rider is mandatory at nomination and must be a bounded PDF',async()=>{
+ assert.equal(requiresTechnicalRider('Bronze sculpture'),true);
+ assert.equal(requiresTechnicalRider('Video','3D_INSTALLATION'),true);
+ assert.equal(requiresTechnicalRider('Calligraphy'),false);
+ assert.equal(await readTechnicalRider(new File(['fake'],'rider.pdf',{type:'application/pdf'})),null);
+ const rider=await readTechnicalRider(new File(['%PDF-1.7 test'],'rider.pdf',{type:'application/pdf'}));assert.equal(validTechnicalRider(rider??undefined),true);
+ const d={...dossier,medium:'Sculpture'};
+ assert.equal(queueNomination(d,'COORDINATOR',ASSIGNED_COORDINATOR,[]),null);
+ assert.equal(queueNomination({...d,technicalRider:rider!},'COORDINATOR',ASSIGNED_COORDINATOR,[])?.status,'PENDING_COMMITTEE_REVIEW');
+});

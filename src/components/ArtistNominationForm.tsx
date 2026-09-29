@@ -1,3 +1,5 @@
+import {TechnicalRiderUpload} from './TechnicalRider';
+import {requiresTechnicalRider,validTechnicalRider,type TechnicalRider,type MediumTag} from '../data/technicalRider';
 import { safePortfolioUrl } from '../data/vetting';
 import {TechnicalRequirementsEditor} from './TechnicalRequirements';
 import {validTechnicalRequirements,type TechnicalRequirement} from '../data/technicalMatrix';
@@ -24,6 +26,8 @@ import {
 export type ArtistCategory = 'Emerging' | 'Established';
 
 export interface NominatedArtistDossier {
+  mediumTag?:MediumTag;
+  technicalRider?:TechnicalRider;
   technicalRequirements?: TechnicalRequirement[];
   arrivalRecipientTag?: import('../data/arrivalPackage').ArrivalRecipientTag;
   geographicRegion?: import('../data/regionalDelegation').Region;
@@ -94,6 +98,8 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
   const [artistCategory, setArtistCategory] = useState<ArtistCategory | ''>('');
   const [nationality, setNationality] = useState('');
   const [style,setStyle]=useState('');
+  const [mediumTag,setMediumTag]=useState<MediumTag>('OTHER');
+  const [technicalRider,setTechnicalRider]=useState<TechnicalRider>();
   const [medium, setMedium] = useState('');
   const [proposedWorkTitle, setProposedWorkTitle] = useState('');
   // Hardening #1: Dynamic Dossier Schema toggle
@@ -117,7 +123,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
   const [submitSuccess, setSubmitSuccess] = useState<boolean>(false);
 
   const artworkValid =
-    artistName.trim() !== '' && nationality.trim() !== '' && medium.trim() !== '' && proposedWorkTitle.trim() !== '' &&
+    (!requiresTechnicalRider(medium,mediumTag)||validTechnicalRider(technicalRider)) && artistName.trim() !== '' && nationality.trim() !== '' && medium.trim() !== '' && proposedWorkTitle.trim() !== '' &&
     (isCommissioned || Boolean(provenance && provenance.size > 0)) &&
     (artistCategory === 'Emerging' || artistCategory === 'Established') &&
     Boolean(cvFile && cvFile.size > 0) &&
@@ -156,6 +162,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
     setBlocklistAlert(null);
 
     const dossier: NominatedArtistDossier = {
+      mediumTag:honored?'OTHER':mediumTag,technicalRider:honored?undefined:technicalRider,
       technicalRequirements:honored?[]:technicalRequirements.map(r=>({...r,specifications:r.specifications.trim()})),
       culturalDeclaration: declaration, portfolioUrl:portfolioUrl.trim() || undefined, portfolioFiles,
       id: `dossier-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
@@ -182,7 +189,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
       setSubmitSuccess(false);
       // Reset form
       setArtistName('');
-      setTechnicalRequirements([]);
+      setTechnicalRequirements([]);setMediumTag('OTHER');setTechnicalRider(undefined);
       setTextAnswer('');
       setTextExplanation('');setExactText('');
       setArtistCategory('');
@@ -278,6 +285,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
           <p>{isAr ? 'تراجع اللجنة التحضيرية الإقرارات ضمن مداولات الترشيح.' : 'HIP verifies declared text before Committee endorsement to the Director.'}</p>
         </fieldset>
 
+        {!honored&&<><label className="block">Artwork medium tag<select className="block w-full rounded border ps-3 pe-3 py-2" value={mediumTag} onChange={e=>{setMediumTag(e.target.value as MediumTag);setTechnicalRider(undefined);}}><option value="OTHER">Other medium</option><option value="SCULPTURE">Sculpture / نحت</option><option value="3D_INSTALLATION">3D Installation / تركيب ثلاثي الأبعاد</option></select></label>{requiresTechnicalRider(medium,mediumTag)&&<TechnicalRiderUpload key={`${mediumTag}:${medium}`} value={technicalRider} onChange={setTechnicalRider}/>}</>}
         {!honored&&<TechnicalRequirementsEditor rows={technicalRequirements} onChange={setTechnicalRequirements} isAr={isAr}/>}
         <label className="block">{isAr ? 'مسار المشاركة' : 'Participation track'}
           <select className="mt-2 block w-full rounded border ps-3 pe-3 py-2 text-start" value={participationTrack} onChange={e => setParticipationTrack(e.target.value as ParticipationTrack)}>
@@ -397,7 +405,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
                 id="nomination-medium"
                 type="text"
                 value={medium}
-                onChange={e => setMedium(e.target.value)}
+                onChange={e => {setMedium(e.target.value);setTechnicalRider(undefined);}}
                 placeholder={tr("e.g. Ink on Wasli, Bronze Casting")}
                 className="w-full rounded-md border border-sadu-gold/60 p-2 text-xs text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
               />
