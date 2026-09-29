@@ -101,7 +101,7 @@ export default function ArtistNominationBuilder({
   };
 
   return (
-    <div className="bg-[#F7F1E6] p-6 text-[#2C2A29] font-sans text-start rounded-lg border border-[#D9D2C5]" dir="ltr">
+    <div className="bg-[#F7F1E6] p-6 text-[#2C2A29] font-sans text-start rounded-lg border border-[#D9D2C5]" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       
       {/* Header */}
       <header className="mb-6 border-b border-[#D9D2C5] pb-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">

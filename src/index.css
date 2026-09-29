@@ -1,19 +1,24 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
+  --font-sans: 'Inter', 'IBM Plex Sans Arabic', sans-serif;
+  --font-serif: 'Fraunces', 'Amiri', Georgia, serif;
+  --color-sadu-approve: #286044;
+  --color-sadu-approve-hover: #1D4832;
+  --color-sadu-reject: #9B3029;
+  --color-sadu-reject-hover: #7D241F;
   --color-sadu-brick: #8B3A1F;
   --color-sadu-brick-dark: #722F19;
   --color-sadu-brick-light: #FBF4F1;
-  --color-sadu-ink: #2F4A5B;
-  --color-sadu-ink-dark: #233845;
-  --color-sadu-ink-light: #EEF3F6;
+  --color-sadu-ink: #111817;
+  --color-sadu-ink-dark: #0B100F;
+  --color-sadu-ink-light: #EDF0EA;
   --color-sadu-linen: #FFFDF7;
   --color-sadu-sand: #F7F1E6;
   --color-sadu-cream: #F7F1E6;
   --color-sadu-sand-dark: #E7D8C1;
   --color-sadu-gold: #CBB89F;
-  --color-sadu-charcoal: #211B17;
+  --color-sadu-charcoal: #111817;
   --color-sadu-sage: #6F8172;
   --color-sadu-sage-light: #DCE5DC;
   --color-sadu-muted: #6E6259;
@@ -27,21 +32,21 @@
     --surface-white: #FFFDF7;
     --surface-paper: #FFFAF0;
     --surface-muted: #F1E7D6;
-    --text-primary: #211B17;
+    --text-primary: #111817;
     --text-supporting: #6E6259;
     --border-rule: #CBB89F;
     --accent-brick: #8B3A1F;
-    --accent-deepink: #2F4A5B;
+    --accent-deepink: #111817;
     --accent-ochre: #B8893A;
     --state-sage: #6F8172;
-    --font-ui-sans: 'IBM Plex Sans Arabic', 'Noto Sans', 'Segoe UI', sans-serif;
+    --font-ui-sans: 'Inter', 'IBM Plex Sans Arabic', sans-serif;
     --font-ui-rtl: 'IBM Plex Sans Arabic', 'Noto Naskh Arabic', 'Noto Sans', sans-serif;
   }
 
   html,
   body {
     font-family: var(--font-ui-sans);
-    color: #211B17;
+    color: #111817;
     background-color: #F7F1E6;
     line-height: 1.6;
     letter-spacing: 0;
@@ -533,7 +538,7 @@ html[lang="ar"] input[type="radio"] {
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #2F4A5B;
+  background: #111817;
 }
 
 /* Global Card Component Stabilization: enforce min-h-[160px] and flex-col layout to prevent layout flickering during transitions */
@@ -640,3 +645,15 @@ html[lang="ar"] input[type="radio"] {
     margin: 15mm 15mm 15mm 15mm;
   }
 }
+
+/* Shared language-aware typography and executive action variants. */
+:root { --font-body: 'Inter', 'IBM Plex Sans Arabic', sans-serif; --font-title: 'Fraunces', 'Amiri', Georgia, serif; }
+[lang="ar"], [dir="rtl"] { --font-body: 'IBM Plex Sans Arabic', 'Inter', sans-serif; --font-title: 'Amiri', 'Fraunces', Georgia, serif; }
+body, .font-sans, .font-ui, .sadu-ui, .sadu-ui * { font-family: var(--font-body); }
+h1, h2, .font-serif, .font-editorial, [dir="rtl"] .font-editorial, [lang="ar"] .font-editorial { font-family: var(--font-title); }
+.sadu-action-approve { background-color: var(--color-sadu-approve); color: #FFFDF7; }
+.sadu-action-reject { background-color: var(--color-sadu-reject); color: #FFFDF7; }
+.sadu-action-approve:enabled:hover { background-color: var(--color-sadu-approve-hover); }
+.sadu-action-reject:enabled:hover { background-color: var(--color-sadu-reject-hover); }
+.sadu-action-approve:disabled, .sadu-action-reject:disabled { opacity: .5; cursor: not-allowed; }
+.sadu-action-approve:focus-visible, .sadu-action-reject:focus-visible { outline: 2px solid var(--color-sadu-ink); outline-offset: 3px; }

@@ -597,7 +597,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
                     className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-xs font-bold transition-colors cursor-pointer ${
                       artist.status === 'APPROVED'
                         ? 'bg-emerald-100 text-emerald-800 cursor-not-allowed border border-emerald-300'
-                        : 'bg-emerald-700 text-white hover:bg-emerald-800 shadow-xs'
+                        : 'sadu-action-approve shadow-xs'
                     }`}
                   >
                     <CheckCircle className="h-3.5 w-3.5" />
@@ -610,7 +610,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
                       setActiveVetoArtistId(artist.id);
                       setSelectedVetoReason('');
                     }}
-                    className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-md bg-red-700 px-3 py-2 text-xs font-bold text-white shadow-xs hover:bg-red-800 transition-colors cursor-pointer"
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-md sadu-action-reject px-3 py-2 text-xs font-bold text-white shadow-xs  transition-colors cursor-pointer"
                   >
                     <XCircle className="h-3.5 w-3.5" />
                     <span>{artist.status === 'VETOED' ? tr('Edit Veto') : tr('Veto / Reject')}</span>
@@ -726,7 +726,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
                 <button
                   type="submit"
                   disabled={!VETO_REASONS.includes(selectedVetoReason)}
-                  className="disabled:opacity-50 disabled:cursor-not-allowed rounded-md bg-red-700 ps-4 pe-4 py-1.5 text-xs font-bold text-white hover:bg-red-800 shadow-xs cursor-pointer"
+                  className="disabled:opacity-50 disabled:cursor-not-allowed rounded-md sadu-action-reject ps-4 pe-4 py-1.5 text-xs font-bold text-white  shadow-xs cursor-pointer"
                 > {tr("Confirm Executive Veto")} </button>
               </div>
             </form>

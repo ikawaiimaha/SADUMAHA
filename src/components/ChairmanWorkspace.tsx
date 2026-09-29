@@ -249,7 +249,7 @@ const ChairmanDecisions: React.FC<ChairmanWorkspaceProps> = ({
             <p dir="auto" className="mt-2 whitespace-pre-wrap text-lg leading-relaxed">{winningTheme.chairmanNotes}</p>
           </section>}
           {/* Large Official Theme Ratified Success Banner */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border-2 border-sadu-brick/40 bg-gradient-to-r from-sadu-brick-light via-sadu-sand to-sadu-paper p-6 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border-2 border-sadu-brick/40 bg-sadu-linen p-6 shadow-sm">
             <div className="flex items-start sm:items-center gap-4">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-sadu-brick text-white shadow-xs">
                 {isBudgetAssigned ? <Lock className="h-6 w-6" /> : <Clock className="h-6 w-6" />}
@@ -333,7 +333,7 @@ const ChairmanDecisions: React.FC<ChairmanWorkspaceProps> = ({
             </div>
           </div>
           {/* OFFICIAL BUDGET ASSIGNMENT SECTION */}
-          <div className="rounded-xl border-2 border-sadu-gold bg-gradient-to-b from-white to-sadu-paper p-6 shadow-sm space-y-5">
+          <div className="rounded-xl border-2 border-sadu-gold bg-sadu-linen p-6 shadow-sm space-y-5">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-sadu-gold/40 pb-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sadu-brick text-white shadow-2xs">
@@ -451,7 +451,7 @@ const ChairmanDecisions: React.FC<ChairmanWorkspaceProps> = ({
                 onClick={handleAssignBudget}
                 disabled={!isBudgetValid}
                 aria-describedby="budget-validation"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-sadu-brick px-6 py-3.5 text-xs font-bold text-white shadow-xs transition-colors enabled:hover:bg-sadu-brick-dark disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-md sadu-action-approve ps-6 pe-6 py-3.5 text-xs font-bold text-white shadow-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 <Banknote className="h-4 w-4" />
                 <span>{tr("Authorize Budget & Transfer Authority")}</span>
@@ -532,7 +532,7 @@ const ChairmanDecisions: React.FC<ChairmanWorkspaceProps> = ({
                   <button
                     type="button"
                     onClick={() => handleApprove(index)}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-sadu-brick px-4 py-2.5 text-xs font-bold text-white shadow-xs transition-colors hover:bg-sadu-brick-dark cursor-pointer"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-md sadu-action-approve ps-4 pe-4 py-2.5 text-xs font-bold text-white shadow-xs transition-colors cursor-pointer"
                   >
                     <CheckCircle2 className="h-4 w-4" /> {isAr ? 'اختيار المقترح' : 'Select proposal'} </button>
                 </div>

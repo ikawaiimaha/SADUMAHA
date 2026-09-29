@@ -696,18 +696,13 @@ function SADUApp() {
       case 'PREP_COMMITTEE':
         return (
           <div className="space-y-6 max-w-6xl mx-auto py-6 px-4 sm:px-6">
-            <CommitteeNominationLedger dossiers={nominatedArtists} tags={blocklist} isAr={isAr} onReview={(id,endorse,minutes)=>{
-              if(activeRole!=='PREP_COMMITTEE')return;
-              setNominatedArtists(rows=>rows.map(d=>d.id===id?reviewByCommittee(d,activeRole,endorse,minutes,blocklist,new Date().toISOString()):d));
-            }}/>
-            <MasterDirectory isAr={isAr} />
             <div className="flex justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setIsNominationFormOpen(false)}
                 className={`rounded px-3 py-1.5 text-xs font-bold transition-colors cursor-pointer ${
                   !isNominationFormOpen
-                    ? 'bg-[#8B4513] text-white shadow-xs'
+                    ? 'bg-sadu-brick text-white shadow-xs'
                     : 'bg-white border border-[#D9D2C5] text-[#2C2A29] hover:bg-stone-50'
                 }`}
               > {isAr ? 'المرحلة 1 · مقترحات الثيمة' : 'Stage 1 · Theme proposals'} </button>
@@ -716,13 +711,19 @@ function SADUApp() {
                 disabled={!nominationOpen(publishedBoundaries)} onClick={() => {if(nominationOpen(publishedBoundaries))setIsNominationFormOpen(true);}}
                 className={`rounded px-3 py-1.5 text-xs font-bold transition-colors cursor-pointer ${
                   isNominationFormOpen
-                    ? 'bg-[#8B4513] text-white shadow-xs'
+                    ? 'bg-sadu-brick text-white shadow-xs'
                     : 'bg-white border border-[#D9D2C5] text-[#2C2A29] hover:bg-stone-50'
                 }`}
               > {isAr ? 'المرحلة 4 · ترشيح الفنانين' : 'Stage 4 · Artist nominations'} </button>
             </div>
 
             {isNominationFormOpen && nominationOpen(publishedBoundaries) ? (
+              <>
+            <CommitteeNominationLedger dossiers={nominatedArtists} tags={blocklist} isAr={isAr} onReview={(id,endorse,minutes)=>{
+              if(activeRole!=='PREP_COMMITTEE')return;
+              setNominatedArtists(rows=>rows.map(d=>d.id===id?reviewByCommittee(d,activeRole,endorse,minutes,blocklist,new Date().toISOString()):d));
+            }}/>
+            <MasterDirectory isAr={isAr} />
               <ArtistNominationForm
                 curatorialBrief={curatorialBrief}
                 blocklist={blocklist}
@@ -730,6 +731,7 @@ function SADUApp() {
                 submittedBy="Preparatory Committee"
                 onCancel={() => setIsNominationFormOpen(false)}
               />
+              </>
             ) : (
               <CommitteeThemeWorkspace
             onCancelAutoNavigate={() => setPendingNavigation(null)}
@@ -969,7 +971,7 @@ function SADUApp() {
         {!['CHAIRMAN', 'BIENNIAL_DIRECTOR', 'EDITORIAL', 'HIP', 'ROLES', 'PR_PROTOCOL', 'TECHNICAL', 'FINANCE'].includes(activeRole) && (activeRole !== 'PREP_COMMITTEE' || isNominationFormOpen) && (activeRole !== 'COORDINATOR' || nominationOpen(publishedBoundaries)&&activeCoordinatorId === commissionCoordinatorId) && <aside className="border-b border-[#D9CEBA] ps-4 pe-4 py-3 text-start" dir={isAr ? 'rtl' : 'ltr'}>
           <CommissionSummary isAr={isAr} legalName={commission.invitation?.legalName} showTechnical={activeRole !== 'PR_PROTOCOL'} />
         </aside>}
-        {(activeRole!=='COORDINATOR'||nominationOpen(publishedBoundaries))&&<GovernanceDesk role={activeRole} pending={activeRole==='PR_PROTOCOL'&&!commission.evidence.prEvidenceGate?['Identity & Travel approval']:activeRole==='BIENNIAL_DIRECTOR'?nominatedArtists.filter(d=>d.status==='PENDING_DIRECTOR_REVIEW').map(d=>`Director decision: ${d.artistName}`):[]} blockedArtistIds={damageHold(commission)||['ARCHIVED_CLOSED','EXECUTIVE_IMPOUND'].includes(commission.installationStatus??'')?[COMMISSION.id]:[]}/>}
+
         <DelegatedRoleGate role={activeRole}>
         {activeRole==='COORDINATOR'&&!nominationOpen(publishedBoundaries)?<CuratorialBoundaries isAr={isAr}/>:<>
         {renderWorkspace()}{['COORDINATOR','LOGISTICS'].includes(activeRole)&&<ExhibitionChecklistQueue/>}
@@ -999,6 +1001,7 @@ function SADUApp() {
         {activeRole!=='HIP' && Object.hasOwn(ESCALATION_DEPARTMENTS, activeRole) && <EscalationSubmission key={activeRole} actor={activeRole} isAr={isAr} records={executiveEscalations} onSubmit={input => setExecutiveEscalations(rows => submitEscalation(rows, input, activeRole, new Date().toISOString()))} />}
         </>}
         </DelegatedRoleGate>
+        {(activeRole!=='COORDINATOR'||nominationOpen(publishedBoundaries))&&<GovernanceDesk role={activeRole} pending={activeRole==='PR_PROTOCOL'&&!commission.evidence.prEvidenceGate?['Identity & Travel approval']:activeRole==='BIENNIAL_DIRECTOR'?nominatedArtists.filter(d=>d.status==='PENDING_DIRECTOR_REVIEW').map(d=>`Director decision: ${d.artistName}`):[]} blockedArtistIds={damageHold(commission)||['ARCHIVED_CLOSED','EXECUTIVE_IMPOUND'].includes(commission.installationStatus??'')?[COMMISSION.id]:[]}/>}
       </main>
 
       {/* Presenter Architecture Drawer (Ctrl+Shift+P / ⌘⇧P) */}
