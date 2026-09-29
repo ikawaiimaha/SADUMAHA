@@ -29,6 +29,7 @@ export interface NominatedArtistDossier {
   geographicRegion?: import('../data/regionalDelegation').Region;
   delegationHistory?: {from?:string;to:string;region:string;at:string;by:string}[];
   culturalDeclaration?: CulturalDeclaration;
+  textualVerification?: import('../data/culturalDeclaration').TextualVerification;
   culturalClearedAt?: string; // Historical legacy record; no longer an approval gate.
   committeeReview?: {decision:'ENDORSED'|'REJECTED';minutes:string;at:string;actor:'PREP_COMMITTEE'};
   portfolioUrl?: string;
@@ -85,7 +86,8 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
   const [textAnswer, setTextAnswer] = useState('');
   const [technicalRequirements,setTechnicalRequirements]=useState<TechnicalRequirement[]>([]);
   const [textExplanation, setTextExplanation] = useState('');
-  const declaration = textAnswer ? { containsText: textAnswer === 'YES', explanation: textAnswer === 'YES' ? textExplanation : '' } : undefined;
+  const [exactText, setExactText] = useState('');
+  const declaration = textAnswer ? { containsText: textAnswer === 'YES', explanation: textAnswer === 'YES' ? textExplanation : '', exactText: textAnswer === 'YES' ? exactText : '' } : undefined;
   const honored = participationTrack === 'HONORED_GUEST';
   const [provenance, setProvenance] = useState<File | null>(null);
   const [artistName, setArtistName] = useState('');
@@ -182,7 +184,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
       setArtistName('');
       setTechnicalRequirements([]);
       setTextAnswer('');
-      setTextExplanation('');
+      setTextExplanation('');setExactText('');
       setArtistCategory('');
       setNationality('');
       setMedium(''); setStyle('');
@@ -271,8 +273,9 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
           <label className="block">{isAr ? 'هل يتضمن العمل نصوصاً دينية أو آيات قرآنية أو أحاديث أو عبارات سياسية؟' : "Does this artwork incorporate religious texts, Qur'anic verses, Hadiths, or political statements?"}
             <select required value={textAnswer} onChange={e => setTextAnswer(e.target.value)} className="mt-2 block w-full border ps-3 pe-3 py-2"><option value="">{isAr ? 'اختر إجابة' : 'Select an answer'}</option><option value="YES">{isAr ? 'نعم' : 'Yes'}</option><option value="NO">{isAr ? 'لا' : 'No'}</option></select>
           </label>
-          {textAnswer === 'YES' && <label className="block">{isAr ? 'الترجمة الكاملة والشرح السياقي' : 'Full translation and contextual explanation'}<textarea required value={textExplanation} onChange={e=>setTextExplanation(e.target.value)} className="mt-2 block w-full border ps-3 pe-3 py-2" /></label>}
-          <p>{isAr ? 'تراجع اللجنة التحضيرية الإقرارات ضمن مداولات الترشيح.' : 'The Preparatory Committee reviews declarations collectively during nomination deliberations.'}</p>
+          {textAnswer === 'YES' && <label className="block">{isAr ? 'النص الأصلي كاملاً مع مراجع الآيات والأحاديث' : 'Exact original text, including verse/Hadith references'}<textarea required maxLength={8000} value={exactText} onChange={e=>setExactText(e.target.value)} className="mt-2 block w-full border ps-3 pe-3 py-2" /></label>}
+          {textAnswer === 'YES' && <label className="block">{isAr ? 'الترجمة الكاملة والشرح السياقي' : 'Full translation and contextual explanation'}<textarea required maxLength={8000} value={textExplanation} onChange={e=>setTextExplanation(e.target.value)} className="mt-2 block w-full border ps-3 pe-3 py-2" /></label>}
+          <p>{isAr ? 'تراجع اللجنة التحضيرية الإقرارات ضمن مداولات الترشيح.' : 'HIP verifies declared text before Committee endorsement to the Director.'}</p>
         </fieldset>
 
         {!honored&&<TechnicalRequirementsEditor rows={technicalRequirements} onChange={setTechnicalRequirements} isAr={isAr}/>}

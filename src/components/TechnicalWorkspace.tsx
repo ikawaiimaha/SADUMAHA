@@ -1,3 +1,4 @@
+import {AssetEscrowLedger} from './AssetEscrowLedger';
 import {DigitalConditionReports} from './DigitalConditionReports';
 import { ProductionSpecsLedger } from './ProductionSpecs';
 import { ArtistExecutionBridge } from './ArtistExecutionBridge';
@@ -27,6 +28,7 @@ export default function TechnicalWorkspace({ isAr, state, onCheck, onClearTechni
   return <div dir={isAr ? 'rtl' : 'ltr'} className="max-w-4xl mx-auto ps-4 pe-4 py-6 space-y-5 text-start bg-[#F7F1E6]">
     <h1 className="font-serif text-3xl font-bold">{isAr ? 'الفريق الهندسي والفني' : 'Engineering / Technical Workspace'}</h1>
     {state.contracts[0]&&<ProductionSpecsLedger artistId={state.contracts[0].artistId} contractId={state.contracts[0].id} isAr={isAr}/>}
+    <AssetEscrowLedger/>
     <ArtistExecutionBridge state={state} actor="TECHNICAL"/>
     <DigitalConditionReports actor="TECHNICAL"/><CommissionSummary isAr={isAr} />
     <InstallationIntervention state={state} isAr={isAr} actor="TECHNICAL" />
@@ -58,7 +60,7 @@ export default function TechnicalWorkspace({ isAr, state, onCheck, onClearTechni
       {state.safRequest && <p role="status">{isAr ? 'طلب مسجل؛ تخصيص الجهة الخارجية غير مؤكد' : 'Request recorded; external allocation unconfirmed'} · {state.safRequest.technicians} × {state.safRequest.hours}</p>}
     </section>
     <SpatialVarianceTicket isAr={isAr} />
-    <ProductionBridge key={`production:${state.contracts[0]?.artistId ?? COMMISSION.id}`} artistId={state.contracts[0]?.artistId ?? COMMISSION.id} isAr={isAr} actor="TECHNICAL" />
+    <ProductionBridge revision={state.agreementRevision} blocked={damageHold(state)||['EXECUTIVE_IMPOUND','ARCHIVED_CLOSED'].includes(state.installationStatus??'')} key={`production:${state.contracts[0]?.artistId ?? COMMISSION.id}`} artistId={state.contracts[0]?.artistId ?? COMMISSION.id} isAr={isAr} actor="TECHNICAL" />
     <TechnicalRequestLedger blocked={damageHold(state)||state.installationStatus==='EXECUTIVE_IMPOUND'} key={`technical:${state.contracts[0]?.artistId ?? COMMISSION.id}`} artistId={state.contracts[0]?.artistId ?? COMMISSION.id} artistName={state.contracts[0]?.artistName ?? (isAr ? COMMISSION.artistNameAr : COMMISSION.artistName)} isAr={isAr} />
     </fieldset>
   </div>;

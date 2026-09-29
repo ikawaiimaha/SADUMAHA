@@ -210,7 +210,7 @@ export function commissionReducer(state: CommissionState, action: CommissionActi
   if (action.type === 'acknowledge-alterations') {
     const last = state.impounds?.at(-1);
     if (action.actor !== 'COORDINATOR' || !impounded || !action.confirmed || !last || last.id!==action.impoundId || last.acknowledgedAt || !Number.isFinite(Date.parse(action.at)) || Date.parse(action.at)<Date.parse(last.issuedAt)) return state;
-    return {...state,installationStatus:'CONTRACT_EXECUTED',impounds:state.impounds!.map(r=>r.id===last.id?{...r,acknowledgedAt:action.at}:r)};
+    return {...state,installationStatus:'LOGISTICS_PENDING_PR',impounds:state.impounds!.map(r=>r.id===last.id?{...r,acknowledgedAt:action.at}:r)};
   }
   if (impounded && ['technical-check','record-technical','request-saf','close-exhibition','CONTRACT_DISPUTED','contracts','request-fleet','fleet-transit'].includes(action.type)) return state;
   if (action.type === 'request-fleet') {

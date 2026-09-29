@@ -187,9 +187,10 @@ export default function ArtistPortalWorkspace({
       {activeContract && <>
         <TravelStatusTracker key={`status:${activeContract.artistId}`} artistId={activeContract.artistId} passportDone={passportDone} isAr={isAr} />
         <TravelVault key={activeContract.artistId} artistId={activeContract.artistId} isAr={isAr} />
-        <ProductionBridge key={`production:${activeContract.artistId}`} artistId={activeContract.artistId} isAr={isAr} actor="ARTIST" />
+        <ProductionBridge revision={conditionState?.agreementRevision??1} blocked={!isSigned||['EXECUTIVE_IMPOUND','ARCHIVED_CLOSED'].includes(conditionState?.installationStatus??'')} key={`production:${activeContract.artistId}`} artistId={activeContract.artistId} isAr={isAr} actor="ARTIST" />
       </>}
       
+      {isSigned&&<p role="status" className="rounded border border-amber-300 bg-[#F7F1E6] ps-4 pe-4 py-3">{isAr?'تم قبول الاتفاقية؛ لا يعد العقد منفذاً قبل التحقق من اكتمال الأصول الرقمية في العهدة الآمنة.':'Agreement accepted; execution remains pending verified final digital assets in private escrow.'}</p>}
       {/* Header */}
       <header className="mb-8 border-b border-[#D9D2C5] pb-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>

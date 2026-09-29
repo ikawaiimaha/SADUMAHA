@@ -1,3 +1,5 @@
+import {TextualVerificationLedger} from './components/CulturalVerificationCard';
+import {verifyTextualContent, textualCleared} from './data/culturalDeclaration';
 import {physicalAssetCleared, type CommissionAction} from './data/commissionScenario';
 import {IdleWorkspaceLock} from './components/IdleWorkspaceLock';
 import {CuratorialBoundaries} from './components/CuratorialBoundaries';
@@ -554,7 +556,7 @@ function SADUApp() {
   const handleSignContract = (contractId?: string, signerName?: string) => {
     const target = contracts.find(c => c.id === contractId);
     if (damageHold(commission) || ['ARCHIVED_CLOSED','EXECUTIVE_IMPOUND'].includes(commission.installationStatus ?? '') || activeRole !== 'ARTIST' || !target || target.status !== 'SENT_TO_ARTIST' || signerName !== target.artistName) return;
-    setArtists(previous => previous.map(artist => artist.id === target.artistId ? { ...artist, status: 'CONTRACT_EXECUTED' } : artist));
+    setArtists(previous => previous.map(artist => artist.id === target.artistId ? { ...artist, status: 'LOGISTICS_PENDING_PR' } : artist));
     setContracts(prev =>
       prev.map(c =>
         c.id === contractId
@@ -712,7 +714,7 @@ function SADUApp() {
             onReturnToCommittee={handleReturnToCommittee}
             onPresentToChairman={handlePresentToChairman}
             blocklist={blocklist}
-            nominatedArtists={nominatedArtists.filter(d => ['PENDING_DIRECTOR_REVIEW','APPROVED','VETOED'].includes(d.status))}
+            nominatedArtists={nominatedArtists.filter(d => ['APPROVED','VETOED'].includes(d.status) || (d.status==='PENDING_DIRECTOR_REVIEW' && textualCleared(d)))}
             onVetoArtist={handleVetoArtist}
             onApproveArtist={handleApproveArtist}
             assignedBudget={assignedBudget}
@@ -798,7 +800,7 @@ function SADUApp() {
 
       case 'HIP':
         return (
-          <HIPWorkspace
+          <><TextualVerificationLedger dossiers={nominatedArtists} isAr={isAr} onVerify={id=>setNominatedArtists(rows=>rows.map(d=>d.id===id?verifyTextualContent(d,activeRole,new Date().toISOString()):d))}/><HIPWorkspace
             arabicLocked={arabicLocked}
             publishedBoundaries={publishedBoundaries}
             onPublishBoundaries={confirmed=>setPublishedBoundaries(current=>publishBoundaries(current,activeRole,themePolishStatus,translationStatus,guidelinesArabic,guidelinesEnglish,blocklist,Boolean(restrictionProposal),confirmed,new Date().toISOString()))}
@@ -823,7 +825,7 @@ function SADUApp() {
               setRestrictionProposal({ tags, reason: reason.trim() });
             }}
             ratifiedTheme={ratifiedTheme}
-          />
+          /></>
         );
 
       case 'COORDINATOR':

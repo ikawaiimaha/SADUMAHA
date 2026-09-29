@@ -527,7 +527,7 @@ test('executive impound locks installation and finance until explicit Coordinato
  assert.equal(reduce(held,{...ack,actor:'TECHNICAL'}),held);
  assert.equal(reduce(held,{...ack,confirmed:false}),held);
  const released=reduce(held,ack);
- assert.equal(released.installationStatus,'CONTRACT_EXECUTED');
+ assert.equal(released.installationStatus,'LOGISTICS_PENDING_PR');
  assert.equal(released.evidence.technicalEvidenceGate,false);
  assert.equal(released.impounds?.[0].acknowledgedAt,at);
  assert.equal(reduce(released,ack),released);
@@ -1206,4 +1206,38 @@ test('theme batches require three distinct Arabic proposals without mandatory En
   assert.equal(isThemeBatchComplete(batch.slice(0,2)),false);
   assert.equal(isThemeBatchComplete([proposal, {...proposal,arabicName:' الميزان '},batch[2]]),false);
   assert.equal(isThemeBatchComplete([batch[0],batch[1],{...batch[2],aestheticFramework:''}]),false);
+});
+
+import {verifyTextualContent,textualCleared,validDeclaration} from '../src/data/culturalDeclaration';
+import {completePrototype} from '../src/data/productionBridge';
+test('exact textual verification is HIP-only and precedes Committee to Director handoff',()=>{
+ const text={containsText:true,exactText:'Fictional source text with reference',explanation:'Translation and context'};
+ assert.equal(validDeclaration({...text,exactText:''}),false);
+ const pending=queueNomination({...dossier,culturalDeclaration:text},'COORDINATOR',ASSIGNED_COORDINATOR,[])!;
+ assert.equal(reviewByCommittee(pending,'PREP_COMMITTEE',true,'',[],at),pending);
+ for(const actor of ['TECHNICAL','ARTIST','COORDINATOR','BIENNIAL_DIRECTOR','PREP_COMMITTEE'])assert.equal(verifyTextualContent(pending,actor,at),pending);
+ const verified=verifyTextualContent(pending,'HIP',at);
+ assert.equal(textualCleared(verified),true);
+ assert.equal(verifyTextualContent(verified,'HIP','2026-10-02T10:00:00Z'),verified);
+ assert.equal(verified.status,'PENDING_COMMITTEE_REVIEW');
+ const endorsed=reviewByCommittee(verified,'PREP_COMMITTEE',true,'Verified',[],at);
+ assert.equal(directorEligible(endorsed,[]),true);
+ assert.equal(directorEligible({...endorsed,culturalDeclaration:{...text,exactText:'Replacement text'}},[]),false);
+ assert.equal(directorEligible({...endorsed,proposedWorkTitle:'Different work'},[]),false);
+ assert.equal(verifyTextualContent(pending,'HIP','invalid'),pending);
+});
+test('test-work completion requires current-revision artist approval and preserves decisions',()=>{
+ const ticket:PrototypeTicket={id:'coating',title:'Coating test',photos:[{name:'test.png',type:'image/png',size:100} as File],status:'PENDING_ARTIST_APPROVAL',requestedAt:at,revision:1};
+ const rows=requestPrototype([],ticket,'TECHNICAL');
+ assert.equal(completePrototype(rows,ticket.id,'TECHNICAL',at,1),rows);
+ assert.equal(decidePrototype(rows,ticket.id,true,'ARTIST',at,2),rows);
+ const approved=decidePrototype(rows,ticket.id,true,'ARTIST',at,1);
+ assert.equal(completePrototype(approved,ticket.id,'ARTIST',at,1),approved);
+ assert.equal(completePrototype(approved,ticket.id,'TECHNICAL',at,2),approved);
+ const done=completePrototype(approved,ticket.id,'TECHNICAL',at,1);
+ assert.equal(done[0].completedAt,at);
+ assert.equal(done[0].decidedAt,at);
+ assert.equal(completePrototype(done,ticket.id,'TECHNICAL','2026-10-02T10:00:00Z',1),done);
+ const rejected=decidePrototype(rows,ticket.id,false,'ARTIST',at,1);
+ assert.equal(completePrototype(rejected,ticket.id,'TECHNICAL',at,1),rejected);
 });

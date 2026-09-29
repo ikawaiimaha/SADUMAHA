@@ -1,3 +1,14 @@
+# 29 September 2026 — Exact-text verification and execution evidence
+
+The latest directive restores a narrow HIP Stage 4 textual verification duty, superseding the earlier blanket Stage 3-only restriction only for this purpose. Coordinators declare the exact original text/references and full translation/context. HIP records verification against that immutable content snapshot; Committee alone endorses or rejects nominations. A nomination containing declared text cannot be endorsed or shown in the Director decision queue without matching verification. No text is inferred from artist identity, medium or nationality. Dossiers declaring no such text still require Committee review. This is a session rehearsal gate; it does not grant HIP dossier mutation permission in PostgreSQL or create a cryptographic signature.
+
+Agreement acceptance routes to LOGISTICS_PENDING_PR, not CONTRACT_EXECUTED. Removing an executive hold also cannot assert execution. Accepted terms remain locked and advance payment rules remain separate so production funding does not depend on final media delivery.
+
+The authenticated Digital Asset Escrow ledger reads a security-invoker view of locked submitted scenarios, declared media and current private Storage objects. Missing/empty/wrong-type objects fail readiness. Technical may read submitted scenario assets through trusted app_metadata authorization, but gains no passport or mutation permission. Downloads use one-minute signed links. The view reports asset evidence, not legal execution, financial approval or cultural review. Local rehearsal files never satisfy it. SQL is retained at supabase/local/asset-escrow.sql and tested locally only; hosted rollout and authenticated end-to-end uploads remain separate.
+
+Iterative prototype tickets retain exact photos, request/decision times and agreement revision. Only Artist may approve/reject a pending current revision. Only Technical may record completion after that approval, once, without overwriting timestamps. Old-revision tests stay visible but cannot authorize current work. Operational holds disable actions. These tests and photos remain session-only rehearsal state; they do not replace engineering or venue clearance.
+
+---
 # 29 September 2026 — Dossier-to-venue technical matrix
 
 Stage 4 dossiers can record a structured technicalRequirements array (hardware, specifications, mounting). Declared entries require complete specifications; Committee and Director read the same data during review. The assigned Coordinator's Stage 6 room claim registers exact-scope venue clearance tickets from those requirements. Claiming a room is not approval. The designated Venue Host records clearance using the existing rehearsal authority/delegation gate.
