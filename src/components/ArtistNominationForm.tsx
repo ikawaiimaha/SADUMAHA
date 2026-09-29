@@ -22,6 +22,7 @@ import {
 export type ArtistCategory = 'Emerging' | 'Established';
 
 export interface NominatedArtistDossier {
+  arrivalRecipientTag?: import('../data/arrivalPackage').ArrivalRecipientTag;
   geographicRegion?: import('../data/regionalDelegation').Region;
   delegationHistory?: {from?:string;to:string;region:string;at:string;by:string}[];
   culturalDeclaration?: CulturalDeclaration;

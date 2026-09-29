@@ -58,7 +58,7 @@ export interface DirectorWorkspaceProps {
   /** Callback when Director vetoes an artist */
   onVetoArtist: (id: string, reason: string, notes?: string) => void;
   /** Callback when Director approves an artist */
-  onApproveArtist?: (id: string) => void;
+  onApproveArtist?: (id: string, tag: import('../data/arrivalPackage').ArrivalRecipientTag) => void;
   /** Assigned budget locked by Chairman */
   assignedBudget?: number | null;
   /** Ratified theme */
@@ -102,6 +102,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
 }) => {
   const tr = useMockupText();
   const { isAr } = useI18n();
+  const [arrivalTags,setArrivalTags] = useState<Record<string, import('../data/arrivalPackage').ArrivalRecipientTag>>({});
   // Tabbed layout: Phase 1 (Theme Ratification Queue) or Phase 2 (Artist Veto & Balance Review)
   const [activeTab, setActiveTab] = useState<'phase1' | 'phase2'>('phase1');
 
@@ -591,11 +592,17 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
 
                 {/* Director Actions: Approve (Green) & Veto / Reject (Red) */}
                 <CulturalVerificationCard dossier={artist} isAr={isAr} />
+                <label className="mt-3 block text-sm">{isAr?'صفة المستلم المعتمدة لحزمة الوصول':'Approved arrival recipient designation'}
+                  <select disabled={!directorEligible(artist,blocklist)} value={artist.status==='APPROVED'?(artist.arrivalRecipientTag??''):(arrivalTags[artist.id]??'GUEST_ARTIST')} onChange={e=>setArrivalTags(tags=>({...tags,[artist.id]:e.target.value as 'GUEST_ARTIST'|'JURY_MEMBER'}))} className="block w-full rounded border border-sadu-gold bg-[#F7F1E6] ps-3 pe-3 py-2 disabled:opacity-60">
+                    <option value="" disabled>{isAr?'غير مصنف':'Unclassified'}</option>
+                    <option value="GUEST_ARTIST">{isAr?'فنان ضيف':'Guest artist'}</option><option value="JURY_MEMBER">{isAr?'عضو لجنة تحكيم — يتطلب تكليفاً معتمداً':'Jury member — requires approved appointment'}</option>
+                  </select>
+                </label>
                 <div className="mt-4 border-t border-sadu-gold/30 pt-3 flex items-center gap-2">
                   <button
                     type="button"
                     disabled={!directorEligible(artist, blocklist)}
-                    onClick={() => onApproveArtist?.(artist.id)}
+                    onClick={() => onApproveArtist?.(artist.id,arrivalTags[artist.id]??'GUEST_ARTIST')}
                     className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-xs font-bold transition-colors cursor-pointer ${
                       artist.status === 'APPROVED'
                         ? 'bg-emerald-100 text-emerald-800 cursor-not-allowed border border-emerald-300'

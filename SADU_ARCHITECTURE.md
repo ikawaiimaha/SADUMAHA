@@ -1,3 +1,11 @@
+# 29 September 2026 — Role-based arrival dispatch rehearsal
+
+Director approval records GUEST_ARTIST or JURY_MEMBER as a recipient designation; this is separate from artist category and workflow status. Coordinators cannot edit that designation or the generated arrival text. Existing fictional commission seed is explicitly GUEST_ARTIST; unknown designations fail closed.
+
+PR owns itinerary and identity review. Assigned Coordinators can record a simulated arrival dispatch only for approved dossiers after theme and guideline publication and completed PR package checks. DXB maps only to Marhaba, SHJ only to Hala; other airports require manual review. Identity review binds to the exact recipient name. Itinerary edits invalidate itinerary review. Receipts preserve recipient, designation, approved revision, itinerary, provider and attachment-manifest snapshots; repeats are idempotent and old snapshots remain historical.
+
+Only JURY_MEMBER manifests include JUDGING_MECHANISM_PDF. This is a rehearsal descriptor, not an actual confidential attachment, public URL, or production access-control implementation. The approved PDF and live mail transport are not supplied. No email is sent, booking promised, or PR/Finance evidence cleared. A production sender must recheck authenticated assignment and recipient designation server-side and retrieve the approved private document; the client tag is never authorization.
+
 # 29 September 2026 — Database Committee decision gate
 
 `migration.sql` is a manual deployment script, tested locally only. It creates/extends artist_status while retaining the inspected legacy TEXT status column, replaces dossier mutation policies, and enforces Coordinator submission → Committee decision → Director decision. Rejections require consensus minutes, and the server records reviewer/time. HIP has no dossier write/delete policy; an invoker trigger also rejects HIP mutations if a broad policy is introduced. Existing rows are not reclassified and historic approvals are not fabricated.

@@ -6,7 +6,7 @@ export function ArrivalPackagePreview({ isAr, artistName, artistId = 'sample-art
   const [draft, setDraft] = useSessionDraft<ArrivalDraft>(`arrival:${artistId}`, { airport: '', flight: '', terminal: '', arrivalLocal: '', identityReviewed: false, itineraryReviewed: false, welcomeGuideIncluded: false });
   const [prepared, setPrepared] = useSessionDraft<ArrivalDraft | null>(`arrival-preview:${artistId}`, null);
   const service = airportService(draft.airport);
-  const ready = arrivalPreviewReady(draft);
+  const ready = arrivalPreviewReady(draft) && draft.identityReviewedFor === artistName;
   const inputClass = 'mt-1 block w-full rounded-md border border-[#D9CEBA] bg-[#F7F1E6] ps-3 pe-3 py-2 text-start';
 
   function updateItinerary(patch: Partial<ArrivalDraft>) {
@@ -37,10 +37,10 @@ export function ArrivalPackagePreview({ isAr, artistName, artistId = 'sample-art
         ['identityReviewed', isAr ? 'راجعت تطابق اسم صاحب التذكرة والتأشيرة مع المستلم النموذجي.' : 'I checked the sample ticket and visa belong to this fictional recipient.'],
         ['itineraryReviewed', isAr ? 'راجعت المطار والمبنى والرحلة والتوقيت المحلي.' : 'I reviewed the airport, terminal, flight and local arrival time.'],
         ['welcomeGuideIncluded', isAr ? 'أدرجت دليل الترحيب بالفنان في قائمة الحزمة.' : 'I included the artist welcome guide in the package checklist.'],
-      ] as const).map(([field, label]) => <label key={field} className="flex items-start gap-3"><input type="checkbox" checked={draft[field]} onChange={event => { setDraft(current => ({ ...current, [field]: event.target.checked })); setPrepared(null); }} className="mt-1 size-5 shrink-0" /><span>{label}</span></label>)}
+      ] as const).map(([field, label]) => <label key={field} className="flex items-start gap-3"><input type="checkbox" checked={draft[field] && (field!=='identityReviewed'||draft.identityReviewedFor===artistName)} onChange={event => { setDraft(current => ({ ...current, [field]: event.target.checked, ...(field==='identityReviewed'?{identityReviewedFor:event.target.checked?artistName:undefined}:{}) })); setPrepared(null); }} className="mt-1 size-5 shrink-0" /><span>{label}</span></label>)}
     </fieldset>
-    <button type="button" disabled={!ready} onClick={() => { if (arrivalPreviewReady(draft)) setPrepared({ ...draft }); }} className="rounded-md bg-[#8B261E] ps-5 pe-5 py-3 font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed">{isAr ? 'تجهيز معاينة حزمة الوصول' : 'Prepare arrival package preview'}</button>
-    {prepared && <div className="space-y-4 border-s-4 border-[#8B261E] bg-[#F7F1E6] ps-4 pe-4 py-4" aria-live="polite">
+    <button type="button" disabled={!ready} onClick={() => { if (ready) setPrepared({ ...draft }); }} className="rounded-md bg-[#8B261E] ps-5 pe-5 py-3 font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed">{isAr ? 'تجهيز معاينة حزمة الوصول' : 'Prepare arrival package preview'}</button>
+    {prepared && prepared.identityReviewedFor===artistName && <div className="space-y-4 border-s-4 border-[#8B261E] bg-[#F7F1E6] ps-4 pe-4 py-4" aria-live="polite">
       <p className="font-bold text-[#8B261E]">{isAr ? 'نسخة تدريبية — لم تُرسل' : 'REHEARSAL PREVIEW — NOT SENT'}</p>
       <p className="text-sm">Guided rehearsal • fictional records • no external actions</p>
       <article lang="en" dir="ltr" className="space-y-2 text-start">

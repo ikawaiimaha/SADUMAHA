@@ -71,6 +71,9 @@ import { validParticipationScope, SOLO_INVITATION_2026 } from './data/soloInvita
 import React, { useState, useEffect, useReducer, useRef, useCallback } from 'react';
 import RoleSelection, { AppRole } from './components/RoleSelection';
 import CommitteeThemeWorkspace, { CommitteeThemeDraft, isThemeBatchComplete } from './components/CommitteeThemeWorkspace';
+import { ArrivalDispatchPanel } from './components/ArrivalDispatchPanel';
+import { ArrivalPackagePreview } from './components/ArrivalPackagePreview';
+import { recordArrivalDispatch, type ArrivalDispatch, type ArrivalRecipientTag } from './data/arrivalPackage';
 import ChairmanWorkspace, { ThemeItem } from './components/ChairmanWorkspace';
 import HIPWorkspace, { TranslationStatus } from './components/HIPWorkspace';
 import EditorialWorkspace, { ThemePolishStatus } from './components/EditorialWorkspace';
@@ -151,7 +154,7 @@ const INITIAL_NOMINATIONS: NominatedArtistDossier[] = [{
   nationality: 'United Arab Emirates', medium: 'Architectural Bronze & Black Oxide',
   proposedWorkTitle: COMMISSION.title, cvFileName: 'fictional-noura-cv.pdf',
   previousWorksCount: 1, mockupCount: 1, submittedBy: 'Preparatory Committee',
-  submittedAt: '2026-09-26T09:00:00Z', status: 'APPROVED',
+  submittedAt: '2026-09-26T09:00:00Z', status: 'APPROVED', arrivalRecipientTag:'GUEST_ARTIST',
   culturalDeclaration: { containsText: false, explanation: '' }, culturalClearedAt: '2026-09-26T08:00:00Z',
 }];
 const INITIAL_VETTED_ARTISTS: VettedArtist[] = [{
@@ -239,6 +242,7 @@ function SADUApp() {
   const [supplierDeliveries,setSupplierDeliveries] = useState<SupplierDelivery[]>([]);
   const [packingEvidence,setPackingEvidence] = useState<PackingEvidence>();
   const [nominatedArtists, setNominatedArtists] = useState<NominatedArtistDossier[]>(INITIAL_NOMINATIONS);
+  const [arrivalDispatches,setArrivalDispatches]=useState<ArrivalDispatch[]>([]);
   const commissionCoordinatorId = nominatedArtists.find(d=>d.id===COMMISSION.id)?.assignedCoordinatorId;
   const [artists, setArtists] = useState<VettedArtist[]>(INITIAL_VETTED_ARTISTS);
   const [isNominationFormOpen, setIsNominationFormOpen] = useState<boolean>(false);
@@ -348,11 +352,12 @@ function SADUApp() {
     );
   };
 
-  const handleApproveArtist = (id: string) => {
+  const handleApproveArtist = (id: string, tag: ArrivalRecipientTag) => {
+    if(!['GUEST_ARTIST','JURY_MEMBER'].includes(tag))return;
     if (!nominatedArtists.some(d => d.id === id && directorEligible(d,blocklist))) return;
     if (activeRole !== 'BIENNIAL_DIRECTOR' || !nominatedArtists.some(a => a.id === id && a.status === 'PENDING_DIRECTOR_REVIEW')) return;
     setNominatedArtists(prev =>
-      prev.map(artist => (artist.id === id ? { ...artist, status: 'APPROVED', approvalRevision: 1, decisionAt: new Date().toISOString() } : artist))
+      prev.map(artist => (artist.id === id ? { ...artist, status: 'APPROVED', arrivalRecipientTag:tag, approvalRevision: 1, decisionAt: new Date().toISOString() } : artist))
     );
 
     const target = nominatedArtists.find(a => a.id === id);
@@ -1006,6 +1011,7 @@ function SADUApp() {
         {activeRole === 'LOGISTICS' && commission.installationStatus !== 'ARCHIVED_CLOSED' && <PackingRegister record={packingEvidence} isAr={isAr} onRecord={record=>{if(activeRole==='LOGISTICS'&&validPacking(record))setPackingEvidence(previous=>previous??record);}} />}
         {['TECHNICAL','COORDINATOR','FINANCE'].includes(activeRole) && <SupplierRegister rows={supplierDeliveries} dossiers={nominatedArtists.filter(d=>commission.installationStatus!=='ARCHIVED_CLOSED'||d.id!==COMMISSION.id)} actor={activeRole} coordinatorId={activeCoordinatorId} isAr={isAr} onAction={action=>setSupplierDeliveries(rows=>supplierTransition(rows,{...action,actor:activeRole},nominatedArtists.filter(d=>commission.installationStatus!=='ARCHIVED_CLOSED'||d.id!==COMMISSION.id)))} />}
         {['COORDINATOR','BIENNIAL_DIRECTOR'].includes(activeRole) && <>
+          {activeRole==='COORDINATOR'&&assignedTo(nominatedArtists,activeCoordinatorId).filter(d=>d.status==='APPROVED'&&!(d.id===COMMISSION.id&&commission.installationStatus==='ARCHIVED_CLOSED')).map(d=><ArrivalDispatchPanel key={d.id} recipient={d} isAr={isAr} records={arrivalDispatches} publicationReady={themePolishStatus==='PUBLISHED_OFFICIAL'&&translationStatus==='PUBLISHED'} onDispatch={draft=>setArrivalDispatches(rows=>recordArrivalDispatch(rows,d,draft,activeRole,activeCoordinatorId,themePolishStatus==='PUBLISHED_OFFICIAL'&&translationStatus==='PUBLISHED',new Date().toISOString()))}/>)}
           {dossierNotice && <p role="status" className="mx-auto max-w-5xl rounded border ps-4 pe-4 py-3">{dossierNotice}</p>}
           <DossierTracking contracts={contracts} dossiers={activeRole === 'COORDINATOR' ? assignedTo(nominatedArtists,activeCoordinatorId) : nominatedArtists.filter(d => d.status === 'APPROVED')} isAr={isAr} actor={activeRole} publicationReady={themePolishStatus === 'PUBLISHED_OFFICIAL' && translationStatus === 'PUBLISHED'} lockedIds={[...contracts.filter(c => c.status !== 'NOT_DRAFTED').map(c=>c.artistId), ...(commission.invitation ? [commission.invitation.artistId] : [])]}
             onRequest={(id,scope,reason) => {
@@ -1023,6 +1029,7 @@ function SADUApp() {
             }}
             onDispatch={id=>setNominatedArtists(rows=>rows.map(d=>d.id===id&&!(id===COMMISSION.id&&commission.installationStatus==='ARCHIVED_CLOSED')?recordDossierDispatch(d,activeRole,themePolishStatus==='PUBLISHED_OFFICIAL'&&translationStatus==='PUBLISHED',new Date().toISOString(),activeCoordinatorId):d))}/>
         </>}
+        {activeRole==='PR_PROTOCOL'&&nominatedArtists.filter(d=>d.status==='APPROVED'&&d.id!==(commission.contracts[0]?.artistId??COMMISSION.id)).map(d=><ArrivalPackagePreview key={d.id} artistId={d.id} artistName={d.artistName} isAr={isAr}/>)}
         {activeRole!=='HIP' && Object.hasOwn(ESCALATION_DEPARTMENTS, activeRole) && <EscalationSubmission key={activeRole} actor={activeRole} isAr={isAr} records={executiveEscalations} onSubmit={input => setExecutiveEscalations(rows => submitEscalation(rows, input, activeRole, new Date().toISOString()))} />}
         </>}
         </DelegatedRoleGate>
