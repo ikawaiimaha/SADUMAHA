@@ -1,3 +1,4 @@
+import {GuestTravel} from './GuestTravel';
 import {validVisaIntake} from '../data/visaIntake';
 import {HospitalityTravel} from './HospitalityTravel';
 import { VisaIntakeReview } from './VisaIntake';
@@ -20,7 +21,7 @@ export function PRWorkspace({ isAr, state, onCheck, onClearPR }: PRWorkspaceProp
   const intake=state.visaIntakes?.filter(v=>v.contractId===state.contracts[0]?.id).at(-1);
   return <div dir={isAr ? 'rtl' : 'ltr'} className="max-w-4xl mx-auto ps-4 pe-4 py-6 space-y-5 text-start bg-[#F7F1E6]">
     <h1 className="font-serif text-3xl font-bold">{isAr ? 'العلاقات العامة — الهوية والسفر' : 'PR — Identity & Travel'}</h1>
-    <HospitalityTravel review/>
+    <GuestTravel review/><details><summary>Earlier companion requests</summary><HospitalityTravel review/></details>
     {intake && <VisaIntakeReview intake={intake} isAr={isAr}/>}
     <CommissionSummary isAr={isAr} showTechnical={false} />
     {(!intake||!validVisaIntake(intake))&&<p role="status">Travel dispatch locked: valid passport PDF and high-resolution personal photo intake required.</p>}

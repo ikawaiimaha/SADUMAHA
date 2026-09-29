@@ -1,3 +1,12 @@
+# 29 September 2026 — Private guest travel intake and PR control room
+
+Authenticated owners of accepted database contracts submit arrival/departure dates, airport preferences, passport PDF, personal portrait and optional self-funded companion details/PDF. They never inherit privileges from the rehearsal role selector. File header/MIME/size and portrait dimensions are checked in the browser; these checks do not certify clarity, immigration acceptance or the absence of malware. Stored-object readiness is independently derived from private Storage metadata. PR must inspect the content. No automatic financial, visa or travel clearance results.
+
+The PR guest roster is a minimal server-authorized projection (contract ID/name only) and includes guests awaiting submission. It does not expose full contracts. Intake names and creation timestamps are server-derived. Submissions and objects are immutable; a new submission replaces the current queue view without deleting history. An incomplete newer submission cannot inherit older readiness. Partial uploads can retry in the open form without overwriting successful files. Refresh after interruption requires a new submission; durable cross-session resume is not claimed for these small documents. PR sees search/sort controls and a 15-second authenticated refresh, with one-minute private document links. This is polling, not a Realtime subscription or a confirmed booking.
+
+Local implementation: `supabase/local/guest-travel.sql`, tested against local PostgreSQL policies and private Storage APIs. Hosted schema rollout is pending. Stage 5 nominees/VIPs still lack a verified authentication mapping and automated invitation sender; neither accounts nor emails are created by this UI. Accepted-contract self-service is available through `/pilot` and the existing workspace entry points. No imaginary entitlement, government-hosting claim or production security certification is introduced.
+
+---
 # 29 September 2026 — Stage 4 technical safety rider
 
 Sculpture and 3D Installation medium tags, plus explicit English/Arabic sculpture labels in the medium field, require a Technical & Safety Rider PDF before nomination submission, Committee endorsement or Director eligibility. The rehearsal checks PDF header/extension/type and a 20 MiB limit. Changing the medium/tag clears the draft attachment. Existing approved sample dossiers without a required rider are not fabricated as compliant; their dispatch is blocked. Scope amendments cannot silently change to a new sculptural medium and reuse the old rider.

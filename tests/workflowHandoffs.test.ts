@@ -1352,3 +1352,10 @@ test('SMA rule 5 blocks declared hall fabrication without banning other venues o
  assert.equal(validWorkers([]),false);
  assert.equal(validWorkers(['x'.repeat(151)]),false);
 });
+import {validTravelDates,latestGuestRows,guestFilesComplete,type GuestTravelRow} from '../src/data/guestTravel';
+test('guest travel validates calendar dates and latest incomplete revisions never inherit old readiness',()=>{
+ assert.equal(validTravelDates('2026-02-30','2026-03-02'),false);assert.equal(validTravelDates('2026-10-11','2026-10-06'),false);assert.equal(validTravelDates('2026-10-06','2026-10-11'),true);
+ const row:GuestTravelRow={id:'old',contract_id:'c',artist_id:'a',artist_name:'Sample',contract_status:'ARTIST_APPROVED',arrival:'2026-10-06',departure:'2026-10-11',airport:'SHJ',companion_name:null,photo_extension:'jpg',created_at:'2026-09-28T00:00:00Z',passport_uploaded:true,photo_uploaded:true,companion_uploaded:false};
+ assert.equal(guestFilesComplete(row),true);assert.equal(guestFilesComplete({...row,companion_name:'Sample companion'}),false);
+ const newer={...row,id:'new',created_at:'2026-09-29T00:00:00Z',passport_uploaded:false};assert.deepEqual(latestGuestRows([row,newer]),[newer]);assert.equal(guestFilesComplete(latestGuestRows([row,newer])[0]),false);
+});
