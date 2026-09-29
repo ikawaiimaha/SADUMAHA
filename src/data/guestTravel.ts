@@ -1,5 +1,5 @@
 export interface GuestTravelRow {
- identity?:Record<string,string>;departure_airport?:string;finalized_at?:string|null;id:string;contract_id:string;artist_id:string;artist_name:string;contract_status:string;
+ national_id_required?:boolean;national_id_uploaded?:boolean;identity?:Record<string,string>;departure_airport?:string;finalized_at?:string|null;id:string;contract_id:string;artist_id:string;artist_name:string;contract_status:string;
  arrival:string;departure:string;airport:'DXB'|'SHJ'|'OTHER';companion_name:string|null;
  photo_extension:'jpg'|'png';created_at:string;passport_uploaded:boolean;photo_uploaded:boolean;companion_uploaded:boolean;
 }
@@ -12,4 +12,4 @@ export function latestGuestRows(rows:GuestTravelRow[]){
  for(const r of [...rows].sort((a,b)=>b.created_at.localeCompare(a.created_at)||b.id.localeCompare(a.id)))if(!latest.has(r.contract_id))latest.set(r.contract_id,r);
  return [...latest.values()];
 }
-export const guestFilesComplete=(r:GuestTravelRow)=>r.passport_uploaded&&r.photo_uploaded&&(!r.companion_name||r.companion_uploaded);
+export const guestFilesComplete=(r:GuestTravelRow)=>r.passport_uploaded&&r.photo_uploaded&&(!r.national_id_required||r.national_id_uploaded===true)&&(!r.companion_name||r.companion_uploaded);

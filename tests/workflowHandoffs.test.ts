@@ -1364,7 +1364,7 @@ import {validGuestIdentity,guestDeadline} from '../src/data/guestIdentity';
 test('guest deadlines use arrival lead days and identity remains required independently of uploads',()=>{
  assert.equal(guestDeadline('2026-10-06',30),'2026-09-06');assert.equal(guestDeadline('2026-03-01',30),'2026-01-30');assert.equal(guestDeadline('',30),null);assert.equal(guestDeadline('2026-02-30',30),null);
  assert.equal(validGuestIdentity({},'2026-10-06'),false);
- const v={passportNumber:'SAMPLE',passportExpiry:'2030-01-01',nationality:'Sample',birthDate:'1990-01-01',birthPlace:'Sample',email:'sample@example.test',phone:'000'};
+ const v={passportNumber:'SAMPLE',passportExpiry:'2030-01-01',nationality:'AE',birthDate:'1990-01-01',birthPlace:'Sample',email:'sample@example.test',phone:'000'};
  assert.equal(validGuestIdentity(v,'2026-10-06'),true);assert.equal(validGuestIdentity({...v,passportExpiry:'2026-10-01'},'2026-10-06'),false);assert.equal(validGuestIdentity({...v,email:''},'2026-10-06'),false);
 });
 
@@ -1408,4 +1408,18 @@ test('label formatting normalizes brackets and inventory preserves unknown count
  assert.ok(csvCell('=SUM(A1)').startsWith("\"'"));
  const report=inventoryCSV([{id:'one',artistName:'Artist',nationality:'AE',medium:'Ink',status:'APPROVED',artworkCount:0},{id:'two',artistName:'Unknown',nationality:'AE',medium:'Ink',status:'APPROVED'}] as NominatedArtistDossier[],'2026-09-29');
  assert.match(report,/"0"/);assert.match(report,/Not reported/);assert.match(report,/Current session/);
+});
+
+test('passport gate uses calendar months and explicit national ID policy',async()=>{
+ const {passportMinimumExpiry,requiresNationalId}=await import('../src/data/guestIdentity');
+ assert.equal(passportMinimumExpiry('2026-08-31'),'2027-02-28');
+ assert.equal(passportMinimumExpiry('2027-08-31'),'2028-02-29');
+ assert.equal(passportMinimumExpiry('2026-02-30'),null);
+ const p={version:'test',reference:'PR test',national_id_countries:['IQ','PK','AF']};
+ for(const n of p.national_id_countries)assert.equal(requiresNationalId(n,p),true);
+ assert.equal(requiresNationalId('AE',p),false);
+ const v={passportNumber:'SAMPLE',passportExpiry:'2027-04-06',nationality:'IQ',birthDate:'1990-01-01',birthPlace:'Sample',email:'sample@example.test',phone:'000'};
+ assert.equal(validGuestIdentity(v,'2026-10-06'),true);
+ assert.equal(validGuestIdentity({...v,passportExpiry:'2027-04-05'},'2026-10-06'),false);
+ assert.equal(validGuestIdentity({...v,nationality:'Other'},'2026-10-06'),false);
 });
