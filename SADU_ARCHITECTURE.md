@@ -1,3 +1,10 @@
+# 29 September 2026 — Edition-bounded pickup calendar
+
+The 2026 freight scheduler uses the existing CATALOG_SCHEDULE delivery deadline, 10 September 2026, as the latest permissible pickup date. New bookings and artist date-change requests must be today or later (Asia/Dubai), on/before that cutoff, and outside the inclusive travel blackout. After the cutoff the intake is visibly closed; an approved schedule update is required rather than inventing an extension. September 3 is a historical example, not a newly bookable date after the deadline.
+
+The local-only pickup-calendar.sql adds a database trigger after the existing booking guard to check resolved date-change approvals and block out-of-window dispatch of legacy pending bookings. Existing history and in-transit/received tracking remain available. No hosted SQL was applied. Publication continues through revision-bound Editorial approval; files are never destructively overwritten after approval.
+
+---
 # 29 September 2026 — Publication revision lock and pickup blackout visibility
 
 The session Artwork Roster requires bilingual exhibition titles, artwork titles/descriptions and an attached PNG/TIFF before submission. Draft replacement remains possible; submitted revisions require the assigned Coordinator's amendment permission. Editorial alone records a revision-specific publication approval after inspecting text and files. Approval generates a bilingual raster PDF proof; it is not a press-ready vector master or a live document. Current approved snapshots appear in Coordinator (assigned artists only) and PR design views. Requesting an amendment withdraws the current export immediately; historical revisions and approval timestamps remain intact. Reapproval of the new revision is required. These publication records/files remain session-only and reset on refresh; they do not replace the separate authenticated checklist/translation tables or establish production designer authorization.

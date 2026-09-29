@@ -1,3 +1,4 @@
+import {CATALOG_SCHEDULE} from './catalogMetadata';
 export type TextMetadata={title:string;medium:string;concept:string;bio?:string;language?:string;title_ar?:string};
 export type CatalogArtwork={id:string;scenario_id:string;zone_id:string;media_object_name:string;source:TextMetadata;translation_ar:TextMetadata|null;production_year:number;height_cm:number;width_cm:number;weight_kg:number;crate_count:number;translation_status:'PENDING_TRANSLATION'|'TRANSLATION_COMPLETED';translated_at?:string};
 export const conceptWords=(text:string)=>text.trim()?text.trim().split(/\s+/u).length:0;
@@ -14,4 +15,10 @@ export type FreightBooking={id:string;artwork_id:string;artist_id:string;ready_d
 export function pickupDateAllowed(date:string,start?:string|null,end?:string|null){
  const valid=(v:string)=>/^\d{4}-\d{2}-\d{2}$/.test(v)&&Number.isFinite(Date.parse(v))&&new Date(v).toISOString().slice(0,10)===v;
  return Boolean(valid(date)&&((!start&&!end)||(start&&end&&valid(start)&&valid(end)&&start<=end&&(date<start||date>end))));
+}
+
+export const PICKUP_DEADLINE=CATALOG_SCHEDULE.delivery;
+export const dubaiToday=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Dubai',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+export function pickupWithinSchedule(date:string,start?:string|null,end?:string|null,today=dubaiToday()){
+ return pickupDateAllowed(date,start,end)&&date>=today&&date<=PICKUP_DEADLINE;
 }

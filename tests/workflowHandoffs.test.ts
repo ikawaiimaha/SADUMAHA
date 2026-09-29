@@ -1299,3 +1299,14 @@ test('pickup blackout is inclusive and invalid ranges fail closed',()=>{
  assert.equal(pickupDateAllowed('2026-09-03','2026-09-13',null),false);
  assert.equal(pickupDateAllowed('2026-02-30'),false);
 });
+
+import {pickupWithinSchedule,PICKUP_DEADLINE} from '../src/data/catalogFreight';
+test('edition calendar rejects December typo, expired intake and stale approval dates',()=>{
+ assert.equal(PICKUP_DEADLINE,'2026-09-10');
+ assert.equal(pickupWithinSchedule('2026-09-03',null,null,'2026-09-01'),true);
+ assert.equal(pickupWithinSchedule('2026-12-03',null,null,'2026-09-01'),false);
+ assert.equal(pickupWithinSchedule('2026-09-10',null,null,'2026-09-01'),true);
+ assert.equal(pickupWithinSchedule('2026-09-11',null,null,'2026-09-01'),false);
+ assert.equal(pickupWithinSchedule('2026-09-03',null,null,'2026-09-29'),false);
+ assert.equal(pickupWithinSchedule('2026-09-03','2026-09-03','2026-09-05','2026-09-01'),false);
+});
