@@ -1,3 +1,10 @@
+# 29 September 2026 — Publication revision lock and pickup blackout visibility
+
+The session Artwork Roster requires bilingual exhibition titles, artwork titles/descriptions and an attached PNG/TIFF before submission. Draft replacement remains possible; submitted revisions require the assigned Coordinator's amendment permission. Editorial alone records a revision-specific publication approval after inspecting text and files. Approval generates a bilingual raster PDF proof; it is not a press-ready vector master or a live document. Current approved snapshots appear in Coordinator (assigned artists only) and PR design views. Requesting an amendment withdraws the current export immediately; historical revisions and approval timestamps remain intact. Reapproval of the new revision is required. These publication records/files remain session-only and reset on refresh; they do not replace the separate authenticated checklist/translation tables or establish production designer authorization.
+
+The authenticated freight scheduler displays inclusive unavailable dates and disables conflicting artist change requests and Logistics approvals. Existing PostgreSQL checks/triggers independently reject blackout dates, including boundary days. No translation status blocks physical dimensions. Local rollback tests verify the database guard; no hosted schema changes or transport bookings were made. Downloaded proofs must be checked against the current approval before printing; software cannot recall copies already downloaded.
+
+---
 # 29 September 2026 — Inter-agency resources and evidence-based workload metrics
 
 Technical records an SAF/SMA resource request against an active approved dossier and accepted agreement, with resource type and required timestamp. A bilingual watermarked request PDF is generated from the tracked record. No external message is sent. The response window is 48 elapsed hours from recording, including weekends; expiry is calculated from timestamps, not a fabricated agency denial.

@@ -760,13 +760,13 @@ test('visa submission is role-bound, idempotent and revokes PR on replacement wi
  assert.equal(cleared.evidence.prEvidenceGate,true);
 });
 import { rosterTransition, validArtwork, type ArtworkRoster, type ArtworkLabel } from '../src/data/artworkRoster';
-const label = ():ArtworkLabel => ({id:'a1',titleAr:'ميزان',titleEn:'Balance',year:'2026',medium:'Bronze',height:'10',width:'20',depth:'1',image:new File(['sample'],'sample.png',{type:'image/png'})});
+const label = ():ArtworkLabel => ({id:'a1',titleAr:'ميزان',titleEn:'Balance',descriptionAr:'Description AR',descriptionEn:'A study of balance',year:'2026',medium:'Bronze',height:'10',width:'20',depth:'1',image:new File(['sample'],'sample.png',{type:'image/png'})});
 test('artwork roster enforces bilingual complete labels and image constraints',()=>{
  const a=label();assert.equal(validArtwork(a),true);
  for(const patch of [{titleAr:'English'},{titleEn:'ميزان'},{year:'9999'},{height:'0'},{depth:'NaN'},{medium:' '},{image:undefined},{image:new File(['x'],'photo.jpg',{type:'image/jpeg'})}])assert.equal(validArtwork({...a,...patch}),false);
 });
 test('artwork revisions lock atomically and only assigned Coordinator unlocks requested amendments',()=>{
- const draft:ArtworkRoster={artistId:'artist',status:'DRAFT',items:[label()],history:[],events:[]};
+ const draft:ArtworkRoster={artistId:'artist',status:'DRAFT',exhibitionTitleAr:'Exhibition AR',exhibitionTitleEn:'Balance',items:[label()],history:[],events:[]};
  assert.equal(rosterTransition({...draft,items:[]},{type:'submit',at},'ARTIST').status,'DRAFT');
  const locked=rosterTransition(draft,{type:'submit',at},'ARTIST');
  assert.equal(locked.status,'LOCKED_PENDING_REVIEW');
@@ -862,7 +862,7 @@ test('production specs are conditional and reject invalid or unchecked technical
 });
 test('submitted production instructions remain immutable during authorized amendment',()=>{
  const item={...label(),productionEnabled:true,printingFraming:'Original paper'};
- const draft:ArtworkRoster={artistId:'artist',status:'DRAFT',items:[item],history:[],events:[]};
+ const draft:ArtworkRoster={artistId:'artist',status:'DRAFT',exhibitionTitleAr:'Exhibition AR',exhibitionTitleEn:'Balance',items:[item],history:[],events:[]};
  const locked=rosterTransition(draft,{type:'submit',at},'ARTIST');
  assert.equal(rosterTransition(locked,{type:'edit',items:[{...item,printingFraming:'Changed'}]},'ARTIST'),locked);
  const request=rosterTransition(locked,{type:'request',at},'ARTIST');
@@ -1275,4 +1275,27 @@ test('institutional totals deduplicate people, distinguish accepted/executed and
  const cancelled=institutionalMetrics([approved,other],[{id:'a',status:'DIRECTOR_VETOED',prCleared:true},{id:'b',status:'ARCHIVED_CLOSED'}]);assert.equal(cancelled.approvedDossiers,0);assert.equal(cancelled.clearedGuests,0);
  const rows=[approved];assert.equal(reassignDossier(rows,'a','coordinator-2','Workload','HIP',at,[]),rows);assert.equal(reassignDossier(rows,'a','coordinator-2','Workload','BIENNIAL_DIRECTOR',at,['a']),rows);
  const moved=reassignDossier(rows,'a','coordinator-2','Workload','BIENNIAL_DIRECTOR',at,[]);assert.equal(moved[0].assignedCoordinatorId,'coordinator-2');assert.equal(moved[0].delegationHistory?.[0].from,ASSIGNED_COORDINATOR);
+});
+
+import {publicationComplete,currentPublication} from '../src/data/artworkRoster';
+import {pickupDateAllowed} from '../src/data/catalogFreight';
+test('publication requires complete bilingual snapshot and Editorial; amendment revokes design export',()=>{
+ const draft:ArtworkRoster={artistId:'test',status:'DRAFT',items:[label()],history:[],events:[],exhibitionTitleAr:'AR',exhibitionTitleEn:'EN'};
+ assert.equal(publicationComplete({...draft,exhibitionTitleEn:''}),false);
+ assert.equal(publicationComplete({...draft,items:[{...label(),descriptionEn:''}]}),false);
+ const locked=rosterTransition(draft,{type:'submit',at},'ARTIST');
+ const action={type:'publish' as const,at,revision:1,inspected:true};
+ assert.equal(rosterTransition(locked,action,'ARTIST'),locked);
+ assert.equal(rosterTransition(locked,{...action,revision:2},'EDITORIAL'),locked);
+ assert.equal(rosterTransition(locked,{...action,inspected:false},'EDITORIAL'),locked);
+ const published=rosterTransition(locked,action,'EDITORIAL');assert.equal(currentPublication(published)?.revision,1);
+ assert.equal(rosterTransition(published,action,'EDITORIAL'),published);
+ const requested=rosterTransition(published,{type:'request',at},'ARTIST');assert.equal(currentPublication(requested),undefined);
+ assert.equal(requested.publications?.length,1);assert.equal(requested.history[0].items[0].titleEn,'Balance');
+});
+test('pickup blackout is inclusive and invalid ranges fail closed',()=>{
+ for(const day of ['2026-09-13','2026-09-18','2026-09-22'])assert.equal(pickupDateAllowed(day,'2026-09-13','2026-09-22'),false);
+ for(const day of ['2026-09-03','2026-09-12','2026-09-23'])assert.equal(pickupDateAllowed(day,'2026-09-13','2026-09-22'),true);
+ assert.equal(pickupDateAllowed('2026-09-03','2026-09-13',null),false);
+ assert.equal(pickupDateAllowed('2026-02-30'),false);
 });

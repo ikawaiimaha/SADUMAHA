@@ -9,3 +9,9 @@ export function labelCSV(rows:CatalogArtwork[]){
 }
 export const shipmentStatuses=['PENDING_ORIGIN_DISPATCH','IN_TRANSIT','CUSTOMS_CLEARANCE','RECEIVED_CONDITION_CHECKED'] as const;
 export type FreightBooking={id:string;artwork_id:string;artist_id:string;ready_date:string;unavailable_start:string|null;unavailable_end:string|null;address:Record<string,string>;map_url:string;status:typeof shipmentStatuses[number];requested_date:string|null;change_reason:string|null;change_status:string|null;condition_reference:string|null;history:{event:string;at:string;date:string;requested_date?:string}[]};
+
+/** ISO calendar days; blackout endpoints are inclusive. Invalid/incomplete ranges fail closed. */
+export function pickupDateAllowed(date:string,start?:string|null,end?:string|null){
+ const valid=(v:string)=>/^\d{4}-\d{2}-\d{2}$/.test(v)&&Number.isFinite(Date.parse(v))&&new Date(v).toISOString().slice(0,10)===v;
+ return Boolean(valid(date)&&((!start&&!end)||(start&&end&&valid(start)&&valid(end)&&start<=end&&(date<start||date>end))));
+}
