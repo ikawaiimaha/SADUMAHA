@@ -59,6 +59,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
   useEffect(() => {
     if (!isOpen) return;
     const drawer = drawerRef.current;
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const previousOverflow = document.body.style.overflow;
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -71,7 +72,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
       if (!focusable.length) return;
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
+      if (event.shiftKey && (document.activeElement === first || document.activeElement === drawer)) {
         event.preventDefault();
         last.focus();
       } else if (!event.shiftKey && document.activeElement === last) {
@@ -85,6 +86,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
     return () => {
       document.body.style.overflow = previousOverflow;
       document.removeEventListener('keydown', handleKeyDown);
+      if (opener?.isConnected) opener.focus({ preventScroll: true });
     };
   }, [isOpen, onClose]);
 

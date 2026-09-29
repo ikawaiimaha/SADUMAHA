@@ -21,8 +21,9 @@ export interface CommitteeThemeWorkspaceProps {
   /** Identifier of the biennial/event these three theme proposals belong to. */
   eventId?: string;
   ratifiedTheme?: { arabicName: string } | null;
+  submittedThemes?: CommitteeThemeDraft[];
   /** Called with the three completed theme drafts once presented to the Chairman. */
-  onPresentToChairman?: (themes: CommitteeThemeDraft[], eventId?: string) => void;
+  onPresentToChairman?: (themes: CommitteeThemeDraft[], eventId?: string) => boolean;
   onCancelAutoNavigate?: () => void;
   onAutoNavigate?: (role: string) => void;
   onBackToRoles?: () => void;
@@ -35,7 +36,8 @@ export const isThemeComplete = (theme: CommitteeThemeDraft): boolean =>
     Boolean(theme.curatorialJustification?.trim());
 
 export const isThemeBatchComplete = (themes: CommitteeThemeDraft[]): boolean =>
-  themes.length === 3 && themes.every(isThemeComplete);
+  themes.length === 3 && themes.every(isThemeComplete) &&
+  new Set(themes.map(theme => theme.arabicName.trim().normalize('NFC'))).size === 3;
 
 const EMPTY_THEME: CommitteeThemeDraft = {
   arabicName: '',
@@ -61,6 +63,7 @@ const createEmptyThemes = (): CommitteeThemeDraft[] => [
 const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
   eventId,
   ratifiedTheme,
+  submittedThemes,
   onPresentToChairman,
   onAutoNavigate,
   onCancelAutoNavigate,
@@ -98,7 +101,8 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
       theme && ['arabicName', 'englishName', 'aestheticFramework', 'contemporaryRelevance', 'curatorialJustification'].every(field => typeof theme[field] === 'string')));
   const [activeProposal, setActiveProposal] = useState(0);
   const [comparing, setComparing] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submittedLocally, setIsSubmitted] = useState(false);
+  const isSubmitted = Boolean(submittedThemes?.length) || submittedLocally;
   const baseId = useId();
 
   const allFieldsFilled = useMemo(
@@ -109,6 +113,7 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
   const filledCount = themes.filter(isThemeComplete).length;
 
   const updateField = (index: number, field: keyof CommitteeThemeDraft, value: string) => {
+    if (ratifiedTheme || isSubmitted) return;
     const isArabicField = field === 'arabicName' || field === 'aestheticFramework'
       || field === 'contemporaryRelevance' || field === 'curatorialJustification';
     const sanitizedValue = isArabicField ? value.replace(/[a-zA-Z]/g, '') : value;
@@ -124,12 +129,12 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    if (ratifiedTheme || !allFieldsFilled || !comparing) return;
+    if (ratifiedTheme || isSubmitted || !allFieldsFilled || !comparing) return;
     const finalized = themes.map(t => ({
       ...t,
       definition: t.curatorialJustification,
     }));
-    onPresentToChairman?.(finalized, eventId);
+    if (!onPresentToChairman?.(finalized, eventId)) return;
     setIsSubmitted(true);
     scrollWorkspaceToTop();
     onAutoNavigate?.('DIRECTOR');
@@ -142,7 +147,7 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
 
   const handleStartNewBatch = () => {
     onCancelAutoNavigate?.();
-    if (ratifiedTheme) return;
+    if (ratifiedTheme || submittedThemes?.length) return;
     setThemes(createEmptyThemes());
     setIsSubmitted(false);
     setComparing(false);
@@ -175,7 +180,7 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
         </div>
 
         <div className="grid gap-6 sm:grid-cols-3">
-          {themes.map((theme, index) => (
+          {(submittedThemes?.length ? submittedThemes : themes).map((theme, index) => (
             <div
               key={index}
               className="space-y-3 rounded-lg border border-sadu-gold/60 bg-white p-4 text-xs"
@@ -216,9 +221,12 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
         <button
           type="button"
           onClick={handleStartNewBatch}
-          className="inline-flex items-center gap-2 rounded-md border border-sadu-gold bg-sadu-sand ps-4 pe-4 py-2 text-xs font-bold text-sadu-charcoal transition-colors hover:bg-sadu-gold/20 cursor-pointer"
+          disabled={Boolean(submittedThemes?.length)}
+          title={isAr ? 'يلزم إرجاع المقترحات من مدير الملتقى قبل التعديل' : 'Director must return the proposals before editing'}
+          className="inline-flex items-center gap-2 rounded-md border border-sadu-gold bg-sadu-sand ps-4 pe-4 py-2 text-xs font-bold text-sadu-charcoal transition-colors enabled:hover:bg-sadu-gold/20 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <RotateCcw className="h-4 w-4" /> {tr("Start New Proposal Set")} </button>
+        {Boolean(submittedThemes?.length) && <p className="text-sm text-sadu-muted">{isAr ? 'المقترحات مقفلة للمراجعة؛ يمكن لمدير الملتقى إرجاعها إلى اللجنة للتعديل.' : 'Proposals are locked for review; the Director can return them to the Committee for revision.'}</p>}
       </div>
     );
   }
@@ -372,6 +380,7 @@ const CommitteeThemeWorkspace: React.FC<CommitteeThemeWorkspaceProps> = ({
       </div>
 
       <div className="flex flex-col items-center justify-between gap-4 border-t border-sadu-gold/40 pt-4 sm:flex-row">
+        {filledCount === 3 && !allFieldsFilled && <p role="status" className="text-sm text-[#8B261E]">{isAr ? 'يجب تقديم ثلاثة أسماء مختلفة للثيمات قبل الإحالة.' : 'Use three distinct theme names before submitting.'}</p>}
         <span className="text-xs text-sadu-muted">
           {filledCount} {isAr ? "من 3 مقترحات مكتملة. افتح مقارنة المقترحات للمراجعة قبل الإحالة؛ الإنجليزية اختيارية." : "of 3 complete. Open Compare all three to review before submitting. English is optional."} </span>
         <button

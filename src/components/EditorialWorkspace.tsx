@@ -17,8 +17,9 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { ThemeItem } from './ChairmanWorkspace';
+import type { ThemeStatus } from '../types';
 
-export type ThemePolishStatus = 'PENDING_CHAIRMAN_APPROVAL' | 'PENDING_EDITORIAL_POLISH' | 'PUBLISHED' | 'PUBLISHED_OFFICIAL';
+export type ThemePolishStatus = Extract<ThemeStatus, 'PENDING_CHAIRMAN_APPROVAL' | 'PENDING_EDITORIAL_POLISH' | 'PUBLISHED_OFFICIAL'>;
 
 interface EditorialDraft {
   arabicText: string;
@@ -35,15 +36,13 @@ export interface EditorialWorkspaceProps {
   onPublishOfficialTheme?: (data: {
     themeEssayArabic: string;
     themeEssayEnglish: string;
-    approvedTheme: any;
-  }) => void;
+  }) => boolean;
   onPublishBrief?: (englishText: string) => void;
-  approvedTheme?: ThemeItem | any;
+  approvedTheme?: ThemeItem | null;
   themePolishStatus?: ThemePolishStatus;
   assignedBudget?: number | null;
   initialEssayArabic?: string;
   initialEssayEnglish?: string;
-  isInitiallyPublished?: boolean;
   onAutoNavigate?: (role: string) => void;
   onBackToRoles?: () => void;
 }
@@ -62,7 +61,6 @@ export default function EditorialWorkspace({
   assignedBudget,
   initialEssayArabic,
   initialEssayEnglish,
-  isInitiallyPublished = false,
   onAutoNavigate,
   onBackToRoles,
 }: EditorialWorkspaceProps = {}) {
@@ -70,16 +68,13 @@ export default function EditorialWorkspace({
   const { isAr } = useI18n();
   // Determine raw theme approved by Chairman in Stage 1
   const rawChairmanTheme = 
-    approvedTheme?.conceptStatementAr || 
     approvedTheme?.curatorialJustification ||
     approvedTheme?.definition || 
     approvedTheme?.arabicName ||
-    approvedTheme?.titleAr || 
     initialEssayArabic || 
     '';
 
-  const [publishedLocally, setPublishedLocally] = useState(false);
-  const isPublished = publishedLocally || isInitiallyPublished || themePolishStatus === 'PUBLISHED' || themePolishStatus === 'PUBLISHED_OFFICIAL';
+  const isPublished = themePolishStatus === 'PUBLISHED_OFFICIAL';
 
   const [draft, setDraft, draftSaveFailed] = useLocalDraft<EditorialDraft>(`sadu:draft:v1:editorial:${rawChairmanTheme}`, {
     arabicText: initialEssayArabic || rawChairmanTheme,
@@ -92,9 +87,11 @@ export default function EditorialWorkspace({
 
   const [translationVerified, setTranslationVerified] = useState(false);
   const isArabicLocked = arabicLocked || isPublished;
-  const canLockArabic = themePolishStatus !== 'PENDING_CHAIRMAN_APPROVAL' && Boolean(approvedTheme) && draft.arabicText.trim().length > 10;
+  const canEditArabic = themePolishStatus === 'PENDING_EDITORIAL_POLISH' && Boolean(approvedTheme) && !isArabicLocked;
+  const canLockArabic = canEditArabic && Boolean(onLockArabic) && draft.arabicText.trim().length > 10;
   const certifiedArabic = isArabicLocked ? (initialEssayArabic ?? '') : draft.arabicText;
-  const canPublish = arabicLocked && !isPublished && certifiedArabic.trim().length > 10 && draft.englishText.trim().length > 10 && translationVerified;
+  const canTranslate = themePolishStatus === 'PENDING_EDITORIAL_POLISH' && Boolean(approvedTheme) && arabicLocked;
+  const canPublish = canTranslate && Boolean(onPublishOfficialTheme) && certifiedArabic.trim().length > 10 && draft.englishText.trim().length > 10 && translationVerified;
 
   const handleLockArabic = (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,20 +104,14 @@ export default function EditorialWorkspace({
 
   const handlePublish = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canPublish) return;
-    
-    // Locks Stage 2 and unlocks Stage 3 (HIP Curatorial Directives)
-    setPublishedLocally(true);
+    if (!canPublish || !onPublishOfficialTheme?.({
+      themeEssayArabic: certifiedArabic.trim(),
+      themeEssayEnglish: draft.englishText.trim(),
+    })) return;
+
+    // Only an accepted global transition can announce success or advance roles.
     scrollWorkspaceToTop();
     onAutoNavigate?.('HIP');
-
-    if (onPublishOfficialTheme) {
-      onPublishOfficialTheme({
-        themeEssayArabic: certifiedArabic.trim(),
-        themeEssayEnglish: draft.englishText.trim(),
-        approvedTheme,
-      });
-    }
 
 
   };
@@ -193,12 +184,12 @@ export default function EditorialWorkspace({
             <h2 className="text-base font-semibold font-serif">{isArabicLocked ? (isAr ? "النص العربي المعتمد — للقراءة فقط" : "Certified Arabic — read only") : approvedTheme ? tr("Chairman Ratified Concept") : (isAr ? "بانتظار قرار رئيس الدائرة" : "Awaiting Chairman decision")}</h2>
           </div>
 
-          {(approvedTheme?.arabicName || approvedTheme?.titleAr) && (
+          {approvedTheme?.arabicName && (
             <div className="mb-3 ps-3 pe-3 py-2 rounded bg-amber-50/60 border border-amber-200/80 text-xs">
               <span className="text-[10px] uppercase font-bold text-amber-900 block">{tr("Ratified Title")}</span>
-              <strong className="text-amber-950 font-serif text-sm">{approvedTheme.arabicName || approvedTheme.titleAr}</strong>
-              {!isAr && approvedTheme.titleEn && (
-                <span className="text-stone-600 block text-[11px] mt-0.5">{approvedTheme.titleEn}</span>
+              <strong className="text-amber-950 font-serif text-sm">{approvedTheme.arabicName}</strong>
+              {!isAr && approvedTheme.englishName && (
+                <span className="text-stone-600 block text-[11px] mt-0.5">{approvedTheme.englishName}</span>
               )}
             </div>
           )}
@@ -260,7 +251,7 @@ export default function EditorialWorkspace({
                 <textarea
                   id="editorial-arabic"
                   dir="rtl"
-                  disabled={!approvedTheme}
+                  disabled={!canEditArabic}
                   rows={4}
                   value={approvedTheme ? draft.arabicText : ""}
                   onChange={(e) => setDraft({...draft, arabicText: e.target.value})}
@@ -277,7 +268,7 @@ export default function EditorialWorkspace({
                 <textarea
                   id="editorial-english"
                   dir="ltr"
-                  disabled={isPublished}
+                  disabled={!canTranslate}
                   rows={4}
                   placeholder={tr("Enter the polished English translation...")}
                   value={draft.englishText}
@@ -285,7 +276,7 @@ export default function EditorialWorkspace({
                   className="w-full p-4 border border-[#D9D2C5] rounded-md bg-[#FAF8F5] text-sm focus:ring-1 focus:ring-[#8B4513] focus:border-[#8B4513] disabled:opacity-60 disabled:bg-stone-100 outline-hidden resize-none text-start leading-relaxed"
                 />
                 {!isPublished && <label className="mt-4 flex items-start gap-2 text-sm">
-                  <input type="checkbox" checked={translationVerified} onChange={e => setTranslationVerified(e.target.checked)} />
+                  <input type="checkbox" disabled={!canTranslate} checked={translationVerified} onChange={e => setTranslationVerified(e.target.checked)} />
                   <span>{isAr ? 'راجعت الترجمة الإنجليزية وتحققت من مطابقتها للنص العربي المعتمد.' : 'I reviewed the English translation and verified it against the certified Arabic statement.'}</span>
                 </label>}
               </div>}

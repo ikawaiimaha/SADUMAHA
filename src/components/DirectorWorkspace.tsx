@@ -350,7 +350,7 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
                       value={notesLocked ? (theme.directorNotes ?? '') : (directorNotes[index] ?? '')}
                       onChange={e => setDirectorNotes({ ...directorNotes, [index]: e.target.value })}
                       placeholder={tr("Add executive remarks for Chairman Al Owais...")}
-                      className="w-full rounded-md border border-sadu-gold/60 bg-sadu-sand/20 p-2 text-xs text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
+                      className="w-full rounded-md border border-sadu-gold/60 bg-sadu-sand/20 p-2 text-xs text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick disabled:opacity-60 disabled:cursor-not-allowed"
                     />
                   </div>
                 </div>

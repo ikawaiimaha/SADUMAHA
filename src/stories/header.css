@@ -22,11 +22,11 @@
 }
 
 .storybook-header button + button {
-  margin-left: 10px;
+  margin-inline-start: 10px;
 }
 
 .storybook-header .welcome {
-  margin-right: 10px;
+  margin-inline-end: 10px;
   color: #333;
   font-size: 14px;
 }

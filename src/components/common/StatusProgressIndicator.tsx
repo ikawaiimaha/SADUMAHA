@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useId } from 'react';
 import { 
   CheckCircle2, 
   Clock, 
@@ -13,6 +13,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { useI18n } from '../../context/I18nContext';
+import { NativeModal } from './NativeModal';
 
 export type WorkflowType = 'contract' | 'committee' | 'milestone' | 'technical' | 'procurement';
 
@@ -107,6 +108,7 @@ export const StatusProgressIndicator: React.FC<StatusProgressIndicatorProps> = (
   const isAr = lang === 'ar';
   const [showPopover, setShowPopover] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const detailsTitleId = useId();
 
   // Default stages depending on type
   const activeStages = stages || (type === 'contract' ? CONTRACT_WORKFLOW_STAGES : COMMITTEE_WORKFLOW_STAGES);
@@ -334,7 +336,7 @@ export const StatusProgressIndicator: React.FC<StatusProgressIndicatorProps> = (
 
       {/* 3. DETAILED VARIANT (Expanded bar with stage milestone names) */}
       {variant === 'detailed' && (
-        <div 
+        <button type="button"
           className={`p-3 rounded-lg border ${theme.bg} ${theme.border} text-xs space-y-2 cursor-pointer transition-shadow hover:shadow-xs`}
           onClick={() => {
             if (interactive) {
@@ -375,7 +377,7 @@ export const StatusProgressIndicator: React.FC<StatusProgressIndicatorProps> = (
               aria-valuemax={100}
             />
           </div>
-        </div>
+        </button>
       )}
 
       {/* 4. MICRO VARIANT (Only dot + progress text) */}
@@ -391,11 +393,9 @@ export const StatusProgressIndicator: React.FC<StatusProgressIndicatorProps> = (
 
       {/* POPUP / DRILL-DOWN AUDIT CARD */}
       {showPopover && (
-        <div 
-          className="absolute z-50 mt-1.5 w-72 sm:w-84 max-w-[90vw] p-4 bg-sadu-paper rounded-lg border-2 border-sadu-gold shadow-xl text-xs space-y-3 end-0 sm:end-auto animate-in fade-in zoom-in-95 duration-100"
-          role="dialog"
-          aria-label="Workflow progress details"
-        >
+        <NativeModal isOpen onClose={() => setShowPopover(false)} labelledBy={detailsTitleId} className="max-w-sm">
+        <div className="p-4 bg-sadu-paper text-xs space-y-3">
+          <h3 id={detailsTitleId} className="sr-only">{isAr ? 'تفاصيل تقدم سير العمل' : 'Workflow progress details'}</h3>
           {/* Header */}
           <div className="flex items-start justify-between gap-2 border-b border-sadu-gold/50 pb-2">
             <div>
@@ -507,6 +507,7 @@ export const StatusProgressIndicator: React.FC<StatusProgressIndicatorProps> = (
               )}
               <button
                 type="button"
+                data-modal-close
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowPopover(false);
@@ -518,6 +519,7 @@ export const StatusProgressIndicator: React.FC<StatusProgressIndicatorProps> = (
             </div>
           </div>
         </div>
+        </NativeModal>
       )}
     </div>
   );

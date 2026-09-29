@@ -244,9 +244,10 @@ function SADUApp() {
   const [isNominationFormOpen, setIsNominationFormOpen] = useState<boolean>(false);
 
   const handleSubmitCommitteeThemes = (themes: CommitteeThemeDraft[]) => {
-    if (ratifiedTheme || !isThemeBatchComplete(themes)) return;
-    setDirectorThemes(themes);
+    if (activeRole !== 'PREP_COMMITTEE' || ratifiedTheme || directorThemes.length || submittedThemes || !isThemeBatchComplete(themes)) return false;
+    setDirectorThemes(themes.map(theme => ({ ...theme })));
     setSubmittedThemes(undefined);
+    return true;
   };
 
   const handleReturnToCommittee = () => {
@@ -259,15 +260,23 @@ function SADUApp() {
 
   const handlePresentToChairman = (themes: CommitteeThemeDraft[]) => {
     if (activeRole !== 'BIENNIAL_DIRECTOR' || ratifiedTheme || submittedThemes || !isThemeBatchComplete(themes)) return;
+    // Director may append advice, but cannot replace the Committee's proposal text.
+    if (!isThemeBatchComplete(directorThemes) || themes.some((theme, index) => {
+      const source = directorThemes[index];
+      return theme.arabicName !== source.arabicName || theme.englishName !== source.englishName ||
+        theme.aestheticFramework !== source.aestheticFramework || theme.contemporaryRelevance !== source.contemporaryRelevance ||
+        theme.curatorialJustification !== source.curatorialJustification;
+    })) return;
     setChairmanDocketRevision(revision => revision + 1);
-    setSubmittedThemes(themes);
+    setSubmittedThemes(directorThemes.map((theme, index) => ({ ...theme, directorNotes: themes[index].directorNotes })));
   };
 
   const handleBudgetAssigned = (amount: number, theme: ThemeItem) => {
     if (activeRole !== 'CHAIRMAN' || ratifiedTheme || !submittedThemes || !isThemeBatchComplete(submittedThemes) || !submittedThemes.some(candidate => candidate.arabicName === theme.arabicName && candidate.curatorialJustification === theme.curatorialJustification) || !Number.isFinite(amount) || amount <= 0) return;
     setAssignedBudget(amount);
     // Preserve the complete executive record, including both sets of notes.
-    setRatifiedTheme({ ...theme });
+    const selected = submittedThemes.find(candidate => candidate.arabicName === theme.arabicName)!;
+    setRatifiedTheme({ ...selected, chairmanNotes: theme.chairmanNotes });
     setArabicLocked(false);
     setThemeEssayArabic('');
     setThemeEssayEnglish('');
@@ -277,17 +286,15 @@ function SADUApp() {
   const handlePublishOfficialTheme = ({
     themeEssayArabic: essayAr,
     themeEssayEnglish: essayEn,
-    approvedTheme,
   }: {
     themeEssayArabic: string;
     themeEssayEnglish: string;
-    approvedTheme: any;
   }) => {
-    if (activeRole !== 'EDITORIAL' || !arabicLocked || themePolishStatus !== 'PENDING_EDITORIAL_POLISH' || essayAr !== themeEssayArabic || !essayEn.trim()) return;
+    if (activeRole !== 'EDITORIAL' || !ratifiedTheme || !arabicLocked || themePolishStatus !== 'PENDING_EDITORIAL_POLISH' || essayAr !== themeEssayArabic || essayAr.trim().length <= 10 || essayEn.trim().length <= 10) return false;
     setThemeEssayArabic(essayAr);
     setThemeEssayEnglish(essayEn);
-    setRatifiedTheme(approvedTheme);
     setThemePolishStatus('PUBLISHED_OFFICIAL');
+    return true;
   };
 
   const handleSubmitToEditorial = (arabicText: string) => {
@@ -670,7 +677,7 @@ function SADUApp() {
             docketRevision={chairmanDocketRevision}
             themes={submittedThemes}
             onThemeApproved={(theme, index) => {
-              if (ratifiedTheme) return;
+              if (activeRole !== 'CHAIRMAN' || ratifiedTheme) return;
               setSubmittedThemes(current => current?.map((proposal, proposalIndex) =>
                 proposalIndex === index ? { ...proposal, chairmanNotes: theme.chairmanNotes } : proposal));
             }}
@@ -753,6 +760,7 @@ function SADUApp() {
             onAutoNavigate={handleAutoNavigate}
                 eventId={EVENT_ID}
                 ratifiedTheme={ratifiedTheme}
+                submittedThemes={directorThemes}
                 onPresentToChairman={handleSubmitCommitteeThemes}
                   />
             )}
@@ -785,6 +793,7 @@ function SADUApp() {
       case 'HIP':
         return (
           <HIPWorkspace
+            arabicLocked={arabicLocked}
             publishedBoundaries={publishedBoundaries}
             onPublishBoundaries={confirmed=>setPublishedBoundaries(current=>publishBoundaries(current,activeRole,themePolishStatus,translationStatus,guidelinesArabic,guidelinesEnglish,blocklist,Boolean(restrictionProposal),confirmed,new Date().toISOString()))}
             themeEssayArabic={themeEssayArabic}
@@ -804,7 +813,7 @@ function SADUApp() {
             restrictionPending={Boolean(restrictionProposal)}
             restrictionAudit={restrictionAudit}
             onUpdateBlocklist={(tags, reason) => {
-              if (publishedBoundaries || activeRole !== 'HIP' || !reason.trim() || restrictionProposal) return;
+              if (publishedBoundaries || activeRole !== 'HIP' || themePolishStatus !== 'PUBLISHED_OFFICIAL' || !reason.trim() || restrictionProposal) return;
               setRestrictionProposal({ tags, reason: reason.trim() });
             }}
             ratifiedTheme={ratifiedTheme}
@@ -936,7 +945,7 @@ function SADUApp() {
   const executiveRoles: InstitutionalRole[] = ['PREP_COMMITTEE', 'BIENNIAL_DIRECTOR', 'CHAIRMAN', 'EDITORIAL', 'HIP'];
   let handoff: WorkspaceHandoff | undefined;
   if (executiveRoles.includes(activeRole)) {
-    if (themePolishStatus === 'PUBLISHED_OFFICIAL' || themePolishStatus === 'PUBLISHED') {
+    if (themePolishStatus === 'PUBLISHED_OFFICIAL') {
       handoff = translationStatus === 'PENDING_TRANSLATION'
         ? { title: isAr ? 'ترجمة الدليل قيد الانتظار' : 'Guidelines awaiting translation', description: isAr ? 'المسؤول: قسم التحرير' : 'Owner: Editorial', owner: 'EDITORIAL' }
         : translationStatus === 'PUBLISHED'
@@ -990,7 +999,7 @@ function SADUApp() {
 
         <DelegatedRoleGate role={activeRole}>
         {activeRole==='COORDINATOR'&&!nominationOpen(publishedBoundaries)?<CuratorialBoundaries isAr={isAr}/>:<>
-        {renderWorkspace()}{['COORDINATOR','PR_PROTOCOL','HIP','LOGISTICS'].includes(activeRole)&&<ArtistMetadataQueue exportLabels={['COORDINATOR','PR_PROTOCOL'].includes(activeRole)}/>}{['COORDINATOR','LOGISTICS'].includes(activeRole)&&<ExhibitionChecklistQueue/>}
+        {renderWorkspace()}{['COORDINATOR','PR_PROTOCOL','LOGISTICS'].includes(activeRole)&&<ArtistMetadataQueue exportLabels={['COORDINATOR','PR_PROTOCOL'].includes(activeRole)}/>}{['COORDINATOR','LOGISTICS'].includes(activeRole)&&<ExhibitionChecklistQueue/>}
         {activeRole==='EDITORIAL'&&<LiveCatalogAggregator state={commission} isAr={isAr}/>}
         {commission.installationStatus==='ARCHIVED_CLOSED'&&['COORDINATOR','BIENNIAL_DIRECTOR'].includes(activeRole)&&<CollectionCloseout state={commission} actor={activeRole}/>}
         {activeRole === 'BIENNIAL_DIRECTOR' && <ExecutiveContractSummary dossiers={nominatedArtists.filter(d=>commission.installationStatus!=='ARCHIVED_CLOSED'||d.id!==COMMISSION.id)} contracts={contracts} isAr={isAr} />}

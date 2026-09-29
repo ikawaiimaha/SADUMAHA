@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import { NativeModal } from './NativeModal';
 import { PrintWrapper, printDocument } from './PrintWrapper';
 import { 
   FileDown, 
@@ -79,11 +80,9 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
 
 
   return (
-    <PrintWrapper><div data-report-overlay className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-sadu-ink/75 backdrop-blur-xs overflow-y-auto">
-      <div 
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="report-modal-title"
+    <PrintWrapper><NativeModal isOpen onClose={onClose} labelledBy="report-modal-title" className="max-w-4xl">
+      <div
+        data-report-overlay
         className="bg-sadu-linen border border-sadu-gold rounded-xl shadow-2xl w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden text-sadu-charcoal animate-in fade-in zoom-in-95 duration-150"
       >
         {/* Modal Action Header (Excluded from Print) */}
@@ -133,6 +132,7 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
             <button
               type="button"
               onClick={onClose}
+              data-modal-close
               className="p-2 text-sadu-muted hover:text-sadu-charcoal hover:bg-sadu-sand-dark rounded-md transition-colors cursor-pointer"
               aria-label={isAr ? 'إغلاق التقرير' : 'Close modal'}
             >
@@ -332,6 +332,6 @@ export const PrintableReportModal: React.FC<PrintableReportModalProps> = ({
           </div>
         </div>
       </div>
-    </div></PrintWrapper>
+    </NativeModal></PrintWrapper>
   );
 };

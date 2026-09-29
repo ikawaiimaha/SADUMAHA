@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { NativeModal } from './common/NativeModal';
 import { 
   ShieldCheck, 
   XCircle, 
@@ -305,25 +306,19 @@ export default function DirectorReviewWorkspace({
 
       {/* Veto Modal (Accountability Gate) */}
       {isVetoModalOpen && (
-        <div 
-          className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4"
-          role="dialog"
-          aria-modal="true"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setIsVetoModalOpen(false);
-          }}
-        >
+        <NativeModal isOpen onClose={() => setIsVetoModalOpen(false)} labelledBy="director-veto-title" className="max-w-md">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden text-start">
             <div className="bg-[#A32A29] p-4 flex items-center justify-between text-white">
               <div className="flex items-center gap-2.5">
                 <AlertOctagon className="w-5 h-5" />
-                <h3 className="font-bold text-sm">Execute Institutional Veto</h3>
+                <h3 id="director-veto-title" className="font-bold text-sm">Execute Institutional Veto</h3>
               </div>
               <button
                 type="button"
                 onClick={() => setIsVetoModalOpen(false)}
                 className="text-white/80 hover:text-white p-1 rounded cursor-pointer"
                 aria-label="Close modal"
+                data-modal-close
               >
                 <X className="w-4 h-4" />
               </button>
@@ -335,10 +330,11 @@ export default function DirectorReviewWorkspace({
               </p>
 
               <div className="mb-4">
-                <label className="block text-xs font-bold text-[#1A1817] mb-1">
+                <label htmlFor="director-veto-category" className="block text-xs font-bold text-[#1A1817] mb-1">
                   Veto Category (تصنيف سبب الاستبعاد)
                 </label>
                 <select
+                  id="director-veto-category"
                   value={vetoReasonCategory}
                   onChange={(e) => setVetoReasonCategory(e.target.value)}
                   className="w-full p-2.5 border border-[#D9D2C5] rounded-md bg-[#FAF8F5] text-xs font-semibold text-[#1A1817] focus:ring-1 focus:ring-[#A32A29] focus:border-[#A32A29] outline-hidden cursor-pointer"
@@ -350,11 +346,12 @@ export default function DirectorReviewWorkspace({
                 </select>
               </div>
               
-              <label className="block text-xs font-bold text-[#1A1817] mb-1 flex justify-between">
+              <label htmlFor="director-veto-notes" className="block text-xs font-bold text-[#1A1817] mb-1 flex justify-between">
                 <span>Detailed Justification Notes</span>
                 <span className="text-[#A32A29]">* Mandatory</span>
               </label>
               <textarea
+                id="director-veto-notes"
                 required
                 rows={3}
                 value={vetoReason}
@@ -381,7 +378,7 @@ export default function DirectorReviewWorkspace({
               </div>
             </form>
           </div>
-        </div>
+        </NativeModal>
       )}
 
     </div>

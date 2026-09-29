@@ -1,3 +1,4 @@
+import { NativeModal } from './common/NativeModal';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Language, RoleKey, WorkspaceTab, ExhibitionProgramme } from '../types';
 import { PROGRAMMES } from '../data/mockData';
@@ -97,7 +98,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       setQuery('');
       setSelectedCategory('all');
       setSelectedIndex(0);
-      setTimeout(() => inputRef.current?.focus(), 50);
+      const timer = setTimeout(() => inputRef.current?.focus(), 50);
+      return () => clearTimeout(timer);
     }
   }, [isOpen]);
 
@@ -476,29 +478,23 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       if (filteredCommands[selectedIndex]) {
         filteredCommands[selectedIndex].action();
       }
-    } else if (e.key === 'Tab') {
-      e.preventDefault();
-      const categories: CommandCategory[] = ['all', 'workflows', 'workspaces', 'programmes', 'actions'];
-      const currentIndex = categories.indexOf(selectedCategory);
-      const nextCategory = categories[(currentIndex + 1) % categories.length];
-      setSelectedCategory(nextCategory);
-      setSelectedIndex(0);
+
     }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-12 sm:pt-20 px-4 bg-sadu-charcoal/65 backdrop-blur-xs">
+    <NativeModal isOpen={isOpen} onClose={onClose} labelledBy="command-palette-title" className="max-w-2xl" returnFocusSelector="[data-workspace-search]">
+      <h2 id="command-palette-title" className="sr-only">{isAr ? 'البحث في مساحات العمل' : 'Search workspaces'}</h2>
       <div 
         className="w-full max-w-2xl bg-sadu-linen border-2 border-sadu-gold rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[82vh] animate-in fade-in zoom-in-95 duration-150"
-        role="dialog"
-        aria-modal="true"
       >
         {/* Search Header */}
         <div className="relative border-b border-sadu-gold px-4 py-3 bg-sadu-sand/60 flex items-center gap-3">
           <Search className="w-5 h-5 text-sadu-brick shrink-0" />
           <input
+            aria-label={dict.placeholder}
             ref={inputRef}
             type="text"
             value={query}
@@ -764,11 +760,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             <span>·</span>
             <span className="flex items-center gap-0.5">
               <kbd className="bg-sadu-linen px-1 rounded border border-sadu-gold">Tab</kbd>
-              <span>{dict.filterHint}</span>
+              <span>{isAr ? 'التنقل بين عناصر التحكم' : 'Move between controls'}</span>
             </span>
           </div>
         </div>
       </div>
-    </div>
+    </NativeModal>
   );
 };

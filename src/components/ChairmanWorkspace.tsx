@@ -21,6 +21,7 @@ import {
   Banknote,
 } from 'lucide-react';
 import { CommitteeThemeDraft } from './CommitteeThemeWorkspace';
+import type { ThemeStatus } from '../types';
 
 const CONCURRENT_EVENTS = [
   {
@@ -78,7 +79,7 @@ export interface ChairmanWorkspaceProps {
   initialBudget?: number | null;
   initialApprovedTheme?: ThemeItem | null;
   /** Optional current theme workflow status. */
-  themeStatus?: 'PENDING_CHAIRMAN_APPROVAL' | 'PENDING_EDITORIAL_POLISH' | 'PUBLISHED' | 'PUBLISHED_OFFICIAL';
+  themeStatus?: ThemeStatus;
   onAutoNavigate?: (role: string) => void;
   onBackToRoles?: () => void;
 }

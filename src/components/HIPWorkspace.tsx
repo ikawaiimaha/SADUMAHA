@@ -17,13 +17,15 @@ import {
   Send,
 } from 'lucide-react';
 import { ThemeItem } from './ChairmanWorkspace';
+import type { ThemeStatus } from '../types';
 
 export type TranslationStatus = 'REQUEST_REVISION' | 'DRAFT' | 'PENDING_TRANSLATION' | 'PUBLISHED';
 
 export interface HIPWorkspaceProps {
   publishedBoundaries?: Boundaries|null;
   onPublishBoundaries?: (confirmed:boolean[])=>void;
-  themeStatus: string;
+  themeStatus: ThemeStatus;
+  arabicLocked?: boolean;
   themeEssayArabic?: string;
   themeEssayEnglish?: string;
   guidelinesEnglish?: string;
@@ -52,6 +54,7 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
   publishedBoundaries, onPublishBoundaries,
   guidelinesArabic,
   themeStatus,
+  arabicLocked = false,
   themeEssayArabic,
   themeEssayEnglish,
   guidelinesEnglish,
@@ -85,7 +88,7 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
   };
 
   const handleAddTag = (tagToAdd: string) => {
-    if (publishedBoundaries || !restrictionReason.trim() || restrictionPending) return;
+    if (isLocked || publishedBoundaries || !restrictionReason.trim() || restrictionPending) return;
     const trimmed = tagToAdd.trim();
     if (!trimmed || !trimmed.replace(/^(Restricted (Medium|Style|Nationality)|Hazardous Medium):/i,'').trim()) return;
     if (blocklist.some(t => t.toLowerCase() === trimmed.toLowerCase())) return;
@@ -94,20 +97,20 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
-    if (publishedBoundaries || !restrictionReason.trim() || restrictionPending) return;
+    if (isLocked || publishedBoundaries || !restrictionReason.trim() || restrictionPending) return;
     onUpdateBlocklist(blocklist.filter(t => t.toLowerCase() !== tagToRemove.toLowerCase()), restrictionReason);
   };
 
   const isLocked = themeStatus !== 'PUBLISHED_OFFICIAL';
   const submissionLocked = Boolean(publishedBoundaries) || isLocked || translationStatus === 'PUBLISHED' || translationStatus === 'PENDING_TRANSLATION';
   const lockReason = (() => {
-    if (themeStatus === 'ARABIC_LOCKED') {
+    if (themeStatus === 'PENDING_EDITORIAL_POLISH' && arabicLocked) {
       return {
         title: isAr ? 'الحالة: بانتظار ترجمة قسم التحرير' : 'Status: Pending Editorial Translation',
         description: isAr ? 'بانتظار إكمال قسم التحرير للترجمة الإنجليزية ونشر الثيمة الرسمية.' : 'Waiting for Editorial to complete the English translation and publish the official theme.',
       };
     }
-    if (themeStatus === 'CHAIRMAN_APPROVED' || themeStatus === 'PENDING_EDITORIAL_POLISH') {
+    if (themeStatus === 'PENDING_EDITORIAL_POLISH') {
       return {
         title: isAr ? 'الحالة: بانتظار الصياغة المؤسسية' : 'Status: Pending Editorial Refinement',
         description: isAr ? 'اعتمد رئيس الدائرة الثيمة. بانتظار قسم التحرير لإتمام الصياغة المؤسسية والنشر.' : 'The Chairman has ratified the theme. Waiting for Editorial to complete institutional refinement and publication.',
@@ -122,7 +125,7 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6">
       {publishedBoundaries&&<CuratorialBoundaries published={publishedBoundaries} isAr={isAr}/>}
-      <fieldset disabled={Boolean(publishedBoundaries)} className="space-y-6">
+      <fieldset disabled={isLocked || Boolean(publishedBoundaries)} className="space-y-6 disabled:opacity-70">
       {/* Header */}
       <div className="rounded-xl border border-sadu-gold bg-sadu-paper p-6 shadow-xs">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-sadu-gold/40 pb-4">

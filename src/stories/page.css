@@ -27,7 +27,7 @@
 
 .storybook-page ul {
   margin: 1em 0;
-  padding-left: 30px;
+  padding-inline-start: 30px;
 }
 
 .storybook-page li {
@@ -37,7 +37,7 @@
 .storybook-page .tip {
   display: inline-block;
   vertical-align: top;
-  margin-right: 10px;
+  margin-inline-end: 10px;
   border-radius: 1em;
   background: #e7fdd8;
   padding: 4px 12px;
@@ -58,7 +58,7 @@
   display: inline-block;
   vertical-align: top;
   margin-top: 3px;
-  margin-right: 4px;
+  margin-inline-end: 4px;
   width: 12px;
   height: 12px;
 }

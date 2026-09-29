@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import { NativeModal } from '../common/NativeModal';
+import React, { useMemo, useState, useId } from 'react';
 import { useI18n } from '../../context/I18nContext';
 import { X, Mail, MailOpen, Send, Paperclip } from 'lucide-react';
 
@@ -79,6 +80,7 @@ const THREADS: InboxThread[] = [
 ];
 
 export const InboxModal: React.FC<InboxModalProps> = ({ isOpen, onClose, initialThreadId }) => {
+  const titleId = useId();
   const i18n = useI18n();
   const isAr = i18n.lang === 'ar';
   const [readThreadIds, setReadThreadIds] = useState<Set<string>>(new Set());
@@ -99,15 +101,15 @@ export const InboxModal: React.FC<InboxModalProps> = ({ isOpen, onClose, initial
   };
 
   return (
-    <div role="dialog" aria-modal="true" aria-label={isAr ? 'صندوق الوارد' : 'Inbox'} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+    <NativeModal isOpen={isOpen} onClose={onClose} labelledBy={titleId} className="max-w-4xl">
       <div className="flex h-[85vh] w-full max-w-4xl flex-col overflow-hidden rounded-lg border border-sadu-gold bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-sadu-gold/50 bg-sadu-linen px-5 py-3">
-          <div className="flex items-center gap-2 text-sm font-bold text-sadu-charcoal"><Mail className="h-4 w-4 text-sadu-brick" />{isAr ? 'صندوق وارد الفنانين' : 'Artist Inbox'}</div>
-          <button type="button" onClick={onClose} aria-label={isAr ? 'إغلاق' : 'Close'} className="flex cursor-pointer items-center justify-center rounded-full p-1.5 text-sadu-muted hover:bg-sadu-sand hover:text-sadu-charcoal"><X className="h-4 w-4" /></button>
+          <h2 id={titleId} className="flex items-center gap-2 text-sm font-bold text-sadu-charcoal"><Mail aria-hidden="true" className="h-4 w-4 text-sadu-brick" />{isAr ? 'صندوق وارد الفنانين' : 'Artist Inbox'}</h2>
+          <button type="button" data-modal-close onClick={onClose} aria-label={isAr ? 'إغلاق' : 'Close'} className="flex cursor-pointer items-center justify-center rounded-full p-1.5 text-sadu-muted hover:bg-sadu-sand hover:text-sadu-charcoal"><X className="h-4 w-4" /></button>
         </div>
 
-        <div className="flex min-h-0 flex-1">
-          <div className="w-full max-w-xs shrink-0 overflow-y-auto border-e border-sadu-gold/40 bg-sadu-paper">
+        <div className="flex min-h-0 flex-1 flex-col sm:flex-row">
+          <div className="w-full max-h-40 sm:max-h-none sm:max-w-xs shrink-0 overflow-y-auto border-e border-sadu-gold/40 bg-sadu-paper">
             {THREADS.map(thread => {
               const isUnread = thread.unread && !readThreadIds.has(thread.id);
               const isActive = thread.id === activeThreadId;
@@ -150,6 +152,7 @@ export const InboxModal: React.FC<InboxModalProps> = ({ isOpen, onClose, initial
             <div className="border-t border-sadu-gold/40 p-4">
               <div className="flex items-end gap-2">
                 <textarea
+                  aria-label={isAr ? 'مسودة رد تجريبية' : 'Sample reply draft'}
                   value={reply}
                   onChange={event => setReply(event.target.value)}
                   rows={2}
@@ -163,6 +166,6 @@ export const InboxModal: React.FC<InboxModalProps> = ({ isOpen, onClose, initial
           </div>
         </div>
       </div>
-    </div>
+    </NativeModal>
   );
 };

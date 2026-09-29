@@ -22,7 +22,10 @@ export function NativeModal({ isOpen, onClose, labelledBy, children, className =
     const previousOverflow = document.body.style.overflow;
     if (!dialog.open) dialog.showModal();
     document.body.style.overflow = 'hidden';
-    dialog.querySelector<HTMLElement>('[data-modal-close]')?.focus();
+    const initialFocus = dialog.querySelector<HTMLElement>('[data-modal-close]') ??
+      Array.from(dialog.querySelectorAll<HTMLElement>('button, a[href], input, select, textarea, [tabindex]'))
+        .find(element => element.tabIndex >= 0 && !element.matches(':disabled') && element.getClientRects().length > 0) ?? dialog;
+    initialFocus.focus();
     return () => {
       if (dialog.open) dialog.close();
       document.body.style.overflow = previousOverflow;
@@ -44,7 +47,7 @@ export function NativeModal({ isOpen, onClose, labelledBy, children, className =
       const first = controls[0]; const last = controls.at(-1);
       if (!first || !last) { event.preventDefault(); dialog.focus(); return; }
       // Native modality makes the page inert; wrap Tab before it moves into browser chrome.
-      if (first && last && (event.shiftKey ? document.activeElement === first : document.activeElement === last)) {
+      if (document.activeElement === dialog || (event.shiftKey ? document.activeElement === first : document.activeElement === last)) {
         event.preventDefault();
         (event.shiftKey ? last : first).focus();
       }

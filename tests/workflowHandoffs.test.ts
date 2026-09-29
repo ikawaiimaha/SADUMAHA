@@ -1,3 +1,4 @@
+import { isThemeBatchComplete } from '../src/components/CommitteeThemeWorkspace';
 import { operationalHandoff } from '../src/data/operationalHandoff';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -1169,4 +1170,14 @@ test('PR intake rejects absent MIME, wrong photo format and insufficient pixels'
  assert.equal(validVisaIntake({...v,personalPhoto:undefined}),false);
  assert.equal(validVisaIntake({...v,photoDimensions:{width:100,height:100}}),false);
  assert.equal(validVisaIntake({...v,personalPhoto:new File(['x'],'photo.png',{type:'image/jpeg'})}),false);
+});
+
+
+test('theme batches require three distinct Arabic proposals without mandatory English', () => {
+  const proposal = {arabicName:'الميزان',englishName:'',aestheticFramework:'إطار',contemporaryRelevance:'صلة',curatorialJustification:'مبرر'};
+  const batch = [proposal, {...proposal,arabicName:'النقطة'}, {...proposal,arabicName:'تجليات'}];
+  assert.equal(isThemeBatchComplete(batch),true);
+  assert.equal(isThemeBatchComplete(batch.slice(0,2)),false);
+  assert.equal(isThemeBatchComplete([proposal, {...proposal,arabicName:' الميزان '},batch[2]]),false);
+  assert.equal(isThemeBatchComplete([batch[0],batch[1],{...batch[2],aestheticFramework:''}]),false);
 });
