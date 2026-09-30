@@ -1,3 +1,4 @@
+import { trackDemoAction } from '../lib/demoReplay';
 import { useEffect, useState } from 'react';
 type Props={role:string;artwork?:any;versionHash?:string;onChanged:()=>Promise<void>};
 export default function AcquisitionPanel({role,artwork,versionHash,onChanged}:Props){
@@ -5,7 +6,7 @@ export default function AcquisitionPanel({role,artwork,versionHash,onChanged}:Pr
  const loadEnvelope=async()=>{const r=await fetch('/api/review/signing-envelope',{cache:'no-store'});if(r.ok)setEnvelope(await r.json());else setEnvelope(undefined);};
  useEffect(()=>{if(role==='Artist')void loadEnvelope();},[role,artwork?.acquisition?.state]);
  const q=artwork?.acquisition;
- const execute=async(action:string,body:object)=>{setBusy(true);setError('');try{const r=await fetch('/api/review/acquisition/'+action,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const d=await r.json();if(!r.ok)throw new Error(d.error);if(role==='Artist')await loadEnvelope();else await onChanged();}catch(e){setError((e as Error).message);}finally{setBusy(false);}};
+ const execute=async(action:string,body:object)=>{setBusy(true);setError('');try{const r=await fetch('/api/review/acquisition/'+action,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const d=await r.json();if(!r.ok)throw new Error(d.error);trackDemoAction(action,'completed');if(role==='Artist')await loadEnvelope();else await onChanged();}catch(e){trackDemoAction(action,'blocked');setError((e as Error).message);}finally{setBusy(false);}};
  const button='rounded border ps-4 pe-4 py-2 disabled:opacity-40';
  if(role==='Artist')return envelope?<section className="rounded-xl border bg-white p-5 space-y-3"><h2>Transfer of title — signing envelope</h2><p>This separate envelope contains only the proposed title document. Local simulation; no legal signature or payment.</p><a className="underline" href={`/api/review/signing-envelope/${envelope.artworkId}.pdf`}>Download Transfer of Title draft</a><p>{envelope.state}</p><label className="block"><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/> I reviewed this document for the fictional test.</label><button className={button} disabled={busy||!confirmed||envelope.state!=='AWAITING_ARTIST_SIGNATURE'} onClick={()=>void execute('sign',{artworkId:envelope.artworkId,documentHash:envelope.documentHash,confirm:true})}>Simulate artist signature</button><p role="alert">{error}</p></section>:null;
  if(!artwork||!['Director','General_Exhibition_Coordinator','Logistics'].includes(role))return null;

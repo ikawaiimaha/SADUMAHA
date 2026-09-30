@@ -9,7 +9,7 @@ import ExecutiveLanding from './components/ExecutiveLanding';
 import RehearsalJourney from './components/RehearsalJourney';
 import './rehearsal.css';
 
-// Dedicated release entry: no pilot, authentication, analytics or integration imports.
+// Dedicated preview entry. Local replay is restricted to loopback synthetic-demo routes.
 const PublicationReview = lazy(() => import('./components/PublicationReview'));
 const path = normalizePreviewPath(window.location.pathname);
 const screen = executiveMode && (journeyPaths.includes(path) || path === '/review') ? <ExecutiveDashboard /> : path === '/review' ? (isLocalPreview(window.location.hostname) ? <Suspense fallback={<p role="status">Loading submission review…</p>}><PublicationReview /></Suspense> : <PreviewUnavailable review />) : path === '/overview' || path === '/' ? <ExecutiveLanding /> : journeyPaths.includes(path) ? <RehearsalJourney /> : <PreviewUnavailable notFound />;

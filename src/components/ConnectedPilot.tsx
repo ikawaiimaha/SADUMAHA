@@ -1,3 +1,4 @@
+import { trackDemoState, trackDemoAction } from '../lib/demoReplay';
 import AcquisitionPanel from './AcquisitionPanel';
 import { useCallback, useEffect, useState } from 'react';
 import SpatialPlanner from './SpatialPlanner';
@@ -10,10 +11,10 @@ export default function ConnectedPilot(){
   const [title,setTitle]=useState('Kufic Horizon');const [concept,setConcept]=useState('A fictional bronze sculpture exploring architecture, calligraphy and the relationship between language and space.');const [file,setFile]=useState<File>();
   const [conservation,setConservation]=useState({max_lux:50,target_temp_c:20,target_humidity_pct:40});
   const guard=useCallback((value:boolean)=>setDirty(value),[]);
-  const refresh=async()=>{setData(await api('/api/review/pilot'));setChecked(false);setTick(n=>n+1);};
+  const refresh=async()=>{const view=await api('/api/review/pilot');setData(view);trackDemoState(view);setChecked(false);setTick(n=>n+1);};
   useEffect(()=>{void api('/api/review/session').then(async s=>{setSession(s);if(s.actor)await refresh();}).catch(e=>setError(e.message));},[]);
   useEffect(()=>{if(!dirty)return;const warn=(e:BeforeUnloadEvent)=>{e.preventDefault();e.returnValue='';};window.addEventListener('beforeunload',warn);return()=>window.removeEventListener('beforeunload',warn);},[dirty]);
-  const run=async(work:()=>Promise<unknown>)=>{if(busy)return;setBusy(true);setError('');try{await work();await refresh();setDirty(false);}catch(e){setError((e as Error).message);}finally{setBusy(false);}};
+  const run=async(work:()=>Promise<unknown>)=>{if(busy)return;setBusy(true);setError('');try{await work();trackDemoAction('workflow','completed');await refresh();setDirty(false);}catch(e){trackDemoAction('workflow','blocked');setError((e as Error).message);}finally{setBusy(false);}};
   const revision=data?.revision; const actor=session?.actor; const command={artworkId:data?.artwork.id,versionHash:revision?.versionHash};
   const mutate=(path:string,extra:object={})=>run(()=>api(base+path,{...command,...extra}));
   const action=(name:string,extra:object={})=>run(()=>api('/api/review/pilot/action',{version:data.version,action:name,checked,...extra}));

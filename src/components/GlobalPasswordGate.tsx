@@ -1,4 +1,6 @@
 import { executiveMode } from '../lib/executiveMode';
+import LocalReplayControls from './LocalReplayControls';
+import { startDemoReplay, pauseDemoReplay } from '../lib/demoReplay';
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 
 /** sessionStorage is a display hint only; the server cookie is always verified. */
@@ -8,6 +10,7 @@ export default function GlobalPasswordGate({ children }: { children: ReactNode }
   const [busy, setBusy] = useState(false);
   const [checking, setChecking] = useState(true);
   const [error, setError] = useState('');
+  useEffect(()=>{if(verified)void startDemoReplay({hostname:window.location.hostname,pathname:window.location.pathname});else pauseDemoReplay();},[verified]);
   const check = useCallback(async () => {
     try {
       const r = await fetch('/api/prelaunch/session', { cache: 'no-store', signal: AbortSignal.timeout(10000) });
@@ -19,7 +22,7 @@ export default function GlobalPasswordGate({ children }: { children: ReactNode }
   useEffect(() => { window.dispatchEvent(new Event('sadu:ready')); void check(); const id = setInterval(check, 60000); return () => clearInterval(id); }, [check]);
   useEffect(() => { try { if (verified) sessionStorage.setItem('sadu-prelaunch-verified', 'true'); else sessionStorage.removeItem('sadu-prelaunch-verified'); } catch { /* Storage is optional, never an auth source. */ } }, [verified]);
   if (verified) return <><aside aria-label="Preview session" className="flex flex-wrap items-center justify-between gap-2 border-b border-[#D9CEBA] bg-[#F7F1E6] ps-5 pe-5 py-2 text-sm text-[#111817]">
-    {!executiveMode && <span>Private SADU preview · Fictional data</span>}
+    {!executiveMode && <span>Private SADU preview · Fictional data</span>}<LocalReplayControls/>
     <button className="rounded border border-[#8C8173] ps-3 pe-3 py-2 font-semibold focus-visible:outline-2 focus-visible:outline-offset-2" disabled={busy} onClick={async () => {
       if (!window.confirm('Lock this preview? Unrecorded changes will be lost. Recorded journey progress stays in this tab.')) return;
       setBusy(true); setError('');
@@ -31,7 +34,7 @@ export default function GlobalPasswordGate({ children }: { children: ReactNode }
   </aside>{children}</>;
   if (checking) return <main className="min-h-screen grid place-items-center bg-[#F7F1E6] text-[#111817]"><p role="status">Checking preview access…</p></main>;
   return <main style={{ minHeight: '100svh', display: 'grid', placeItems: 'center', background: '#F7F1E6', color: '#111817', padding: 24 }}>
-    <form style={{ width: 'min(360px, 85vw)', textAlign: 'center' }} onSubmit={async e => {
+    <form data-private style={{ width: 'min(360px, 85vw)', textAlign: 'center' }} onSubmit={async e => {
       e.preventDefault(); setBusy(true); setError('');
       try { const r = await fetch('/api/prelaunch/unlock', { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: AbortSignal.timeout(10000), body: JSON.stringify({ password }) }); if (!r.ok) throw new Error(); await check(); }
       catch { setError('Unable to unlock. Check your password or contact the preview owner.'); }
