@@ -38,3 +38,13 @@ CREATE TABLE legacy_asset (id TEXT PRIMARY KEY,work_id TEXT NOT NULL,evidence_id
 -- Read policies must bind authenticated actors to invitation/edition scope; never trust a posted role.
 -- Invitation redemption, milestone payment and roster reservation require atomic transactions.
 -- Restricted benchmark identities must not enter research projections, payload logs or exports.
+
+-- Version-bound artist intent; approved theme snapshot is copied by the service, never trusted from request data.
+CREATE TABLE thematic_defense (
+ work_id TEXT NOT NULL, revision INTEGER NOT NULL,
+ conceptual_text TEXT NOT NULL, material_text TEXT NOT NULL,
+ theme_revision INTEGER NOT NULL, theme_snapshot_json TEXT NOT NULL CHECK(json_valid(theme_snapshot_json)),
+ acknowledged_at TEXT NOT NULL,
+ PRIMARY KEY(work_id,revision),
+ FOREIGN KEY(work_id,revision) REFERENCES artist_submission_revision(work_id,revision)
+);

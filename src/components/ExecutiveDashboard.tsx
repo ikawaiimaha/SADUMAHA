@@ -1,3 +1,4 @@
+import type { ThemeState } from "../lib/themeWorkflow";
 import RoleSwitcher from './RoleSwitcher';
 import ThemeWorkspace from './ThemeWorkspace';
 import SpatialLedgerWorkspace from './SpatialLedgerWorkspace';
@@ -14,6 +15,7 @@ export default function ExecutiveDashboard() {
 
 function ExecutiveDashboardContent() {
   const [workspace, setWorkspace] = useState<'artists' | 'theme' | 'spaces'>('artists');
+  const [theme, setTheme] = useState<ThemeState>();
   const [themeApprovalId, setThemeApprovalId] = useState<string | null>(null);
   const { state: sandbox, role } = useSandbox();
   const [editing, setEditing] = useState(false);
@@ -67,8 +69,8 @@ function ExecutiveDashboardContent() {
     </div></header>
     <main className="mx-auto max-w-6xl p-5 md:p-8 space-y-7">
       <nav aria-label="Workspaces" className="flex flex-wrap gap-5 border-b border-[#DED5C4] pb-4">{(['artists','theme','spaces'] as const).map(w => <button key={w} aria-pressed={workspace === w} onClick={() => setWorkspace(w)} className={`text-sm pb-2 border-b-2 focus-visible:outline-2 focus-visible:outline-[#8B261E] ${workspace === w ? 'border-[#8B261E] text-[#8B261E] font-semibold' : 'border-transparent text-[#655D50]'}`}>{w === 'artists' ? 'Artist dossiers' : w === 'theme' ? 'Theme & Editorial' : 'Spaces & allocations'}</button>)}</nav>
-      <div id="theme-workspace" tabIndex={-1} hidden={workspace !== 'theme'}><ThemeWorkspace onPlanningReady={setThemeApprovalId} /></div>
-      <div id="spatial-workspace" tabIndex={-1} hidden={workspace !== 'spaces'}><SpatialLedgerWorkspace themeApprovalId={themeApprovalId} /></div>
+      <div id="theme-workspace" tabIndex={-1} hidden={workspace !== 'theme'}><ThemeWorkspace onPlanningReady={setThemeApprovalId} onThemeChange={setTheme} /></div>
+      <div id="spatial-workspace" tabIndex={-1} hidden={workspace !== 'spaces'}><SpatialLedgerWorkspace themeApprovalId={themeApprovalId} theme={theme} /></div>
       <div hidden={workspace !== 'artists'} className="space-y-7">
       <div><p className="text-sm uppercase tracking-widest text-[#8B261E]">Exhibition overview</p><h1 className="mt-2 text-3xl font-serif">Artist dossiers</h1><p className="mt-2 text-[#655D50]">Select an artist to review their next step and supporting information.</p></div>
       <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)] items-start">

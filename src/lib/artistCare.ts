@@ -1,4 +1,5 @@
 import { arrivalPolicy, checkArrivalLocation } from "../logistics/geofence.mjs";
+import type { ThemeState } from "./themeWorkflow";
 import type { Ledger, LedgerActor } from "./spatialLedger";
 
 export type MediaRef = {
@@ -12,7 +13,18 @@ export type MediaRef = {
   duration?: number;
 };
 export type Route = "EXISTING" | "COMMISSION";
+export type ThemeAnchor = { selectionId: string; revision: number; title: { en: string; ar: string }; essay: NonNullable<ThemeState["published"]>["essay"] };
+export function approvedTheme(theme?: ThemeState): ThemeAnchor | undefined {
+  const p = theme?.published;
+  if (!p) return undefined;
+  const events = theme!.events.slice(0, theme!.events.map(e => e.action).lastIndexOf("PUBLISH") + 1);
+  const index = events.map(e => e.action).lastIndexOf("SELECT");
+  const title = p.proposals[p.selected];
+  if (index < 0 || !title) return undefined;
+  return { selectionId: `theme-selection-${index + 1}`, revision: p.revision, title: { en: title.en, ar: title.ar }, essay: structuredClone(p.essay) };
+}
 export type Work = {
+  thematicDefense?: { conceptual: string; material: string; acknowledged: boolean; themeRevision: number; theme?: ThemeAnchor; acknowledgedAt?: string };
   id: string;
   title: string;
   route: Route;
@@ -254,6 +266,7 @@ export async function applyArtistCare(
   c: CareCommand,
   ledger: Ledger,
   now = new Date().toISOString(),
+  theme?: ThemeState,
 ): Promise<{ state: ArtistCare; token?: string }> {
   if (actor.exhibitionId !== ledger.exhibitionId)
     reject("Edition access denied.", 403);
@@ -408,6 +421,18 @@ export async function applyArtistCare(
       )
         reject("Submission is not open for this invitation.");
       const x = d.work as Work;
+      const anchor = approvedTheme(theme);
+      if (!anchor || anchor.selectionId !== ledger.block.themeApprovalId)
+        reject("The approved bilingual theme for this spatial brief is not available. Ask Editorial to complete executive approval.");
+      const defense = x?.thematicDefense;
+      if (!defense?.acknowledged || defense.themeRevision !== anchor.revision)
+        reject("Review and acknowledge the current approved theme before submitting.", 422);
+      if (typeof defense.conceptual !== "string" || typeof defense.material !== "string" || defense.conceptual.length > 4000 || defense.material.length > 4000) reject("Keep each thematic response within 4000 characters.", 422);
+      const written = text(defense.conceptual, 20) && text(defense.material, 20);
+      const voice = x?.media?.voice;
+      const spoken = voice && media(voice) && voice.type.startsWith("audio/") && positive(voice.duration) && voice.duration <= 60;
+      if (!written && !spoken) reject("Answer both thematic prompts or attach a Studio Voice recording of up to 60 seconds.", 422);
+
       if (
         !x ||
         !text(x.id) ||
@@ -416,7 +441,6 @@ export async function applyArtistCare(
         !positive(x.width) ||
         !positive(x.height) ||
         !positive(x.depth) ||
-        !text(x.rationale, 20) ||
         !text(x.maintenance, 10) ||
         !positive(x.intervalDays) ||
         x.intervalDays > 365
@@ -487,7 +511,8 @@ export async function applyArtistCare(
         depth: x.depth,
         weight: x.weight,
         year: x.year,
-        rationale: x.rationale,
+        rationale: written ? defense.conceptual : "Studio Voice thematic defense",
+        thematicDefense: { conceptual: defense.conceptual, material: defense.material, acknowledged: true, themeRevision: anchor.revision, theme: structuredClone(anchor), acknowledgedAt: now },
         packing: x.packing,
         insuranceMinor: x.insuranceMinor,
         budget: x.route === "COMMISSION" ? x.budget : [],

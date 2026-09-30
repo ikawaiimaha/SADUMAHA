@@ -1,3 +1,4 @@
+import type { ThemeState } from "../src/lib/themeWorkflow";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createArtistCareService } from "../server/artist-care.mjs";
@@ -16,6 +17,7 @@ import {
   type CareCommand,
 } from "../src/lib/artistCare";
 
+const theme: ThemeState = { revision: 7, phase: "Published", proposals: [], notes: [], snapshots: [], events: [{ action: "SELECT" }, { action: "PUBLISH" }] as ThemeState["events"], published: { revision: 6, selected: 0, proposals: [{ en: "Shared practice", ar: "ممارسة مشتركة", rationale: "", feasibility: "", translation: "" }], essay: { introduction: { en: "Approved introduction", ar: "مقدمة معتمدة" }, context: { en: "Approved context", ar: "سياق معتمد" }, checkedEn: true, checkedAr: true } } };
 const at = "2026-09-30T10:00:00Z";
 
 test("backend care responses are artist-scoped and unverified media ingestion is disabled", async () => {
@@ -66,7 +68,7 @@ function roster() {
       s,
       { id, role, exhibitionId: "sandbox" },
       { ...c, expected: s.version },
-      "theme-1",
+      "theme-selection-1",
       at,
     );
   };
@@ -128,6 +130,7 @@ const work = (): Work => ({
   weight: 1,
   year: 2026,
   rationale: "A synthetic proposal about shared artistic practice.",
+  thematicDefense: { conceptual: "Shared practice connects this artwork to the theme.", material: "Bronze expresses the continuity of shared practice.", acknowledged: true, themeRevision: 6 },
   packing: "Protect all surfaces.",
   insuranceMinor: 100000,
   budget: [
@@ -175,6 +178,7 @@ async function journey() {
       { action, data, workId, invitationId: inv?.id, expected: state.version },
       ledger,
       time,
+      theme,
     );
     state = result.state;
     if (result.token) token = result.token;
@@ -212,7 +216,7 @@ test("benchmark seeds are projected out of research responses, histories and all
       s,
       { role, id: role, exhibitionId: "sandbox" },
       { ...c, expected: s.version },
-      "theme-1",
+      "theme-selection-1",
       at,
     );
   };
@@ -551,7 +555,7 @@ test("benchmark artists receive only their own invitation envelope, never the pl
       id: i.artistId,
       name: i.name,
       rationale: "Restricted Committee reasoning",
-      themeId: "theme-1",
+      themeId: "theme-selection-1",
       assigned: true,
     },
   ];
@@ -590,4 +594,29 @@ test("benchmark artists receive only their own invitation envelope, never the pl
   await j.act("General_Exhibition_Coordinator", "DISPATCH");
   await j.act("Artist_Portal", "ACCEPT", { token: j.token });
   assert.equal(j.s.invitations[0].state, "ACCEPTED");
+});
+
+
+test("thematic defense rejects unpublished/stale themes and snapshots exact approved text", async () => {
+ const j = await journey();
+ await j.act("Exhibition_Coordinator", "WELCOME", { note: "Welcome to this synthetic exhibition proposal." });
+ await j.act("Exhibition_Coordinator", "DISPATCH");
+ await j.act("Artist_Portal", "ACCEPT", { token: j.token });
+ const invitation = j.s.invitations[0];
+ const actor = { id: invitation.artistActorId, role: "Artist_Portal", exhibitionId: "sandbox" };
+ const command = { action: "SUBMIT_WORK", expected: j.s.version, invitationId: invitation.id, data: { work: work() } };
+ await assert.rejects(() => applyArtistCare(j.s, actor, command, j.ledger, at), /approved bilingual theme/);
+ const stale = work(); stale.thematicDefense!.themeRevision = 0;
+ await assert.rejects(() => applyArtistCare(j.s, actor, { ...command, data: { work: stale } }, j.ledger, at, theme), /acknowledge/);
+ const empty = work(); empty.thematicDefense!.material = "";
+ await assert.rejects(() => applyArtistCare(j.s, actor, { ...command, data: { work: empty } }, j.ledger, at, theme), /both thematic prompts/);
+ const approved = structuredClone(theme);
+ const result = await applyArtistCare(j.s, actor, command, j.ledger, at, approved);
+ approved.published!.essay.introduction.en = "Later edit";
+ assert.equal(result.state.invitations[0].works[0].thematicDefense!.theme!.essay.introduction.en, "Approved introduction");
+ assert.equal(result.state.invitations[0].works[0].thematicDefense!.conceptual, work().thematicDefense!.conceptual);
+ const spoken = work(); spoken.thematicDefense!.conceptual = ""; spoken.thematicDefense!.material = "";
+ spoken.media.voice = { ...image, type: "audio/webm", duration: 60 };
+ const audioResult = await applyArtistCare(j.s, actor, { ...command, data: { work: spoken } }, j.ledger, at, theme);
+ assert.equal(audioResult.state.invitations[0].works[0].media.voice.duration, 60);
 });

@@ -78,6 +78,8 @@ export function createArtistCareService(
           actor,
           command,
           s.spatialLedger,
+          undefined,
+          s.themeWorkflow,
         );
         s.artistCare = bindArtists(s, result.state);
         return {

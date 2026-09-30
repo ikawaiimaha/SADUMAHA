@@ -1,3 +1,4 @@
+import type { ThemeState } from "../lib/themeWorkflow";
 import ArtistCareWorkspace from "./ArtistCareWorkspace";
 import { projectCuratorialLedger } from "../lib/curatorialAccess";
 import CuratorialWorkspace from "./CuratorialWorkspace";
@@ -29,8 +30,10 @@ const money = (n: number) =>
   }).format(n / 100);
 export default function SpatialLedgerWorkspace({
   themeApprovalId,
+  theme,
 }: {
   themeApprovalId: string | null;
+  theme?: ThemeState;
 }) {
   const { role } = useSandbox();
   const [view, setView] = useState<"allocations" | "brief" | "board" | "care">(
@@ -216,7 +219,7 @@ export default function SpatialLedgerWorkspace({
         ))}
       </nav>
       <div hidden={view !== "care"}>
-        <ArtistCareWorkspace ledger={fullLedger} />
+        <ArtistCareWorkspace ledger={fullLedger} theme={theme} />
       </div>
       <div hidden={view === "allocations" || view === "care"}>
         <CuratorialWorkspace

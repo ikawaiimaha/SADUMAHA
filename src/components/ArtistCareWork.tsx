@@ -60,7 +60,7 @@ export default function ArtistCareWork({
           ? `Proposed production: AED ${w.budget.reduce((n, x) => n + x.minor, 0) / 100}`
           : `Declared insurance value: AED ${w.insuranceMinor / 100}`}
       </p>
-      <p className="text-sm leading-6">{w.rationale}</p>
+      {w.thematicDefense ? <section className="space-y-3 border-s-2 border-[#DED5C4] ps-4" aria-label="Artist thematic defense"><h4 className="font-serif text-xl">Artist’s thematic defense</h4><p className="text-xs text-[#655D50]">{w.thematicDefense.theme?.title.en} · approved theme revision {w.thematicDefense.themeRevision}</p>{w.thematicDefense.conceptual && <div><h5 className="text-sm font-semibold">Connection to the theme</h5><p className="whitespace-pre-wrap">{w.thematicDefense.conceptual}</p></div>}{w.thematicDefense.material && <div><h5 className="text-sm font-semibold">Material and technique</h5><p className="whitespace-pre-wrap">{w.thematicDefense.material}</p></div>}</section> : <p className="text-sm leading-6">{w.rationale}</p>}
       <div className="grid gap-4 md:grid-cols-3">
         {Object.entries(w.media)
           .filter(([k]) => k !== "voice")

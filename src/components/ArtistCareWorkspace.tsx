@@ -1,7 +1,9 @@
+import type { ThemeState } from "../lib/themeWorkflow";
 import { useEffect, useRef, useState } from "react";
 import { useSandbox } from "./SandboxProvider";
 import {
   applyArtistCare,
+  approvedTheme,
   emptyArtistCare,
   prepareInvitations,
   projectArtistCare,
@@ -47,7 +49,7 @@ const briefing = [
     "An acknowledgement is not a legal signature. Repairs require approval of the exact protocol. Revised repair instructions invalidate earlier approval.",
   ],
 ];
-export default function ArtistCareWorkspace({ ledger }: { ledger: Ledger }) {
+export default function ArtistCareWorkspace({ ledger, theme: approvedThemeState }: { ledger: Ledger; theme?: ThemeState }) {
   const { role } = useSandbox();
   const briefingDialog = useRef<HTMLDialogElement>(null);
   const [now, setNow] = useState(Date.now());
@@ -169,6 +171,8 @@ export default function ArtistCareWorkspace({ ledger }: { ledger: Ledger }) {
           expected: latest.current.version,
         },
         ledger,
+        undefined,
+        approvedThemeState,
       );
       persist(result.state);
       if (result.token) setDispatchToken(result.token);
@@ -250,7 +254,7 @@ export default function ArtistCareWorkspace({ ledger }: { ledger: Ledger }) {
                   void run({
                     action: "SET_BRIEF",
                     data: {
-                      theme,
+                      approvedThemeState,
                       deadline,
                       closesAt: close,
                       commissionAllowed: commissions,
@@ -584,6 +588,7 @@ export default function ArtistCareWorkspace({ ledger }: { ledger: Ledger }) {
           )}
           {artist && adding && (
             <ArtistSubmission
+              theme={approvedTheme(approvedThemeState)}
               key={revision?.id ?? "new"}
               returned={revision}
               allowed={state.settings?.commissionAllowed ?? false}
