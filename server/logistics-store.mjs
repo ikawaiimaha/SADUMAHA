@@ -1,3 +1,4 @@
+import { arrivalPolicy, checkArrivalLocation } from '../src/logistics/geofence.mjs';
 import { jsPDF } from 'jspdf';
 import QRCode from 'qrcode';
 import { randomUUID } from 'node:crypto';
@@ -40,7 +41,7 @@ export function shippingManifest(record, historical = false) {
   pdf.setFontSize(9); pdf.text('Receipt does not confirm condition, customs clearance, installation safety or payment.', 18, 282);
   return Buffer.from(pdf.output('arraybuffer'));
 }
-export async function openLogisticsStore(file, reviewFor) {
+export async function openLogisticsStore(file, reviewFor, locationPolicy = arrivalPolicy(process.env)) {
   await mkdir(dirname(file), { recursive: true });
   let state;
   try { state = JSON.parse(await readFile(file, 'utf8')); } catch (e) { if (e.code !== 'ENOENT') throw e; state = { format: 1, version: 0, artwork_records: [], events: [] }; }
@@ -48,7 +49,7 @@ export async function openLogisticsStore(file, reviewFor) {
   let queue = Promise.resolve();
   const read = actor => {
     authorize(actor); const review = reviewFor(actor);
-    return structuredClone({ ...state, artworkEntityId: review.governance?.artworkId ?? null,
+    return structuredClone({ ...state, locationPolicy, artworkEntityId: review.governance?.artworkId ?? null,
       changeImpacts: review.governance?.impacts.filter(i => i.domain === 'Logistics' && i.status !== 'RESOLVED') ?? [] });
   };
   return {
@@ -82,6 +83,7 @@ export async function openLogisticsStore(file, reviewFor) {
           record = next.artwork_records.find(r => r.id === command.artwork_id.trim());
           if (!record) fail(404, 'Unknown artwork ID. No status was changed.');
           const target = command.action === 'arrive' ? 'On_Site_Sharjah' : command.action === 'status' ? command.physical_status : null;
+          if (target === 'On_Site_Sharjah') { const check = checkArrivalLocation(locationPolicy, command.location); if (!check.allowed) fail(409, check.reason); }
           if (!target || !PHYSICAL_STATUSES.includes(target)) fail(422, 'Unknown physical status.');
           if (!required(command.note, 300)) fail(422, 'Record the observation and location (maximum 300 basic Latin characters).');
           if (record.physical_status === target) return read(actor); // Repeated scans do not duplicate receipt events.
