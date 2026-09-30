@@ -9,7 +9,7 @@ import { createRehearsalApp } from '../server/rehearsal-server.mjs';
 const [artist, coordinator, director] = ACCOUNTS;
 const logistics = { origin: 'Fictional studio loading bay', destination: 'Fictional Sharjah gallery receiving bay', carrier: 'Demo carrier / TEST-001', handling: 'Keep upright. Use rated lifting equipment.', gross_weight_kg: 105 };
 const approved = { revisions: [{ number: 3, status: 'Publication_Approved', content: { title: 'Kufic Horizon', label: { artistName: 'Noura Al Mazrouei' } } }] };
-async function setup() { const file = join(await mkdtemp(join(tmpdir(), 'sadu-crates-')), 'logistics.json'); let review = structuredClone(approved); const store = await openLogisticsStore(file, () => review); const act = (actor, command) => store.act(actor, { version: store.read(actor).version, ...command }); return { file, store, act, revise: () => { review.revisions[0].number++; } }; }
+async function setup() { const file = join(await mkdtemp(join(tmpdir(), 'sadu-crates-')), 'logistics.json'); let review = structuredClone(approved); const store = await openLogisticsStore(file, () => review); const act = (actor, command) => store.act(actor, { version: store.read(actor).version, location: { latitude: 25.36143, longitude: 55.38702, accuracy: 5, timestamp: Date.now() }, ...command }); return { file, store, act, revise: () => { review.revisions[0].number++; } }; }
 test('manifest requires approved content and complete logistics; stores one stable artwork ID', async () => {
  const { store, act, revise } = await setup();
  await assert.rejects(act(artist, { action: 'save', logistics: { ...logistics, gross_weight_kg: 0 } }), e => e.status === 422);
@@ -28,6 +28,10 @@ test('arrival is scoped, durable, idempotent and independent of other approvals'
  await assert.rejects(act(artist, { action: 'arrive', artwork_id: id, note: 'Received at demo bay' }), e => e.status === 403);
  await assert.rejects(act(coordinator, { action: 'arrive', artwork_id: 'unknown', note: 'Received' }), e => e.status === 404);
  await assert.rejects(act(coordinator, { action: 'arrive', artwork_id: id, note: '' }), e => e.status === 422);
+ const unchanged = store.read(coordinator);
+ await assert.rejects(act(coordinator, { action: 'arrive', artwork_id: id, note: 'Missing GPS', location: null }), e => e.status === 409);
+ await assert.rejects(act(coordinator, { action: 'status', artwork_id: id, physical_status: 'On_Site_Sharjah', note: 'Outside', location: { latitude: 25.37143, longitude: 55.38702, accuracy: 5, timestamp: Date.now() } }), e => e.status === 409 && e.message.startsWith('Unauthorized Location.'));
+ assert.deepEqual(store.read(coordinator), unchanged);
  await assert.rejects(act(coordinator, { action: 'status', artwork_id: id, physical_status: 'Installed', note: 'Mounted' }), e => e.status === 409);
  await act(coordinator, { action: 'arrive', artwork_id: id, note: 'Received at fictional Sharjah bay' }); const before = store.read(coordinator);
  await act(coordinator, { action: 'arrive', artwork_id: id, note: 'Repeated scan' }); assert.deepEqual(store.read(coordinator), before);

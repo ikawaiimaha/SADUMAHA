@@ -41,7 +41,7 @@ export function shippingManifest(record, historical = false) {
   pdf.setFontSize(9); pdf.text('Receipt does not confirm condition, customs clearance, installation safety or payment.', 18, 282);
   return Buffer.from(pdf.output('arraybuffer'));
 }
-export async function openLogisticsStore(file, reviewFor, locationPolicy = arrivalPolicy(process.env)) {
+export async function openLogisticsStore(file, reviewFor, locationPolicy = arrivalPolicy()) {
   await mkdir(dirname(file), { recursive: true });
   let state;
   try { state = JSON.parse(await readFile(file, 'utf8')); } catch (e) { if (e.code !== 'ENOENT') throw e; state = { format: 1, version: 0, artwork_records: [], events: [] }; }

@@ -4,7 +4,7 @@ import { dirname } from 'node:path';
 import { hashUploadStream } from './file-integrity.mjs';
 import { extractKeywords } from '../src/curation/keywords.mjs';
 import { validateLayout, isDimension } from '../src/spatial/geometry.mjs';
-import { checkArrivalLocation } from '../src/logistics/geofence.mjs';
+import { arrivalPolicy, checkArrivalLocation } from '../src/logistics/geofence.mjs';
 import { renderLabelBatch, validateLabelContent } from './gallery-labels.mjs';
 import { ReviewError } from './review-store.mjs';
 
@@ -42,7 +42,7 @@ function revisionFor(state, artwork, expected) {
 function decision(state, actor, revision, action) { state.decisions.push({ id: randomUUID(), actorId: actor.id, targetId: revision.artworkId, versionHash: revision.versionHash, action, at: new Date().toISOString() }); }
 
 /** Actor is supplied by authentication middleware, never by request body. */
-export function createEcosystemControllers({ repository, storage, dockPolicy, endpointOrigin }) {
+export function createEcosystemControllers({ repository, storage, dockPolicy = arrivalPolicy(), endpointOrigin }) {
   const origin = new URL(endpointOrigin);
   if (origin.username || origin.password || origin.search || origin.hash || origin.pathname !== '/' || !(origin.protocol === 'https:' || origin.protocol === 'http:' && ['localhost','127.0.0.1'].includes(origin.hostname))) throw new Error('Use a trusted HTTPS origin or local development origin.');
   return {

@@ -1,3 +1,6 @@
+export const TARGET_LATITUDE = 25.36143;
+export const TARGET_LONGITUDE = 55.38702;
+export const UNAUTHORIZED_LOCATION = 'Unauthorized Location. Asset receipt can only be recorded within 200 meters of the official Sharjah Art Museum facility.';
 export function haversineMetres(a, b) {
   const rad = n => n * Math.PI / 180;
   const dLat = rad(b.latitude - a.latitude), dLon = rad(b.longitude - a.longitude);
@@ -11,10 +14,11 @@ export function checkArrivalLocation(policy, location, now = Date.now()) {
   if (!coordinates(location) || !Number.isFinite(location.accuracy) || location.accuracy < 0 || !Number.isFinite(location.timestamp)) return { allowed: false, reason: 'Check your location before recording arrival.' };
   if (now - location.timestamp > 60000 || location.timestamp > now + 5000) return { allowed: false, reason: 'Location expired. Check again at the loading dock.' };
   const distance = haversineMetres(policy, location);
+  if (distance > policy.radiusMetres) return { allowed: false, reason: UNAUTHORIZED_LOCATION };
   // Require the full reported uncertainty circle to fit within the dock boundary.
   if (distance + location.accuracy > policy.radiusMetres) return { allowed: false, reason: 'Outside the 200 m boundary, or GPS accuracy is insufficient. Move closer and retry.' };
   return { allowed: true, reason: 'Location check passed. Confirm the crate and condition separately.' };
 }
-export function arrivalPolicy(env) {
-  return { required: env.SADU_REQUIRE_ARRIVAL_LOCATION === 'true', radiusMetres: 200, latitude: env.SADU_DOCK_LATITUDE?.trim() ? Number(env.SADU_DOCK_LATITUDE) : null, longitude: env.SADU_DOCK_LONGITUDE?.trim() ? Number(env.SADU_DOCK_LONGITUDE) : null };
+export function arrivalPolicy() {
+  return { required: true, radiusMetres: 200, latitude: TARGET_LATITUDE, longitude: TARGET_LONGITUDE };
 }

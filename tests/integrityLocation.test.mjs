@@ -29,7 +29,15 @@ test('location gate handles missing config, boundary, uncertainty, stale fixes a
   assert.equal(checkArrivalLocation(policy, { ...fix, accuracy: 201 }, now).allowed, false);
   assert.equal(checkArrivalLocation(policy, { ...fix, timestamp: now - 60001 }, now).allowed, false);
   assert.equal(checkArrivalLocation(policy, { ...fix, latitude: 91 }, now).allowed, false);
-  assert.equal(checkArrivalLocation(arrivalPolicy({ SADU_REQUIRE_ARRIVAL_LOCATION: 'true' }), fix, now).allowed, false);
-  assert.equal(checkArrivalLocation(arrivalPolicy({}), undefined, now).allowed, true);
+  assert.equal(checkArrivalLocation(arrivalPolicy(), fix, now).allowed, false);
+  assert.equal(checkArrivalLocation(arrivalPolicy(), undefined, now).allowed, false);
   assert.ok(Math.abs(haversineMetres({ latitude: 0, longitude: 0 }, { latitude: 0, longitude: 1 }) - 111195) < 1);
+});
+
+test('confirmed museum policy is active and outside coordinates use the required error', () => {
+  const policy = arrivalPolicy();
+  assert.deepEqual(policy, { required: true, radiusMetres: 200, latitude: 25.36143, longitude: 55.38702 });
+  const fix = { latitude: policy.latitude, longitude: policy.longitude, accuracy: 5, timestamp: Date.now() };
+  assert.equal(checkArrivalLocation(policy, fix).allowed, true);
+  assert.equal(checkArrivalLocation(policy, { ...fix, latitude: policy.latitude + 0.01 }).reason, 'Unauthorized Location. Asset receipt can only be recorded within 200 meters of the official Sharjah Art Museum facility.');
 });
