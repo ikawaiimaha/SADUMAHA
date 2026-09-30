@@ -36,6 +36,7 @@ function scoped(state, actor, artworkId, roles) {
   return artwork;
 }
 function revisionFor(state, artwork, expected) {
+  if (artwork.lifecycleStatus === 'ARCHIVED_CLOSED') reject(409, 'Archived dossiers are read-only.');
   const revision = state.revisions.find(r => r.id === artwork.currentRevisionId);
   if (!revision || revision.versionHash !== expected) reject(409, 'Artwork revision changed. Reload the dossier.');
   return revision;
@@ -49,6 +50,7 @@ export function createEcosystemControllers({ repository, storage, dockPolicy = a
   return {
     async submitArtwork(actor, command, mediaStream) {
       const initial = repository.read(); const existing = scoped(initial, actor, command.artworkId, ['Artist']);
+      if (existing.lifecycleStatus === 'ARCHIVED_CLOSED') reject(409, 'Archived dossiers are read-only.');
       if ((existing.currentRevisionId ?? null) !== command.expectedRevisionId) reject(409, 'Revision changed before upload.');
       if (!text(command.concept_text) || !pair(command.title) || !pair(command.artistName) || !isDimension(command.width_cm) || !isDimension(command.height_cm)) reject(422, 'Bilingual name/title, concept and exact dimensions are required.');
       const conservation = command.conservation_reqs == null ? null : validateConservation(command.conservation_reqs);
@@ -58,6 +60,7 @@ export function createEcosystemControllers({ repository, storage, dockPolicy = a
       const integrity = await hashUploadStream(mediaStream, staged.stream);
       return repository.transaction(state => {
         const artwork = scoped(state, actor, command.artworkId, ['Artist']);
+        if (artwork.lifecycleStatus === 'ARCHIVED_CLOSED') reject(409, 'Archived dossiers are read-only.');
         if ((artwork.currentRevisionId ?? null) !== command.expectedRevisionId) reject(409, 'Revision changed during upload. Staging object retained for reconciliation.');
         const tags = extractKeywords(command.concept_text);
         const revision = { id: randomUUID(), artworkId: artwork.id, sequence: state.revisions.filter(r => r.artworkId === artwork.id).length + 1, state: 'EDITORIAL_DRAFT', conservation_reqs: conservation, artistName: { en: command.artistName.en, ar: command.artistName.ar }, title: { en: command.title.en, ar: command.title.ar }, concept_text: command.concept_text, width_cm: command.width_cm, height_cm: command.height_cm, year: command.year, media: { objectId: staged.objectId, ...integrity }, curatorial_tags: tags,

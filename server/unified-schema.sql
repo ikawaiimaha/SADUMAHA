@@ -49,3 +49,16 @@ CREATE TABLE condition_pin (
 );
 CREATE TABLE exhibition_budget (exhibition_id TEXT PRIMARY KEY REFERENCES exhibition(id), ceiling_minor INTEGER NOT NULL CHECK(ceiling_minor>=0), currency TEXT NOT NULL CHECK(currency='AED'));
 CREATE TABLE budget_line (id TEXT PRIMARY KEY, exhibition_id TEXT NOT NULL REFERENCES exhibition_budget(exhibition_id), artwork_id TEXT NOT NULL REFERENCES artwork(id), amount_minor INTEGER NOT NULL CHECK(amount_minor>=0), paid_minor INTEGER NOT NULL DEFAULT 0 CHECK(paid_minor>=0), released_minor INTEGER NOT NULL DEFAULT 0 CHECK(released_minor>=0), CHECK(paid_minor+released_minor<=amount_minor));
+-- Stage 8 operational dossier archive; distinct from the public cultural archive.
+ALTER TABLE artwork ADD COLUMN lifecycle_status TEXT NOT NULL DEFAULT 'INVITED';
+CREATE TABLE archival_record (
+ id TEXT PRIMARY KEY, artwork_id TEXT NOT NULL UNIQUE REFERENCES artwork(id),
+ revision_id TEXT NOT NULL REFERENCES artwork_revision(id), closed_by TEXT NOT NULL REFERENCES actor(id), closed_at TEXT NOT NULL,
+ snapshot_json TEXT NOT NULL CHECK(json_valid(snapshot_json)), snapshot_hash TEXT NOT NULL CHECK(length(snapshot_hash)=64),
+ pdf_base64 TEXT NOT NULL, pdf_hash TEXT NOT NULL CHECK(length(pdf_hash)=64)
+);
+CREATE TRIGGER archival_record_no_update BEFORE UPDATE ON archival_record BEGIN SELECT RAISE(ABORT,'Archival records are immutable'); END;
+CREATE TRIGGER archival_record_no_delete BEFORE DELETE ON archival_record BEGIN SELECT RAISE(ABORT,'Archival records are immutable'); END;
+CREATE TRIGGER archive_requires_compiled_record BEFORE UPDATE OF lifecycle_status ON artwork
+ WHEN NEW.lifecycle_status='ARCHIVED_CLOSED' AND NOT EXISTS(SELECT 1 FROM archival_record WHERE artwork_id=NEW.id)
+ BEGIN SELECT RAISE(ABORT,'Generate archival record in the closing transaction first'); END;

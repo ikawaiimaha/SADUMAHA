@@ -26,3 +26,29 @@ private encrypted storage and retention; content scanning/high-resolution checks
 full contract/amendment and return proof; remaining screen adapters; bilingual
 print validation; real geolocation trial; notification delivery and outcome baseline.
 Local file recovery is tested; disaster recovery is not certified.
+
+## Stage 8 master record
+
+The Director can POST `/api/review/ecosystem/archive-close` with artworkId and
+the current versionHash after publication, accepted agreement, reconciled return
+and all three sample Finance tranches. `archival-record.mjs` aggregates an
+allowlisted snapshot, generates the PDF, and persists both in the same transaction
+as `ARCHIVED_CLOSED`. A generation failure rolls back closure and its audit event.
+The archive is idempotent, frozen and survives restart. Source edits are blocked.
+
+Only assigned Director/General Exhibition Coordinator accounts may GET
+`/api/review/ecosystem/archive/:artworkId.pdf`. The connected dashboards show its
+download link only after closure. PDF and snapshot hashes are checked on export.
+Every page contains the source-media hash and snapshot hash. The PDF's own hash is
+stored separately and returned as `X-Content-SHA256`; a paper hash is not a signature.
+
+`archival-pdf.mjs` uses existing jsPDF with bundled OFL Amiri for Arabic and embeds
+the reference image with revision-bound numbered condition pins. No remote images
+or sensitive raw message/banking/passport payloads are fetched or serialized.
+Malformed source images block closure, rather than being silently omitted.
+
+This host currently joins one pilot dossier's agreement and payments and rejects
+multi-dossier state to avoid cross-dossier leakage. A production repository must
+provide explicit dossier-scoped contract/ledger joins. The separate browser-only
+CollectionCloseout workflow does not trigger this authenticated backend service.
+The SQL additions are reference schema, not a deployed migration.
