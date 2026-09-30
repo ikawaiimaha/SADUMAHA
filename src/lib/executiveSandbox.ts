@@ -1,6 +1,9 @@
 import { executiveCases } from '../data/executiveCases';
 
 export const sandboxRoles = {
+  Committee: 'Preparatory Committee',
+  Chairman: 'Chairman',
+  Editorial: 'Editorial',
   Director: 'Director',
   General_Exhibition_Coordinator: 'Master Administration',
   Logistics_Officer: 'Logistics Officer',

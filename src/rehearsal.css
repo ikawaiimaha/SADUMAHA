@@ -3,6 +3,7 @@
 @source "./components/PublicationReview.tsx";
 @source "./components/SpatialPlanner.tsx";
 @source "./components/ExecutiveDashboard.tsx";
+@source "./components/ThemeWorkspace.tsx";
 
 @source "./components/RoleSwitcher.tsx";
 @source "./components/SandboxRoleActions.tsx";

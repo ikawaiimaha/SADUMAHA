@@ -1,4 +1,5 @@
 import RoleSwitcher from './RoleSwitcher';
+import ThemeWorkspace from './ThemeWorkspace';
 import SandboxRoleActions from './SandboxRoleActions';
 import { SandboxProvider, useSandbox } from './SandboxProvider';
 import React, { useEffect, useRef, useState } from 'react';
@@ -11,6 +12,7 @@ export default function ExecutiveDashboard() {
 }
 
 function ExecutiveDashboardContent() {
+  const [workspace, setWorkspace] = useState<'artists' | 'theme'>('artists');
   const { state: sandbox, role } = useSandbox();
   const [editing, setEditing] = useState(false);
   const noteInput = useRef<HTMLTextAreaElement>(null);
@@ -56,12 +58,15 @@ function ExecutiveDashboardContent() {
   const card = 'rounded-xl border border-[#DED5C4] bg-[#FFFDF9] p-5 md:p-7';
   const focus = 'focus-visible:outline-2 focus-visible:outline-[#8B261E] focus-visible:outline-offset-4';
   return <div className="min-h-screen bg-[#F7F1E6] text-[#111817]" lang="en">
-    <a href="#dossier" className="sr-only focus:not-sr-only">Skip to active dossier</a>
+    <a href={workspace === 'theme' ? '#theme-workspace' : '#dossier'} className="sr-only focus:not-sr-only">Skip to active workspace</a>
     <header className="border-b border-[#DED5C4] px-6 py-4"><div className="mx-auto max-w-6xl flex flex-wrap items-center justify-between gap-5">
       <div className="flex items-center gap-4">{institutionalLogo && !logoFailed && <img src={institutionalLogo} onError={() => setLogoFailed(true)} alt="Sharjah Department of Culture" className="h-16 max-w-48 object-contain"/>}<div><p className="text-sm">Sharjah Department of Culture</p><strong style={{ fontFamily: 'Amiri, Noto Naskh Arabic, Georgia, serif' }} className="text-4xl text-[#8B261E]">SADU</strong></div></div>
       <RoleSwitcher />
     </div></header>
     <main className="mx-auto max-w-6xl p-5 md:p-8 space-y-7">
+      <nav aria-label="Workspaces" className="flex gap-5 border-b border-[#DED5C4] pb-4">{(['artists','theme'] as const).map(w => <button key={w} aria-pressed={workspace === w} onClick={() => setWorkspace(w)} className={`text-sm pb-2 border-b-2 focus-visible:outline-2 focus-visible:outline-[#8B261E] ${workspace === w ? 'border-[#8B261E] text-[#8B261E] font-semibold' : 'border-transparent text-[#655D50]'}`}>{w === 'artists' ? 'Artist dossiers' : 'Theme & Editorial'}</button>)}</nav>
+      <div id="theme-workspace" tabIndex={-1} hidden={workspace !== 'theme'}><ThemeWorkspace /></div>
+      <div hidden={workspace !== 'artists'} className="space-y-7">
       <div><p className="text-sm uppercase tracking-widest text-[#8B261E]">Exhibition overview</p><h1 className="mt-2 text-3xl font-serif">Artist dossiers</h1><p className="mt-2 text-[#655D50]">Select an artist to review their next step and supporting information.</p></div>
       <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)] items-start">
         <aside className="space-y-5"><section className="py-2"><h2 className="px-3 text-xs uppercase tracking-widest text-[#655D50]">Artists · {executiveCases.length}</h2><nav aria-label="Artist dossiers" className="mt-4 space-y-2">{executiveCases.map(c => <button key={c.id} aria-pressed={selected === c.id} disabled={busy} onClick={() => select(c.id)} className={`block w-full rounded-lg border p-3 text-start focus-visible:outline-2 focus-visible:outline-[#8B261E] focus-visible:outline-offset-2 ${selected === c.id ? 'bg-[#FFFDF9] border-[#8B261E]' : 'border-transparent hover:bg-[#EDE5D8]'}`}><span className="block font-semibold">{c.name}</span><span className="text-sm text-[#655D50]">{c.focus}</span></button>)}</nav></section>
@@ -96,7 +101,7 @@ function ExecutiveDashboardContent() {
             {notes[selected] && <details key={`note-${selected}`} className="mt-4"><summary className={`cursor-pointer text-sm ${focus}`}>Latest saved note</summary><p className="mt-2 whitespace-pre-wrap break-words text-sm">{notes[selected].text}</p><p className="mt-2 text-xs text-[#655D50]">{new Date(notes[selected].recordedAt).toLocaleString('en-GB')}</p></details>}
           </section>
         </section>
-      </div><footer className="text-sm text-[#655D50]">Executive presentation · Case-study records · <a className="underline" href="/overview">About SADU</a></footer>
+      </div></div><footer className="text-sm text-[#655D50]">Executive presentation · Case-study records · <a className="underline" href="/overview">About SADU</a></footer>
     </main>
   </div>;
 }
