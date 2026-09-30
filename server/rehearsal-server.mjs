@@ -1,4 +1,5 @@
 import { createPrelaunchGate } from './prelaunch-gate.mjs';
+import { openDigitalArchive } from './digital-archive.mjs';
 import { LocalAuthProvider } from '../src/governance/localAdapters.ts';
 import express from 'express';
 import { fileURLToPath } from 'node:url';
@@ -14,6 +15,14 @@ export async function createRehearsalApp({ prelaunchGate = createPrelaunchGate()
   const spatial = await openSpatialStore(spatialFile ?? (file ? `${file}.spatial.json` : fileURLToPath(new URL('../.local/rehearsal-spatial.json', import.meta.url))));
   const logistics = await openLogisticsStore(file ? `${file}.logistics.json` : fileURLToPath(new URL('../.local/rehearsal-logistics.json', import.meta.url)), actor => store.read(actor));
   const app = express();
+  const archive = await openDigitalArchive(file ? `${file}.archive.json` : fileURLToPath(new URL('../.local/rehearsal-archive.json', import.meta.url)), () => {
+    const coordinator = ACCOUNTS.find(a => a.role === 'General_Exhibition_Coordinator');
+    const review = store.read(coordinator); const shipment = logistics.read(coordinator); const plan = spatial.read(coordinator);
+    const revision = review.revisions.at(-1);
+    // These modules do not yet share approved bilingual/image metadata. Fail closed rather than invent an archival record.
+    const ids = [...new Set([review.governance?.artworkId, ...shipment.artwork_records.map(a => a.id), ...plan.artwork_records.map(a => a.id)].filter(Boolean))];
+    return { exhibitionId: 'demo-exhibition', approvedImageOrigins: [], artworks: ids.map(id => ({ id, revision: String(revision?.number ?? ''), physical_status: shipment.artwork_records.find(a => a.id === id)?.physical_status ?? 'UNCONFIRMED', culturalApproved: false })) };
+  });
   app.use(prelaunchGate);
   if (authProvider.mode !== 'fictional-local') throw new Error('External authentication remains paused.');
   app.disable('x-powered-by');
@@ -37,7 +46,7 @@ export async function createRehearsalApp({ prelaunchGate = createPrelaunchGate()
       const account = ACCOUNTS.find(a => a.id === req.body?.accountId);
       if (!account) return res.status(403).json({ error: 'Unknown fictional account. HIP is not an available role.' });
       const token = await authProvider.selectAccount(account.id);
-      res.cookie('sadu_review', token, { httpOnly: true, sameSite: 'strict', path: '/api/review', maxAge: 8 * 3600000 });
+      res.cookie('sadu_review', token, { httpOnly: true, sameSite: 'strict', path: '/api', maxAge: 8 * 3600000 });
       res.json({ actor: account });
     } catch (error) { next(error); }
   });
@@ -49,6 +58,10 @@ export async function createRehearsalApp({ prelaunchGate = createPrelaunchGate()
     } catch (error) { next(error); }
   });
   app.get('/api/review/logistics', (req, res) => res.json(logistics.read(res.locals.actor)));
+  app.get('/api/review/archive/status', (req, res) => res.json(archive.status(res.locals.actor)));
+  app.post('/api/review/archive', async (req, res, next) => {
+    try { res.json(await archive.archive(res.locals.actor, req.body?.version)); } catch (error) { next(error); }
+  });
   app.post('/api/review/logistics', async (req, res, next) => {
     try { res.json(await logistics.act(res.locals.actor, req.body)); } catch (error) { next(error); }
   });
@@ -80,6 +93,9 @@ export async function createRehearsalApp({ prelaunchGate = createPrelaunchGate()
   });
   app.post('/api/review/action', async (req, res, next) => {
     try { res.json(await store.act(res.locals.actor, req.body)); } catch (error) { next(error); }
+  });
+  app.get('/api/v1/archive/biennial-2026', async (req, res, next) => {
+    try { res.set({ 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff' }).type('application/ld+json').send(JSON.stringify(archive.read(await actorFor(req)))); } catch (error) { next(error); }
   });
   app.use('/api', (req, res) => res.status(404).json({ error: 'Unknown endpoint.' }));
   const root = staticRoot ?? fileURLToPath(new URL('../dist-rehearsal', import.meta.url));
