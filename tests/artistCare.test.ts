@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {createArtistCareService} from '../server/artist-care.mjs';
+import { createArtistCareService } from "../server/artist-care.mjs";
 import {
   applyLedger,
   ledgerSeed,
@@ -18,15 +18,46 @@ import {
 
 const at = "2026-09-30T10:00:00Z";
 
-test('backend care responses are artist-scoped and unverified media ingestion is disabled',async()=>{
-  const j=await journey();
-  let stored={spatialLedger:j.ledger,artistCare:j.s,artworks:[]};
-  const repository={read:()=>structuredClone(stored),transaction:async(work:any)=>{const next=structuredClone(stored);const result=await work(next);stored=next;return result;}};
-  const service=createArtistCareService(repository);
-  assert.equal(service.read({id:'unassigned',role:'Artist',exhibitionId:'sandbox'}).invitations.length,0);
-  assert.throws(()=>service.read({id:'Director',role:'Director',exhibitionId:'another-edition'}),/scope denied/);
-  await assert.rejects(()=>service.mutate({id:'Director',role:'Director',exhibitionId:'sandbox'},{action:'LEGACY_ASSET',expected:j.s.version,data:{file:image}}),/Verified media storage is not connected/);
-  assert.equal(stored.artistCare.version,j.s.version);
+test("backend care responses are artist-scoped and unverified media ingestion is disabled", async () => {
+  const j = await journey();
+  let stored = { spatialLedger: j.ledger, artistCare: j.s, artworks: [] };
+  const repository = {
+    read: () => structuredClone(stored),
+    transaction: async (work: any) => {
+      const next = structuredClone(stored);
+      const result = await work(next);
+      stored = next;
+      return result;
+    },
+  };
+  const service = createArtistCareService(repository);
+  assert.equal(
+    service.read({ id: "unassigned", role: "Artist", exhibitionId: "sandbox" })
+      .invitations.length,
+    0,
+  );
+  assert.throws(
+    () =>
+      service.read({
+        id: "Director",
+        role: "Director",
+        exhibitionId: "another-edition",
+      }),
+    /scope denied/,
+  );
+  await assert.rejects(
+    () =>
+      service.mutate(
+        { id: "Director", role: "Director", exhibitionId: "sandbox" },
+        {
+          action: "LEGACY_ASSET",
+          expected: j.s.version,
+          data: { file: image },
+        },
+      ),
+    /Verified media storage is not connected/,
+  );
+  assert.equal(stored.artistCare.version, j.s.version);
 });
 function roster() {
   let s = ledgerSeed();
@@ -510,4 +541,53 @@ test("budget, stale commands and artist response projection fail closed", async 
     ).invitations.length,
     0,
   );
+});
+
+test("benchmark artists receive only their own invitation envelope, never the planning record", async () => {
+  const j = await journey(),
+    i = j.s.invitations[0];
+  j.ledger.curation!.benchmarks = [
+    {
+      id: i.artistId,
+      name: i.name,
+      rationale: "Restricted Committee reasoning",
+      themeId: "theme-1",
+      assigned: true,
+    },
+  ];
+  const own = {
+    id: i.artistActorId,
+    role: "Artist_Portal",
+    exhibitionId: "sandbox",
+  };
+  assert.equal(projectArtistCare(j.s, own, j.ledger).invitations.length, 1);
+  assert.ok(
+    !JSON.stringify(projectArtistCare(j.s, own, j.ledger)).includes(
+      "Restricted Committee reasoning",
+    ),
+  );
+  assert.equal(
+    projectCuratorialLedger(j.ledger, "Artist_Portal").artworks.some(
+      (a) => a.id === i.artistId,
+    ),
+    false,
+  );
+  assert.equal(
+    projectArtistCare(
+      j.s,
+      {
+        id: "coordinator-a",
+        role: "Exhibition_Coordinator",
+        exhibitionId: "sandbox",
+      },
+      j.ledger,
+    ).invitations.length,
+    0,
+  );
+  await j.act("General_Exhibition_Coordinator", "WELCOME", {
+    note: "A private welcome for the synthetic benchmark artist.",
+  });
+  await j.act("General_Exhibition_Coordinator", "DISPATCH");
+  await j.act("Artist_Portal", "ACCEPT", { token: j.token });
+  assert.equal(j.s.invitations[0].state, "ACCEPTED");
 });

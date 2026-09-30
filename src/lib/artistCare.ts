@@ -215,7 +215,14 @@ export function projectArtistCare(
     actor.role,
   );
   s.invitations = s.invitations
-    .filter((i) => !restricted.has(i.artistId) || manager)
+    .filter(
+      (i) =>
+        !restricted.has(i.artistId) ||
+        manager ||
+        (["Artist", "Artist_Portal"].includes(actor.role) &&
+          i.artistActorId === actor.id) ||
+        (actor.role === "Committee" && ledger.curation?.phase === "ENDORSED"),
+    )
     .filter(
       (i) =>
         manager ||
@@ -277,7 +284,12 @@ export async function applyArtistCare(
   if (
     i &&
     ledger.curation?.benchmarks?.some((b) => b.id === i.artistId) &&
-    !["Director", "General_Exhibition_Coordinator"].includes(actor.role)
+    !["Director", "General_Exhibition_Coordinator"].includes(actor.role) &&
+    !(
+      ["Artist", "Artist_Portal"].includes(actor.role) &&
+      i.artistActorId === actor.id
+    ) &&
+    !(actor.role === "Committee" && ledger.curation?.phase === "ENDORSED")
   )
     reject("This dossier is restricted.", 403);
   switch (c.action) {

@@ -105,6 +105,8 @@ export default function ArtistCareWorkspace({ ledger }: { ledger: Ledger }) {
     .filter(
       (i) =>
         !restricted.has(i.artistId) ||
+        artist ||
+        (role === "Committee" && ledger.curation?.phase === "ENDORSED") ||
         ["Director", "General_Exhibition_Coordinator"].includes(role),
     )
     .filter(
