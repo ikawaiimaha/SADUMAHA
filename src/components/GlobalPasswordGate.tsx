@@ -1,3 +1,4 @@
+import { executiveMode } from '../lib/executiveMode';
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 
 /** sessionStorage is a display hint only; the server cookie is always verified. */
@@ -18,7 +19,7 @@ export default function GlobalPasswordGate({ children }: { children: ReactNode }
   useEffect(() => { window.dispatchEvent(new Event('sadu:ready')); void check(); const id = setInterval(check, 60000); return () => clearInterval(id); }, [check]);
   useEffect(() => { try { if (verified) sessionStorage.setItem('sadu-prelaunch-verified', 'true'); else sessionStorage.removeItem('sadu-prelaunch-verified'); } catch { /* Storage is optional, never an auth source. */ } }, [verified]);
   if (verified) return <><aside aria-label="Preview session" className="flex flex-wrap items-center justify-between gap-2 border-b border-[#D9CEBA] bg-[#F7F1E6] ps-5 pe-5 py-2 text-sm text-[#111817]">
-    <span>Private SADU preview · Fictional data</span>
+    {!executiveMode && <span>Private SADU preview · Fictional data</span>}
     <button className="rounded border border-[#8C8173] ps-3 pe-3 py-2 font-semibold focus-visible:outline-2 focus-visible:outline-offset-2" disabled={busy} onClick={async () => {
       if (!window.confirm('Lock this preview? Unrecorded changes will be lost. Recorded journey progress stays in this tab.')) return;
       setBusy(true); setError('');

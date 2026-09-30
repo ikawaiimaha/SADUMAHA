@@ -49,35 +49,25 @@ export default function RehearsalJourney() {
   return <div className="min-h-screen bg-[#F7F1E6] text-[#2C2A29]" dir="ltr" lang="en">
     <a href="#journey-task" className="sr-only focus:not-sr-only focus:block ps-4 pe-4 py-2">Skip to current task</a>
     <header className="border-b border-[#D9CEBA] ps-5 pe-5 py-5"><div className="mx-auto max-w-7xl flex flex-wrap items-center justify-between gap-4">
-      <div><strong className="font-serif text-3xl text-[#8B261E]">SADU</strong><p className="text-sm">Fictional journey · release candidate</p></div>
-      <label>Rehearsal desk<select className={input} value={desk} onChange={e => { setDesk(e.target.value as Desk); setNotice(''); }}>{DESKS.map(d => <option key={d}>{d}</option>)}</select></label>
+      <div><strong className="font-serif text-3xl text-[#8B261E]">SADU</strong><p className="text-sm">Guided exhibition demo</p></div>
+      <details className="text-sm"><summary className="cursor-pointer underline py-2">Demo controls</summary><p className="max-w-sm my-2">Try another team’s view. This simulates responsibility, not sign-in.</p><label>Rehearsal desk<select className={input} value={desk} onChange={e => { setDesk(e.target.value as Desk); setNotice(''); }}>{DESKS.map(d => <option key={d}>{d}</option>)}</select></label></details>
     </div></header>
     <main className="mx-auto max-w-7xl ps-4 pe-4 py-6 space-y-6">
       <section className="space-y-3">
-        <h1 className="text-3xl font-serif">One artist. One shared journey.</h1>
-        <nav aria-label="Preview navigation" className="flex flex-wrap gap-x-5 gap-y-2"><a href="/overview" className="underline py-2">Presentation overview</a><a href="/review" className="underline py-2">{isLocalPreview(window.location.hostname) ? 'Open the two-tier submission review' : 'Advanced review · local service only'}</a></nav>
-        <p><strong>{DEMO_ARTIST.name}</strong> · {DEMO_ARTIST.work} · {DEMO_ARTIST.weight} kg</p>
-        <p className="max-w-4xl">A guided rehearsal from brief to safe return. Use fictional statements only. Nothing is emailed, uploaded to a server, signed or paid. Desk switching simulates responsibilities; it is not authentication.</p>
-        <p className="text-sm">Recorded decisions and task completion survive refresh in this browser tab. Unsaved form text is not retained. Export a review record before closing the tab. This checklist remains separate from the server-backed submission and crate records.</p>
+        <p className="text-sm uppercase tracking-widest text-[#8B261E]">Artist dashboard</p>
+        <h1 className="text-3xl font-serif">{DEMO_ARTIST.name}</h1>
+        <p>{DEMO_ARTIST.work} · {DEMO_ARTIST.weight} kg</p>
+        <p className="max-w-3xl">Follow the next action below. Each step shows which team is responsible and what they need to check.</p>
+        <p className="text-sm">Fictional demo · No messages, payments or external publishing.</p>
         {(journal.recoveryError || storageError) && <p role="alert">{journal.recoveryError || storageError}</p>}
         <div className="flex flex-wrap items-center gap-3"><progress aria-label="Completed rehearsal tasks" max={JOURNEY_TASKS.length} value={complete} className="h-4 w-64 accent-[#8B261E]"/><span>{complete} of {JOURNEY_TASKS.length} tasks complete</span></div>
-        {complete < JOURNEY_TASKS.length && <button className={button} onClick={() => open(resumeTask)}>Continue: {resumeTask.title}</button>}
+        {complete < JOURNEY_TASKS.length && <button className={secondary} onClick={() => open(resumeTask)}>Continue: {resumeTask.title}</button>}
         {unsaved && <p className="text-sm" role="status">Unrecorded edits in this tab. Complete or record the task before leaving.</p>}
-        {complete === JOURNEY_TASKS.length && <p role="status" className="rounded border border-green-700 bg-green-50 ps-4 pe-4 py-3">Journey complete. All three fictional tranches are recorded and return is reconciled. <a className="underline font-semibold" href="#journey-record">Export your review record</a>.</p>}
+        {complete === JOURNEY_TASKS.length && <p role="status" className="rounded border border-green-700 bg-green-50 ps-4 pe-4 py-3">Journey complete. All three fictional tranches are recorded and return is reconciled. <a className="underline font-semibold" href="#journey-record" onClick={() => { const details = document.getElementById("journey-record"); if (details instanceof HTMLDetailsElement) details.open = true; }}>Export your review record</a>.</p>}
       </section>
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(17rem,0.9fr)_minmax(0,1.5fr)]">
-        <section className={panel} aria-labelledby="task-list-heading">
-          <h2 id="task-list-heading" className="text-xl font-semibold">Artist task list</h2>
-          <p className="mt-2 text-sm">One list for the artist and every desk. Timing below is a sequence, not a real deadline.</p>
-          <label className="block my-3">Show tasks<select value={filter} onChange={e => setFilter(e.target.value as typeof filter)} className={input}>{['All tasks', 'Outstanding', 'My desk'].map(f => <option key={f}>{f}</option>)}</select></label>
-          <ol className="max-h-52 overflow-y-auto space-y-2 lg:max-h-[65vh]">{JOURNEY_TASKS.filter(t => filter === 'All tasks' || filter === 'Outstanding' && !state.completed[t.id] || filter === 'My desk' && t.owner === desk).map(t => <li key={t.id}>
-            <button aria-current={t.id === selected ? 'step' : undefined} className={`w-full rounded border ps-3 pe-3 py-3 text-start focus-visible:outline-2 ${t.id === selected ? 'border-[#8B261E] bg-[#F7F1E6]' : 'border-[#D9CEBA]'}`} onClick={() => { setSelected(t.id); setNotice(''); focusTask(); }}>
-              <span className="block font-semibold">{JOURNEY_TASKS.indexOf(t) + 1}. {t.title}</span><span className="block text-sm">{t.owner} · {taskStatus(state, t)}</span>
-            </button>
-          </li>)}</ol>
-          {filter === 'Outstanding' && complete === JOURNEY_TASKS.length && <p>No outstanding tasks.</p>}
-        </section>
+      <div className="space-y-4">
         <section ref={taskPanel} id="journey-task" tabIndex={-1} className={`${panel} space-y-4 scroll-mt-4 focus:outline-none`} aria-labelledby="task-heading">
+          <p className="text-sm font-semibold text-[#8B261E]">{state.completed[selected] ? "Completed action" : "Your current action"}</p>
           <p className="text-sm">Stage {task.stage} of 8 · {task.owner} · {taskStatus(state, task)}</p>
           <h2 id="task-heading" className="text-2xl font-semibold">{task.title}</h2>
           <p>{task.detail}</p><p><strong>When:</strong> {task.due}</p>
@@ -88,16 +78,33 @@ export default function RehearsalJourney() {
           {state.completed[selected] && complete < JOURNEY_TASKS.length && <button className={button} onClick={() => { const next = JOURNEY_TASKS.find(t => !state.completed[t.id] && !missingTasks(state, t).length); if (next) open(next); }}>Open next available task</button>}
         </section>
       </div>
+        <details className={panel}><summary className="cursor-pointer font-semibold">All steps · {complete} of {JOURNEY_TASKS.length} complete</summary>
+          <h2 id="task-list-heading" className="text-xl font-semibold mt-4">Artist task list</h2>
+          <p className="mt-2 text-sm">One list for the artist and every desk. Timing below is a sequence, not a real deadline.</p>
+          <label className="block my-3">Show tasks<select value={filter} onChange={e => setFilter(e.target.value as typeof filter)} className={input}>{['All tasks', 'Outstanding', 'My desk'].map(f => <option key={f}>{f}</option>)}</select></label>
+          <ol className="max-h-52 overflow-y-auto space-y-2 lg:max-h-[65vh]">{JOURNEY_TASKS.filter(t => filter === 'All tasks' || filter === 'Outstanding' && !state.completed[t.id] || filter === 'My desk' && t.owner === desk).map(t => <li key={t.id}>
+            <button aria-current={t.id === selected ? 'step' : undefined} className={`w-full rounded border ps-3 pe-3 py-3 text-start focus-visible:outline-2 ${t.id === selected ? 'border-[#8B261E] bg-[#F7F1E6]' : 'border-[#D9CEBA]'}`} onClick={() => { setSelected(t.id); setNotice(''); focusTask(); }}>
+              <span className="block font-semibold">{JOURNEY_TASKS.indexOf(t) + 1}. {t.title}</span><span className="block text-sm">{t.owner} · {taskStatus(state, t)}</span>
+            </button>
+          </li>)}</ol>
+          {filter === 'Outstanding' && complete === JOURNEY_TASKS.length && <p>No outstanding tasks.</p>}
+        </details>
+      <details className="space-y-4"><summary className="cursor-pointer rounded-xl border border-[#D9CEBA] bg-white ps-5 pe-5 py-5 font-semibold">Documents &amp; payment record</summary>
       <Documents state={state}/>
       <section className={panel}><h2 className="text-xl font-semibold">Rehearsal payment ledger</h2><p className="my-2">AED 45,000 · Advance 30% / Delivery 40% / Completion & return 30%. Evidence and Finance actions are separate.</p>
         {!ledgerRows(state).length ? <p>No payments recorded.</p> : <ul className="space-y-2">{ledgerRows(state).map(r => <li key={r.decisionId}>{r.milestone} · AED {r.amount.toLocaleString('en-AE')} · {new Date(r.at).toLocaleString('en-GB')}</li>)}</ul>}
       </section>
-      <section id="journey-record" className={panel}><h2 className="text-xl font-semibold">Decision history</h2><p className="my-2">A verbal instruction is valid source material. Recording it does not imply confirmation, payment, publication or technical clearance.</p>
+      </details>
+      <details id="journey-record" className={panel}><summary className="cursor-pointer font-semibold">Decisions &amp; export</summary><section className="mt-4"><h2 className="text-xl font-semibold">Decision history</h2><p className="my-2">A verbal instruction is valid source material. Recording it does not imply confirmation, payment, publication or technical clearance.</p>
         {!state.decisions.length && <p>No statements recorded yet.</p>}
         <ol className="space-y-3">{state.decisions.slice().reverse().map(r => <li className="border-t border-[#D9CEBA] pt-3" key={r.id}><strong>{taskById(r.taskId).title}</strong><p>{r.source} · {r.speaker} · {new Date(r.occurredAt).toLocaleString('en-GB')}</p><p className="whitespace-pre-wrap break-words">{r.statement}</p><p className="text-sm">Recorded by {r.recordedBy} · {r.confirmation ? `${r.confirmation.outcome} by ${r.confirmation.by}: ${r.confirmation.note}` : 'Reported — awaiting confirmation'}{currentDecision(state, r.taskId)?.id !== r.id ? ' · Superseded statement retained' : ''}</p>{r.reference && <p className="break-words">Optional source reference: {r.reference}</p>}</li>)}</ol>
         <button className={`${secondary} mt-4`} onClick={() => { const blob = new Blob([JSON.stringify({ format: 'sadu-fictional-review-v1', artist: DEMO_ARTIST, ...state }, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'SADU-fictional-review.json'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); }}>Download review record</button>
       </section>
-      <footer className="text-sm">English presentation journey. Earlier bilingual work and pilot modules are retained separately in the repository; they are not loaded by this rehearsal.</footer>
+      </details>
+      <details className="text-sm border-t border-[#D9CEBA] pt-4"><summary className="cursor-pointer underline py-2">About this demo &amp; other tools</summary>
+        <p className="my-3">Recorded progress stays in this browser tab. Unrecorded text is not saved. Export your decisions before closing the tab. Advanced review and shipping tools use separate records on the development computer.</p>
+        <nav aria-label="Preview navigation" className="flex flex-wrap gap-4"><a href="/overview" className="underline py-2">Presentation overview</a><a href="/review" className="underline py-2">{isLocalPreview(window.location.hostname) ? 'Open the two-tier submission review' : 'Advanced review · local service only'}</a></nav>
+      </details>
     </main>
   </div>;
 }

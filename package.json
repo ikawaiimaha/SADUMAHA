@@ -23,6 +23,7 @@
     "chromatic": "npx chromatic --project-token=chpt_b93f012ea65c898"
   },
   "dependencies": {
+    "@fontsource/amiri": "^5.3.0",
     "@google/genai": "^2.4.0",
     "@microsoft/clarity": "^1.0.2",
     "@supabase/supabase-js": "2.117.2",

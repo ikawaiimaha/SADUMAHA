@@ -1,3 +1,5 @@
+import ExecutiveDashboard from './components/ExecutiveDashboard';
+import { executiveMode } from './lib/executiveMode';
 import PreviewUnavailable from './components/PreviewUnavailable';
 import { isLocalPreview, journeyPaths, normalizePreviewPath, pausedPaths } from './lib/previewRoutes';
 import GlobalPasswordGate from './components/GlobalPasswordGate';
@@ -17,6 +19,7 @@ function ReadyApp() {
   useEffect(() => { window.dispatchEvent(new Event('sadu:ready')); }, []);
   const path = normalizePreviewPath(window.location.pathname);
   const local = isLocalPreview(window.location.hostname);
+  if (executiveMode && (journeyPaths.includes(path) || path === '/review')) return <ExecutiveDashboard />;
   if (path === '/overview') return <Suspense fallback={<p role="status">Loading presentation…</p>}><ExecutiveLanding /></Suspense>;
   if (path === '/review' && !local) return <PreviewUnavailable review />;
   if (!local && pausedPaths.includes(path)) return <PreviewUnavailable />;
