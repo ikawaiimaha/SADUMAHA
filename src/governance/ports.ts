@@ -20,13 +20,19 @@ export interface ISignatureProvider {
 export interface Entity { id: string; kind: 'Artwork' | 'Contract'; currentRevisionHash: string; }
 export interface Revision<T> { id: string; entityId: string; hash: string; parentHash: string | null; content: T; createdAt: string; }
 export interface DecisionLog {
-  id: string; actorId: string; actionType: 'CREATED' | 'REVISED' | 'APPROVED' | 'REJECTED' | 'REVIEW_REQUESTED';
+  id: string; actorId: string; sourceType: 'SADU_Portal' | 'SYSTEM_MIGRATION'; actionType: 'SUBMITTED' | 'DRAFT_SAVED' | 'TAGS_EXTRACTED' | 'PROFILE_VERIFIED' | 'CREATED' | 'REVISED' | 'APPROVED' | 'REJECTED' | 'REVIEW_REQUESTED';
   targetEntityId: string; versionHash: string;
-  purpose: 'BASELINE_CAPTURE' | 'CONTENT_UPDATE' | 'CONTRACT_UPDATE' | 'CURATORIAL_REVIEW' | 'PUBLICATION_REVIEW' | 'REVISION_REQUEST' | 'FICTIONAL_SPECIALIST_REVIEW';
+  purpose: 'PORTAL_ACTION' | 'BASELINE_CAPTURE' | 'CONTENT_UPDATE' | 'CONTRACT_UPDATE' | 'CURATORIAL_REVIEW' | 'PUBLICATION_REVIEW' | 'REVISION_REQUEST' | 'FICTIONAL_SPECIALIST_REVIEW';
   at: string;
 }
 export interface ChangeImpact {
   id: string; entityId: string; fromHash: string; toHash: string; domain: string;
   changedFields: string[]; approvalId: string | null;
   status: 'STALE' | 'REQUIRES_RE_APPROVAL' | 'RESOLVED'; at: string; resolvedBy?: string;
+}
+
+/** Provider verification produces metadata; raw request content never becomes a decision payload. */
+export interface ICommunicationAdapter {
+  readonly mode: 'local-test' | 'external';
+  verify(request: unknown): Promise<null | { channel: 'WHATSAPP' | 'EMAIL'; providerAccountId: string; bindingId: string; eventId: string; evidenceRef: string }>;
 }

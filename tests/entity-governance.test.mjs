@@ -40,7 +40,7 @@ test('audit stores operational codes only; spoofed metadata and free-text reason
   const { store } = await fixture(); await save(store, { ...content, concept: 'Do not copy private@example.test into the decision log' });
   const record = store.read(coordinator);
   assert.ok(!JSON.stringify(record.governance.decisions).includes('private@example.test'));
-  assert.ok(record.governance.decisions.every(d => Object.keys(d).sort().join(',') === 'actionType,actorId,at,id,purpose,targetEntityId,versionHash'));
+  assert.ok(record.governance.decisions.every(d => Object.keys(d).sort().join(',') === 'actionType,actorId,at,id,purpose,sourceType,targetEntityId,versionHash'));
   await assert.rejects(store.governance(coordinator, { version: record.version, action: 'record_clearance', note: 'passport payload' }), e => e.status === 409);
   await assert.rejects(store.governance(artist, { version: record.version, action: 'record_clearance' }), e => e.status === 403);
   assert.equal(store.read(director).governance, undefined);
@@ -87,4 +87,28 @@ test('governance HTTP requires session, rejects cross-origin and Director draft 
   const detail = await fetch(`${base}/api/review/entities/${contract.id}`, { headers: { Cookie: coordCookie } });
   assert.equal(detail.status, 200); assert.equal((await detail.json()).revisions.length, 1);
 
+});
+
+test('portal submission logs authenticated actor and source automatically, rejecting failed actions without a log', async () => {
+  const { store } = await fixture(); await save(store);
+  const r = store.read(artist);
+  const command = { action: 'submit', version: r.version, revision: r.currentRevision, sourceType: 'WhatsApp', actorId: 'forged' };
+  const submitted = await store.act(artist, command);
+  const log = submitted.governance.decisions.at(-1);
+  assert.equal(log.actionType, 'SUBMITTED'); assert.equal(log.sourceType, 'SADU_Portal'); assert.equal(log.actorId, artist.id);
+  await assert.rejects(store.act(artist, command));
+  assert.equal(store.read(artist).governance.decisions.length, submitted.governance.decisions.length);
+});
+import { ingestCommunication } from '../server/communication-ingestion.mjs';
+test('ingestion is disabled by default, resolves trusted dossier bindings and deduplicates without copying messages', async () => {
+  const rows = []; const raw = { text: 'private message', attachment: 'sensitive bytes' };
+  await assert.rejects(ingestCommunication(rows, raw, null, () => null), e => e.status === 503);
+  const verified = { channel: 'WHATSAPP', providerAccountId: 'fixture-account', bindingId: 'binding', eventId: 'fixture-event', evidenceRef: 'c84bf77f-8c54-4d61-a852-83c30b3ceaf9' };
+  const adapter = { mode: 'local-test', verify: async () => verified };
+  await assert.rejects(ingestCommunication(rows, raw, adapter, () => null), e => e.status === 422);
+  const resolve = () => ({ channel: 'WHATSAPP', providerAccountId: 'fixture-account', targetEntityId: 'dossier-fixture', exhibitionId: 'demo-exhibition' });
+  const first = await ingestCommunication(rows, raw, adapter, resolve);
+  assert.equal((await ingestCommunication(rows, raw, adapter, resolve)).id, first.id); assert.equal(rows.length, 1);
+  assert.equal(first.status, 'RECEIVED_UNREVIEWED'); assert.ok(!JSON.stringify(rows).includes('private message')); assert.ok(!JSON.stringify(rows).includes('sensitive bytes'));
+  await assert.rejects(ingestCommunication(rows, raw, adapter, () => ({ ...resolve(), targetEntityId: 'other' })), e => e.status === 409);
 });

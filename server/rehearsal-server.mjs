@@ -53,6 +53,7 @@ export async function createRehearsalApp({ file, staticRoot, spatialFile, authPr
   app.get('/api/review/logistics/:id/manifest.pdf', (req, res) => {
     res.set({ 'Content-Type': 'application/pdf', 'Content-Disposition': 'attachment; filename="SADU-shipping-manifest.pdf"', 'X-Content-Type-Options': 'nosniff' }).send(logistics.manifest(res.locals.actor, req.params.id));
   });
+  app.post('/api/review/ingestion/:channel', (req, res) => res.status(503).json({ error: 'External ingestion is paused. No message was stored.' }));
   app.get('/api/review/governance', (req, res) => {
     const record = store.read(res.locals.actor);
     if (!record.governance) return res.status(403).json({ error: 'Use the finalized executive review projection.' });

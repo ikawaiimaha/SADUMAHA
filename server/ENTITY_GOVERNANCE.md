@@ -67,3 +67,11 @@ The storage adapter keeps copied synthetic bytes in memory with owner/exhibition
 ## Verification
 
 `npm run build:rehearsal` includes TypeScript and the regression suites. Added tests cover immutable snapshots and reopen, no-op saves, selective invalidation, explicit reapproval, safe decision fields, role isolation, contract relations, stale/concurrent writes, legacy baseline migration, HTTP access controls, session revocation, storage isolation and simulated signatures.
+
+## Automatic sources and future communications (30 September 2026)
+
+New decision rows carry server-assigned `sourceType: SADU_Portal`; baseline capture uses `SYSTEM_MIGRATION`. Legacy rows retain their original absence of a source rather than inventing provenance. Accepted submission, no-change draft-save, theme extraction and profile-review actions now also generate operational decision entries. Failed/stale commands do not commit a log. Frontend calls the authorized action endpoint; it cannot independently forge an approval by posting a log. Raw payloads and IP addresses are not copied into the decision collection.
+
+The browser-only 14-task journey offers native portal completion after responsible-desk, evidence and prerequisite checks. It creates the simulated statement/confirmation automatically and persists through the existing session journal. It cannot bypass a pending/disputed external statement. WhatsApp / Instant Messaging is available in the manual fallback; SADU_Portal is shown as an automatic-only option and rejected by the manual reducer. Browser desk/time remain simulation data, distinct from server actor/time.
+
+`ICommunicationAdapter` and `server/communication-ingestion.mjs` prepare an ingestion boundary: trusted verification, explicit provider-account/channel-to-dossier binding, duplicate-event handling, conflicting-delivery rejection and opaque evidence references. Imported messages are `RECEIVED_UNREVIEWED`, never approvals. The local test service takes a caller-owned receipt collection; production verification, durable evidence storage, transactional receipt persistence and sender/dossier enrollment remain unimplemented. `POST /api/review/ingestion/:channel` is deliberately disabled (503 for a local authenticated caller; existing access checks still apply). No WhatsApp, email address, Graph subscription or public webhook is provisioned.

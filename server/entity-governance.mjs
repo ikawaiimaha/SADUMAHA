@@ -3,7 +3,7 @@ import { createHash, randomUUID } from 'node:crypto';
 const fail = (status, message) => { throw Object.assign(new Error(message), { status, governance: true }); };
 const canonical = value => JSON.stringify(value, (_, v) => v && !Array.isArray(v) && typeof v === 'object' ? Object.fromEntries(Object.keys(v).sort().map(k => [k, v[k]])) : v);
 const digest = value => createHash('sha256').update(canonical(value)).digest('hex');
-export const PURPOSES = Object.freeze(['BASELINE_CAPTURE', 'CONTENT_UPDATE', 'CONTRACT_UPDATE', 'CURATORIAL_REVIEW', 'PUBLICATION_REVIEW', 'REVISION_REQUEST', 'FICTIONAL_SPECIALIST_REVIEW']);
+export const PURPOSES = Object.freeze(['PORTAL_ACTION', 'BASELINE_CAPTURE', 'CONTENT_UPDATE', 'CONTRACT_UPDATE', 'CURATORIAL_REVIEW', 'PUBLICATION_REVIEW', 'REVISION_REQUEST', 'FICTIONAL_SPECIALIST_REVIEW']);
 export const DEPENDENCIES = Object.freeze({
   Artwork: { Technical: ['dimensions'], Logistics: ['dimensions'], Editorial: ['title', 'concept', 'displayName'], Publication: ['title', 'concept', 'displayName', 'dimensions', 'year', 'profileUrl'] },
   Contract: { Finance: ['amount', 'currency', 'termsVersion', 'scope', 'artworkId'], Logistics: ['scope', 'artworkId'] },
@@ -25,10 +25,10 @@ function validateContent(kind, content) {
 export const artworkContent = content => ({ title: content.title, concept: content.concept, dimensions: content.label ? { width_cm: content.label.width_cm, height_cm: content.label.height_cm } : null, displayName: content.label?.artistName ?? null, year: content.label?.year ?? null, profileUrl: content.label?.profileUrl ?? '' });
 export const emptyGovernance = () => ({ format: 1, entities: [], revisions: [], decisions: [], approvals: [], impacts: [] });
 export function decision(graph, actor, action, entity, hash, purpose, at) {
-  if (!PURPOSES.includes(purpose) || !['CREATED', 'REVISED', 'APPROVED', 'REJECTED', 'REVIEW_REQUESTED'].includes(action)) fail(422, 'A controlled decision purpose and action are required.');
+  if (!PURPOSES.includes(purpose) || !['SUBMITTED', 'DRAFT_SAVED', 'TAGS_EXTRACTED', 'PROFILE_VERIFIED', 'CREATED', 'REVISED', 'APPROVED', 'REJECTED', 'REVIEW_REQUESTED'].includes(action)) fail(422, 'A controlled decision purpose and action are required.');
   // Explicit construction: never spread a command, actor profile, note or content into this log.
   if (!/^(demo-(artist|coordinator|director)|system-local-migration)$/.test(actor.id)) fail(403, 'Unknown fictional actor.');
-  const row = { id: randomUUID(), actorId: actor.id, actionType: action, targetEntityId: entity.id, versionHash: hash, purpose, at };
+  const row = { id: randomUUID(), actorId: actor.id, actionType: action, targetEntityId: entity.id, versionHash: hash, purpose, sourceType: actor.id === 'system-local-migration' ? 'SYSTEM_MIGRATION' : 'SADU_Portal', at };
   graph.decisions.push(row); return row;
 }
 export function reviseEntity(graph, entity, content, actor, purpose, at) {
@@ -76,6 +76,7 @@ export function ensureGovernance(state, at = new Date().toISOString()) {
   state.artworkId = entity.id;
 }
 export function syncReviewGovernance(state, actor, command, at) {
+  const before = state.governance.decisions.length;
   const entity = state.governance.entities.find(e => e.id === state.artworkId);
   const revision = reviseEntity(state.governance, entity, artworkContent(state.revisions.at(-1).content), actor, 'CONTENT_UPDATE', at);
   state.revisions.at(-1).entityRevisionHash = revision.hash;
@@ -85,6 +86,7 @@ export function syncReviewGovernance(state, actor, command, at) {
     decision(state.governance, actor, 'REVIEW_REQUESTED', entity, revision.hash, 'REVISION_REQUEST', at);
     for (const a of state.governance.approvals.filter(a => a.entityId === entity.id && ['Editorial', 'Publication'].includes(a.domain) && a.status === 'APPROVED')) a.status = 'STALE';
   }
+  if (state.governance.decisions.length === before) decision(state.governance, actor, ({ submit: 'SUBMITTED', save: 'DRAFT_SAVED', tag_existing: 'TAGS_EXTRACTED', verify_profile: 'PROFILE_VERIFIED' })[command.action], entity, revision.hash, 'PORTAL_ACTION', at);
 }
 export function governanceCommand(state, actor, command, at = new Date().toISOString()) {
   if (actor.role !== 'General_Exhibition_Coordinator') fail(403, 'Only the fictional Coordinator records contract terms and specialist evidence.');

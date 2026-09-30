@@ -78,3 +78,20 @@ test('physical receipt can be recorded before advance without unlocking Finance 
  assert.equal(complete(received,'delivery').completed.delivery,undefined);
  assert.deepEqual(ledgerRows(received),[]);
 });
+
+test('native portal completion logs automatically and cannot bypass desk, evidence or prior statements', () => {
+  const state = createJourney();
+  const action = { type: 'portal_complete' as const, taskId: 'brief' as const, actor: 'Committee' as const, at, id: 'native-brief', checks: [true] };
+  assert.equal(journeyReducer(state, { ...action, actor: 'Artist' }), state);
+  assert.equal(journeyReducer(state, { ...action, checks: [false] }), state);
+  const next = journeyReducer(state, action);
+  assert.equal(next.decisions[0].source, 'SADU_Portal'); assert.ok(next.completed.brief);
+  assert.equal(journeyReducer(next, action), next);
+  const pending = reported(state, 'brief'); assert.equal(journeyReducer(pending, action), pending);
+});
+test('WhatsApp is manual evidence; portal provenance cannot be selected or forged in manual recording', () => {
+  const state = createJourney();
+  const action = { type: 'record' as const, id: 'wa', actor: 'Committee' as const, at, draft: { taskId: 'brief' as const, source: 'WhatsApp / Instant Messaging' as const, speaker: 'Fictional sender', occurredAt: at, statement: 'Fictional message' } };
+  assert.equal(journeyReducer(state, action).decisions[0].source, 'WhatsApp / Instant Messaging');
+  assert.equal(journeyReducer(state, { ...action, draft: { ...action.draft, source: 'SADU_Portal' } }), state);
+});

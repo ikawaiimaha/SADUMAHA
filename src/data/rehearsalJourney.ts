@@ -2,7 +2,7 @@
 export const DEMO_ARTIST = { id: 'demo-kufic-horizon', name: 'Noura Al Mazrouei', work: 'Kufic Horizon: Architectural Bronze & Black Oxide', weight: 84, fee: 45000 } as const;
 export const DESKS = ['Committee', 'Director', 'Editorial', 'General Exhibition Coordinator', 'Artist', 'PR', 'Technical', 'Finance', 'Logistics'] as const;
 export type Desk = typeof DESKS[number];
-export const SOURCES = ['Verbal instruction', 'Email', 'Meeting', 'Document'] as const;
+export const SOURCES = ['Verbal instruction', 'Email', 'Meeting', 'Document', 'WhatsApp / Instant Messaging', 'SADU_Portal'] as const;
 export type SourceKind = typeof SOURCES[number];
 export type TaskId = 'brief' | 'selection' | 'invitation' | 'agreement' | 'acceptance' | 'materials' | 'editorial' | 'pr' | 'technical' | 'advance' | 'receipt' | 'delivery' | 'return' | 'completion';
 export type JourneyTask = { id: TaskId; stage: number; title: string; owner: Desk; requires: TaskId[]; due: string; checks: string[]; detail: string };
@@ -27,6 +27,7 @@ export type DecisionRecord = DecisionDraft & { id: string; artistId: string; rev
 export type JourneyState = { revision: number; decisions: DecisionRecord[]; completed: Partial<Record<TaskId, { at: string; by: Desk; decisionId: string; evidence: string[] }>> };
 export const createJourney = (): JourneyState => ({ revision: 1, decisions: [], completed: {} });
 export type JourneyAction =
+  | { type: 'portal_complete'; taskId: TaskId; actor: Desk; at: string; id: string; checks: boolean[] }
   | { type: 'record'; draft: DecisionDraft; actor: Desk; at: string; id: string }
   | { type: 'confirm'; decisionId: string; actor: Desk; at: string; outcome: 'confirmed' | 'disputed'; note: string }
   | { type: 'complete'; taskId: TaskId; decisionId: string; actor: Desk; at: string; checks: boolean[] };
@@ -42,9 +43,18 @@ export function taskStatus(state: JourneyState, task: JourneyTask): 'Complete' |
 }
 export function journeyReducer(state: JourneyState, action: JourneyAction): JourneyState {
   if (!DESKS.includes(action.actor) || !Number.isFinite(Date.parse(action.at))) return state;
+  if (action.type === 'portal_complete') {
+    const task = JOURNEY_TASKS.find(t => t.id === action.taskId);
+    if (!task || task.owner !== action.actor || currentDecision(state, task.id) || state.completed[task.id] || missingTasks(state, task).length || action.checks.length !== task.checks.length || !action.checks.every(v => v === true)) return state;
+    const draft: DecisionDraft = { taskId: task.id, source: 'SADU_Portal', speaker: task.owner, occurredAt: action.at, statement: `Fictional portal action: ${task.title}.` };
+    const recorded = recordPortalStatement(state, draft, action);
+    const confirmed = journeyReducer(recorded, { type: 'confirm', decisionId: action.id, actor: action.actor, at: action.at, outcome: 'confirmed', note: 'Responsible rehearsal desk performed this portal action.' });
+    const completed = journeyReducer(confirmed, { type: 'complete', taskId: task.id, decisionId: action.id, actor: action.actor, at: action.at, checks: action.checks });
+    return completed.completed[task.id] ? completed : state;
+  }
   if (action.type === 'record') {
     const d = action.draft;
-    if (!JOURNEY_TASKS.some(t => t.id === d.taskId) || state.completed[d.taskId] || !SOURCES.includes(d.source)
+    if (!JOURNEY_TASKS.some(t => t.id === d.taskId) || state.completed[d.taskId] || !SOURCES.includes(d.source) || d.source === 'SADU_Portal'
       || !d.speaker.trim() || d.speaker.length > 120 || !d.statement.trim() || d.statement.length > 2000
       || (d.reference?.length ?? 0) > 250 || !Number.isFinite(Date.parse(d.occurredAt)) || Date.parse(d.occurredAt) > Date.parse(action.at)
       || !action.id || state.decisions.some(r => r.id === action.id)) return state;
@@ -63,3 +73,8 @@ export function journeyReducer(state: JourneyState, action: JourneyAction): Jour
   return { ...state, completed: { ...state.completed, [task.id]: { at: action.at, by: action.actor, decisionId: record.id, evidence: [...task.checks] } } };
 }
 export const ledgerRows = (state: JourneyState) => ([['advance', 13500], ['delivery', 18000], ['completion', 13500]] as const).filter(([id]) => state.completed[id]).map(([id, amount]) => ({ milestone: taskById(id).title, amount, ...state.completed[id]! }));
+
+function recordPortalStatement(state: JourneyState, draft: DecisionDraft, action: { id: string; actor: Desk; at: string }): JourneyState {
+  if (!action.id || state.decisions.some(d => d.id === action.id)) return state;
+  return { ...state, decisions: [...state.decisions, { ...draft, id: action.id, artistId: DEMO_ARTIST.id, revision: state.revision, recordedBy: action.actor, recordedAt: action.at }] };
+}

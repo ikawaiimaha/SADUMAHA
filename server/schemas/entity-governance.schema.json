@@ -107,7 +107,11 @@
               "REVISED",
               "APPROVED",
               "REJECTED",
-              "REVIEW_REQUESTED"
+              "REVIEW_REQUESTED",
+              "SUBMITTED",
+              "DRAFT_SAVED",
+              "TAGS_EXTRACTED",
+              "PROFILE_VERIFIED"
             ]
           },
           "targetEntityId": {
@@ -126,12 +130,19 @@
               "CURATORIAL_REVIEW",
               "PUBLICATION_REVIEW",
               "REVISION_REQUEST",
-              "FICTIONAL_SPECIALIST_REVIEW"
+              "FICTIONAL_SPECIALIST_REVIEW",
+              "PORTAL_ACTION"
             ]
           },
           "at": {
             "type": "string",
             "format": "date-time"
+          },
+          "sourceType": {
+            "enum": [
+              "SADU_Portal",
+              "SYSTEM_MIGRATION"
+            ]
           }
         },
         "required": [
