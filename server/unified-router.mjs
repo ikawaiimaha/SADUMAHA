@@ -18,6 +18,9 @@ export function unifiedRouter(controllers) {
     if (!req.fileStream) return res.status(415).json({ error: 'Configure an authenticated single-file multipart stream adapter before intake.' });
     try { res.json(await controllers.submitArtwork(res.locals.actor, req.body, req.fileStream)); } catch(e) { next(e); }
   });
+  router.post('/social-actors', run('registerSocialActor'));
+  router.post('/artist-heritage', run('recordArtistHeritage'));
+  router.get('/assertion/:artworkId', (req,res,next) => { try { res.json(controllers.assertion(res.locals.actor, req.params.artworkId)); } catch(e) { next(e); } });
   router.post('/editorial', run('approveEditorial'));
   router.post('/placement', run('placeArtwork'));
   router.post('/ready', run('readyForDirector'));

@@ -6,3 +6,5 @@
 
 @source "./components/RoleSwitcher.tsx";
 @source "./components/SandboxRoleActions.tsx";
+
+@source "./components/HeritageFields.tsx";

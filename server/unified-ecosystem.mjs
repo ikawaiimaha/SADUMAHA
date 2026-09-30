@@ -1,3 +1,4 @@
+import { validateHeritage, institutionalAssertion, socialActorTypes } from '../src/heritage/taxonomy.mjs';
 import { requireRecordAccess } from './acquisition.mjs';
 import { validateConservation, conservationWarnings, normalizedPin, budgetGauge } from '../src/logistics/museumCare.mjs';
 import { createHash, randomUUID } from 'node:crypto';
@@ -15,7 +16,7 @@ const reject = (status, message) => { throw new ReviewError(status, message); };
 const text = v => typeof v === 'string' && v.trim().length > 0 && v.length <= 10000;
 const pair = v => v && text(v.en) && text(v.ar);
 const bilingual = v => ['en','ar'].map(lang => ({ '@language': lang, '@value': v[lang] }));
-export const emptyEcosystem = () => ({ format: 1, version: 0, artworks: [], revisions: [], dictionary: [], walls: [], placements: [], requests: [], twins: [], labels: [], decisions: [] });
+export const emptyEcosystem = () => ({ format: 1, version: 0, artworks: [], revisions: [], socialActors: [], artistProfiles: [], artistHeritageRevisions: [], dictionary: [], walls: [], placements: [], requests: [], twins: [], labels: [], decisions: [] });
 
 /** Local single-process transactional adapter; production must use database transactions/row locks. */
 export async function openEcosystemRepository(file, seed = emptyEcosystem()) {
@@ -51,12 +52,44 @@ export function createEcosystemControllers({ repository, storage, dockPolicy = a
   const origin = new URL(endpointOrigin);
   if (origin.username || origin.password || origin.search || origin.hash || origin.pathname !== '/' || !(origin.protocol === 'https:' || origin.protocol === 'http:' && ['localhost','127.0.0.1'].includes(origin.hostname))) throw new Error('Use a trusted HTTPS origin or local development origin.');
   return {
+    registerSocialActor(actor, command) {
+      return repository.transaction(state => {
+        scoped(state, actor, command.artworkId, ['General_Exhibition_Coordinator']);
+        if (!socialActorTypes.includes(command.kind) || !pair(command.name)) reject(422, 'Actor type and bilingual name are required.');
+        const entry = { id: randomUUID(), exhibitionId: actor.exhibitionId, kind: command.kind, name: { en: command.name.en, ar: command.name.ar } };
+        (state.socialActors ??= []).push(entry); return entry;
+      });
+    },
+    recordArtistHeritage(actor, command) {
+      return repository.transaction(state => {
+        const artwork = scoped(state, actor, command.artworkId, ['Artist','General_Exhibition_Coordinator']);
+        if (artwork.lifecycleStatus === 'ARCHIVED_CLOSED' || artwork.acquisition) reject(409, 'This dossier is frozen.');
+        const declaration = validateHeritage(command.heritage, state.socialActors ?? [], artwork.exhibitionId);
+        const profiles = state.artistProfiles ??= [];
+        let profile = profiles.find(p => p.actorId === artwork.artistActorId && p.exhibitionId === artwork.exhibitionId);
+        if ((profile?.currentRevisionId ?? null) !== command.expectedRevisionId) reject(409, 'Artist profile revision changed.');
+        if (!profile) { profile = { id: randomUUID(), actorId: artwork.artistActorId, exhibitionId: artwork.exhibitionId }; profiles.push(profile); }
+        const revision = { id: randomUUID(), artistId: profile.id, declaration, recordedBy: actor.id, at: new Date().toISOString() };
+        revision.versionHash = hash(revision);
+        (state.artistHeritageRevisions ??= []).push(revision); profile.currentRevisionId = revision.id;
+        state.decisions.push({ id: randomUUID(), actorId: actor.id, targetId: profile.id, versionHash: revision.versionHash, action: 'ARTIST_HERITAGE_DECLARED', at: revision.at });
+        return revision;
+      });
+    },
+    assertion(actor, artworkId) {
+      const state = repository.read();
+      const artwork = scoped(state, actor, artworkId, ['Director','General_Exhibition_Coordinator']);
+      const revision = state.revisions.find(r => r.id === artwork.currentRevisionId);
+      if (!revision) reject(404, 'No artwork revision exists.');
+      return institutionalAssertion(revision);
+    },
     async submitArtwork(actor, command, mediaStream) {
       const initial = repository.read(); const existing = scoped(initial, actor, command.artworkId, ['Artist']);
       if(existing.acquisition) reject(409, 'Acquisition freezes the approved revision.');
       if (existing.lifecycleStatus === 'ARCHIVED_CLOSED') reject(409, 'Archived dossiers are read-only.');
       if ((existing.currentRevisionId ?? null) !== command.expectedRevisionId) reject(409, 'Revision changed before upload.');
       if (!text(command.concept_text) || !pair(command.title) || !pair(command.artistName) || !isDimension(command.width_cm) || !isDimension(command.height_cm)) reject(422, 'Bilingual name/title, concept and exact dimensions are required.');
+      const heritage = validateHeritage(command.heritage, initial.socialActors ?? [], existing.exhibitionId);
       const conservation = command.conservation_reqs == null ? null : validateConservation(command.conservation_reqs);
       const requirements = command.technicalRequirements ?? [];
       if (!Array.isArray(requirements) || requirements.length > 100 || requirements.some(r => !text(r.item) || r.item.length > 150 || !Number.isSafeInteger(r.quantity) || r.quantity < 1 || typeof r.external !== 'boolean')) reject(422, 'Invalid technical requirements.');
@@ -67,8 +100,9 @@ export function createEcosystemControllers({ repository, storage, dockPolicy = a
         if (artwork.acquisition) reject(409, 'Acquisition freezes the approved revision.');
         if (artwork.lifecycleStatus === 'ARCHIVED_CLOSED') reject(409, 'Archived dossiers are read-only.');
         if ((artwork.currentRevisionId ?? null) !== command.expectedRevisionId) reject(409, 'Revision changed during upload. Staging object retained for reconciliation.');
+        validateHeritage(heritage, state.socialActors ?? [], artwork.exhibitionId);
         const tags = extractKeywords(command.concept_text);
-        const revision = { id: randomUUID(), artworkId: artwork.id, sequence: state.revisions.filter(r => r.artworkId === artwork.id).length + 1, state: 'EDITORIAL_DRAFT', conservation_reqs: conservation, artistName: { en: command.artistName.en, ar: command.artistName.ar }, title: { en: command.title.en, ar: command.title.ar }, concept_text: command.concept_text, width_cm: command.width_cm, height_cm: command.height_cm, year: command.year, media: { objectId: staged.objectId, ...integrity }, curatorial_tags: tags,
+        const revision = { id: randomUUID(), artworkId: artwork.id, sequence: state.revisions.filter(r => r.artworkId === artwork.id).length + 1, state: 'EDITORIAL_DRAFT', heritage, conservation_reqs: conservation, artistName: { en: command.artistName.en, ar: command.artistName.ar }, title: { en: command.title.en, ar: command.title.ar }, concept_text: command.concept_text, width_cm: command.width_cm, height_cm: command.height_cm, year: command.year, media: { objectId: staged.objectId, ...integrity }, curatorial_tags: tags,
           Arabic_Terms: tags.flatMap(term => { const entry = state.dictionary.filter(d => d.exhibitionId === artwork.exhibitionId && d.english.toLowerCase() === term && d.approvedBy && d.approvedAt).sort((a,b) => b.version - a.version)[0]; return entry ? [{ term, arabic: entry.arabic, dictionaryId: entry.id, dictionaryVersion: entry.version, status: 'SUGGESTED' }] : []; }),
           technicalRequirements: requirements.map(r => ({ id: randomUUID(), item: r.item, quantity: r.quantity, external: r.external })), approvals: {},
         };

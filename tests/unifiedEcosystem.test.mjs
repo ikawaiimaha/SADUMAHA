@@ -16,7 +16,7 @@ async function fixture() {
   const storage = { openStaging: async () => ({ objectId: 'private-object', stream: new Writable({ write(_c,_e,done) { done(); } }) }) };
   return { repository, file, controller: createEcosystemControllers({ repository, storage, dockPolicy: { latitude: 0, longitude: 0, radiusMetres: 200 }, endpointOrigin: 'http://127.0.0.1:3013' }) };
 }
-const submission = { artworkId: 'art', expectedRevisionId: null, artistName: { en: 'Sample Artist', ar: 'فنان' }, title: { en: 'Calligraphy Study', ar: 'دراسة' }, concept_text: 'Calligraphy and architecture explore bronze and space.', width_cm: 100, height_cm: 100, year: 2026, technicalRequirements: [{ item: 'Projector', quantity: 2, external: true }] };
+const submission = { artworkId: 'art', expectedRevisionId: null, artistName: { en: 'Sample Artist', ar: 'فنان' }, title: { en: 'Calligraphy Study', ar: 'دراسة' }, heritage:{applicability:'NOT_APPLICABLE',reason:'Synthetic contemporary artwork outside the heritage programme.'},concept_text: 'Calligraphy and architecture explore bronze and space.', width_cm: 100, height_cm: 100, year: 2026, technicalRequirements: [{ item: 'Projector', quantity: 2, external: true }] };
 test('complete intake → translation → placement/SLA → receiving → publication links one revision', async () => {
   const { controller: c, repository, file } = await fixture();
   const r = await c.submitArtwork(actor('Artist'), submission, Readable.from([Buffer.from('image bytes')]));
@@ -67,4 +67,20 @@ test('conservation clearance and image-bound condition records respect roles and
   await c.publish(actor('Director'),cmd);
   assert.equal(c.museumView(actor('Director'),'art').pins.length,1);
   assert.doesNotMatch(JSON.stringify(repository.read().twins),/Sample scratch|damage photo/);
+});
+
+test('heritage registry, artist revisions and artwork assertions enforce scope and preserve evidence', async()=>{
+ const {controller:c,repository}=await fixture();
+ await assert.rejects(c.registerSocialActor(actor('Artist'),{artworkId:'art',kind:'Institution',name:{en:'Demo',ar:'تجريبي'}}),{status:403});
+ const social=await c.registerSocialActor(actor('General_Exhibition_Coordinator'),{artworkId:'art',kind:'Institution',name:{en:'Synthetic craft school',ar:'مدرسة تجريبية'}});
+ const heritage={applicability:'APPLICABLE',transmission_method:'FORMAL_TRAINING',safeguarding_measure:['DOCUMENTATION','CAPACITY_BUILDING'],material_provenance:'MIXED_MEDIA',social_actors:[social.id]};
+ const profile=await c.recordArtistHeritage(actor('Artist'),{artworkId:'art',expectedRevisionId:null,heritage});
+ await assert.rejects(c.recordArtistHeritage(actor('Artist'),{artworkId:'art',expectedRevisionId:null,heritage}),{status:409});
+ const r=await c.submitArtwork(actor('Artist'),{...submission,heritage},Readable.from([Buffer.from('bytes')]));
+ assert.equal(r.heritage.transmission_method,'FORMAL_TRAINING');
+ assert.equal(repository.read().artistHeritageRevisions[0].versionHash,profile.versionHash);
+ const output=c.assertion(actor('General_Exhibition_Coordinator'),'art');assert.equal(output.version_hash,r.versionHash);assert.equal(output.compliance_determination,'NOT_ASSESSED');
+ assert.throws(()=>c.assertion(actor('Logistics'),'art'),{status:403});
+ assert.ok(!JSON.stringify(repository.read().decisions).includes('Synthetic craft school'));
+ await assert.rejects(c.submitArtwork(actor('Artist'),{...submission,expectedRevisionId:r.id,heritage:undefined},Readable.from([Buffer.from('bad')])),{status:422});
 });

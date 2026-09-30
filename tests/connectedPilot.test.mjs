@@ -22,7 +22,7 @@ test('one connected HTTP journey verifies permissions, documents, return, paymen
  try{
   assert.equal((await call('/api/review/pilot')).status,401);rejected++;
   await login('Artist');
-  const metadata={artworkId:PILOT_ARTWORK,expectedRevisionId:null,artistName:{en:'Noura Al Mazrouei',ar:'نورة المزروعي'},title:{en:'Kufic Horizon',ar:'أفق كوفي'},concept_text:'Calligraphy and architecture explore bronze, memory and space.',width_cm:120,height_cm:180,year:2026,conservation_reqs:{max_lux:50,target_temp_c:20,target_humidity_pct:40},technicalRequirements:[{item:'Projector',quantity:1,external:true}]};
+  const metadata={artworkId:PILOT_ARTWORK,expectedRevisionId:null,artistName:{en:'Noura Al Mazrouei',ar:'نورة المزروعي'},title:{en:'Kufic Horizon',ar:'أفق كوفي'},heritage:{applicability:'NOT_APPLICABLE',reason:'Synthetic contemporary artwork outside the heritage programme.'},concept_text:'Calligraphy and architecture explore bronze, memory and space.',width_cm:120,height_cm:180,year:2026,conservation_reqs:{max_lux:50,target_temp_c:20,target_humidity_pct:40},technicalRequirements:[{item:'Projector',quantity:1,external:true}]};
   const upload=body=>fetch(origin+'/api/review/ecosystem/submission',{method:'POST',headers:{Cookie:cookie,Origin:origin,'Content-Type':'application/octet-stream','x-sadu-metadata':encodeURIComponent(JSON.stringify(body))},body:image});
   assert.equal((await upload({...metadata,title:{en:'Missing Arabic'}})).status,422);rejected++;
   assert.equal((await upload(metadata)).status,200);stamp('Submission');
