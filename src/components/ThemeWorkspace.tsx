@@ -8,11 +8,12 @@ const blankEssay = (): Essay => ({ introduction: { en: '', ar: '' }, context: { 
 const input = 'mt-2 w-full rounded-lg border border-[#8C8173] bg-white p-3 text-sm focus-visible:outline-2 focus-visible:outline-[#8B261E]';
 const button = 'rounded-lg bg-[#8B261E] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8B261E]';
 const secondary = 'rounded-lg border border-[#DED5C4] px-4 py-2.5 text-sm focus-visible:outline-2 focus-visible:outline-[#8B261E]';
-export default function ThemeWorkspace() {
+export default function ThemeWorkspace({ onPlanningReady }: { onPlanningReady?: (id: string | null) => void }) {
   const { role } = useSandbox();
   const [loaded] = useState(() => { try { return { state: restoreTheme(sessionStorage.getItem(KEY)), error: '' }; } catch { return { state: emptyTheme(), error: 'The saved theme journal cannot be read. Actions are locked to preserve it. Open a fresh tab to start another simulation.' }; } });
   const [state, setState] = useState(loaded.state);
   const latest = useRef(state);
+  useEffect(() => { const index = state.events.map(e => e.action).lastIndexOf('SELECT'); onPlanningReady?.(state.selected !== undefined && index >= 0 ? `theme-selection-${index + 1}` : null); }, [state, onPlanningReady]);
   const [tab, setTab] = useState<'Proposal' | 'Bilingual essay' | 'Decisions'>('Proposal');
   const [proposals, setProposals] = useState<Proposal[]>(state.proposals.length ? state.proposals : [blankProposal(), blankProposal(), blankProposal()]);
   const [essay, setEssay] = useState<Essay>(state.essay || blankEssay());

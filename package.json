@@ -18,7 +18,7 @@
     "lint": "tsc --noEmit",
     "test:demo": "node --import tsx --test tests/livingRecord.test.ts tests/artistIntake.test.ts tests/intakeWorkflow.test.ts tests/bilingualTimeline.test.tsx tests/prWorkspace.test.tsx",
     "test:e2e": "playwright test",
-    "test:guards": "node --import tsx --test tests/demoBoundaries.test.ts tests/previewNavigation.test.tsx tests/digitalArchive.test.mjs tests/integrityLocation.test.mjs tests/unifiedEcosystem.test.mjs tests/museumCare.test.mjs tests/connectedPilot.test.mjs tests/acquisition.test.mjs tests/demoReplay.test.ts tests/executiveSandbox.test.ts tests/themeWorkflow.test.ts tests/heritage.test.mjs tests/localDraft.test.ts tests/workflowHandoffs.test.ts tests/arrivalPackage.test.tsx tests/governanceMiddleware.test.ts tests/cms-publication.test.mjs tests/invitationArchive.test.ts tests/rehearsalJourney.test.ts",
+    "test:guards": "node --import tsx --test tests/demoBoundaries.test.ts tests/previewNavigation.test.tsx tests/digitalArchive.test.mjs tests/integrityLocation.test.mjs tests/unifiedEcosystem.test.mjs tests/museumCare.test.mjs tests/connectedPilot.test.mjs tests/acquisition.test.mjs tests/demoReplay.test.ts tests/executiveSandbox.test.ts tests/themeWorkflow.test.ts tests/spatialLedger.test.ts tests/heritage.test.mjs tests/localDraft.test.ts tests/workflowHandoffs.test.ts tests/arrivalPackage.test.tsx tests/governanceMiddleware.test.ts tests/cms-publication.test.mjs tests/invitationArchive.test.ts tests/rehearsalJourney.test.ts",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "chromatic": "npx chromatic --project-token=chpt_b93f012ea65c898"

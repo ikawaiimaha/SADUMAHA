@@ -1,5 +1,6 @@
 import RoleSwitcher from './RoleSwitcher';
 import ThemeWorkspace from './ThemeWorkspace';
+import SpatialLedgerWorkspace from './SpatialLedgerWorkspace';
 import SandboxRoleActions from './SandboxRoleActions';
 import { SandboxProvider, useSandbox } from './SandboxProvider';
 import React, { useEffect, useRef, useState } from 'react';
@@ -12,7 +13,8 @@ export default function ExecutiveDashboard() {
 }
 
 function ExecutiveDashboardContent() {
-  const [workspace, setWorkspace] = useState<'artists' | 'theme'>('artists');
+  const [workspace, setWorkspace] = useState<'artists' | 'theme' | 'spaces'>('artists');
+  const [themeApprovalId, setThemeApprovalId] = useState<string | null>(null);
   const { state: sandbox, role } = useSandbox();
   const [editing, setEditing] = useState(false);
   const noteInput = useRef<HTMLTextAreaElement>(null);
@@ -58,14 +60,15 @@ function ExecutiveDashboardContent() {
   const card = 'rounded-xl border border-[#DED5C4] bg-[#FFFDF9] p-5 md:p-7';
   const focus = 'focus-visible:outline-2 focus-visible:outline-[#8B261E] focus-visible:outline-offset-4';
   return <div className="min-h-screen bg-[#F7F1E6] text-[#111817]" lang="en">
-    <a href={workspace === 'theme' ? '#theme-workspace' : '#dossier'} className="sr-only focus:not-sr-only">Skip to active workspace</a>
+    <a href={workspace === 'theme' ? '#theme-workspace' : workspace === 'spaces' ? '#spatial-workspace' : '#dossier'} className="sr-only focus:not-sr-only">Skip to active workspace</a>
     <header className="border-b border-[#DED5C4] px-6 py-4"><div className="mx-auto max-w-6xl flex flex-wrap items-center justify-between gap-5">
       <div className="flex items-center gap-4">{institutionalLogo && !logoFailed && <img src={institutionalLogo} onError={() => setLogoFailed(true)} alt="Sharjah Department of Culture" className="h-16 max-w-48 object-contain"/>}<div><p className="text-sm">Sharjah Department of Culture</p><strong style={{ fontFamily: 'Amiri, Noto Naskh Arabic, Georgia, serif' }} className="text-4xl text-[#8B261E]">SADU</strong></div></div>
       <RoleSwitcher />
     </div></header>
     <main className="mx-auto max-w-6xl p-5 md:p-8 space-y-7">
-      <nav aria-label="Workspaces" className="flex gap-5 border-b border-[#DED5C4] pb-4">{(['artists','theme'] as const).map(w => <button key={w} aria-pressed={workspace === w} onClick={() => setWorkspace(w)} className={`text-sm pb-2 border-b-2 focus-visible:outline-2 focus-visible:outline-[#8B261E] ${workspace === w ? 'border-[#8B261E] text-[#8B261E] font-semibold' : 'border-transparent text-[#655D50]'}`}>{w === 'artists' ? 'Artist dossiers' : 'Theme & Editorial'}</button>)}</nav>
-      <div id="theme-workspace" tabIndex={-1} hidden={workspace !== 'theme'}><ThemeWorkspace /></div>
+      <nav aria-label="Workspaces" className="flex flex-wrap gap-5 border-b border-[#DED5C4] pb-4">{(['artists','theme','spaces'] as const).map(w => <button key={w} aria-pressed={workspace === w} onClick={() => setWorkspace(w)} className={`text-sm pb-2 border-b-2 focus-visible:outline-2 focus-visible:outline-[#8B261E] ${workspace === w ? 'border-[#8B261E] text-[#8B261E] font-semibold' : 'border-transparent text-[#655D50]'}`}>{w === 'artists' ? 'Artist dossiers' : w === 'theme' ? 'Theme & Editorial' : 'Spaces & allocations'}</button>)}</nav>
+      <div id="theme-workspace" tabIndex={-1} hidden={workspace !== 'theme'}><ThemeWorkspace onPlanningReady={setThemeApprovalId} /></div>
+      <div id="spatial-workspace" tabIndex={-1} hidden={workspace !== 'spaces'}><SpatialLedgerWorkspace themeApprovalId={themeApprovalId} /></div>
       <div hidden={workspace !== 'artists'} className="space-y-7">
       <div><p className="text-sm uppercase tracking-widest text-[#8B261E]">Exhibition overview</p><h1 className="mt-2 text-3xl font-serif">Artist dossiers</h1><p className="mt-2 text-[#655D50]">Select an artist to review their next step and supporting information.</p></div>
       <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)] items-start">

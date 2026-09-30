@@ -1,3 +1,4 @@
+import { createSpatialLedgerService, spatialLedgerRouter, requireSpatialExecution } from './spatial-ledger.mjs';
 import { acquisitionService, requireRecordAccess } from './acquisition.mjs';
 import { archivalRecordService } from './archival-record.mjs';
 import express from 'express';
@@ -14,7 +15,7 @@ import { arrivalPolicy } from '../src/logistics/geofence.mjs';
 import { shippingManifest } from './logistics-store.mjs';
 
 export const PILOT_ARTWORK = '901bb523-c68b-4db8-b605-e4841d715c2f';
-export const PILOT_ROLES = ['Artist','Editorial','General_Exhibition_Coordinator','Museum_Operations','Director','PR','Technical','Logistics','Finance'];
+export const PILOT_ROLES = ['Chairman','Committee','Exhibition_Coordinator','Artist','Editorial','General_Exhibition_Coordinator','Museum_Operations','Director','PR','Technical','Logistics','Finance'];
 export const PILOT_ACCOUNTS = PILOT_ROLES.map(role => ({ id: `pilot-${role}`, role, exhibitionId:'connected-pilot', name: role.replaceAll('_',' ') }));
 export function pilotSeed() {
   const s = emptyEcosystem();
@@ -46,6 +47,7 @@ export async function createConnectedPilot({ directory=resolve('.local/connected
   app.use('/api',(req,res,next)=>{try{requireRecordAccess(res.locals.actor,repository.read().artworks[0]);next();}catch(e){next(e);}});
   for(const operation of ['initiate','approve','route'])app.post(`/api/review/acquisition/${operation}`,async(req,res,next)=>{try{res.json(await acquisitions[operation](res.locals.actor,req.body));}catch(e){next(e);}});
   app.get('/api/review/acquisition/:id/:kind.pdf',(req,res,next)=>{try{if(!['title','manifest'].includes(req.params.kind))return res.sendStatus(404);res.set({'X-Content-Type-Options':'nosniff','Content-Disposition':'attachment; filename="SADU-Acquisition.pdf"'}).type('pdf').send(acquisitions.document(res.locals.actor,req.params.id,req.params.kind));}catch(e){next(e);}});
+  app.use('/api/review/spatial-ledger',spatialLedgerRouter(createSpatialLedgerService(repository)));
   const current=()=>{const s=repository.read();const a=s.artworks[0];return {s,a,r:s.revisions.find(r=>r.id===a.currentRevisionId)};};
   const requireRole=(actor,roles)=>{if(actor.exhibitionId!=='connected-pilot'||!roles.includes(actor.role))throw Object.assign(new Error('This role cannot perform this action.'),{status:403});};
   const recordEvent=(s,actor,r,action)=>s.decisions.push({id:randomUUID(),actorId:actor.id,targetId:PILOT_ARTWORK,versionHash:r?.versionHash??'',action,at:new Date().toISOString()});
@@ -54,6 +56,7 @@ export async function createConnectedPilot({ directory=resolve('.local/connected
     const body=req.body??{};const actor=res.locals.actor;
     await repository.transaction(s=>{if(body.version!==s.version)throw Object.assign(new Error('Dossier changed. Refresh and retry.'),{status:409});const a=s.artworks[0],r=s.revisions.find(r=>r.id===a.currentRevisionId);if(a.lifecycleStatus==='ARCHIVED_CLOSED')throw Object.assign(new Error('Archived dossiers are read-only.'),{status:409});if(!r)throw Object.assign(new Error('Submit the artwork first.'),{status:409});
       const need=(condition,message)=>{if(!condition)throw Object.assign(new Error(message),{status:409});};
+      if(['agreement','pay'].includes(body.action))requireSpatialExecution(s,a.id,body.action==='agreement'?4500000:s.agreement?.amountMinor);
       switch(body.action){
         case 'agreement':requireRole(actor,['General_Exhibition_Coordinator']);need(!s.agreement,'Agreement already recorded.');s.agreement={amountMinor:4500000,tranches:[1350000,1800000,1350000],revisionId:r.id,accepted:false};break;
         case 'accept':requireRole(actor,['Artist']);need(s.agreement?.revisionId===r.id,'Current agreement is required.');s.agreement.accepted=true;a.lifecycleStatus='CONTRACT_EXECUTED';break;
