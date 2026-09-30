@@ -1,3 +1,12 @@
+import {
+  applyCuration,
+  invalidateClosedBriefs,
+  invalidateWithdrawnBrief,
+  slotReservations,
+  isBoardAllocated,
+  type Curation,
+  type CurationCommand,
+} from "./curatorialBoard";
 export type LedgerActor = { id: string; role: string; exhibitionId: string };
 export type Venue = { id: string; name: string; active: boolean };
 export type Gallery = {
@@ -22,6 +31,7 @@ export type Allocation = {
   paidMinor: number;
 };
 export type Ledger = {
+  curation?: Curation;
   version: number;
   exhibitionId: string;
   block: {
@@ -54,14 +64,15 @@ export type LedgerCommand = {
     | "TECHNICAL"
     | "DRAFT_CONTRACT"
     | "AUTHORIZE_CONTRACT"
-    | "RELEASE";
+    | "RELEASE"
+    | CurationCommand["action"];
   expected: number;
   targetId?: string;
   galleryId?: string;
   coordinatorId?: string;
   amountMinor?: number;
   reason?: string;
-};
+} & Omit<Partial<CurationCommand>, "action" | "expected">;
 export const ledgerSeed = (exhibitionId = "sandbox"): Ledger => ({
   version: 0,
   exhibitionId,
@@ -142,13 +153,21 @@ export function capacity(s: Ledger, id: string, excluding?: string) {
   const g = s.galleries.find((x) => x.id === id);
   if (!g) return null;
   const rows = s.artworks.filter(
-    (a) => a.galleryId === id && a.id !== excluding && a.state === "APPROVED",
+    (a) =>
+      a.galleryId === id &&
+      a.id !== excluding &&
+      a.state === "APPROVED" &&
+      !isBoardAllocated(s, a.id),
   );
   return {
-    works: g.maxWorks - rows.length,
+    works: g.maxWorks - rows.length - slotReservations(s, id).works,
     m2:
-      Math.round((g.usableM2 - rows.reduce((n, a) => n + a.areaM2, 0)) * 100) /
-      100,
+      Math.round(
+        (g.usableM2 -
+          rows.reduce((n, a) => n + a.areaM2, 0) -
+          slotReservations(s, id).m2) *
+          100,
+      ) / 100,
   };
 }
 export function alternatives(s: Ledger, a: Allocation) {
@@ -200,6 +219,19 @@ export function applyLedger(
     row.technicalVersion = null;
     row.authorizedVersion = null;
   };
+  if (c.action.startsWith("CURATE_")) {
+    applyCuration(s, actor, c as CurationCommand, at);
+    s.version++;
+    s.decisions.push({
+      actorId: actor.id,
+      action: c.action,
+      targetId: c.id || c.slotId || s.exhibitionId,
+      at,
+      reason: c.note || c.reason || "",
+      version: s.version,
+    });
+    return s;
+  }
   if (c.action === "AUTHORIZE_BLOCK") {
     requireRole("Director");
     if (s.block.state === "ACTIVE") fail("The block is already authorized.");
@@ -225,6 +257,19 @@ export function applyLedger(
   } else {
     if (!a) fail("Artwork not found.", 404);
     if (c.action === "APPROVE" || c.action === "REASSIGN") {
+      if (c.action === "APPROVE" && s.curation?.slots.length)
+        fail("Use the Curatorial brief and Defense Board for this edition.");
+      if (
+        c.action === "REASSIGN" &&
+        s.curation?.snapshots.some(
+          (snapshot) =>
+            snapshot.state === "ENDORSED" &&
+            snapshot.rows.some((row) => row.revision.artistId === a.id),
+        )
+      )
+        fail(
+          "Relocate the brief slot and obtain a new Defense Board endorsement.",
+        );
       requireRole(
         c.action === "APPROVE" ? "Committee" : "General_Exhibition_Coordinator",
       );
@@ -254,6 +299,7 @@ export function applyLedger(
       if (a.state === "WITHDRAWN") fail("Already withdrawn.");
       a.state = "WITHDRAWN";
       invalidate(a);
+      invalidateWithdrawnBrief(s, a.id, at);
     } else if (c.action === "DELEGATE") {
       requireRole("General_Exhibition_Coordinator");
       if (!s.staff.some((x) => x.id === c.coordinatorId))
@@ -267,6 +313,24 @@ export function applyLedger(
         fail("Assign a valid gallery first.");
       a.technicalVersion = a.assignmentVersion;
     } else if (c.action === "DRAFT_CONTRACT") {
+      const boardSelection = s.curation?.slots.find(
+        (slot) =>
+          s
+            .curation!.nominations.find((n) => n.id === slot.selectedId)
+            ?.revisions.at(-1)?.artistId === a.id,
+      );
+      if (
+        boardSelection &&
+        c.amountMinor! >
+          s
+            .curation!.nominations.find(
+              (n) => n.id === boardSelection.selectedId,
+            )!
+            .revisions.at(-1)!.costMinor
+      )
+        fail(
+          "Contract terms exceed the endorsed proposal estimate. A reviewed budget amendment is required.",
+        );
       requireRole("Exhibition_Coordinator");
       if (a.coordinatorId !== actor.id)
         fail("This dossier is assigned to another coordinator.", 403);
@@ -310,6 +374,8 @@ export function applyLedger(
       a.paidMinor = Math.ceil(a.contractMinor * 0.3);
     } else fail("Unknown ledger action.", 422);
   }
+  if (c.action === "CLOSE_SPACE" || c.action === "CLOSE_VENUE")
+    invalidateClosedBriefs(s, at);
   s.version++;
   s.decisions.push({
     actorId: actor.id,
