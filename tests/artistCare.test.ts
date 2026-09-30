@@ -1,3 +1,4 @@
+import { validateCraft, type ArtistCraft } from "../src/lib/artistCraft";
 import type { ThemeState } from "../src/lib/themeWorkflow";
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -17,7 +18,33 @@ import {
   type CareCommand,
 } from "../src/lib/artistCare";
 
-const theme: ThemeState = { revision: 7, phase: "Published", proposals: [], notes: [], snapshots: [], events: [{ action: "SELECT" }, { action: "PUBLISH" }] as ThemeState["events"], published: { revision: 6, selected: 0, proposals: [{ en: "Shared practice", ar: "ممارسة مشتركة", rationale: "", feasibility: "", translation: "" }], essay: { introduction: { en: "Approved introduction", ar: "مقدمة معتمدة" }, context: { en: "Approved context", ar: "سياق معتمد" }, checkedEn: true, checkedAr: true } } };
+const theme: ThemeState = {
+  revision: 7,
+  phase: "Published",
+  proposals: [],
+  notes: [],
+  snapshots: [],
+  events: [{ action: "SELECT" }, { action: "PUBLISH" }] as ThemeState["events"],
+  published: {
+    revision: 6,
+    selected: 0,
+    proposals: [
+      {
+        en: "Shared practice",
+        ar: "ممارسة مشتركة",
+        rationale: "",
+        feasibility: "",
+        translation: "",
+      },
+    ],
+    essay: {
+      introduction: { en: "Approved introduction", ar: "مقدمة معتمدة" },
+      context: { en: "Approved context", ar: "سياق معتمد" },
+      checkedEn: true,
+      checkedAr: true,
+    },
+  },
+};
 const at = "2026-09-30T10:00:00Z";
 
 test("backend care responses are artist-scoped and unverified media ingestion is disabled", async () => {
@@ -130,7 +157,12 @@ const work = (): Work => ({
   weight: 1,
   year: 2026,
   rationale: "A synthetic proposal about shared artistic practice.",
-  thematicDefense: { conceptual: "Shared practice connects this artwork to the theme.", material: "Bronze expresses the continuity of shared practice.", acknowledged: true, themeRevision: 6 },
+  thematicDefense: {
+    conceptual: "Shared practice connects this artwork to the theme.",
+    material: "Bronze expresses the continuity of shared practice.",
+    acknowledged: true,
+    themeRevision: 6,
+  },
   packing: "Protect all surfaces.",
   insuranceMinor: 100000,
   budget: [
@@ -596,27 +628,209 @@ test("benchmark artists receive only their own invitation envelope, never the pl
   assert.equal(j.s.invitations[0].state, "ACCEPTED");
 });
 
-
 test("thematic defense rejects unpublished/stale themes and snapshots exact approved text", async () => {
- const j = await journey();
- await j.act("Exhibition_Coordinator", "WELCOME", { note: "Welcome to this synthetic exhibition proposal." });
- await j.act("Exhibition_Coordinator", "DISPATCH");
- await j.act("Artist_Portal", "ACCEPT", { token: j.token });
- const invitation = j.s.invitations[0];
- const actor = { id: invitation.artistActorId, role: "Artist_Portal", exhibitionId: "sandbox" };
- const command = { action: "SUBMIT_WORK", expected: j.s.version, invitationId: invitation.id, data: { work: work() } };
- await assert.rejects(() => applyArtistCare(j.s, actor, command, j.ledger, at), /approved bilingual theme/);
- const stale = work(); stale.thematicDefense!.themeRevision = 0;
- await assert.rejects(() => applyArtistCare(j.s, actor, { ...command, data: { work: stale } }, j.ledger, at, theme), /acknowledge/);
- const empty = work(); empty.thematicDefense!.material = "";
- await assert.rejects(() => applyArtistCare(j.s, actor, { ...command, data: { work: empty } }, j.ledger, at, theme), /both thematic prompts/);
- const approved = structuredClone(theme);
- const result = await applyArtistCare(j.s, actor, command, j.ledger, at, approved);
- approved.published!.essay.introduction.en = "Later edit";
- assert.equal(result.state.invitations[0].works[0].thematicDefense!.theme!.essay.introduction.en, "Approved introduction");
- assert.equal(result.state.invitations[0].works[0].thematicDefense!.conceptual, work().thematicDefense!.conceptual);
- const spoken = work(); spoken.thematicDefense!.conceptual = ""; spoken.thematicDefense!.material = "";
- spoken.media.voice = { ...image, type: "audio/webm", duration: 60 };
- const audioResult = await applyArtistCare(j.s, actor, { ...command, data: { work: spoken } }, j.ledger, at, theme);
- assert.equal(audioResult.state.invitations[0].works[0].media.voice.duration, 60);
+  const j = await journey();
+  await j.act("Exhibition_Coordinator", "WELCOME", {
+    note: "Welcome to this synthetic exhibition proposal.",
+  });
+  await j.act("Exhibition_Coordinator", "DISPATCH");
+  await j.act("Artist_Portal", "ACCEPT", { token: j.token });
+  const invitation = j.s.invitations[0];
+  const actor = {
+    id: invitation.artistActorId,
+    role: "Artist_Portal",
+    exhibitionId: "sandbox",
+  };
+  const command = {
+    action: "SUBMIT_WORK",
+    expected: j.s.version,
+    invitationId: invitation.id,
+    data: { work: work() },
+  };
+  await assert.rejects(
+    () => applyArtistCare(j.s, actor, command, j.ledger, at),
+    /approved bilingual theme/,
+  );
+  const stale = work();
+  stale.thematicDefense!.themeRevision = 0;
+  await assert.rejects(
+    () =>
+      applyArtistCare(
+        j.s,
+        actor,
+        { ...command, data: { work: stale } },
+        j.ledger,
+        at,
+        theme,
+      ),
+    /acknowledge/,
+  );
+  const empty = work();
+  empty.thematicDefense!.material = "";
+  await assert.rejects(
+    () =>
+      applyArtistCare(
+        j.s,
+        actor,
+        { ...command, data: { work: empty } },
+        j.ledger,
+        at,
+        theme,
+      ),
+    /both thematic prompts/,
+  );
+  const approved = structuredClone(theme);
+  const result = await applyArtistCare(
+    j.s,
+    actor,
+    command,
+    j.ledger,
+    at,
+    approved,
+  );
+  approved.published!.essay.introduction.en = "Later edit";
+  assert.equal(
+    result.state.invitations[0].works[0].thematicDefense!.theme!.essay
+      .introduction.en,
+    "Approved introduction",
+  );
+  assert.equal(
+    result.state.invitations[0].works[0].thematicDefense!.conceptual,
+    work().thematicDefense!.conceptual,
+  );
+  const spoken = work();
+  spoken.thematicDefense!.conceptual = "";
+  spoken.thematicDefense!.material = "";
+  spoken.media.voice = { ...image, type: "audio/webm", duration: 60 };
+  const audioResult = await applyArtistCare(
+    j.s,
+    actor,
+    { ...command, data: { work: spoken } },
+    j.ledger,
+    at,
+    theme,
+  );
+  assert.equal(
+    audioResult.state.invitations[0].works[0].media.voice.duration,
+    60,
+  );
+});
+
+const craft: ArtistCraft = {
+  lineage: 75,
+  lineageRationale:
+    "I extend proportioned forms through contemporary repetition.",
+  anchors: ["Geometry & Infinity", "Shared learning"],
+  substrate: "Ahar paper",
+  pigment: "Soot ink and gold leaf",
+  method: "Qalam",
+  comparison: { final: image, grid: { ...image, id: "grid" } },
+};
+test("craft context validates bounded artist-defined data and equal pixel dimensions", () => {
+  assert.equal(validateCraft(craft).lineage, 75);
+  assert.throws(() => validateCraft({ ...craft, lineage: 101 }), /0 to 100/);
+  assert.throws(() => validateCraft({ ...craft, lineage: 0.5 }), /0 to 100/);
+  assert.throws(
+    () => validateCraft({ ...craft, lineageRationale: "word ".repeat(51) }),
+    /50 words/,
+  );
+  assert.throws(
+    () =>
+      validateCraft({
+        ...craft,
+        comparison: { final: image, grid: { ...image, width: 1 } },
+      }),
+    /identical pixel/,
+  );
+  assert.throws(
+    () => validateCraft({ ...craft, anchors: ["a", "a"] }),
+    /distinct/,
+  );
+  assert.throws(() => validateCraft({ ...craft, method: "" }), /substrate/);
+});
+test("consultation locks drafts, scopes messages, releases to artist and redacts submitted history", async () => {
+  const j = await journey();
+  await j.act("Exhibition_Coordinator", "WELCOME", {
+    note: "Welcome to this synthetic exhibition.",
+  });
+  await j.act("Exhibition_Coordinator", "DISPATCH");
+  await j.act("Artist_Portal", "ACCEPT", { token: j.token });
+  const draft = { ...work(), craft };
+  await j.act("Artist_Portal", "REQUEST_GUIDANCE", {
+    work: draft,
+    note: "Private synthetic question for the assigned coordinator.",
+  });
+  const id = draft.id;
+  assert.equal(j.s.invitations[0].works[0].state, "GC_CONSULTATION");
+  for (const role of [
+    "Director",
+    "Committee",
+    "Finance",
+    "General_Exhibition_Coordinator",
+    "Technical",
+  ]) {
+    const projected = projectArtistCare(
+      j.s,
+      { id: role, role, exhibitionId: "sandbox" },
+      j.ledger,
+    );
+    assert.ok(
+      !JSON.stringify(projected).includes("Private synthetic question"),
+    );
+    assert.equal(projected.invitations[0].works.length, 0);
+  }
+  await assert.rejects(
+    () => j.act("Artist_Portal", "SUBMIT_WORK", { work: draft, revision: 1 }),
+    /returned current revision/,
+  );
+  await assert.rejects(
+    () =>
+      j.act(
+        "Artist_Portal",
+        "RELEASE_DRAFT",
+        { note: "I release my own draft" },
+        id,
+      ),
+    /Only the assigned/,
+  );
+  await assert.rejects(
+    () =>
+      j.act(
+        "Exhibition_Coordinator",
+        "GUIDANCE_MESSAGE",
+        { note: "Unauthorized reply attempt" },
+        id,
+        at,
+        "other-coordinator",
+      ),
+    /assigned coordinator/,
+  );
+  await j.act(
+    "Exhibition_Coordinator",
+    "GUIDANCE_MESSAGE",
+    { note: "Explain the material relationship more clearly." },
+    id,
+  );
+  await j.act(
+    "Exhibition_Coordinator",
+    "RELEASE_DRAFT",
+    { note: "Please revise your material explanation and submit." },
+    id,
+  );
+  await j.act("Artist_Portal", "SUBMIT_WORK", { work: draft, revision: 1 });
+  const committee = projectArtistCare(
+    j.s,
+    { id: "Committee", role: "Committee", exhibitionId: "sandbox" },
+    j.ledger,
+  );
+  assert.equal(
+    committee.invitations[0].works[0].craft!.substrate,
+    "Ahar paper",
+  );
+  assert.ok(!JSON.stringify(committee).includes("Private synthetic question"));
+  assert.ok(
+    !JSON.stringify(committee).includes("Explain the material relationship"),
+  );
+  assert.equal(committee.invitations[0].works[0].consultation, undefined);
+  assert.equal(j.s.invitations[0].works[0].consultation!.messages.length, 3);
 });

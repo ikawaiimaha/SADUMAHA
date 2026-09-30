@@ -1,3 +1,4 @@
+import { CraftComparison } from "./ArtistCraftFields";
 import { useState } from "react";
 import {
   type Work,
@@ -51,7 +52,9 @@ export default function ArtistCareWork({
           className={`rounded-full px-3 py-1 text-xs ${w.route === "COMMISSION" ? "bg-amber-100 text-amber-900" : "bg-blue-100 text-blue-900"}`}
         >
           {w.route === "COMMISSION" ? "COMMISSION" : "EXISTING WORK"} ·{" "}
-          {w.state.toLowerCase()}
+          {w.state === "GC_CONSULTATION"
+            ? "Guidance requested"
+            : w.state.toLowerCase()}
         </span>
       </div>
       <p className="text-sm">
@@ -60,7 +63,126 @@ export default function ArtistCareWork({
           ? `Proposed production: AED ${w.budget.reduce((n, x) => n + x.minor, 0) / 100}`
           : `Declared insurance value: AED ${w.insuranceMinor / 100}`}
       </p>
-      {w.thematicDefense ? <section className="space-y-3 border-s-2 border-[#DED5C4] ps-4" aria-label="Artist thematic defense"><h4 className="font-serif text-xl">Artist’s thematic defense</h4><p className="text-xs text-[#655D50]">{w.thematicDefense.theme?.title.en} · approved theme revision {w.thematicDefense.themeRevision}</p>{w.thematicDefense.conceptual && <div><h5 className="text-sm font-semibold">Connection to the theme</h5><p className="whitespace-pre-wrap">{w.thematicDefense.conceptual}</p></div>}{w.thematicDefense.material && <div><h5 className="text-sm font-semibold">Material and technique</h5><p className="whitespace-pre-wrap">{w.thematicDefense.material}</p></div>}</section> : <p className="text-sm leading-6">{w.rationale}</p>}
+      {w.thematicDefense ? (
+        <section
+          className="space-y-3 border-s-2 border-[#DED5C4] ps-4"
+          aria-label="Artist thematic defense"
+        >
+          <h4 className="font-serif text-xl">Artist’s thematic defense</h4>
+          <p className="text-xs text-[#655D50]">
+            {w.thematicDefense.theme
+              ? `${w.thematicDefense.theme.title.en} · approved theme revision ${w.thematicDefense.themeRevision}`
+              : "Draft response · theme acknowledgement required before submission"}
+          </p>
+          {w.thematicDefense.conceptual && (
+            <div>
+              <h5 className="text-sm font-semibold">Connection to the theme</h5>
+              <p className="whitespace-pre-wrap">
+                {w.thematicDefense.conceptual}
+              </p>
+            </div>
+          )}
+          {w.thematicDefense.material && (
+            <div>
+              <h5 className="text-sm font-semibold">Material and technique</h5>
+              <p className="whitespace-pre-wrap">
+                {w.thematicDefense.material}
+              </p>
+            </div>
+          )}
+        </section>
+      ) : (
+        <p className="text-sm leading-6">{w.rationale}</p>
+      )}
+      {w.craft && (
+        <details>
+          <summary className="cursor-pointer font-medium">
+            Artist-defined craft & context
+          </summary>
+          <div className="mt-4 space-y-3 text-sm">
+            <p>
+              Lineage position: {w.craft.lineage} / 100 · Classical →
+              Experimental
+            </p>
+            <p className="whitespace-pre-wrap">{w.craft.lineageRationale}</p>
+            <div className="flex flex-wrap gap-2">
+              {w.craft.anchors.map((tag) => (
+                <span key={tag} className="rounded-full bg-[#F7F1E6] px-3 py-1">
+                  {tag}
+                </span>
+              ))}
+            </div>
+            <dl>
+              <dt className="font-semibold">Substrate / support</dt>
+              <dd>{w.craft.substrate}</dd>
+              <dt className="font-semibold mt-2">Pigment / surface material</dt>
+              <dd>{w.craft.pigment}</dd>
+              <dt className="font-semibold mt-2">Tool / method</dt>
+              <dd>{w.craft.method}</dd>
+            </dl>
+            <CraftComparison craft={w.craft} />
+          </div>
+        </details>
+      )}
+      {w.consultation && (
+        <section
+          className="rounded-lg bg-[#F7F1E6] p-4 space-y-3"
+          aria-label="Curatorial guidance"
+        >
+          <h4 className="font-medium">
+            Curatorial guidance · {w.consultation.status.toLowerCase()}
+          </h4>
+          <p className="text-xs">
+            Recorded advice for this artwork. It does not replace Committee
+            review.
+          </p>
+          {w.consultation.messages.map((m, index) => (
+            <div key={index} className="border-s-2 border-[#DED5C4] ps-3">
+              <p className="text-xs">
+                {m.actorId} · {new Date(m.at).toLocaleString()}
+              </p>
+              <p className="text-sm whitespace-pre-wrap">{m.text}</p>
+            </div>
+          ))}
+          {w.state === "GC_CONSULTATION" && (
+            <>
+              <label className="block text-sm">
+                Guidance message
+                <textarea
+                  className={careInput}
+                  maxLength={4000}
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                />
+              </label>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  className={careButton}
+                  disabled={note.trim().length < 10}
+                  onClick={async () => {
+                    if (await act("GUIDANCE_MESSAGE", { note })) setNote("");
+                  }}
+                >
+                  Send guidance message
+                </button>
+                {!artist && (
+                  <button
+                    className={careButton}
+                    disabled={note.trim().length < 10}
+                    onClick={() => void act("RELEASE_DRAFT", { note })}
+                  >
+                    Release draft to artist
+                  </button>
+                )}
+              </div>
+              <p className="text-xs">
+                Draft editing is paused until the assigned coordinator releases
+                it.
+              </p>
+            </>
+          )}
+        </section>
+      )}
       <div className="grid gap-4 md:grid-cols-3">
         {Object.entries(w.media)
           .filter(([k]) => k !== "voice")

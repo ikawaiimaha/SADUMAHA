@@ -49,7 +49,13 @@ const briefing = [
     "An acknowledgement is not a legal signature. Repairs require approval of the exact protocol. Revised repair instructions invalidate earlier approval.",
   ],
 ];
-export default function ArtistCareWorkspace({ ledger, theme: approvedThemeState }: { ledger: Ledger; theme?: ThemeState }) {
+export default function ArtistCareWorkspace({
+  ledger,
+  theme: approvedThemeState,
+}: {
+  ledger: Ledger;
+  theme?: ThemeState;
+}) {
   const { role } = useSandbox();
   const briefingDialog = useRef<HTMLDialogElement>(null);
   const [now, setNow] = useState(Date.now());
@@ -101,6 +107,8 @@ export default function ArtistCareWorkspace({ ledger, theme: approvedThemeState 
     [en, setEn] = useState(state.template?.en ?? DEFAULT_EN),
     [ar, setAr] = useState(state.template?.ar ?? DEFAULT_AR),
     [reference, setReference] = useState("");
+  const [lineageBand, setLineageBand] = useState("all");
+  const [anchorQuery, setAnchorQuery] = useState("");
   const artist = ["Artist_Portal", "Artist"].includes(role),
     restricted = new Set(ledger.curation?.benchmarks?.map((x) => x.id) ?? []);
   const available = state.invitations
@@ -190,6 +198,25 @@ export default function ArtistCareWorkspace({ ledger, theme: approvedThemeState 
       setBusy(false);
     }
   };
+  const filteredWorks = invitation
+    ? invitation.works.filter(
+        (w) =>
+          artist ||
+          ((lineageBand === "all" ||
+            (w.craft &&
+              (lineageBand === "classical"
+                ? w.craft.lineage <= 30
+                : lineageBand === "middle"
+                  ? w.craft.lineage > 30 && w.craft.lineage < 70
+                  : w.craft.lineage >= 70))) &&
+            (!anchorQuery.trim() ||
+              w.craft?.anchors.some((a) =>
+                a
+                  .toLocaleLowerCase()
+                  .includes(anchorQuery.trim().toLocaleLowerCase()),
+              ))),
+      )
+    : [];
   return (
     <section aria-label="Invitations and artist care" className="space-y-6">
       <header>
@@ -218,6 +245,8 @@ export default function ArtistCareWorkspace({ ledger, theme: approvedThemeState 
           awaiting review ·{" "}
           {invitation.works.filter((w) => w.state === "RETURNED").length}{" "}
           awaiting revision ·{" "}
+          {invitation.works.filter((w) => w.state === "GC_CONSULTATION").length}{" "}
+          in guidance ·{" "}
           {
             invitation.works.filter(
               (w) => w.condition?.damage && !w.condition.repaired,
@@ -592,6 +621,17 @@ export default function ArtistCareWorkspace({ ledger, theme: approvedThemeState 
               key={revision?.id ?? "new"}
               returned={revision}
               allowed={state.settings?.commissionAllowed ?? false}
+              onGuidance={async (work, note, rev) => {
+                const saved = await run({
+                  action: "REQUEST_GUIDANCE",
+                  data: { work, note, revision: rev },
+                });
+                if (saved) {
+                  setAdding(false);
+                  setRevision(undefined);
+                }
+                return saved;
+              }}
               onSubmit={async (work, rev) => {
                 const saved = await run({
                   action: "SUBMIT_WORK",
@@ -605,8 +645,49 @@ export default function ArtistCareWorkspace({ ledger, theme: approvedThemeState 
               }}
             />
           )}
+          {!artist && (
+            <details className="border-y border-[#DED5C4] py-3">
+              <summary className="cursor-pointer text-sm">
+                Filter artwork context in this dossier
+              </summary>
+              <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                <label className="text-sm">
+                  Artist-defined lineage
+                  <select
+                    className={careInput}
+                    value={lineageBand}
+                    onChange={(e) => setLineageBand(e.target.value)}
+                  >
+                    <option value="all">
+                      All positions, including unspecified
+                    </option>
+                    <option value="classical">0–30 · Classical emphasis</option>
+                    <option value="middle">31–69 · Mixed approaches</option>
+                    <option value="experimental">
+                      70–100 · Experimental emphasis
+                    </option>
+                  </select>
+                </label>
+                <label className="text-sm">
+                  Conceptual anchor
+                  <input
+                    className={careInput}
+                    value={anchorQuery}
+                    onChange={(e) => setAnchorQuery(e.target.value)}
+                    placeholder="Search artist-selected anchors"
+                  />
+                </label>
+              </div>
+            </details>
+          )}
           <div className="space-y-5">
-            {invitation.works.map((w) => (
+            {!filteredWorks.length && (
+              <p className="text-sm text-[#655D50]">
+                No artworks match this view. Clear the filters or wait for an
+                artist submission.
+              </p>
+            )}
+            {filteredWorks.map((w) => (
               <ArtistCareWork
                 key={`${invitation.id}:${w.id}:${w.revision}`}
                 work={w}

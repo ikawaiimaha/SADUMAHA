@@ -1,4 +1,5 @@
 import { arrivalPolicy, checkArrivalLocation } from "../logistics/geofence.mjs";
+import { validateCraft, type ArtistCraft } from "./artistCraft";
 import type { ThemeState } from "./themeWorkflow";
 import type { Ledger, LedgerActor } from "./spatialLedger";
 
@@ -13,18 +14,44 @@ export type MediaRef = {
   duration?: number;
 };
 export type Route = "EXISTING" | "COMMISSION";
-export type ThemeAnchor = { selectionId: string; revision: number; title: { en: string; ar: string }; essay: NonNullable<ThemeState["published"]>["essay"] };
+export type ThemeAnchor = {
+  selectionId: string;
+  revision: number;
+  title: { en: string; ar: string };
+  essay: NonNullable<ThemeState["published"]>["essay"];
+};
 export function approvedTheme(theme?: ThemeState): ThemeAnchor | undefined {
   const p = theme?.published;
   if (!p) return undefined;
-  const events = theme!.events.slice(0, theme!.events.map(e => e.action).lastIndexOf("PUBLISH") + 1);
-  const index = events.map(e => e.action).lastIndexOf("SELECT");
+  const events = theme!.events.slice(
+    0,
+    theme!.events.map((e) => e.action).lastIndexOf("PUBLISH") + 1,
+  );
+  const index = events.map((e) => e.action).lastIndexOf("SELECT");
   const title = p.proposals[p.selected];
   if (index < 0 || !title) return undefined;
-  return { selectionId: `theme-selection-${index + 1}`, revision: p.revision, title: { en: title.en, ar: title.ar }, essay: structuredClone(p.essay) };
+  return {
+    selectionId: `theme-selection-${index + 1}`,
+    revision: p.revision,
+    title: { en: title.en, ar: title.ar },
+    essay: structuredClone(p.essay),
+  };
 }
 export type Work = {
-  thematicDefense?: { conceptual: string; material: string; acknowledged: boolean; themeRevision: number; theme?: ThemeAnchor; acknowledgedAt?: string };
+  craft?: ArtistCraft;
+  consultation?: {
+    status: "OPEN" | "RELEASED";
+    submitted?: boolean;
+    messages: { actorId: string; at: string; text: string }[];
+  };
+  thematicDefense?: {
+    conceptual: string;
+    material: string;
+    acknowledged: boolean;
+    themeRevision: number;
+    theme?: ThemeAnchor;
+    acknowledgedAt?: string;
+  };
   id: string;
   title: string;
   route: Route;
@@ -41,7 +68,7 @@ export type Work = {
   maintenance: string;
   intervalDays: number;
   consent: string[];
-  state: "SUBMITTED" | "APPROVED" | "RETURNED";
+  state: "SUBMITTED" | "APPROVED" | "RETURNED" | "GC_CONSULTATION";
   committeeReviewed?: boolean;
   revision: number;
   feedback?: string;
@@ -253,11 +280,43 @@ export function projectArtistCare(
     );
   for (const i of s.invitations) {
     delete i.tokenHash;
+    const consultAccess =
+      (["Artist", "Artist_Portal"].includes(actor.role) &&
+        i.artistActorId === actor.id) ||
+      (actor.role === "Exhibition_Coordinator" &&
+        i.coordinatorId === actor.id) ||
+      (restricted.has(i.artistId) &&
+        actor.role === "General_Exhibition_Coordinator");
+    const redact = (work: Work): Work => {
+      if (!consultAccess) {
+        delete work.consultation;
+        work.previous = work.previous
+          ?.filter((p) => !p.consultation)
+          .map(redact);
+      }
+      return work;
+    };
+    i.works = i.works
+      .filter(
+        (w) =>
+          consultAccess ||
+          (!w.consultation && w.state !== "GC_CONSULTATION") ||
+          w.consultation?.submitted === true,
+      )
+      .map(redact);
+
     if (["Artist", "Artist_Portal"].includes(actor.role))
       for (const w of i.works)
         w.legacy = w.legacy.filter((a) => a.cleared && legacyAvailable(s, w));
   }
   if (!manager) s.audit = [];
+  else
+    s.audit = s.audit.filter(
+      (e) =>
+        !["REQUEST_GUIDANCE", "GUIDANCE_MESSAGE", "RELEASE_DRAFT"].includes(
+          e.action,
+        ),
+    );
   return s;
 }
 export async function applyArtistCare(
@@ -305,7 +364,120 @@ export async function applyArtistCare(
     !(actor.role === "Committee" && ledger.curation?.phase === "ENDORSED")
   )
     reject("This dossier is restricted.", 403);
+  const consultationDesk = () => {
+    if (
+      !i ||
+      (!(
+        actor.role === "Exhibition_Coordinator" && i.coordinatorId === actor.id
+      ) &&
+        !(
+          actor.role === "General_Exhibition_Coordinator" &&
+          ledger.curation?.benchmarks?.some((b) => b.id === i.artistId)
+        ))
+    )
+      reject("Guidance belongs to the assigned coordinator.", 403);
+  };
   switch (c.action) {
+    case "REQUEST_GUIDANCE": {
+      own();
+      if (
+        i!.state !== "ACCEPTED" ||
+        !currentRoster(ledger, i!) ||
+        !s.settings ||
+        Date.parse(now) >= Date.parse(s.settings.deadline)
+      )
+        reject("Guidance requests are closed for this invitation.");
+      const draft = d.work as Work;
+      if (
+        !draft ||
+        !text(draft.id) ||
+        !text(draft.title) ||
+        !text(d.note, 10) ||
+        d.note.length > 4000 ||
+        !["EXISTING", "COMMISSION"].includes(draft.route)
+      )
+        reject(
+          "Add an artwork title, submission type and a specific guidance question.",
+          422,
+        );
+      const old = i!.works.find((x) => x.id === draft.id);
+      if (old && (old.state !== "RETURNED" || d.revision !== old.revision))
+        reject("Only a new or returned current draft can request guidance.");
+      const safe = {
+        id: draft.id,
+        title: draft.title,
+        route: draft.route,
+        width: draft.width,
+        height: draft.height,
+        depth: draft.depth,
+        weight: draft.weight,
+        year: draft.year,
+        rationale: draft.rationale,
+        packing: draft.packing,
+        insuranceMinor: draft.insuranceMinor,
+        budget: draft.budget ?? [],
+        media: draft.media ?? {},
+        maintenance: draft.maintenance,
+        intervalDays: draft.intervalDays,
+        consent: [],
+        craft: draft.craft ? validateCraft(draft.craft) : undefined,
+        thematicDefense: draft.thematicDefense
+          ? {
+              conceptual: String(draft.thematicDefense.conceptual ?? ""),
+              material: String(draft.thematicDefense.material ?? ""),
+              acknowledged: false,
+              themeRevision: -1,
+            }
+          : undefined,
+        state: "GC_CONSULTATION",
+        revision: (old?.revision ?? 0) + 1,
+        previous: old
+          ? [...(old.previous ?? []), { ...old, previous: undefined }]
+          : [],
+        milestones: [],
+        maintenanceLog: [],
+        legacy: [],
+        consultation: {
+          status: "OPEN",
+          messages: [
+            ...(old?.consultation?.messages ?? []),
+            { actorId: actor.id, at: now, text: d.note },
+          ],
+        },
+      } as Work;
+      if (old) i!.works[i!.works.indexOf(old)] = safe;
+      else i!.works.push(safe);
+      break;
+    }
+    case "GUIDANCE_MESSAGE":
+    case "RELEASE_DRAFT": {
+      if (["Artist", "Artist_Portal"].includes(actor.role)) {
+        own();
+        if (c.action === "RELEASE_DRAFT")
+          reject("Only the assigned coordinator can release this draft.", 403);
+      } else consultationDesk();
+      if (
+        !w ||
+        w.state !== "GC_CONSULTATION" ||
+        w.consultation?.status !== "OPEN" ||
+        !text(d.note, 10) ||
+        d.note.length > 4000
+      )
+        reject("Add a specific note to an open consultation.", 422);
+      w.consultation.messages.push({
+        actorId: actor.id,
+        at: now,
+        text: d.note,
+      });
+      if (c.action === "RELEASE_DRAFT") {
+        w.consultation.status = "RELEASED";
+        w.state = "RETURNED";
+        w.feedback =
+          "Guidance complete. Review the advice and submit when ready.";
+      }
+      break;
+    }
+
     case "SET_BRIEF":
       role("General_Exhibition_Coordinator");
       if (s.invitations.length)
@@ -423,15 +595,36 @@ export async function applyArtistCare(
       const x = d.work as Work;
       const anchor = approvedTheme(theme);
       if (!anchor || anchor.selectionId !== ledger.block.themeApprovalId)
-        reject("The approved bilingual theme for this spatial brief is not available. Ask Editorial to complete executive approval.");
+        reject(
+          "The approved bilingual theme for this spatial brief is not available. Ask Editorial to complete executive approval.",
+        );
       const defense = x?.thematicDefense;
       if (!defense?.acknowledged || defense.themeRevision !== anchor.revision)
-        reject("Review and acknowledge the current approved theme before submitting.", 422);
-      if (typeof defense.conceptual !== "string" || typeof defense.material !== "string" || defense.conceptual.length > 4000 || defense.material.length > 4000) reject("Keep each thematic response within 4000 characters.", 422);
-      const written = text(defense.conceptual, 20) && text(defense.material, 20);
+        reject(
+          "Review and acknowledge the current approved theme before submitting.",
+          422,
+        );
+      if (
+        typeof defense.conceptual !== "string" ||
+        typeof defense.material !== "string" ||
+        defense.conceptual.length > 4000 ||
+        defense.material.length > 4000
+      )
+        reject("Keep each thematic response within 4000 characters.", 422);
+      const written =
+        text(defense.conceptual, 20) && text(defense.material, 20);
       const voice = x?.media?.voice;
-      const spoken = voice && media(voice) && voice.type.startsWith("audio/") && positive(voice.duration) && voice.duration <= 60;
-      if (!written && !spoken) reject("Answer both thematic prompts or attach a Studio Voice recording of up to 60 seconds.", 422);
+      const spoken =
+        voice &&
+        media(voice) &&
+        voice.type.startsWith("audio/") &&
+        positive(voice.duration) &&
+        voice.duration <= 60;
+      if (!written && !spoken)
+        reject(
+          "Answer both thematic prompts or attach a Studio Voice recording of up to 60 seconds.",
+          422,
+        );
 
       if (
         !x ||
@@ -511,8 +704,21 @@ export async function applyArtistCare(
         depth: x.depth,
         weight: x.weight,
         year: x.year,
-        rationale: written ? defense.conceptual : "Studio Voice thematic defense",
-        thematicDefense: { conceptual: defense.conceptual, material: defense.material, acknowledged: true, themeRevision: anchor.revision, theme: structuredClone(anchor), acknowledgedAt: now },
+        rationale: written
+          ? defense.conceptual
+          : "Studio Voice thematic defense",
+        craft: x.craft ? validateCraft(x.craft) : undefined,
+        consultation: old?.consultation
+          ? { ...old.consultation, submitted: true }
+          : undefined,
+        thematicDefense: {
+          conceptual: defense.conceptual,
+          material: defense.material,
+          acknowledged: true,
+          themeRevision: anchor.revision,
+          theme: structuredClone(anchor),
+          acknowledgedAt: now,
+        },
         packing: x.packing,
         insuranceMinor: x.insuranceMinor,
         budget: x.route === "COMMISSION" ? x.budget : [],

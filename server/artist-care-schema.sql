@@ -48,3 +48,25 @@ CREATE TABLE thematic_defense (
  PRIMARY KEY(work_id,revision),
  FOREIGN KEY(work_id,revision) REFERENCES artist_submission_revision(work_id,revision)
 );
+
+-- Artist-defined context, never an institutional quality score.
+CREATE TABLE artist_craft_context (
+ work_id TEXT NOT NULL, revision INTEGER NOT NULL,
+ lineage INTEGER NOT NULL CHECK(lineage BETWEEN 0 AND 100), lineage_rationale TEXT NOT NULL,
+ anchors_json TEXT NOT NULL CHECK(json_valid(anchors_json)),
+ substrate TEXT NOT NULL, pigment TEXT NOT NULL, method TEXT NOT NULL,
+ comparison_json TEXT CHECK(comparison_json IS NULL OR json_valid(comparison_json)),
+ PRIMARY KEY(work_id,revision), FOREIGN KEY(work_id,revision) REFERENCES artist_submission_revision(work_id,revision)
+);
+CREATE TABLE curatorial_consultation (
+ id TEXT PRIMARY KEY, work_id TEXT NOT NULL, revision INTEGER NOT NULL,
+ assigned_coordinator_id TEXT NOT NULL, artist_actor_id TEXT NOT NULL,
+ state TEXT NOT NULL CHECK(state IN ('OPEN','RELEASED')),
+ FOREIGN KEY(work_id,revision) REFERENCES artist_submission_revision(work_id,revision)
+);
+CREATE TABLE consultation_message (
+ id TEXT PRIMARY KEY, consultation_id TEXT NOT NULL REFERENCES curatorial_consultation(id),
+ actor_id TEXT NOT NULL, created_at TEXT NOT NULL, body TEXT NOT NULL
+);
+-- GC_CONSULTATION drafts and all messages are projected only to the owner and assigned desk.
+-- Committee responses exclude consultation history even after formal submission.
