@@ -1,3 +1,4 @@
+import { returnReadiness } from "./artistCareExperience";
 import { arrivalPolicy, checkArrivalLocation } from "../logistics/geofence.mjs";
 import {
   validateFreight,
@@ -454,8 +455,11 @@ export async function applyArtistCare(
         reject(
           "Freight details require an approved work with an active allocation before receipt.",
         );
-      w.freight = validateFreight(d.freight);
-      w.freightRevision = (w.freightRevision ?? 0) + 1;
+      const updatedFreight = validateFreight(d.freight);
+      if (JSON.stringify(w.freight) !== JSON.stringify(updatedFreight)) {
+        w.freight = updatedFreight;
+        w.freightRevision = (w.freightRevision ?? 0) + 1;
+      }
       break;
     case "PRE_DISPATCH_CONDITION":
       own();
@@ -1052,23 +1056,9 @@ export async function applyArtistCare(
       break;
     case "RETURN_TRANSIT":
       role("Logistics", "Logistics_Officer");
-      if (
-        !w?.condition ||
-        w.returnAt ||
-        !s.settings ||
-        Date.parse(now) < Date.parse(s.settings.closesAt) ||
-        (w.condition.damage && !w.condition.repaired)
-      )
-        reject(
-          "Return transit requires exhibition closure and resolved condition issues.",
-        );
-      const removal = w.conditionHistory?.find(
-        (r) => r.stage === "DEINSTALLATION" && r.revision === w.revision,
-      );
-      if (!removal || removal.damage)
-        reject(
-          "Return transit requires a locked de-installation report without unresolved damage.",
-        );
+      if (!w) reject("Select an artwork.");
+      const returnBlock = returnReadiness(s, w, Date.parse(now));
+      if (returnBlock) reject(returnBlock);
       w.returnAt = now;
       break;
     case "LEGACY_ASSET":

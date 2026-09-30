@@ -1,3 +1,4 @@
+import { careNextStep, returnReadiness } from "../src/lib/artistCareExperience";
 import {
   customsExport,
   consolidationCandidates,
@@ -528,7 +529,7 @@ test("submission revisions, financial separation, repair approval and timed lega
   await j.act("Director", "CLEAR_LEGACY", { id: asset }, "work");
   await assert.rejects(
     () => j.act("Logistics_Officer", "RETURN_TRANSIT", {}, "work"),
-    /exhibition closure/,
+    /exhibition closes/,
   );
   await j.act(
     "Logistics_Officer",
@@ -1068,4 +1069,22 @@ test("customs JSON HTTP endpoint checks actor scope and exposes only an explicit
     (await fetch(root + "/export-to-customs?role=Director")).status,
     403,
   );
+});
+
+test("unchanged freight saves preserve the checkpoint; next steps identify responsibility", async () => {
+  const j = await freightJourney();
+  await j.act("Artist_Portal", "SAVE_FREIGHT", { freight }, "work");
+  const before = j.s.invitations[0].works[0].freightRevision;
+  await j.act("Artist_Portal", "SAVE_FREIGHT", { freight }, "work");
+  const w = j.s.invitations[0].works[0];
+  assert.equal(w.freightRevision, before);
+  assert.equal(careNextStep(j.s, w).owner, "Artist / Logistics");
+  assert.match(returnReadiness(j.s, w)!, /arrival/);
+  w.state = "SUBMITTED";
+  w.committeeReviewed = false;
+  assert.equal(careNextStep(j.s, w).owner, "Committee");
+  w.committeeReviewed = true;
+  assert.equal(careNextStep(j.s, w).owner, "Director");
+  w.state = "RETURNED";
+  assert.equal(careNextStep(j.s, w).owner, "Artist");
 });

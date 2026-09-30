@@ -1,3 +1,4 @@
+import { careNextStep, returnReadiness } from "../lib/artistCareExperience";
 import ArtistFreightPanel from "./ArtistFreightPanel";
 import type { CareInvitation } from "../lib/artistCare";
 import { CraftComparison } from "./ArtistCraftFields";
@@ -50,6 +51,8 @@ export default function ArtistCareWork({
     coord = role === "General_Exhibition_Coordinator",
     tech = role === "Technical",
     logistics = ["Logistics", "Logistics_Officer"].includes(role);
+  const next = careNextStep(state, w);
+  const returnBlock = returnReadiness(state, w);
   return (
     <article className={careCard}>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -69,6 +72,13 @@ export default function ArtistCareWork({
           ? `Proposed production: AED ${w.budget.reduce((n, x) => n + x.minor, 0) / 100}`
           : `Declared insurance value: AED ${w.insuranceMinor / 100}`}
       </p>
+      <aside
+        className="rounded-lg border border-[#DED5C4] bg-[#F7F1E6] p-4 text-sm"
+        aria-label="Next step"
+      >
+        <p className="font-semibold">Next step · {next.owner}</p>
+        <p className="mt-1">{next.text}</p>
+      </aside>
       {w.thematicDefense ? (
         <section
           className="space-y-3 border-s-2 border-[#DED5C4] ps-4"
@@ -278,6 +288,7 @@ export default function ArtistCareWork({
         role={role}
         run={run}
         active={shippingActive}
+        closesAt={state.settings?.closesAt}
       />
       {w.state === "APPROVED" && (
         <>
@@ -439,7 +450,7 @@ export default function ArtistCareWork({
                     Transit damage observed
                   </label>
                   <button
-                    disabled={!proof}
+                    disabled={!proof || note.trim().length < 10}
                     className={careButton}
                     onClick={() => {
                       if (!navigator.geolocation) {
@@ -537,6 +548,10 @@ export default function ArtistCareWork({
                   {tech && !w.nextMaintenance && (
                     <button
                       className={careButton}
+                      disabled={
+                        !!w.returnAt ||
+                        !!(w.condition.damage && !w.condition.repaired)
+                      }
                       onClick={() => void act("INSTALL")}
                     >
                       Record installation & schedule care
@@ -575,6 +590,10 @@ export default function ArtistCareWork({
                 </label>
                 <button
                   className={`${careButton} mt-3`}
+                  disabled={
+                    note.trim().length < 5 ||
+                    Date.now() < Date.parse(w.nextMaintenance!)
+                  }
                   onClick={() => void act("MAINTAIN", { note })}
                 >
                   Record due maintenance
@@ -599,10 +618,14 @@ export default function ArtistCareWork({
               {logistics && !w.returnAt && (
                 <button
                   className={careButton}
+                  disabled={!!returnBlock}
                   onClick={() => void act("RETURN_TRANSIT")}
                 >
                   Record return transit
                 </button>
+              )}
+              {logistics && returnBlock && !w.returnAt && (
+                <p className="text-sm text-[#655D50]">{returnBlock}</p>
               )}
               {role === "Editorial" && (
                 <>

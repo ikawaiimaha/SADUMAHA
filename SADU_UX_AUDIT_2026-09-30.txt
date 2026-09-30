@@ -1,0 +1,22 @@
+SADU UX and workflow audit — 30 September 2026
+
+Scope: recent theme, artist-care, craft/consultation, freight and condition additions; existing connected-pilot regression suite. This is not certification of all deployments or institutional policy.
+
+Findings addressed:
+- Artwork cards did not identify the next responsible desk. Added state-derived next-step guidance without changing the visual system.
+- Return and installation controls offered actions with unmet prerequisites. Return checks are now shared by backend and UI, including matching artwork and freight revisions.
+- Saving unchanged freight data unnecessarily invalidated condition evidence. Revisions increment only when validated details change.
+- Artwork filters and editor state carried across roles/dossiers. Reset contextual state, offer Clear artwork filters, and remount role-specific work panels.
+- Old success messages survived failed actions; feedback appeared below long dossiers. Clear stale success and show feedback near the workspace heading.
+- Condition photographs could not be removed before locking. Add removal of unsaved selections; saved evidence is retained.
+- De-installation, arrival and care controls lacked basic readiness hints. Disable premature actions and explain de-installation timing.
+- Download anchors were detached from the document. Attach for click and remove afterwards; PDF generation has automated coverage. Browser download delivery still needs verification outside the in-app browser.
+
+Remaining material limitations:
+- Executive Artist Care uses browser-session storage and sandbox role selection. It is not a shared authenticated institutional database. Server services exist, but verified media storage is deliberately unavailable until an adapter is configured.
+- Case-study overview, artist-care journey and connected pilot retain separate state paths. A future authenticated pilot should use one authoritative command API and projection, not synchronize independent browser stores heuristically.
+- Pre-dispatch/de-installation damage creates a hold. A reviewed resolution workflow for those checkpoint types remains necessary; the existing arrival repair workflow must not be assumed to cover them.
+- Customs output is a broker-review draft. Consolidation is a nearby-pickup candidate heuristic, not vehicle routing or measured cost savings.
+- Arabic/English parity across the complete product, production access control and external integrations require separate verification. No live institutional integration was activated by this audit.
+
+Release validation: 207 guard tests and 50 review tests passed; TypeScript and executive rehearsal build passed. Browser checks confirmed next-step guidance and blocked return explanation, with no console errors. See .local/ux-audit-build-final.log. Only files changed for this audit are included in its commit; pre-existing uncommitted project work remains untouched.

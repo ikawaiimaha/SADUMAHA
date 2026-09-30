@@ -21,7 +21,9 @@ function download(blob: Blob, name: string) {
     a = document.createElement("a");
   a.href = url;
   a.download = name;
+  document.body.appendChild(a);
   a.click();
+  a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 export default function ArtistFreightPanel({
@@ -30,11 +32,13 @@ export default function ArtistFreightPanel({
   role,
   run,
   active,
+  closesAt,
 }: {
   work: Work;
   invitation: CareInvitation;
   role: string;
   active: boolean;
+  closesAt?: string;
   run: (c: Omit<CareCommand, "expected">) => Promise<boolean>;
 }) {
   const artist = ["Artist", "Artist_Portal"].includes(role),
@@ -78,6 +82,8 @@ export default function ArtistFreightPanel({
     removal = reports.find(
       (r) => r.stage === "DEINSTALLATION" && r.revision === w.revision,
     );
+  const removalOpen =
+    !!w.nextMaintenance && !!closesAt && Date.now() >= Date.parse(closesAt);
   const reason = active
     ? shippingReadiness(w)
     : "An active allocation and current endorsed roster are required.";
@@ -299,6 +305,12 @@ export default function ArtistFreightPanel({
         {((artist && !pre && !w.condition) ||
           (logistics && w.condition && !removal && !w.returnAt)) && (
           <div className="rounded-lg bg-[#F7F1E6] p-4 space-y-3">
+            {logistics && !removalOpen && (
+              <p className="text-sm">
+                De-installation evidence opens after installation and exhibition
+                closure.
+              </p>
+            )}
             <h4 className="font-medium">
               {artist
                 ? "Pre-dispatch condition record"
@@ -316,6 +328,23 @@ export default function ArtistFreightPanel({
               }
             />
             <p className="text-xs">{photos.length} / 8 photographs added</p>
+            {photos.map((photo) => (
+              <div
+                key={photo.id}
+                className="flex items-center justify-between gap-3 text-sm"
+              >
+                <span>{photo.name}</span>
+                <button
+                  type="button"
+                  className="underline"
+                  onClick={() =>
+                    setPhotos((old) => old.filter((p) => p.id !== photo.id))
+                  }
+                >
+                  Remove photograph
+                </button>
+              </div>
+            ))}
             <label className="block text-sm">
               Condition observations
               <textarea
@@ -348,6 +377,7 @@ export default function ArtistFreightPanel({
             <button
               disabled={
                 busy ||
+                (logistics && !removalOpen) ||
                 !photos.length ||
                 note.trim().length < 10 ||
                 (artist && (!ack || !w.freight))

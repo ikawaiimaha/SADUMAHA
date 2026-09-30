@@ -170,6 +170,7 @@ export default function ArtistCareWorkspace({
     busyRef.current = true;
     setBusy(true);
     setError("");
+    setMessage("");
     try {
       const result = await applyArtistCare(
         latest.current,
@@ -199,6 +200,15 @@ export default function ArtistCareWorkspace({
       setBusy(false);
     }
   };
+  useEffect(() => {
+    setLineageBand("all");
+    setAnchorQuery("");
+    setAdding(false);
+    setRevision(undefined);
+    setError(initial.error);
+    setMessage("");
+  }, [selected, role, initial.error]);
+  const freightGroups = consolidationCandidates(visible);
   const filteredWorks = invitation
     ? invitation.works.filter(
         (w) =>
@@ -233,6 +243,16 @@ export default function ArtistCareWorkspace({
           remain paused.
         </p>
       </header>
+      {error && (
+        <p role="alert" className="text-sm text-[#8B261E]">
+          {error}
+        </p>
+      )}
+      {message && (
+        <p role="status" className="text-sm">
+          {message}
+        </p>
+      )}
       {state.settings && (
         <p className="border-s-2 border-[#8B261E] ps-4 text-sm">
           {Date.parse(state.settings.deadline) > now
@@ -255,8 +275,8 @@ export default function ArtistCareWorkspace({
             routing and packing compatibility still need review. No savings
             assumed.
           </p>
-          {consolidationCandidates(visible).length ? (
-            consolidationCandidates(visible).map((g) => (
+          {freightGroups.length ? (
+            freightGroups.map((g) => (
               <article
                 key={g.workIds.join(":")}
                 className="mt-3 rounded-lg bg-[#FFFDF9] p-4 text-sm"
@@ -720,6 +740,18 @@ export default function ArtistCareWorkspace({
                   />
                 </label>
               </div>
+              {(lineageBand !== "all" || anchorQuery) && (
+                <button
+                  type="button"
+                  className="mt-3 text-sm underline"
+                  onClick={() => {
+                    setLineageBand("all");
+                    setAnchorQuery("");
+                  }}
+                >
+                  Clear artwork filters
+                </button>
+              )}
             </details>
           )}
           <div className="space-y-5">
@@ -731,7 +763,7 @@ export default function ArtistCareWorkspace({
             )}
             {filteredWorks.map((w) => (
               <ArtistCareWork
-                key={`${invitation.id}:${w.id}:${w.revision}`}
+                key={`${role}:${invitation.id}:${w.id}:${w.revision}`}
                 work={w}
                 invitation={invitation}
                 shippingActive={
@@ -801,16 +833,6 @@ export default function ArtistCareWorkspace({
             ))}
         </div>
       </dialog>
-      {error && (
-        <p role="alert" className="text-sm text-[#8B261E]">
-          {error}
-        </p>
-      )}
-      {message && (
-        <p role="status" className="text-sm">
-          {message}
-        </p>
-      )}
     </section>
   );
 }
