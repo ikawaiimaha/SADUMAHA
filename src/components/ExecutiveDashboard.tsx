@@ -1,9 +1,17 @@
+import RoleSwitcher from './RoleSwitcher';
+import SandboxRoleActions from './SandboxRoleActions';
+import { SandboxProvider, useSandbox } from './SandboxProvider';
 import React, { useEffect, useRef, useState } from 'react';
 import '@fontsource/amiri/400.css';
 import { executiveCases, openExecutiveDatabase, type ExecutiveNote } from '../data/executiveCases';
 import { institutionalLogo } from '../lib/executiveMode';
 
 export default function ExecutiveDashboard() {
+  return <SandboxProvider><ExecutiveDashboardContent /></SandboxProvider>;
+}
+
+function ExecutiveDashboardContent() {
+  const { state: sandbox, role } = useSandbox();
   const [editing, setEditing] = useState(false);
   const noteInput = useRef<HTMLTextAreaElement>(null);
   const noteButton = useRef<HTMLButtonElement>(null);
@@ -51,7 +59,7 @@ export default function ExecutiveDashboard() {
     <a href="#dossier" className="sr-only focus:not-sr-only">Skip to active dossier</a>
     <header className="border-b border-[#DED5C4] px-6 py-4"><div className="mx-auto max-w-6xl flex flex-wrap items-center justify-between gap-5">
       <div className="flex items-center gap-4">{institutionalLogo && !logoFailed && <img src={institutionalLogo} onError={() => setLogoFailed(true)} alt="Sharjah Department of Culture" className="h-16 max-w-48 object-contain"/>}<div><p className="text-sm">Sharjah Department of Culture</p><strong style={{ fontFamily: 'Amiri, Noto Naskh Arabic, Georgia, serif' }} className="text-4xl text-[#8B261E]">SADU</strong></div></div>
-      <div className="text-start"><p className="font-semibold">Master Administration</p><p className="text-sm text-[#655D50]">Exhibitions · Coordination &amp; oversight</p></div>
+      <RoleSwitcher />
     </div></header>
     <main className="mx-auto max-w-6xl p-5 md:p-8 space-y-7">
       <div><p className="text-sm uppercase tracking-widest text-[#8B261E]">Exhibition overview</p><h1 className="mt-2 text-3xl font-serif">Artist dossiers</h1><p className="mt-2 text-[#655D50]">Select an artist to review their next step and supporting information.</p></div>
@@ -61,16 +69,11 @@ export default function ExecutiveDashboard() {
         <section id="dossier" tabIndex={-1} className={`${card} min-w-0 scroll-mt-6`} aria-label="Active artist dossier">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm text-[#655D50]">{dossier.focus}</p>
-            <span className="rounded-full bg-[#F7F1E6] px-3 py-1 text-xs font-medium text-[#7C3928]">Needs attention</span>
+            <span className="rounded-full bg-[#F7F1E6] px-3 py-1 text-xs font-medium text-[#7C3928]">{sandbox.dossiers[selected].status}</span>
           </div>
           <h2 className="mt-3 text-3xl font-serif md:text-4xl">{dossier.name}</h2>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-[#655D50]">{dossier.summary}</p>
-          <section aria-label="Next step" className="my-6 border-s-2 border-[#8B261E] bg-[#F7F1E6] p-5">
-            <p className="text-xs uppercase tracking-widest text-[#8B261E]">Next step</p>
-            <h3 className="mt-2 text-lg font-semibold">{dossier.next}</h3>
-            <p className="mt-2 text-sm leading-6">{dossier.request}</p>
-            <p className="mt-3 text-xs text-[#655D50]">Responsible team · {dossier.owner}</p>
-          </section>
+          <SandboxRoleActions dossierId={selected} />
           <section aria-label="Artwork details">
             <h3 className="text-sm font-semibold">Artworks &amp; installation</h3>
             <ul className="mt-2 divide-y divide-[#E7DFD2]">{dossier.works.map(w => <li key={w} className="py-2 text-sm">{w}</li>)}</ul>
@@ -80,7 +83,7 @@ export default function ExecutiveDashboard() {
               <p className="mt-4 text-xs leading-5 text-[#655D50]">Case-study records from the supplied summaries. Original documents and current statuses have not been verified. No approvals are inferred.</p>
             </details>
           </section>
-          <section className="mt-6 border-t border-[#DED5C4] pt-5" aria-label="Coordination notes">
+          <section hidden={role !== 'General_Exhibition_Coordinator'} className="mt-6 border-t border-[#DED5C4] pt-5" aria-label="Coordination notes">
             {!editing && <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-[#655D50]">{notes[selected] ? 'A coordination note is saved on this device.' : 'Record the agreed next step when ready.'}</p><button ref={noteButton} type="button" aria-expanded={editing} aria-controls="coordination-note" onClick={() => setEditing(true)} className={`rounded-lg bg-[#8B261E] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#701E18] ${focus}`}>Add coordination note</button></div>}
             {editing && <form id="coordination-note" onSubmit={e => { e.preventDefault(); save(); }}>
               <label htmlFor="note" className="text-sm font-semibold">Coordination note</label>
