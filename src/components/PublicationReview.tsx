@@ -1,3 +1,4 @@
+import ConnectedPilot from './ConnectedPilot';
 import { ConnectedBudgetGauge } from './MuseumCare';
 import DigitalArchive from './DigitalArchive';
 import SmartCuration, { type CuratedArtwork } from './SmartCuration';
@@ -31,6 +32,12 @@ async function api<T>(path: string, body?: unknown): Promise<T> {
   return data;
 }
 export default function PublicationReview() {
+  const [mode,setMode]=useState<string>();
+  useEffect(()=>{void fetch('/api/review/session').then(r=>r.json()).then(s=>setMode(s.mode)).catch(()=>setMode('legacy'));},[]);
+  if (!mode) return <p role="status">Connecting to the shared dossier…</p>;
+  return mode==='connected-local-pilot' ? <ConnectedPilot/> : <LegacyPublicationReview/>;
+}
+function LegacyPublicationReview() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [actor, setActor] = useState<Account | null>(null);
   const [record, setRecord] = useState<RecordView | null>(null);

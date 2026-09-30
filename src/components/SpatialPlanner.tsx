@@ -15,7 +15,7 @@ async function request(body?: unknown): Promise<SpatialRecord> {
   return record;
 }
 
-export default function SpatialPlanner({ role, onDirtyChange }: { role: string; onDirtyChange: (dirty: boolean) => void }) {
+export default function SpatialPlanner({ role, onDirtyChange, fixedWall = false }: { fixedWall?: boolean; role: string; onDirtyChange: (dirty: boolean) => void }) {
   const coordinator = role === 'General_Exhibition_Coordinator';
   const [data, setData] = useState<SpatialRecord | null>(null);
   const [placements, setPlacements] = useState<Placement[]>([]);
@@ -73,7 +73,7 @@ export default function SpatialPlanner({ role, onDirtyChange }: { role: string; 
     <button className={button} disabled={busy} onClick={() => void run()}>{dirty ? 'Discard local changes and reload plan' : 'Reload saved wall plan'}</button>
     {data && wall && <>
       <p><strong>Assigned wall:</strong> {wall.max_width_cm} cm wide × {wall.max_height_cm} cm high · Artist {wall.artist_id}</p>
-      {coordinator && <fieldset disabled={busy || layoutDirty} className="space-y-3"><legend className="font-semibold">Wall dimensions</legend>
+      {coordinator && !fixedWall && <fieldset disabled={busy || layoutDirty} className="space-y-3"><legend className="font-semibold">Wall dimensions</legend>
         <div className="grid gap-3 sm:grid-cols-2"><label>Wall width (cm)<input className={input} type="number" min="0" max="100000" step="any" value={wallDraft.width} onChange={e => setWallDraft({ ...wallDraft, width: e.target.value })}/></label><label>Wall height (cm)<input className={input} type="number" min="0" max="100000" step="any" value={wallDraft.height} onChange={e => setWallDraft({ ...wallDraft, height: e.target.value })}/></label></div>
         <button className={button} disabled={!wallDirty || !isDimension(Number(wallDraft.width)) || !isDimension(Number(wallDraft.height))} onClick={() => void run({ action: 'save_wall', max_width_cm: Number(wallDraft.width), max_height_cm: Number(wallDraft.height) })}>Save wall dimensions</button>
         <p className="text-sm">The sample wall starts at 600 × 300 cm. Saving new dimensions rechecks existing positions.</p>

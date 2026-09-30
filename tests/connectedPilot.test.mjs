@@ -1,0 +1,58 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtemp, writeFile, readFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { createHash } from 'node:crypto';
+import { createConnectedPilot, PILOT_ARTWORK } from '../server/connected-pilot.mjs';
+
+test('one connected HTTP journey verifies permissions, documents, return, payments and restart recovery',async()=>{
+ const directory=await mkdtemp(join(tmpdir(),'sadu-connected-'));const started=performance.now();const milestones=[];let rejected=0;
+ const options={directory,gate:(_q,_r,next)=>next(),simulatedLocation:true};let runtime=await createConnectedPilot(options);let server;
+ const listen=async()=>{server=runtime.app.listen(0,'127.0.0.1');await new Promise(resolve=>server.once('listening',resolve));return `http://127.0.0.1:${server.address().port}`;};let origin=await listen();let cookie='';
+ const call=async(path,body,method='POST')=>fetch(origin+path,{...(body?{method,body:JSON.stringify(body)}:{}),headers:{Cookie:cookie,Origin:origin,'Content-Type':'application/json'}});
+ const json=async(path,body,method)=>{const r=await call(path,body,method);const result=await r.json();assert.equal(r.status,200,JSON.stringify(result));return result;};
+ const login=async role=>{const r=await call('/api/review/session',{accountId:`pilot-${role}`});assert.equal(r.status,200);cookie=r.headers.get('set-cookie').split(';')[0];};
+ const dossier=()=>json('/api/review/pilot');
+ const action=async(name,extra={})=>{const view=await dossier();return json('/api/review/pilot/action',{version:view.version,action:name,checked:true,...extra});};
+ const cmd=async()=>({artworkId:PILOT_ARTWORK,versionHash:(await dossier()).revision.versionHash});
+ const stamp=name=>milestones.push({name,elapsedMs:Math.round(performance.now()-started)});
+ const image=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jG/8AAAAASUVORK5CYII=','base64');
+ try{
+  assert.equal((await call('/api/review/pilot')).status,401);rejected++;
+  await login('Artist');
+  const metadata={artworkId:PILOT_ARTWORK,expectedRevisionId:null,artistName:{en:'Noura Al Mazrouei',ar:'نورة المزروعي'},title:{en:'Kufic Horizon',ar:'أفق كوفي'},concept_text:'Calligraphy and architecture explore bronze, memory and space.',width_cm:120,height_cm:180,year:2026,conservation_reqs:{max_lux:50,target_temp_c:20,target_humidity_pct:40},technicalRequirements:[{item:'Projector',quantity:1,external:true}]};
+  const upload=body=>fetch(origin+'/api/review/ecosystem/submission',{method:'POST',headers:{Cookie:cookie,Origin:origin,'Content-Type':'application/octet-stream','x-sadu-metadata':encodeURIComponent(JSON.stringify(body))},body:image});
+  assert.equal((await upload({...metadata,title:{en:'Missing Arabic'}})).status,422);rejected++;
+  assert.equal((await upload(metadata)).status,200);stamp('Submission');
+  const first=await dossier();assert.equal(first.revision.media.file_hash,createHash('sha256').update(image).digest('hex'));
+  const savedImage=Buffer.from(await(await call('/api/review/pilot/media')).arrayBuffer());assert.deepEqual(savedImage,image);
+  assert.equal((await call('/api/review/ecosystem/publish',await cmd())).status,403);rejected++;
+  await login('Editorial');await json('/api/review/ecosystem/editorial',{...await cmd(),description:{en:metadata.concept_text,ar:'عمل تجريبي يجمع الخط والعمارة.'}});stamp('Editorial');
+  await login('General_Exhibition_Coordinator');
+  let view=await dossier();assert.equal((await call('/api/review/spatial',{version:view.version,action:'save_layout',placements:[{artwork_id:PILOT_ARTWORK,x_cm:550,y_cm:0}]})).status,409);rejected++;
+  await json('/api/review/spatial',{version:view.version,action:'save_layout',placements:[{artwork_id:PILOT_ARTWORK,x_cm:20,y_cm:20}]});
+  await json('/api/review/ecosystem/ready',await cmd());await action('agreement');stamp('Layout and agreement');
+  await login('Artist');await action('accept');
+  await login('PR');await action('pr');await login('Technical');await action('technical');
+  await login('Museum_Operations');await json('/api/review/ecosystem/venue-clearance',await cmd());
+  await login('Director');await json('/api/review/ecosystem/publish',await cmd());stamp('Director publication');
+  const label=Buffer.from(await(await call('/api/review/pilot/label.pdf')).arrayBuffer());assert.equal(label.subarray(0,5).toString(),'%PDF-');
+  const manifest=Buffer.from(await(await call('/api/review/pilot/manifest.pdf')).arrayBuffer());assert.equal(manifest.subarray(0,5).toString(),'%PDF-');
+  const twinUrl=new URL((await dossier()).twins[0].uri);const twin=await fetch(origin+twinUrl.pathname,{headers:{Cookie:cookie,Accept:'application/ld+json'}});assert.equal((await twin.json())['sadu:fileHash'],first.revision.media.file_hash);
+  await login('Finance');assert.equal((await call('/api/review/pilot/action',{version:(await dossier()).version,action:'pay',tranche:2})).status,409);rejected++;
+  await action('pay',{tranche:0});
+  await login('Logistics');assert.equal((await call('/api/review/ecosystem/arrival',await cmd(),'PATCH')).status,409);rejected++;
+  await json('/api/review/pilot/simulated-arrival',await cmd());await action('condition-clear');stamp('Synthetic receipt and condition');
+  await login('Finance');await action('pay',{tranche:1});
+  await login('Logistics');await action('return');await login('Finance');await action('pay',{tranche:2});stamp('Safe return and completion');
+  const done=await dossier();assert.equal(done.artwork.physicalStatus,'RETURN_FREIGHT_CLEARED');assert.equal(done.payments.reduce((n,p)=>n+p.amountMinor,0),4500000);
+  const staleVersion=done.version-1;assert.equal((await call('/api/review/pilot/action',{version:staleVersion,action:'pay',tranche:2})).status,409);rejected++;
+  const stateBefore=await readFile(join(directory,'state.json'),'utf8');
+  await new Promise(resolve=>server.close(resolve));runtime=await createConnectedPilot(options);origin=await listen();cookie='';await login('Finance');
+  const recovered=await dossier();assert.deepEqual(recovered.payments,done.payments);assert.equal(recovered.decisions.length,done.decisions.length);assert.equal(await readFile(join(directory,'state.json'),'utf8'),stateBefore);stamp('Restart recovery');
+  const evidence={date:'2026-09-30',directory,fictional:true,syntheticLocation:true,milestones,blockedNegativeCases:rejected,paymentsMinor:4500000,decisionCount:done.decisions.length,missingInputCasesExercised:2,externalDispatches:0,manualFollowupsObservedInScript:0,staffTimeSavings:'Not measured; no operational baseline',totalMs:Math.round(performance.now()-started)};
+  await writeFile(join(directory,'pilot-evidence.json'),JSON.stringify(evidence,null,2));await writeFile(join(directory,'label.pdf'),label);await writeFile(join(directory,'manifest.pdf'),manifest);
+  console.log('PILOT_EVIDENCE '+JSON.stringify(evidence));
+ }finally{if(server?.listening)await new Promise(resolve=>server.close(resolve));}
+});
