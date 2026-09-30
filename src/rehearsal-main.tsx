@@ -1,3 +1,4 @@
+import GlobalPasswordGate from './components/GlobalPasswordGate';
 import { StrictMode, lazy, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import ExecutiveLanding from './components/ExecutiveLanding';
@@ -6,4 +7,4 @@ import './rehearsal.css';
 
 // Dedicated release entry: no pilot, authentication, analytics or integration imports.
 const PublicationReview = lazy(() => import('./components/PublicationReview'));
-createRoot(document.getElementById('root')!).render(<StrictMode>{window.location.pathname === '/review' ? <Suspense fallback={<p>Loading submission review…</p>}><PublicationReview /></Suspense> : window.location.pathname === '/journey' ? <RehearsalJourney /> : <ExecutiveLanding />}</StrictMode>);
+createRoot(document.getElementById('root')!).render(<StrictMode><GlobalPasswordGate>{window.location.pathname === '/review' ? <Suspense fallback={<p>Loading submission review…</p>}><PublicationReview /></Suspense> : window.location.pathname === '/journey' ? <RehearsalJourney /> : <ExecutiveLanding />}</GlobalPasswordGate></StrictMode>);

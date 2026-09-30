@@ -1,0 +1,30 @@
+import { useEffect, useState, type ReactNode } from 'react';
+
+/** sessionStorage is a display hint only; the server cookie is always verified. */
+export default function GlobalPasswordGate({ children }: { children: ReactNode }) {
+  const [verified, setVerified] = useState(false);
+  const [password, setPassword] = useState('');
+  const [busy, setBusy] = useState(true);
+  const [error, setError] = useState('');
+  const check = async () => {
+    try { const r = await fetch('/api/prelaunch/session', { cache: 'no-store' }); const data = r.ok ? await r.json() : null; setVerified(data?.verified === true); }
+    catch { setVerified(false); } finally { setBusy(false); }
+  };
+  useEffect(() => { window.dispatchEvent(new Event('sadu:ready')); void check(); const id = setInterval(check, 60000); return () => clearInterval(id); }, []);
+  useEffect(() => { try { if (verified) sessionStorage.setItem('sadu-prelaunch-verified', 'true'); else sessionStorage.removeItem('sadu-prelaunch-verified'); } catch { /* Storage is optional, never an auth source. */ } }, [verified]);
+  if (verified) return <>{children}</>;
+  return <main style={{ minHeight: '100svh', display: 'grid', placeItems: 'center', background: '#F7F1E6', color: '#111817', padding: 24 }}>
+    <form style={{ width: 'min(360px, 85vw)', textAlign: 'center' }} onSubmit={async e => {
+      e.preventDefault(); setBusy(true); setError('');
+      try { const r = await fetch('/api/prelaunch/unlock', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password }) }); if (!r.ok) throw new Error(); await check(); }
+      catch { setError('Unable to unlock. Check your password or contact the preview owner.'); }
+      finally { setPassword(''); setBusy(false); }
+    }}>
+      <p>Sharjah Department of Culture</p><h1 className="text-3xl font-semibold my-4">SADU</h1>
+      <p>System under construction. Authorized personnel only.</p>
+      <label className="block text-start mt-6">Password<input className="block w-full border p-3 mt-2 rounded" type="password" autoComplete="current-password" required maxLength={256} value={password} onChange={e => setPassword(e.target.value)} disabled={busy}/></label>
+      <button className="w-full mt-3 p-3 rounded bg-[#111817] text-[#F7F1E6] disabled:opacity-50" disabled={busy}>{busy ? 'Checking access…' : 'Submit'}</button>
+      <p role="status" className="mt-3">{error}</p><small>Restricted fictional prototype</small>
+    </form>
+  </main>;
+}

@@ -73,7 +73,7 @@ test('spatial store survives reopen; concurrent updates cannot overwrite each ot
 });
 test('spatial HTTP endpoints use server sessions and reject role spoofing and invalid layouts', async t => {
   const dir = await mkdtemp(join(tmpdir(), 'sadu-spatial-http-'));
-  const app = await createRehearsalApp({ file: join(dir, 'review.json'), staticRoot: dir });
+  const app = await createRehearsalApp({ prelaunchGate: (_req, _res, next) => next(),  file: join(dir, 'review.json'), staticRoot: dir });
   const server = await new Promise(resolve => { const s = app.listen(0, '127.0.0.1', () => resolve(s)); });
   t.after(() => new Promise(resolve => server.close(resolve)));
   const origin = `http://127.0.0.1:${server.address().port}`;

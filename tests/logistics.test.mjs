@@ -46,7 +46,7 @@ test('all forward movement states preserve actor, observation and time; competin
  assert.ok(store.read(coordinator).events.at(-1).at);
 });
 test('logistics HTTP API requires a session and rejects forged role and cross-origin actions', async t => {
- const file = join(await mkdtemp(join(tmpdir(),'sadu-crate-http-')),'review.json'); const app = await createRehearsalApp({file});
+ const file = join(await mkdtemp(join(tmpdir(),'sadu-crate-http-')),'review.json'); const app = await createRehearsalApp({ prelaunchGate: (_req, _res, next) => next(), file});
  const server = await new Promise(resolve => { const s=app.listen(0,'127.0.0.1',()=>resolve(s)); }); t.after(()=>new Promise(resolve=>server.close(resolve)));
  const origin=`http://127.0.0.1:${server.address().port}`;
  assert.equal((await fetch(`${origin}/api/review/logistics`)).status,401);

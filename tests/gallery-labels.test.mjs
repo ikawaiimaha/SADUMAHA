@@ -82,7 +82,7 @@ test('profile verification is Coordinator-only, exact-URL-bound and does not car
 test('PDF download endpoints require Coordinator session and return a single batch document', async t => {
   const { file, command } = await prepare({ labelOptions: { testMode: true } });
   await command(director, 'publish', { note: 'Approve for test batch' });
-  const app = await createRehearsalApp({ file, staticRoot: join(file, '..'), labelOptions: { testMode: true } });
+  const app = await createRehearsalApp({ prelaunchGate: (_req, _res, next) => next(),  file, staticRoot: join(file, '..'), labelOptions: { testMode: true } });
   const server = await new Promise(resolve => { const s = app.listen(0, '127.0.0.1', () => resolve(s)); });
   t.after(() => new Promise(resolve => server.close(resolve)));
   const origin = `http://127.0.0.1:${server.address().port}`;

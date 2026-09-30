@@ -1,3 +1,4 @@
+import { prelaunchVitePlugin } from './server/prelaunch-gate.mjs';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
@@ -8,7 +9,7 @@ export default defineConfig({
   base: './',
   publicDir: false,
   envDir: false,
-  plugins: [react(), tailwindcss()],
+  plugins: [prelaunchVitePlugin(), react(), tailwindcss()],
   build: {
     manifest: true,
     outDir: fileURLToPath(new URL('./dist-rehearsal', import.meta.url)),

@@ -1,3 +1,4 @@
+import { createPrelaunchGate } from './prelaunch-gate.mjs';
 import { LocalAuthProvider } from '../src/governance/localAdapters.ts';
 import express from 'express';
 import { fileURLToPath } from 'node:url';
@@ -7,12 +8,13 @@ import { openLogisticsStore } from './logistics-store.mjs';
 import { openSpatialStore } from './spatial-store.mjs';
 import { DEFAULT_CMS_BASE_URL, dynamicTestProfileUrl } from './gallery-labels.mjs';
 
-export async function createRehearsalApp({ file, staticRoot, spatialFile, authProvider = new LocalAuthProvider(ACCOUNTS), labelOptions = { testMode: process.env.SDC_LABEL_TEST_MODE !== 'false', baseUrl: process.env.SDC_CMS_BASE_URL || DEFAULT_CMS_BASE_URL } } = {}) {
+export async function createRehearsalApp({ prelaunchGate = createPrelaunchGate(), file, staticRoot, spatialFile, authProvider = new LocalAuthProvider(ACCOUNTS), labelOptions = { testMode: process.env.SDC_LABEL_TEST_MODE !== 'false', baseUrl: process.env.SDC_CMS_BASE_URL || DEFAULT_CMS_BASE_URL } } = {}) {
   if (labelOptions.testMode) dynamicTestProfileUrl('configuration-check', labelOptions.baseUrl);
   const store = await openReviewStore(file ?? fileURLToPath(new URL('../.local/rehearsal-review.json', import.meta.url)), { labelOptions });
   const spatial = await openSpatialStore(spatialFile ?? (file ? `${file}.spatial.json` : fileURLToPath(new URL('../.local/rehearsal-spatial.json', import.meta.url))));
   const logistics = await openLogisticsStore(file ? `${file}.logistics.json` : fileURLToPath(new URL('../.local/rehearsal-logistics.json', import.meta.url)), actor => store.read(actor));
   const app = express();
+  app.use(prelaunchGate);
   if (authProvider.mode !== 'fictional-local') throw new Error('External authentication remains paused.');
   app.disable('x-powered-by');
   app.use('/api/review', (req, res, next) => {
@@ -81,7 +83,7 @@ export async function createRehearsalApp({ file, staticRoot, spatialFile, authPr
   });
   app.use('/api', (req, res) => res.status(404).json({ error: 'Unknown endpoint.' }));
   const root = staticRoot ?? fileURLToPath(new URL('../dist-rehearsal', import.meta.url));
-  app.use(express.static(root));
+  app.use(express.static(root, { cacheControl: false }));
   app.get('*', (req, res) => res.sendFile(resolve(root, 'index.html')));
   app.use((error, req, res, next) => {
     if (res.headersSent) return next(error);

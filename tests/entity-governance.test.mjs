@@ -70,7 +70,7 @@ test('shared write queue prevents competing contract writes from accepting the s
   assert.equal(result.filter(r => r.status === 'fulfilled').length, 1);
 });
 test('governance HTTP requires session, rejects cross-origin and Director draft access', async t => {
-  const { file } = await fixture(); const app = await createRehearsalApp({ file });
+  const { file } = await fixture(); const app = await createRehearsalApp({ prelaunchGate: (_req, _res, next) => next(),  file });
   const server = app.listen(0, '127.0.0.1'); await new Promise(r => server.once('listening', r)); t.after(() => server.close());
   const base = `http://127.0.0.1:${server.address().port}`;
   assert.equal((await fetch(`${base}/api/review/governance`)).status, 401);

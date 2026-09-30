@@ -1,3 +1,4 @@
+import GlobalPasswordGate from './components/GlobalPasswordGate';
 import {StrictMode, useEffect, lazy, Suspense} from 'react';
 import {createRoot} from 'react-dom/client';
 import RehearsalJourney from './components/RehearsalJourney';
@@ -20,7 +21,7 @@ function ReadyApp() {
 }
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
+  <StrictMode><GlobalPasswordGate>
     <ReadyApp />
-  </StrictMode>,
+  </GlobalPasswordGate></StrictMode>,
 );

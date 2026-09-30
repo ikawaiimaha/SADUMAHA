@@ -72,3 +72,14 @@ See `reviews/SADU_Fictional_Audit_2026-09-29.md` for current scope, defect findi
 ## Stable entity revisions and change impacts
 
 See [ENTITY_GOVERNANCE.md](ENTITY_GOVERNANCE.md) for the implemented graph schema, safe decision codes, invalidation matrix, API and local provider adapters. The review service now returns the governance projection and Logistics impact array; external providers remain paused.
+
+
+## Restricted local preview
+
+The rehearsal server and both Vite servers protect documents, assets and API routes with `server/prelaunch-gate.mjs`. Both React entry points also wrap their content in `GlobalPasswordGate`. Password checks happen on the server; sessionStorage is an optional display hint, never authorization. Missing configuration fails closed.
+
+Use `SADU_PRELAUNCH_PASSWORD` (20–256 characters) in the server environment, or the ignored `.local/prelaunch-password.txt` file. Never use a `VITE_` variable for credentials. A random local password has been generated for this workstation without logging it. Restart the server after changing it; restart revokes existing sessions. Sessions expire after eight hours and use HttpOnly, SameSite=Strict cookies. HTTPS sockets add Secure. Five failed attempts per address trigger a 15-minute lockout.
+
+This is a local preview boundary, not institutional identity authentication. Existing role permissions still apply after unlocking. External integrations remain paused. The Vite plugin does not execute on static hosting: any existing cloud deployment requires separate hosting access protection and has not been changed by this work. The React gate alone cannot protect downloaded bundles or external APIs.
+
+Run `npm run build:rehearsal` for the build and regression suite, including password failures, origin enforcement, cookie expiry, throttling, logout and direct-route denial. Existing workflow tests inject a pass-through gate to isolate role logic; dedicated tests exercise the actual gate.

@@ -83,7 +83,7 @@ test('durable store survives reopen and serializes competing approvals', async (
 });
 test('HTTP sessions reject absent identity, cross-origin writes, HIP and forged roles', async t => {
   const folder = await mkdtemp(join(tmpdir(), 'sadu-review-http-'));
-  const app = await createRehearsalApp({ file: join(folder, 'state.json'), staticRoot: folder });
+  const app = await createRehearsalApp({ prelaunchGate: (_req, _res, next) => next(),  file: join(folder, 'state.json'), staticRoot: folder });
   const server = await new Promise(resolve => { const s = app.listen(0, '127.0.0.1', () => resolve(s)); });
   t.after(() => new Promise(resolve => server.close(resolve)));
   const origin = `http://127.0.0.1:${server.address().port}`;

@@ -1,3 +1,4 @@
+import { prelaunchVitePlugin } from './server/prelaunch-gate.mjs';
 /// <reference types="vitest/config" />
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
@@ -12,7 +13,7 @@ const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(file
 // More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
 export default defineConfig(() => {
   return {
-    plugins: [react(), tailwindcss(), {
+    plugins: [prelaunchVitePlugin(), react(), tailwindcss(), {
       name: 'retired-portrait-responses',
       configureServer(server) {
         server.middlewares.use(retiredPortraitMiddleware);
