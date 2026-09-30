@@ -4,7 +4,8 @@ import { randomUUID } from 'node:crypto';
 import { mkdir, readFile, writeFile, rename } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { ReviewError } from './review-store.mjs';
-export const PHYSICAL_STATUSES = Object.freeze(['Pending_Shipment', 'In_Transit', 'Customs_Clearance', 'On_Site_Sharjah', 'Installed']);
+import { PHYSICAL_STATUSES, PHYSICAL_TRANSITIONS } from '../src/logistics/physicalStatus.mjs';
+export { PHYSICAL_STATUSES } from '../src/logistics/physicalStatus.mjs';
 const fail = (status, message) => { throw new ReviewError(status, message); };
 const required = (v, max = 180) => typeof v === 'string' && v.trim().length > 0 && v.length <= max && /^[\x20-\x7e]+$/.test(v);
 function authorize(actor) {
@@ -84,8 +85,7 @@ export async function openLogisticsStore(file, reviewFor) {
           if (!target || !PHYSICAL_STATUSES.includes(target)) fail(422, 'Unknown physical status.');
           if (!required(command.note, 300)) fail(422, 'Record the observation and location (maximum 300 basic Latin characters).');
           if (record.physical_status === target) return read(actor); // Repeated scans do not duplicate receipt events.
-          const allowed = { Pending_Shipment: ['In_Transit','On_Site_Sharjah'], In_Transit: ['Customs_Clearance','On_Site_Sharjah'], Customs_Clearance: ['On_Site_Sharjah'], On_Site_Sharjah: ['Installed'], Installed: [] };
-          if (!allowed[record.physical_status].includes(target)) fail(409, 'This movement would skip a required arrival or regress an existing status.');
+          if (!PHYSICAL_TRANSITIONS[record.physical_status].includes(target)) fail(409, 'This movement would skip a required arrival or regress an existing status.');
           const previous = record.physical_status; record.physical_status = target;
           next.events.push({ id: randomUUID(), artwork_id: record.id, from: previous, to: target, note: command.note.trim(), actor_id: actor.id, at: new Date().toISOString() });
         }

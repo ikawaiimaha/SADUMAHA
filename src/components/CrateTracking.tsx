@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { PHYSICAL_TRANSITIONS } from '../logistics/physicalStatus.mjs';
 type Shipment = { id: string; title: string; physical_status: string; approved_revision: number; logistics: { origin: string; destination: string; carrier: string; handling: string; gross_weight_kg: number } };
 type View = { version: number; artwork_records: Shipment[]; events: { id: string; to?: string; note?: string; actor_id: string; at: string }[] };
 const field = 'block w-full rounded border border-[#8C8173] ps-3 pe-3 py-2';
@@ -34,6 +35,7 @@ export default function CrateTracking({ role, onGuardChange }: { role: 'Artist' 
     }; void tick();
   });
   const record = view?.artwork_records[0];
+  const availableMoves: readonly string[] = record ? PHYSICAL_TRANSITIONS[record.physical_status as keyof typeof PHYSICAL_TRANSITIONS] ?? [] : [];
   const saved = record ? { ...record.logistics, gross_weight_kg: String(record.logistics.gross_weight_kg) } : { origin: '', destination: '', carrier: '', handling: '', gross_weight_kg: '' };
   const dirty = role === 'Artist' && JSON.stringify(details) !== JSON.stringify(saved);
   useEffect(() => { onGuardChange(dirty || busy || scanning); }, [dirty, busy, scanning, onGuardChange]);
@@ -58,10 +60,11 @@ export default function CrateTracking({ role, onGuardChange }: { role: 'Artist' 
       <p>A keyboard barcode scanner can type into this field. Camera scanning reads the ID locally and never opens a URL.</p>
       <button className={button} disabled={busy || scanning} onClick={() => void scan()}>Scan QR with camera</button>
       {scanning && <button className={button} onClick={stop}>Stop camera</button>}
-      <video ref={video} muted playsInline className={scanning ? 'w-full max-w-sm' : 'hidden'} />
+      <video ref={video} muted playsInline style={{ display: scanning ? 'block' : 'none' }} className="w-full max-w-sm" />
       <label className="block">Observation and location<textarea className={field} maxLength={300} value={note} onChange={e => setNote(e.target.value)}/></label>
-      <div className="flex flex-wrap gap-2"><button className={button} disabled={busy || !id.trim() || !note.trim()} onClick={() => void act('arrive')}>Record arrival in Sharjah</button>
-      {['In_Transit','Customs_Clearance','Installed'].map(status => <button key={status} className={button} disabled={busy || !id.trim() || !note.trim()} onClick={() => void act('status', status)}>Record {status.replaceAll('_',' ')}</button>)}</div>
+      <p className="text-sm">{!record ? 'The Artist must save shipment details for an approved artwork first.' : availableMoves.length ? `Next available observations: ${availableMoves.map(s => s.replaceAll('_', ' ')).join(', ')}. Enter the artwork ID and an observation to record a change.` : 'Installation is already recorded. Earlier movement states cannot be repeated or restored here.'}</p>
+      <div className="flex flex-wrap gap-2"><button className={button} disabled={busy || !id.trim() || !note.trim() || !availableMoves.includes('On_Site_Sharjah')} onClick={() => void act('arrive')}>Record arrival in Sharjah</button>
+      {['In_Transit','Customs_Clearance','Installed'].map(status => <button key={status} className={button} disabled={busy || !id.trim() || !note.trim() || !availableMoves.includes(status)} onClick={() => void act('status', status)}>Record {status.replaceAll('_',' ')}</button>)}</div>
     </div>}
     <ul>{view?.events.filter(e => e.to).map(e => <li key={e.id}>{e.to?.replaceAll('_',' ')} · {e.note} · {e.actor_id} · {new Date(e.at).toLocaleString('en-GB')}</li>)}</ul>
   </section>;

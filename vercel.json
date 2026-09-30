@@ -8,6 +8,6 @@
       "headers": { "Cache-Control": "no-store" }
     },
     { "handle": "filesystem" },
-    { "src": "/(join|artist/register|roster|pilot)/?$", "dest": "/index.html" }
+    { "src": "/(join|artist/register|roster|pilot|journey|rehearsal|review|overview|workbench|gallery-consignment)/?$", "dest": "/index.html" }
   ]
 }
