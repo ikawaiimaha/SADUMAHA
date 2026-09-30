@@ -80,6 +80,15 @@ The rehearsal server and both Vite servers protect documents, assets and API rou
 
 Use `SADU_PRELAUNCH_PASSWORD` (20–256 characters) in the server environment, or the ignored `.local/prelaunch-password.txt` file. Never use a `VITE_` variable for credentials. A random local password has been generated for this workstation without logging it. Restart the server after changing it; restart revokes existing sessions. Sessions expire after eight hours and use HttpOnly, SameSite=Strict cookies. HTTPS sockets add Secure. Five failed attempts per address trigger a 15-minute lockout.
 
-This is a local preview boundary, not institutional identity authentication. Existing role permissions still apply after unlocking. External integrations remain paused. The Vite plugin does not execute on static hosting: any existing cloud deployment requires separate hosting access protection and has not been changed by this work. The React gate alone cannot protect downloaded bundles or external APIs.
+This is a local preview boundary, not institutional identity authentication. Existing role permissions still apply after unlocking. External integrations remain paused. The Vite plugin does not execute on static hosting: static hosting requires an equivalent server boundary. The Vercel adapter is described below. The React gate alone cannot protect downloaded bundles or external APIs.
 
 Run `npm run build:rehearsal` for the build and regression suite, including password failures, origin enforcement, cookie expiry, throttling, logout and direct-route denial. Existing workflow tests inject a pass-through gate to isolate role logic; dedicated tests exercise the actual gate.
+
+
+### Vercel preview access
+
+Root `middleware.ts` covers every route, including static assets, with `server/cloud-prelaunch.mjs`. The `/api/prelaunch/session`, `/unlock`, and `/lock` handlers run in this middleware. `SADU_PRELAUNCH_PASSWORD` is a sensitive Production environment variable on the `sadumaha` project, never a Vite variable. Other environments fail closed until configured.
+
+Cloud cookies are host-only, HttpOnly, Secure, SameSite=Strict and HMAC signed, expiring after eight hours. A session survives an instance restart; changing the password and redeploying invalidates signatures on the new deployment. Logout clears the browser cookie; a copied cookie remains valid until expiry or rotation. Local and cloud sessions use different cookies. Guess throttling is supplemental per-instance protection, not a distributed rate limit. Keep the generated high-entropy password.
+
+This protects the deployed prototype, not external services or historical deployment URLs. It does not deploy the local review JSON backend, activate institutional authentication, or resume government integrations. Production verification must check anonymous deep links/assets, rejected passwords, successful unlock, authenticated asset access and logout. Deploy from a clean Git snapshot to exclude unrelated working changes and local data.
