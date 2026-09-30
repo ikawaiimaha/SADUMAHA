@@ -1,4 +1,5 @@
 import express from 'express';
+import { twinAudioView } from './twin-audio-view.mjs';
 
 /** Mount under /api/review/ecosystem after existing trusted session middleware.
  * Intake stream parsing/storage stays behind the host's authenticated upload adapter.
@@ -22,6 +23,15 @@ export function unifiedRouter(controllers) {
   router.post('/ready', run('readyForDirector'));
   router.patch('/arrival', run('receiveCrate'));
   router.post('/publish', run('publish'));
-  router.get('/twins/:id', (req, res, next) => { try { res.type('application/ld+json').send(JSON.stringify(controllers.getTwin(res.locals.actor, req.params.id))); } catch(e) { next(e); } });
+  router.post('/venue-clearance', run('clearVenue'));
+  router.post('/participation', run('setParticipation'));
+  router.post('/budget-release', run('releaseBudget'));
+  router.get('/museum/:artworkId', (req, res, next) => { try { res.json(controllers.museumView(res.locals.actor, req.params.artworkId)); } catch(e) { next(e); } });
+  router.get('/budget', (req, res, next) => { try { res.json(controllers.budget(res.locals.actor)); } catch(e) { next(e); } });
+  router.post('/condition', async (req, res, next) => {
+    if (!req.fileStream) return res.status(415).json({ error: 'An authenticated photograph upload stream is required.' });
+    try { res.json(await controllers.recordCondition(res.locals.actor, req.body, req.fileStream)); } catch(e) { next(e); }
+  });
+  router.get('/twins/:id', (req, res, next) => { try { const twin = controllers.getTwin(res.locals.actor, req.params.id); if (req.accepts(['html','application/ld+json']) === 'html') res.type('html').send(twinAudioView(twin)); else res.type('application/ld+json').send(JSON.stringify(twin)); } catch(e) { next(e); } });
   return router;
 }

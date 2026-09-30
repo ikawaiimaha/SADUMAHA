@@ -39,3 +39,13 @@ CREATE TABLE physical_observation (id TEXT PRIMARY KEY, artwork_id TEXT NOT NULL
 CREATE TABLE digital_twin (id TEXT PRIMARY KEY, revision_id TEXT NOT NULL UNIQUE REFERENCES artwork_revision(id), endpoint_uri TEXT NOT NULL UNIQUE, json_ld TEXT NOT NULL CHECK(json_valid(json_ld)), payload_hash TEXT NOT NULL, published_by TEXT NOT NULL REFERENCES actor(id));
 CREATE TABLE gallery_label (id TEXT PRIMARY KEY, twin_id TEXT NOT NULL UNIQUE REFERENCES digital_twin(id), pdf_base64 TEXT NOT NULL, file_hash TEXT NOT NULL);
 CREATE TABLE decision_log (id TEXT PRIMARY KEY, actor_id TEXT NOT NULL REFERENCES actor(id), target_id TEXT NOT NULL, version_hash TEXT NOT NULL, action TEXT NOT NULL, recorded_at TEXT NOT NULL);
+-- SQLite JSON equivalent of the requested JSONB conservation field.
+ALTER TABLE artwork_revision ADD COLUMN conservation_reqs TEXT CHECK(conservation_reqs IS NULL OR json_valid(conservation_reqs));
+ALTER TABLE wall_space ADD COLUMN climate_capability TEXT CHECK(climate_capability IS NULL OR json_valid(climate_capability));
+CREATE TABLE condition_pin (
+ id TEXT PRIMARY KEY, revision_id TEXT NOT NULL REFERENCES artwork_revision(id), reference_image_hash TEXT NOT NULL,
+ x_pct REAL NOT NULL CHECK(x_pct BETWEEN 0 AND 100), y_pct REAL NOT NULL CHECK(y_pct BETWEEN 0 AND 100),
+ description TEXT NOT NULL, photo_document_id TEXT NOT NULL REFERENCES document_vault(id), recorded_by TEXT NOT NULL REFERENCES actor(id), recorded_at TEXT NOT NULL
+);
+CREATE TABLE exhibition_budget (exhibition_id TEXT PRIMARY KEY REFERENCES exhibition(id), ceiling_minor INTEGER NOT NULL CHECK(ceiling_minor>=0), currency TEXT NOT NULL CHECK(currency='AED'));
+CREATE TABLE budget_line (id TEXT PRIMARY KEY, exhibition_id TEXT NOT NULL REFERENCES exhibition_budget(exhibition_id), artwork_id TEXT NOT NULL REFERENCES artwork(id), amount_minor INTEGER NOT NULL CHECK(amount_minor>=0), paid_minor INTEGER NOT NULL DEFAULT 0 CHECK(paid_minor>=0), released_minor INTEGER NOT NULL DEFAULT 0 CHECK(released_minor>=0), CHECK(paid_minor+released_minor<=amount_minor));

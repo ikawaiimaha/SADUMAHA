@@ -1,3 +1,4 @@
+import { ConnectedBudgetGauge } from './MuseumCare';
 import DigitalArchive from './DigitalArchive';
 import SmartCuration, { type CuratedArtwork } from './SmartCuration';
 import { useEffect, useState } from 'react';
@@ -91,6 +92,7 @@ export default function PublicationReview() {
     <header className="border-b border-[#D9CEBA] ps-5 pe-5 py-5 flex flex-wrap gap-4 items-center justify-between"><strong className="font-serif text-3xl text-[#8B261E]">SADU</strong><a className="underline" href="/journey">Return to the 14-task journey</a><a className="underline" href="/overview">Executive overview</a></header>
     <main className="mx-auto max-w-5xl ps-4 pe-4 py-6 space-y-6">
         {actor?.role === "Director" && <DigitalArchive key={actor.id}/>}
+        {actor && ["Director", "General_Exhibition_Coordinator"].includes(actor.role) && <details><summary>Exhibition budget</summary><ConnectedBudgetGauge key={actor.id}/></details>}
       <h1 className="font-serif text-3xl">Submission review and publication</h1>
       <p>Noura Al Mazrouei · Kufic Horizon · Fictional local accounts. Account selection simulates sign-in; it does not verify a real identity.</p>
       <p>Reviews and revisions are saved on this computer. The real application, email and government website remain paused. “Approve &amp; Publish” queues a local public snapshot only.</p>

@@ -1,0 +1,18 @@
+const escape = value => String(value).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c]);
+/** Renders only verified cultural text returned by the authorized twin projection. */
+export function twinAudioView(twin) {
+  const texts = Object.fromEntries(['en','ar'].map(lang => [lang, twin.description?.find(v => v['@language'] === lang)?.['@value'] ?? '']));
+  const title = twin.name?.find(v => v['@language'] === 'en')?.['@value'] ?? 'Artwork';
+  return `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escape(title)} — SADU</title><style>body{font:18px/1.7 system-ui;max-width:760px;margin:auto;padding:24px;background:#F7F1E6;color:#111817}button,select{font:inherit;padding:10px;margin:4px;border:1px solid #8c8173;border-radius:6px}button:focus-visible,select:focus-visible{outline:3px solid #8b261e}article{white-space:pre-wrap}</style><header>SADU · Private artwork guide</header><h1>${escape(title)}</h1><label>Guide language <select id="language"><option value="en">English</option><option value="ar">Arabic</option></select></label><div><button id="play" disabled>Listen</button><button id="pause" disabled>Pause</button><button id="stop" disabled>Stop</button></div><p id="status" role="status">Checking device speech support…</p><article id="text">${escape(texts.en)}</article><p>Device voices vary in quality and availability. The text remains available without audio. Only on-device voices are used.</p><script>
+  const texts=${JSON.stringify(texts).replace(/</g,'\\u003c')};
+  const language=document.getElementById('language'), play=document.getElementById('play'), pause=document.getElementById('pause'), stop=document.getElementById('stop'), status=document.getElementById('status'), article=document.getElementById('text');
+  const synth=window.speechSynthesis; let voice, utterance, generation=0;
+  function reset(){generation++; if(synth)synth.cancel(); pause.disabled=true;stop.disabled=true;pause.textContent='Pause';}
+  function voices(){voice=synth?.getVoices().find(v=>v.localService&&v.lang.toLowerCase().startsWith(language.value));play.disabled=!voice||!texts[language.value];status.textContent=voice?'Ready to listen.':'No on-device voice is available for this language. You can read the text below.';}
+  language.addEventListener('change',()=>{reset();article.textContent=texts[language.value];article.lang=language.value;article.dir=language.value==='ar'?'rtl':'ltr';voices();});
+  play.addEventListener('click',()=>{reset();if(!voice)return;const token=generation;utterance=new SpeechSynthesisUtterance(texts[language.value]);utterance.voice=voice;utterance.lang=voice.lang;utterance.onend=()=>{if(token!==generation)return;pause.disabled=true;stop.disabled=true;status.textContent='Finished.';};utterance.onerror=()=>{if(token!==generation)return;reset();status.textContent='Audio could not be played. Please read the text or retry.';};synth.speak(utterance);pause.disabled=false;stop.disabled=false;status.textContent='Playing.';});
+  pause.addEventListener('click',()=>{if(synth.paused){synth.resume();pause.textContent='Pause';status.textContent='Playing.';}else{synth.pause();pause.textContent='Resume';status.textContent='Paused.';}});
+  stop.addEventListener('click',()=>{reset();status.textContent='Stopped.';});window.addEventListener('pagehide',reset);
+  if(synth&&window.SpeechSynthesisUtterance){synth.addEventListener('voiceschanged',voices);voices();}else{status.textContent='Speech is unavailable in this browser. You can read the text below.';}
+  </script></html>`;
+}

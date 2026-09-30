@@ -51,3 +51,20 @@ test('invalid geometry, stale versions and forged roles cannot mutate the pipeli
   await assert.rejects(c.readyForDirector(actor('General_Exhibition_Coordinator'), { ...cmd, versionHash: 'stale' }), { status: 409 });
   await assert.rejects(c.submitArtwork(actor('Artist'), submission, Readable.from([Buffer.from('another')])), { status: 409 });
 });
+test('conservation clearance and image-bound condition records respect roles and revisions', async () => {
+  const { controller:c, repository } = await fixture();
+  await repository.transaction(s => { s.walls[0].climateCapability={lux:40,min_temp_c:18,max_temp_c:22,min_humidity_pct:35,max_humidity_pct:45}; });
+  const r=await c.submitArtwork(actor('Artist'),{...submission,conservation_reqs:{max_lux:50,target_temp_c:20,target_humidity_pct:40}},Readable.from([Buffer.from('master')]));
+  const e=await c.approveEditorial(actor('Editorial'),{artworkId:'art',versionHash:r.versionHash,description:{en:'Approved',ar:'معتمد'}});
+  const cmd={artworkId:'art',versionHash:e.versionHash};
+  await c.placeArtwork(actor('General_Exhibition_Coordinator'),{...cmd,wallId:'wall',x_cm:0,y_cm:0});
+  await c.readyForDirector(actor('General_Exhibition_Coordinator'),cmd);
+  await assert.rejects(c.publish(actor('Director'),cmd),{status:409});
+  await assert.rejects(c.clearVenue(actor('Director'),cmd),{status:403});
+  await c.clearVenue(actor('Museum_Operations'),cmd);
+  const pin=await c.recordCondition(actor('Logistics'),{...cmd,x_pct:20,y_pct:80,description:'Sample scratch'},Readable.from([Buffer.from('damage photo')]));
+  assert.equal(pin.referenceImageHash,r.media.file_hash);assert.equal(pin.revisionId,r.id);assert.match(pin.photo.file_hash,/^[a-f0-9]{64}$/);
+  await c.publish(actor('Director'),cmd);
+  assert.equal(c.museumView(actor('Director'),'art').pins.length,1);
+  assert.doesNotMatch(JSON.stringify(repository.read().twins),/Sample scratch|damage photo/);
+});
