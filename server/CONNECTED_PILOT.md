@@ -52,3 +52,35 @@ multi-dossier state to avoid cross-dossier leakage. A production repository must
 provide explicit dossier-scoped contract/ledger joins. The separate browser-only
 CollectionCloseout workflow does not trigger this authenticated backend service.
 The SQL additions are reference schema, not a deployed migration.
+
+## Acquisition fork
+
+`acquisition.mjs` supplies `nextAccessionNumber` and the acquisition state machine:
+AWAITING_ARTIST_SIGNATURE → SIMULATED_ARTIST_ACCEPTED → ACQUIRED_SIMULATED →
+TRANSFER_ROUTED. Initiation requires a current published revision, a separate
+agreed purchase price in AED minor units and an evidence reference. It freezes
+that revision and voids return freight. Archived/returned dossiers cannot be acquired.
+Approval allocates YYYY.Edition.Sequence within the repository transaction;
+the SQL reference includes a unique index and transactional counter. This is an
+institutional numbering convention, not certification of TMS/Axiell compatibility.
+
+The title template is an unsigned draft for legal review. LocalSignatureProvider
+returns SIMULATED_NOT_SIGNED; no legally signed transfer, actual ownership change,
+payment or vendor connection is asserted outside this explicitly fictional store.
+Production signature verification and acquisition payment reconciliation remain
+separate release gates. Acquired objects cannot use the return-based archive gate.
+
+POST `/api/review/acquisition/{initiate,sign,approve,route}` implements the fork.
+SDC destinations are Main Storage or Sharjah Art Museum. Sovereign routing is
+restricted to Director/General Exhibition Coordinator. The buyer cannot be changed
+by choosing an inconsistent destination.
+
+Sovereign privacy starts at initiation, not just at final approval. The pilot host
+blocks all dossier endpoints for other roles, including raw files, spatial records,
+labels, budget and decision history. The Artist receives only an isolated signing
+envelope (`/api/review/signing-envelope` and its PDF), scoped to their authenticated
+artist ID. This immutable title PDF is created before routing and contains no
+destination. Logistics has no sovereign dossier or manifest access. Other backend
+hosts must install equivalent query/storage policies before adopting these routes.
+
+Reference: https://help.collections.axiell.com/en/Topics/Acquisition%20items.htm

@@ -1,3 +1,4 @@
+import { requireRecordAccess } from './acquisition.mjs';
 import { validateConservation, conservationWarnings, normalizedPin, budgetGauge } from '../src/logistics/museumCare.mjs';
 import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, readFile, writeFile, rename } from 'node:fs/promises';
@@ -33,9 +34,11 @@ export async function openEcosystemRepository(file, seed = emptyEcosystem()) {
 function scoped(state, actor, artworkId, roles) {
   const artwork = state.artworks.find(a => a.id === artworkId);
   if (!actor || !artwork || actor.exhibitionId !== artwork.exhibitionId || !roles.includes(actor.role) || (actor.role === 'Artist' && artwork.artistActorId !== actor.id)) reject(403, 'Actor is not assigned to this artwork action.');
+  requireRecordAccess(actor,artwork);
   return artwork;
 }
 function revisionFor(state, artwork, expected) {
+  if (artwork.acquisition) reject(409, 'Acquisition freezes the approved revision.');
   if (artwork.lifecycleStatus === 'ARCHIVED_CLOSED') reject(409, 'Archived dossiers are read-only.');
   const revision = state.revisions.find(r => r.id === artwork.currentRevisionId);
   if (!revision || revision.versionHash !== expected) reject(409, 'Artwork revision changed. Reload the dossier.');
@@ -50,6 +53,7 @@ export function createEcosystemControllers({ repository, storage, dockPolicy = a
   return {
     async submitArtwork(actor, command, mediaStream) {
       const initial = repository.read(); const existing = scoped(initial, actor, command.artworkId, ['Artist']);
+      if(existing.acquisition) reject(409, 'Acquisition freezes the approved revision.');
       if (existing.lifecycleStatus === 'ARCHIVED_CLOSED') reject(409, 'Archived dossiers are read-only.');
       if ((existing.currentRevisionId ?? null) !== command.expectedRevisionId) reject(409, 'Revision changed before upload.');
       if (!text(command.concept_text) || !pair(command.title) || !pair(command.artistName) || !isDimension(command.width_cm) || !isDimension(command.height_cm)) reject(422, 'Bilingual name/title, concept and exact dimensions are required.');
@@ -60,6 +64,7 @@ export function createEcosystemControllers({ repository, storage, dockPolicy = a
       const integrity = await hashUploadStream(mediaStream, staged.stream);
       return repository.transaction(state => {
         const artwork = scoped(state, actor, command.artworkId, ['Artist']);
+        if (artwork.acquisition) reject(409, 'Acquisition freezes the approved revision.');
         if (artwork.lifecycleStatus === 'ARCHIVED_CLOSED') reject(409, 'Archived dossiers are read-only.');
         if ((artwork.currentRevisionId ?? null) !== command.expectedRevisionId) reject(409, 'Revision changed during upload. Staging object retained for reconciliation.');
         const tags = extractKeywords(command.concept_text);
@@ -187,7 +192,7 @@ export function createEcosystemControllers({ repository, storage, dockPolicy = a
       if (!actor || !['General_Exhibition_Coordinator','Director','Finance'].includes(actor.role)) reject(403, 'Budget access is restricted.');
       const state = repository.read(); const exhibition = state.budgets?.find(b => b.exhibitionId === actor.exhibitionId);
       if (!exhibition) reject(409, 'No verified exhibition budget has been configured.');
-      return budgetGauge(exhibition.ceiling, (state.budgetRows ?? []).filter(r => r.exhibitionId === actor.exhibitionId).map(r => ({ ...r, status: state.artworks.find(a => a.id === r.artworkId)?.lifecycleStatus ?? 'UNCONFIRMED' })));
+      return budgetGauge(exhibition.ceiling, (state.budgetRows ?? []).filter(r => r.exhibitionId === actor.exhibitionId).filter(r=>{try{requireRecordAccess(actor,state.artworks.find(a=>a.id===r.artworkId)??{});return true;}catch{return false;}}).map(r => ({ ...r, status: state.artworks.find(a => a.id === r.artworkId)?.lifecycleStatus ?? 'UNCONFIRMED' })));
     },
     getTwin(actor, id) { const state = repository.read(); const twin = state.twins.find(t => t.id === id); if (!twin) reject(404, 'Unknown digital twin.'); scoped(state, actor, twin.artworkId, ['Director','General_Exhibition_Coordinator','Editorial','Artist']); return structuredClone(twin.document); },
   };

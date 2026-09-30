@@ -62,3 +62,17 @@ CREATE TRIGGER archival_record_no_delete BEFORE DELETE ON archival_record BEGIN 
 CREATE TRIGGER archive_requires_compiled_record BEFORE UPDATE OF lifecycle_status ON artwork
  WHEN NEW.lifecycle_status='ARCHIVED_CLOSED' AND NOT EXISTS(SELECT 1 FROM archival_record WHERE artwork_id=NEW.id)
  BEGIN SELECT RAISE(ABORT,'Generate archival record in the closing transaction first'); END;
+ALTER TABLE artwork ADD COLUMN accession_number TEXT;
+ALTER TABLE artwork ADD COLUMN ownership_state TEXT NOT NULL DEFAULT 'TEMPORARY_LOAN' CHECK(ownership_state IN ('TEMPORARY_LOAN','SDC_OWNED','SOVEREIGN_COLLECTION'));
+CREATE UNIQUE INDEX artwork_accession_unique ON artwork(accession_number) WHERE accession_number IS NOT NULL;
+CREATE TABLE accession_counter (year INTEGER NOT NULL, edition INTEGER NOT NULL, last_sequence INTEGER NOT NULL CHECK(last_sequence>=0), PRIMARY KEY(year,edition));
+CREATE TABLE acquisition (
+ id TEXT PRIMARY KEY, artwork_id TEXT NOT NULL UNIQUE REFERENCES artwork(id), revision_id TEXT NOT NULL REFERENCES artwork_revision(id),
+ buyer TEXT NOT NULL CHECK(buyer IN ('SDC_OWNED','SOVEREIGN_COLLECTION')), purchase_minor INTEGER NOT NULL CHECK(purchase_minor>0),
+ price_agreement_ref TEXT NOT NULL, state TEXT NOT NULL CHECK(state IN ('AWAITING_ARTIST_SIGNATURE','SIMULATED_ARTIST_ACCEPTED','ACQUIRED_SIMULATED','TRANSFER_ROUTED')),
+ title_pdf_base64 TEXT NOT NULL, title_hash TEXT NOT NULL, signature_receipt_json TEXT CHECK(signature_receipt_json IS NULL OR json_valid(signature_receipt_json)),
+ destination TEXT, permanent_manifest_base64 TEXT, permanent_manifest_hash TEXT,
+ return_manifest_state TEXT NOT NULL DEFAULT 'VOID' CHECK(return_manifest_state='VOID')
+);
+-- Production adapters must allocate the counter and accession under one database transaction
+-- and enforce dossier-level sovereign access on every query, export and storage read.
