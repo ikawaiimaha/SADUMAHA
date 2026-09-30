@@ -1,8 +1,15 @@
 -- Reference extension to spatial-ledger-schema.sql; local runtime uses its transactional repository.
+CREATE TABLE committee_benchmark_seed (
+ id TEXT PRIMARY KEY, theme_approval_id TEXT NOT NULL, artist_name TEXT NOT NULL,
+ execution_rationale TEXT NOT NULL, created_by TEXT NOT NULL REFERENCES actor(id),
+ created_at TEXT NOT NULL, classification TEXT NOT NULL DEFAULT 'RESTRICTED_COMMITTEE_SEED'
+ CHECK(classification='RESTRICTED_COMMITTEE_SEED')
+);
 CREATE TABLE curatorial_slot (
  id TEXT PRIMARY KEY, block_id TEXT NOT NULL, gallery_id TEXT NOT NULL,
  brief TEXT NOT NULL, area_ceiling_m2 REAL NOT NULL CHECK(area_ceiling_m2>0),
  budget_ceiling_minor INTEGER NOT NULL CHECK(budget_ceiling_minor>0), assigned_actor_id TEXT NOT NULL REFERENCES actor(id),
+ benchmark_seed_id TEXT REFERENCES committee_benchmark_seed(id),
  FOREIGN KEY(block_id,gallery_id) REFERENCES spatial_block_gallery(block_id,gallery_id)
 );
 CREATE TABLE curatorial_proposal (id TEXT PRIMARY KEY, slot_id TEXT NOT NULL REFERENCES curatorial_slot(id), author_id TEXT NOT NULL REFERENCES actor(id), state TEXT NOT NULL CHECK(state IN ('SUBMITTED','RETURNED','SHORTLISTED','COMMITTEE_APPROVED','ENDORSED')));

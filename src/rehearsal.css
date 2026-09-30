@@ -13,3 +13,9 @@
 @source "./components/SpatialLedgerWorkspace.tsx";
 
 @source "./components/CuratorialWorkspace.tsx";
+
+@source "./components/BenchmarkSeeds.tsx";
+
+@source "./components/ArtistCareWorkspace.tsx";
+@source "./components/ArtistSubmission.tsx";
+@source "./components/ArtistCareWork.tsx";

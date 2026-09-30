@@ -1,3 +1,5 @@
+import ArtistCareWorkspace from "./ArtistCareWorkspace";
+import { projectCuratorialLedger } from "../lib/curatorialAccess";
 import CuratorialWorkspace from "./CuratorialWorkspace";
 import { useRef, useState } from "react";
 import { useSandbox } from "./SandboxProvider";
@@ -31,7 +33,7 @@ export default function SpatialLedgerWorkspace({
   themeApprovalId: string | null;
 }) {
   const { role } = useSandbox();
-  const [view, setView] = useState<"allocations" | "brief" | "board">(
+  const [view, setView] = useState<"allocations" | "brief" | "board" | "care">(
     "allocations",
   );
   const [initial] = useState(() => {
@@ -58,7 +60,8 @@ export default function SpatialLedgerWorkspace({
       };
     }
   });
-  const [ledger, setLedger] = useState<Ledger>(initial.state);
+  const [fullLedger, setLedger] = useState<Ledger>(initial.state);
+  const ledger = projectCuratorialLedger(fullLedger, role);
   const latest = useRef(initial);
   const [selected, setSelected] = useState(ledger.artworks[0].id);
   const [gallery, setGallery] = useState("");
@@ -70,7 +73,8 @@ export default function SpatialLedgerWorkspace({
   const [closeId, setCloseId] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState(initial.error);
-  const a = ledger.artworks.find((x) => x.id === selected)!;
+  const a =
+    ledger.artworks.find((x) => x.id === selected) ?? ledger.artworks[0];
   const boardManaged = ledger.curation?.snapshots.some(
     (snapshot) =>
       snapshot.state === "ENDORSED" &&
@@ -133,7 +137,7 @@ export default function SpatialLedgerWorkspace({
         exhibitionId: "sandbox",
       };
       const command = {
-        targetId: selected,
+        targetId: a.id,
         galleryId: gallery,
         reason,
         coordinatorId: staff,
@@ -198,6 +202,7 @@ export default function SpatialLedgerWorkspace({
             ["allocations", "Allocations"],
             ["brief", "Curatorial brief"],
             ["board", "Defense board"],
+            ["care", "Invitations & artist care"],
           ] as const
         ).map(([id, label]) => (
           <button
@@ -210,7 +215,10 @@ export default function SpatialLedgerWorkspace({
           </button>
         ))}
       </nav>
-      <div hidden={view === "allocations"}>
+      <div hidden={view !== "care"}>
+        <ArtistCareWorkspace ledger={fullLedger} />
+      </div>
+      <div hidden={view === "allocations" || view === "care"}>
         <CuratorialWorkspace
           ledger={ledger}
           mode={view === "board" ? "board" : "brief"}

@@ -1,3 +1,4 @@
+import BenchmarkSeeds from "./BenchmarkSeeds";
 import { useState } from "react";
 import { useSandbox } from "./SandboxProvider";
 import {
@@ -101,6 +102,9 @@ export default function CuratorialWorkspace({
           The Director must authorize the spatial block in Allocations before a
           brief can be issued.
         </p>
+      )}
+      {mode === "brief" && (
+        <BenchmarkSeeds ledger={ledger} role={role} run={run} />
       )}
       {mode === "brief" && (
         <>
@@ -482,6 +486,9 @@ export default function CuratorialWorkspace({
                         </span>
                       </div>
                       <p className="mt-3 text-sm leading-6 whitespace-pre-wrap">
+                        {slot?.restricted
+                          ? "Committee benchmark  -  "
+                          : "Research proposal  -  "}
                         {r.fit}
                       </p>
                       <p className="mt-2 text-sm">
@@ -513,6 +520,7 @@ export default function CuratorialWorkspace({
                         ))}
                       </details>
                       {coordinator &&
+                        !slot?.restricted &&
                         editable &&
                         ["SUBMITTED", "SHORTLISTED"].includes(n.status) && (
                           <div className="mt-4 space-y-3">
@@ -667,6 +675,9 @@ export default function CuratorialWorkspace({
                     {ledger.artworks.find((a) => a.id === r.artistId)?.name}
                   </h2>
                   <p className="mt-3 text-sm leading-6 whitespace-pre-wrap">
+                    {s.restricted
+                      ? "Committee benchmark  -  "
+                      : "Research proposal  -  "}
                     {r.fit}
                   </p>
                   <dl className="mt-4 grid grid-cols-2 gap-4 text-sm">
@@ -719,55 +730,57 @@ export default function CuratorialWorkspace({
                             Approve this proposal
                           </button>
                         )}
-                        <details>
-                          <summary className="cursor-pointer text-sm">
-                            Object to this proposal
-                          </summary>
-                          <label className="block text-sm mt-3">
-                            Committee reason
-                            <select
-                              className={input}
-                              value={note.reason}
-                              onChange={(e) =>
-                                setReturnNotes((old) => ({
-                                  ...old,
-                                  [n.id]: { ...note, reason: e.target.value },
-                                }))
+                        {!s.restricted && (
+                          <details>
+                            <summary className="cursor-pointer text-sm">
+                              Object to this proposal
+                            </summary>
+                            <label className="block text-sm mt-3">
+                              Committee reason
+                              <select
+                                className={input}
+                                value={note.reason}
+                                onChange={(e) =>
+                                  setReturnNotes((old) => ({
+                                    ...old,
+                                    [n.id]: { ...note, reason: e.target.value },
+                                  }))
+                                }
+                              >
+                                {curationReasons.map((x) => (
+                                  <option key={x}>{x}</option>
+                                ))}
+                              </select>
+                            </label>
+                            <label className="block text-sm mt-3">
+                              Committee review note
+                              <textarea
+                                className={input}
+                                value={note.note}
+                                onChange={(e) =>
+                                  setReturnNotes((old) => ({
+                                    ...old,
+                                    [n.id]: { ...note, note: e.target.value },
+                                  }))
+                                }
+                              />
+                            </label>
+                            <button
+                              className={`${secondary} mt-3`}
+                              disabled={note.note.trim().length < 10}
+                              onClick={() =>
+                                run({
+                                  action: "CURATE_RETURN",
+                                  id: n.id,
+                                  revision: r.number,
+                                  ...note,
+                                })
                               }
                             >
-                              {curationReasons.map((x) => (
-                                <option key={x}>{x}</option>
-                              ))}
-                            </select>
-                          </label>
-                          <label className="block text-sm mt-3">
-                            Committee review note
-                            <textarea
-                              className={input}
-                              value={note.note}
-                              onChange={(e) =>
-                                setReturnNotes((old) => ({
-                                  ...old,
-                                  [n.id]: { ...note, note: e.target.value },
-                                }))
-                              }
-                            />
-                          </label>
-                          <button
-                            className={`${secondary} mt-3`}
-                            disabled={note.note.trim().length < 10}
-                            onClick={() =>
-                              run({
-                                action: "CURATE_RETURN",
-                                id: n.id,
-                                revision: r.number,
-                                ...note,
-                              })
-                            }
-                          >
-                            Return this slot for revision
-                          </button>
-                        </details>
+                              Return this slot for revision
+                            </button>
+                          </details>
+                        )}
                       </div>
                     )}
                 </article>

@@ -1,3 +1,6 @@
+import { createArtistCareService } from "./artist-care.mjs";
+import { prepareInvitations } from "../src/lib/artistCare.ts";
+import { projectCuratorialLedger } from "../src/lib/curatorialAccess.ts";
 import express from "express";
 import {
   applyLedger,
@@ -49,6 +52,7 @@ export function createSpatialLedgerService(repository) {
     return ledger;
   };
   return {
+    care: createArtistCareService(repository),
     read(actor) {
       authorized(actor);
       const s = repository.read();
@@ -58,7 +62,10 @@ export function createSpatialLedgerService(repository) {
           status: 403,
         });
       return {
-        ledger: ledger ?? initial(s, actor),
+        ledger: projectCuratorialLedger(
+          ledger ?? initial(s, actor),
+          actor.role,
+        ),
         theme: s.themeWorkflow ?? emptyTheme(),
       };
     },
@@ -83,7 +90,7 @@ export function createSpatialLedgerService(repository) {
     },
     mutate(actor, command) {
       authorized(actor);
-      return repository.transaction((s) => {
+      return repository.transaction(async (s) => {
         const theme = s.themeWorkflow;
         const selected = theme?.events.findLastIndex(
           (e) => e.action === "SELECT",
@@ -98,7 +105,23 @@ export function createSpatialLedgerService(repository) {
           command,
           proof,
         );
-        return s.spatialLedger;
+        if (s.artistCare) {
+          const previousCount = s.artistCare.invitations.length;
+          s.artistCare = await prepareInvitations(
+            s.artistCare,
+            s.spatialLedger,
+          );
+          if (s.artistCare.invitations.length !== previousCount)
+            s.artistCare.version++;
+          for (const invitation of s.artistCare.invitations) {
+            const artwork = s.artworks?.find(
+              (a) => a.id === invitation.artistId,
+            );
+            if (artwork?.artistActorId)
+              invitation.artistActorId = artwork.artistActorId;
+          }
+        }
+        return projectCuratorialLedger(s.spatialLedger, actor.role);
       });
     },
   };
@@ -129,6 +152,20 @@ export function requireSpatialExecution(state, artworkId, amountMinor) {
 }
 export function spatialLedgerRouter(service) {
   const router = express.Router();
+  router.get("/care", (req, res, next) => {
+    try {
+      res.json(service.care.read(res.locals.actor));
+    } catch (e) {
+      next(e);
+    }
+  });
+  router.post("/care", async (req, res, next) => {
+    try {
+      res.json(await service.care.mutate(res.locals.actor, req.body));
+    } catch (e) {
+      next(e);
+    }
+  });
   router.get("/", (req, res, next) => {
     try {
       res.json(service.read(res.locals.actor));

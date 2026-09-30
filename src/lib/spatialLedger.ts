@@ -213,6 +213,12 @@ export function applyLedger(
     )
       fail("Record a short operational reason (maximum 500 characters).", 422);
   };
+  const restrictedIds = new Set(s.curation?.benchmarks?.map((x) => x.id) ?? []);
+  if (
+    restrictedIds.has(c.targetId ?? "") &&
+    actor.role !== "General_Exhibition_Coordinator"
+  )
+    fail("This record is restricted.", 403);
   const a = s.artworks.find((x) => x.id === c.targetId);
   const invalidate = (row: Allocation) => {
     row.assignmentVersion++;
@@ -220,7 +226,7 @@ export function applyLedger(
     row.authorizedVersion = null;
   };
   if (c.action.startsWith("CURATE_")) {
-    applyCuration(s, actor, c as CurationCommand, at);
+    applyCuration(s, actor, c as CurationCommand, at, themeApprovalId);
     s.version++;
     s.decisions.push({
       actorId: actor.id,

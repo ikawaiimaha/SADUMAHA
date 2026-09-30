@@ -6,8 +6,10 @@ export const curationReasons = [
   "Does not fit thematic brief",
   "Evidence insufficient",
   "Availability or delivery concern",
+  "Does not meet the published execution standard",
 ];
 export type BriefSlot = {
+  restricted?: boolean;
   id: string;
   galleryId: string;
   brief: string;
@@ -53,6 +55,13 @@ export type DefenseSnapshot = {
   rows: { slot: BriefSlot; proposalId: string; revision: ProposalRevision }[];
 };
 export type Curation = {
+  benchmarks?: {
+    id: string;
+    name: string;
+    rationale: string;
+    themeId: string;
+    assigned: boolean;
+  }[];
   phase: "DRAFT" | "COMMITTEE_REVIEW" | "DIRECTOR_REVIEW" | "ENDORSED";
   slots: BriefSlot[];
   nominations: Nomination[];
@@ -67,7 +76,10 @@ export type CurationCommand = {
     | "CURATE_LOCK"
     | "CURATE_COMMITTEE_APPROVE"
     | "CURATE_ENDORSE"
-    | "CURATE_MOVE_SLOT";
+    | "CURATE_MOVE_SLOT"
+    | "CURATE_SEED"
+    | "CURATE_ASSIGN_SEED";
+  name?: string;
   expected: number;
   id?: string;
   slotId?: string;
@@ -221,12 +233,34 @@ export function applyCuration(
   actor: LedgerActor,
   c: CurationCommand,
   at: string,
+  themeProof?: string | null,
 ) {
   const b = (s.curation ??= emptyCuration());
   const requireRole = (role: string) => {
     if (actor.role !== role)
       fail("This decision belongs to another role.", 403);
   };
+  if (c.action === "CURATE_SEED") {
+    requireRole("Committee");
+    if (!themeProof || b.phase !== "DRAFT" || b.slots.length)
+      fail("Add benchmarks to an approved theme before issuing briefs.");
+    if (
+      !text(c.id) ||
+      !text(c.name, 2) ||
+      !text(c.fit, 10) ||
+      s.artworks.some((a) => a.id === c.id) ||
+      b.benchmarks?.some((x) => x.id === c.id)
+    )
+      fail("Provide a unique benchmark ID, name and execution rationale.", 422);
+    (b.benchmarks ??= []).push({
+      id: c.id!,
+      name: c.name!.trim(),
+      rationale: c.fit!.trim(),
+      themeId: themeProof,
+      assigned: false,
+    });
+    return;
+  }
   if (s.block.state !== "ACTIVE")
     fail("Authorize the spatial block before issuing a curatorial brief.");
   if (b.phase === "ENDORSED")
@@ -241,9 +275,99 @@ export function applyCuration(
       fail("The Defense Board is in review. Draft changes are locked.");
   };
   switch (c.action) {
+    case "CURATE_ASSIGN_SEED": {
+      requireRole("General_Exhibition_Coordinator");
+      editable();
+      const seed = b.benchmarks?.find((x) => x.id === c.id);
+      const previous = b.nominations.find((x) => x.id === c.id);
+      if (
+        !seed ||
+        (seed.assigned && previous?.status !== "RETURNED") ||
+        seed.themeId !== s.block.themeApprovalId ||
+        !activeGallery(s, c.galleryId!) ||
+        !Number.isFinite(c.areaM2) ||
+        c.areaM2! <= 0 ||
+        !Number.isSafeInteger(c.costMinor) ||
+        c.costMinor! <= 0
+      )
+        fail(
+          "Choose an unallocated current-theme benchmark, active gallery, positive footprint and budget.",
+          422,
+        );
+      const slotId = `seed-slot:${seed.id}`;
+      if (!s.artworks.some((a) => a.id === seed.id))
+        s.artworks.push({
+          id: seed.id,
+          name: seed.name,
+          areaM2: c.areaM2!,
+          galleryId: null,
+          state: "UNASSIGNED",
+          assignmentVersion: 0,
+          technicalVersion: null,
+          coordinatorId: null,
+          contractMinor: 0,
+          authorizedVersion: null,
+          paidMinor: 0,
+        });
+      if (previous) {
+        const existing = b.slots.find((x) => x.id === slotId)!;
+        existing.galleryId = c.galleryId!;
+        existing.areaM2 = c.areaM2!;
+        existing.budgetMinor = c.costMinor!;
+        existing.selectedId = seed.id;
+        previous.status = "SHORTLISTED";
+        previous.revisions.push({
+          ...previous.revisions.at(-1)!,
+          number: previous.revisions.length + 1,
+          areaM2: c.areaM2!,
+          costMinor: c.costMinor!,
+          authorId: actor.id,
+          at,
+        });
+      } else {
+        b.slots.push({
+          id: slotId,
+          galleryId: c.galleryId!,
+          brief: seed.rationale,
+          areaM2: c.areaM2!,
+          budgetMinor: c.costMinor!,
+          assignedTo: actor.id,
+          selectedId: seed.id,
+          restricted: true,
+        });
+        b.nominations.push({
+          id: seed.id,
+          slotId,
+          authorId: "Committee",
+          status: "SHORTLISTED",
+          revisions: [
+            {
+              number: 1,
+              artistId: seed.id,
+              fit: seed.rationale,
+              evidence: "Committee benchmark linked to approved theme",
+              areaM2: c.areaM2!,
+              costMinor: c.costMinor!,
+              response: "",
+              authorId: actor.id,
+              at,
+            },
+          ],
+          feedback: [],
+        });
+      }
+      seed.assigned = true;
+      checkPlan(s);
+      break;
+    }
+
     case "CURATE_CREATE_SLOTS": {
       requireRole("General_Exhibition_Coordinator");
       editable();
+      if (b.benchmarks?.some((x) => !x.assigned))
+        fail(
+          "Allocate Committee benchmarks before broadcasting remaining slots.",
+        );
       if (
         !text(c.id) ||
         b.slots.some((x) => x.id.startsWith(c.id! + ":")) ||
@@ -278,13 +402,14 @@ export function applyCuration(
     case "CURATE_PROPOSE": {
       requireRole("Exhibition_Coordinator");
       editable();
-      if (!slot || slot.assignedTo !== actor.id)
+      if (!slot || slot.restricted || slot.assignedTo !== actor.id)
         fail("This brief is assigned to another coordinator.", 403);
       if (!activeGallery(s, slot.galleryId))
         fail("The Coordinator must relocate this slot first.");
       if (
         !text(c.id) ||
         !s.artworks.some((a) => a.id === c.artistId) ||
+        b.benchmarks?.some((x) => x.id === c.artistId) ||
         !text(c.fit, 10) ||
         !text(c.evidence, 5) ||
         !Number.isFinite(c.areaM2) ||
@@ -377,6 +502,10 @@ export function applyCuration(
     case "CURATE_RETURN": {
       if (!nomination || c.revision !== revision?.number)
         fail("The proposal revision changed.");
+      if (b.slots.find((x) => x.id === nomination.slotId)?.restricted)
+        fail(
+          "Committee benchmarks cannot be vetoed through the proposal stream. Resolve feasibility with the Committee.",
+        );
       if (actor.role === "General_Exhibition_Coordinator") {
         editable();
         if (!["SUBMITTED", "SHORTLISTED"].includes(nomination.status))
