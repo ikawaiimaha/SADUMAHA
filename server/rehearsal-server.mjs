@@ -1,3 +1,4 @@
+import { unifiedRouter } from './unified-router.mjs';
 import { createPrelaunchGate } from './prelaunch-gate.mjs';
 import { openDigitalArchive } from './digital-archive.mjs';
 import { LocalAuthProvider } from '../src/governance/localAdapters.ts';
@@ -9,7 +10,7 @@ import { openLogisticsStore } from './logistics-store.mjs';
 import { openSpatialStore } from './spatial-store.mjs';
 import { DEFAULT_CMS_BASE_URL, dynamicTestProfileUrl } from './gallery-labels.mjs';
 
-export async function createRehearsalApp({ prelaunchGate = createPrelaunchGate(), file, staticRoot, spatialFile, authProvider = new LocalAuthProvider(ACCOUNTS), labelOptions = { testMode: process.env.SDC_LABEL_TEST_MODE !== 'false', baseUrl: process.env.SDC_CMS_BASE_URL || DEFAULT_CMS_BASE_URL } } = {}) {
+export async function createRehearsalApp({ ecosystemControllers, prelaunchGate = createPrelaunchGate(), file, staticRoot, spatialFile, authProvider = new LocalAuthProvider(ACCOUNTS), labelOptions = { testMode: process.env.SDC_LABEL_TEST_MODE !== 'false', baseUrl: process.env.SDC_CMS_BASE_URL || DEFAULT_CMS_BASE_URL } } = {}) {
   if (labelOptions.testMode) dynamicTestProfileUrl('configuration-check', labelOptions.baseUrl);
   const store = await openReviewStore(file ?? fileURLToPath(new URL('../.local/rehearsal-review.json', import.meta.url)), { labelOptions });
   const spatial = await openSpatialStore(spatialFile ?? (file ? `${file}.spatial.json` : fileURLToPath(new URL('../.local/rehearsal-spatial.json', import.meta.url))));
@@ -57,6 +58,7 @@ export async function createRehearsalApp({ prelaunchGate = createPrelaunchGate()
       res.locals.actor = actor; next();
     } catch (error) { next(error); }
   });
+  if (ecosystemControllers) app.use('/api/review/ecosystem', unifiedRouter(ecosystemControllers));
   app.get('/api/review/logistics', (req, res) => res.json(logistics.read(res.locals.actor)));
   app.get('/api/review/archive/status', (req, res) => res.json(archive.status(res.locals.actor)));
   app.post('/api/review/archive', async (req, res, next) => {

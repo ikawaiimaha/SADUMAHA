@@ -1,0 +1,53 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtemp } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { Readable, Writable } from 'node:stream';
+import { emptyEcosystem, openEcosystemRepository, createEcosystemControllers } from '../server/unified-ecosystem.mjs';
+const actor = role => ({ id: role, role, exhibitionId: 'expo' });
+async function fixture() {
+  const seed = emptyEcosystem();
+  seed.artworks.push({ id: 'art', exhibitionId: 'expo', artistActorId: 'Artist', physicalStatus: 'In_Transit' });
+  seed.walls.push({ id: 'wall', exhibitionId: 'expo', max_width_cm: 500, max_height_cm: 300 });
+  seed.dictionary.push({ id: 'term', exhibitionId: 'expo', english: 'calligraphy', arabic: 'خط', version: 1, approvedBy: 'editor', approvedAt: '2026-01-01' });
+  const file = join(await mkdtemp(join(tmpdir(), 'sadu-unified-')), 'state.json');
+  const repository = await openEcosystemRepository(file, seed);
+  const storage = { openStaging: async () => ({ objectId: 'private-object', stream: new Writable({ write(_c,_e,done) { done(); } }) }) };
+  return { repository, file, controller: createEcosystemControllers({ repository, storage, dockPolicy: { latitude: 0, longitude: 0, radiusMetres: 200 }, endpointOrigin: 'http://127.0.0.1:3013' }) };
+}
+const submission = { artworkId: 'art', expectedRevisionId: null, artistName: { en: 'Sample Artist', ar: 'فنان' }, title: { en: 'Calligraphy Study', ar: 'دراسة' }, concept_text: 'Calligraphy and architecture explore bronze and space.', width_cm: 100, height_cm: 100, year: 2026, technicalRequirements: [{ item: 'Projector', quantity: 2, external: true }] };
+test('complete intake → translation → placement/SLA → receiving → publication links one revision', async () => {
+  const { controller: c, repository, file } = await fixture();
+  const r = await c.submitArtwork(actor('Artist'), submission, Readable.from([Buffer.from('image bytes')]));
+  assert.match(r.media.file_hash, /^[a-f0-9]{64}$/); assert.equal(r.Arabic_Terms[0].status, 'SUGGESTED');
+  const e = await c.approveEditorial(actor('Editorial'), { artworkId: 'art', versionHash: r.versionHash, description: { en: 'Verified description', ar: 'وصف' } });
+  const command = { artworkId: 'art', versionHash: e.versionHash };
+  await assert.rejects(c.publish(actor('Director'), command), { status: 409 });
+  const placed = await c.placeArtwork(actor('General_Exhibition_Coordinator'), { ...command, wallId: 'wall', x_cm: 10, y_cm: 10 });
+  assert.equal(placed.allocationRequests[0].state, 'QUEUED_PAUSED');
+  await c.placeArtwork(actor('General_Exhibition_Coordinator'), { ...command, wallId: 'wall', x_cm: 20, y_cm: 10 });
+  assert.equal(repository.read().requests.length, 1);
+  await assert.rejects(c.receiveCrate(actor('Logistics'), command), { status: 409 });
+  await c.receiveCrate(actor('Logistics'), { ...command, location: { latitude: 0, longitude: 0, accuracy: 10, timestamp: Date.now() } });
+  assert.doesNotMatch(JSON.stringify(repository.read().decisions), /latitude|longitude/);
+  await c.readyForDirector(actor('General_Exhibition_Coordinator'), command);
+  const output = await c.publish(actor('Director'), command);
+  assert.equal(output.twin.document['sadu:fileHash'], r.media.file_hash);
+  assert.equal(output.twin.document['@id'], output.twin.uri);
+  const pdf = Buffer.from(output.label.pdfBase64, 'base64'); assert.match(pdf.toString('latin1'), /^%PDF/);
+  assert.equal((await c.publish(actor('Director'), command)).twin.id, output.twin.id);
+  assert.equal(c.getTwin(actor('Editorial'), output.twin.id)['@type'], 'VisualArtwork');
+  assert.throws(() => c.getTwin({ ...actor('Director'), exhibitionId: 'other' }, output.twin.id), { status: 403 });
+  assert.equal((await openEcosystemRepository(file)).read().twins.length, 1);
+});
+test('invalid geometry, stale versions and forged roles cannot mutate the pipeline', async () => {
+  const { controller: c, repository } = await fixture();
+  const r = await c.submitArtwork(actor('Artist'), submission, Readable.from([Buffer.from('bytes')]));
+  const cmd = { artworkId: 'art', versionHash: r.versionHash, wallId: 'wall', x_cm: 450, y_cm: 0 };
+  await assert.rejects(c.placeArtwork(actor('General_Exhibition_Coordinator'), cmd), { status: 409 });
+  assert.equal(repository.read().requests.length, 0); assert.equal(repository.read().placements.length, 0);
+  await assert.rejects(c.publish(actor('Artist'), cmd), { status: 403 });
+  await assert.rejects(c.readyForDirector(actor('General_Exhibition_Coordinator'), { ...cmd, versionHash: 'stale' }), { status: 409 });
+  await assert.rejects(c.submitArtwork(actor('Artist'), submission, Readable.from([Buffer.from('another')])), { status: 409 });
+});

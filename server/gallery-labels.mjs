@@ -56,7 +56,7 @@ function renderPage(pdf, label) {
     for (let row = 0; row < qr.modules.size; row++) for (let col = 0; col < qr.modules.size; col++) {
       if (qr.modules.get(row, col)) pdf.rect(x + (col + 4) * unit, y + (row + 4) * unit, unit, unit, 'F');
     }
-    pdf.link(x, y, size, size, { url: label.qrUrl }); pdf.setFontSize(8); pdf.text(label.status === 'Test_Ready' ? 'Test profile URL' : 'Artist profile', x + size / 2, 74, { align: 'center' });
+    pdf.link(x, y, size, size, { url: label.qrUrl }); pdf.setFontSize(8); pdf.text(label.qrCaption || (label.status === 'Test_Ready' ? 'Test profile URL' : 'Artist profile'), x + size / 2, 74, { align: 'center' });
   } else {
     pdf.setDrawColor(160, 160, 160); pdf.rect(x, y, size, size); pdf.setFontSize(8);
     pdf.text(['QR pending', 'Profile verification', 'not recorded'], x + size / 2, y + 14, { align: 'center', lineHeightFactor: 1.5 });
