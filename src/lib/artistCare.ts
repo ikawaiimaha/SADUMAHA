@@ -1,4 +1,9 @@
 import { arrivalPolicy, checkArrivalLocation } from "../logistics/geofence.mjs";
+import {
+  validateFreight,
+  type FreightDetails,
+  type ConditionSnapshot,
+} from "./artistFreight";
 import { validateCraft, type ArtistCraft } from "./artistCraft";
 import type { ThemeState } from "./themeWorkflow";
 import type { Ledger, LedgerActor } from "./spatialLedger";
@@ -38,6 +43,9 @@ export function approvedTheme(theme?: ThemeState): ThemeAnchor | undefined {
   };
 }
 export type Work = {
+  freight?: FreightDetails;
+  freightRevision?: number;
+  conditionHistory?: ConditionSnapshot[];
   craft?: ArtistCraft;
   consultation?: {
     status: "OPEN" | "RELEASED";
@@ -377,7 +385,109 @@ export async function applyArtistCare(
     )
       reject("Guidance belongs to the assigned coordinator.", 403);
   };
+  const recordCondition = async (
+    stage: ConditionSnapshot["stage"],
+    photos: MediaRef[],
+    acknowledged: boolean,
+  ) => {
+    if (
+      !w ||
+      !text(d.note, 10) ||
+      d.note.length > 4000 ||
+      !photos.length ||
+      photos.length > 8 ||
+      !photos.every(
+        (f) => media(f, true) && Math.max(f.width ?? 0, f.height ?? 0) >= 2000,
+      ) ||
+      new Set(photos.map((f) => f.hash)).size !== photos.length
+    )
+      reject(
+        "Add a condition note and 1–8 distinct condition photographs, each at least 2000 pixels on its long edge.",
+        422,
+      );
+    if (
+      w.conditionHistory?.some(
+        (r) =>
+          r.stage === stage &&
+          r.revision === w.revision &&
+          (r.freightRevision ?? 0) === (w.freightRevision ?? 0),
+      )
+    )
+      reject(
+        "This condition checkpoint is locked. Record a separate incident rather than overwrite evidence.",
+      );
+    const record = {
+      id: crypto.randomUUID(),
+      stage,
+      revision: w.revision,
+      freightRevision: w.freightRevision ?? 0,
+      actorId: actor.id,
+      at: now,
+      note: d.note,
+      damage: d.damage === true,
+      photos: structuredClone(photos),
+      previousHash: w.conditionHistory?.at(-1)?.hash ?? null,
+      acknowledgement: acknowledged,
+    };
+    w.conditionHistory ??= [];
+    w.conditionHistory.push({
+      ...record,
+      hash: await digest(JSON.stringify(record)),
+    });
+  };
   switch (c.action) {
+    case "SAVE_FREIGHT":
+      if (["Artist", "Artist_Portal"].includes(actor.role)) own();
+      else
+        role(
+          "Logistics",
+          "Logistics_Officer",
+          "General_Exhibition_Coordinator",
+        );
+      if (
+        !w ||
+        w.state !== "APPROVED" ||
+        w.condition ||
+        !i ||
+        !currentRoster(ledger, i)
+      )
+        reject(
+          "Freight details require an approved work with an active allocation before receipt.",
+        );
+      w.freight = validateFreight(d.freight);
+      w.freightRevision = (w.freightRevision ?? 0) + 1;
+      break;
+    case "PRE_DISPATCH_CONDITION":
+      own();
+      if (
+        !w ||
+        w.state !== "APPROVED" ||
+        w.condition ||
+        !w.freight ||
+        d.acknowledged !== true ||
+        !i ||
+        !currentRoster(ledger, i)
+      )
+        reject(
+          "Acknowledge your pre-dispatch report for an approved, unreceived artwork.",
+        );
+      await recordCondition("PRE_DISPATCH", d.photos ?? [], true);
+      break;
+    case "DEINSTALL_CONDITION":
+      role("Logistics", "Logistics_Officer");
+      if (
+        !w?.condition ||
+        !w.nextMaintenance ||
+        w.returnAt ||
+        !s.settings ||
+        Date.parse(now) < Date.parse(s.settings.closesAt)
+      )
+        reject(
+          "De-installation requires an installed work after exhibition closure.",
+        );
+      await recordCondition("DEINSTALLATION", d.photos ?? [], false);
+      break;
+
     case "REQUEST_GUIDANCE": {
       own();
       if (
@@ -878,6 +988,7 @@ export async function applyArtistCare(
         reject(
           "Record a photographed condition report for an approved, unreceived work.",
         );
+      await recordCondition("ARRIVAL", [d.file], false);
       w.condition = {
         id: crypto.randomUUID(),
         damage: d.damage === true,
@@ -950,6 +1061,13 @@ export async function applyArtistCare(
       )
         reject(
           "Return transit requires exhibition closure and resolved condition issues.",
+        );
+      const removal = w.conditionHistory?.find(
+        (r) => r.stage === "DEINSTALLATION" && r.revision === w.revision,
+      );
+      if (!removal || removal.damage)
+        reject(
+          "Return transit requires a locked de-installation report without unresolved damage.",
         );
       w.returnAt = now;
       break;

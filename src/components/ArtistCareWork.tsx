@@ -1,3 +1,5 @@
+import ArtistFreightPanel from "./ArtistFreightPanel";
+import type { CareInvitation } from "../lib/artistCare";
 import { CraftComparison } from "./ArtistCraftFields";
 import { useState } from "react";
 import {
@@ -17,12 +19,16 @@ import {
 } from "./ArtistSubmission";
 export default function ArtistCareWork({
   work: w,
+  invitation,
+  shippingActive,
   role,
   state,
   run,
   onRevise,
 }: {
   work: Work;
+  invitation: CareInvitation;
+  shippingActive: boolean;
   role: string;
   state: ArtistCare;
   run: (c: Omit<CareCommand, "expected">) => Promise<boolean>;
@@ -266,6 +272,13 @@ export default function ArtistCareWork({
           </button>
         </>
       )}
+      <ArtistFreightPanel
+        work={w}
+        invitation={invitation}
+        role={role}
+        run={run}
+        active={shippingActive}
+      />
       {w.state === "APPROVED" && (
         <>
           {w.route === "COMMISSION" && (

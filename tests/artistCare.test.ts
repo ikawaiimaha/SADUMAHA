@@ -1,3 +1,13 @@
+import {
+  customsExport,
+  consolidationCandidates,
+  shippingReadiness,
+  validateFreight,
+  type FreightDetails,
+} from "../src/lib/artistFreight";
+import { artistShippingPdf } from "../src/lib/artistShippingPdf";
+import express from "express";
+import { spatialLedgerRouter } from "../server/spatial-ledger.mjs";
 import { validateCraft, type ArtistCraft } from "../src/lib/artistCraft";
 import type { ThemeState } from "../src/lib/themeWorkflow";
 import test from "node:test";
@@ -522,6 +532,17 @@ test("submission revisions, financial separation, repair approval and timed lega
   );
   await j.act(
     "Logistics_Officer",
+    "DEINSTALL_CONDITION",
+    {
+      photos: [image],
+      note: "Condition checked after de-installation.",
+      damage: false,
+    },
+    "work",
+    "2026-10-21T10:00:00Z",
+  );
+  await j.act(
+    "Logistics_Officer",
     "RETURN_TRANSIT",
     {},
     "work",
@@ -833,4 +854,218 @@ test("consultation locks drafts, scopes messages, releases to artist and redacts
   );
   assert.equal(committee.invitations[0].works[0].consultation, undefined);
   assert.equal(j.s.invitations[0].works[0].consultation!.messages.length, 3);
+});
+
+const freight: FreightDetails = {
+  originCountry: "FR",
+  pickupCountry: "DE",
+  pickupCity: "Berlin",
+  pickupAddress: "Synthetic collection address",
+  latitude: 52.52,
+  longitude: 13.405,
+  readyFrom: "2026-10-01",
+  readyUntil: "2026-10-05",
+  handling: "CLIMATE_CONTROLLED",
+  medium: "Bronze",
+  customsValueMinor: 100000,
+  currency: "EUR",
+  grossWeightKg: 110,
+  packageCount: 1,
+  regime: "TEMPORARY_IMPORT",
+};
+async function freightJourney() {
+  const j = await journey();
+  await j.act("Exhibition_Coordinator", "WELCOME", {
+    note: "Welcome to the synthetic freight test.",
+  });
+  await j.act("Exhibition_Coordinator", "DISPATCH");
+  await j.act("Artist_Portal", "ACCEPT", { token: j.token });
+  await j.act("Artist_Portal", "SUBMIT_WORK", { work: work() });
+  await j.act("Committee", "RECOMMEND_WORK", {}, "work");
+  await j.act("Director", "APPROVE_WORK", {}, "work");
+  return j;
+}
+test("customs export separates valuation and origin; checkpoint gates PDF and locks evidence", async () => {
+  const j = await freightJourney();
+  const w = () => j.s.invitations[0].works[0];
+  await j.act("Artist_Portal", "SAVE_FREIGHT", { freight }, "work");
+  const payload = customsExport(j.s.invitations[0], w());
+  assert.equal(payload.countryOfOrigin, "FR");
+  assert.equal(payload.pickup.country, "DE");
+  assert.equal(payload.customsValue.currency, "EUR");
+  assert.equal(payload.declaredInsuranceValue.currency, "AED");
+  await assert.rejects(() => artistShippingPdf(w()), /pre-dispatch/);
+  await assert.rejects(
+    () =>
+      j.act(
+        "Artist_Portal",
+        "PRE_DISPATCH_CONDITION",
+        {
+          photos: [image],
+          note: "Ready for dispatch report",
+          acknowledged: false,
+        },
+        "work",
+      ),
+    /Acknowledge/,
+  );
+  await assert.rejects(
+    () =>
+      j.act(
+        "Finance",
+        "PRE_DISPATCH_CONDITION",
+        {
+          photos: [image],
+          note: "Ready for dispatch report",
+          acknowledged: true,
+        },
+        "work",
+      ),
+    /another desk/,
+  );
+  await j.act(
+    "Artist_Portal",
+    "PRE_DISPATCH_CONDITION",
+    { photos: [image], note: "Ready for dispatch report", acknowledged: true },
+    "work",
+  );
+  assert.equal(shippingReadiness(w()), null);
+  assert.equal(
+    Buffer.from(await artistShippingPdf(w()))
+      .subarray(0, 5)
+      .toString(),
+    "%PDF-",
+  );
+  assert.equal(w().conditionHistory![0].hash.length, 64);
+  assert.equal(w().conditionHistory![0].previousHash, null);
+  await assert.rejects(
+    () =>
+      j.act(
+        "Artist_Portal",
+        "PRE_DISPATCH_CONDITION",
+        {
+          photos: [image],
+          note: "Overwrite the same report",
+          acknowledged: true,
+        },
+        "work",
+      ),
+    /checkpoint is locked/,
+  );
+  await j.act(
+    "Artist_Portal",
+    "SAVE_FREIGHT",
+    { freight: { ...freight, packageCount: 2 } },
+    "work",
+  );
+  assert.match(shippingReadiness(w())!, /pre-dispatch/);
+  assert.equal(w().conditionHistory!.length, 1);
+  await j.act(
+    "Artist_Portal",
+    "PRE_DISPATCH_CONDITION",
+    {
+      photos: [image],
+      note: "Rechecked after repacking into two crates.",
+      acknowledged: true,
+    },
+    "work",
+  );
+  assert.equal(
+    w().conditionHistory![1].previousHash,
+    w().conditionHistory![0].hash,
+  );
+  const stale = structuredClone(w());
+  stale.revision++;
+  assert.match(shippingReadiness(stale)!, /pre-dispatch/);
+  const damage = structuredClone(w());
+  damage.conditionHistory!.at(-1)!.damage = true;
+  assert.match(shippingReadiness(damage)!, /damage/);
+  assert.throws(
+    () => validateFreight({ ...freight, regime: "ATA_CARNET" }),
+    /Carnet reference/,
+  );
+});
+test("consolidation requires nearby compatible pickups and does not invent savings", async () => {
+  const j = await freightJourney();
+  const s = structuredClone(j.s),
+    i = s.invitations[0];
+  const base = { ...i.works[0], freight };
+  i.works = [
+    base,
+    {
+      ...structuredClone(base),
+      id: "near",
+      freight: {
+        ...freight,
+        pickupCity: "Potsdam",
+        latitude: 52.4,
+        longitude: 13.05,
+      },
+    },
+    {
+      ...structuredClone(base),
+      id: "far",
+      freight: {
+        ...freight,
+        pickupCity: "Paris",
+        latitude: 48.85,
+        longitude: 2.35,
+      },
+    },
+    {
+      ...structuredClone(base),
+      id: "late",
+      freight: {
+        ...freight,
+        readyFrom: "2026-11-01",
+        readyUntil: "2026-11-02",
+      },
+    },
+    {
+      ...structuredClone(base),
+      id: "special",
+      freight: { ...freight, handling: "SPECIALIST" },
+    },
+  ];
+  const groups = consolidationCandidates(s);
+  assert.equal(groups.length, 1);
+  assert.equal(groups[0].workIds.length, 2);
+  assert.equal(groups[0].savingsPercent, null);
+  assert.equal(groups[0].grossWeightKg, 220);
+});
+test("customs JSON HTTP endpoint checks actor scope and exposes only an explicit export", async (t) => {
+  const j = await freightJourney();
+  await j.act("Artist_Portal", "SAVE_FREIGHT", { freight }, "work");
+  const stored = { artistCare: j.s, spatialLedger: j.ledger, artworks: [] };
+  const care = createArtistCareService({ read: () => structuredClone(stored) });
+  const app = express();
+  let actor = {
+    id: j.s.invitations[0].artistActorId,
+    role: "Artist_Portal",
+    exhibitionId: "sandbox",
+  };
+  app.use((req, res, next) => {
+    res.locals.actor = actor;
+    next();
+  });
+  app.use(spatialLedgerRouter({ care }));
+  app.use((e, req, res, next) =>
+    res.status(e.status ?? 500).json({ error: e.message }),
+  );
+  const server = await new Promise<any>((resolve) => {
+    const s = app.listen(0, "127.0.0.1", () => resolve(s));
+  });
+  t.after(() => new Promise<void>((resolve) => server.close(() => resolve())));
+  const root = `http://127.0.0.1:${server.address().port}/care/${j.s.invitations[0].id}/work`;
+  const result = await fetch(root + "/export-to-customs");
+  assert.equal(result.status, 200);
+  assert.equal((await result.json()).status, "DRAFT_FOR_BROKER_REVIEW");
+  assert.equal((await fetch(root + "/shipping-label.pdf")).status, 409);
+  actor = { ...actor, id: "another-artist" };
+  assert.equal((await fetch(root + "/export-to-customs")).status, 404);
+  actor = { ...actor, role: "Finance" };
+  assert.equal(
+    (await fetch(root + "/export-to-customs?role=Director")).status,
+    403,
+  );
 });

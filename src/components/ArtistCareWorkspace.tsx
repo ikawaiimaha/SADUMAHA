@@ -1,3 +1,4 @@
+import { consolidationCandidates } from "../lib/artistFreight";
 import type { ThemeState } from "../lib/themeWorkflow";
 import { useEffect, useRef, useState } from "react";
 import { useSandbox } from "./SandboxProvider";
@@ -238,6 +239,47 @@ export default function ArtistCareWorkspace({
             ? `${Math.ceil((Date.parse(state.settings.deadline) - now) / 3600000)} hours until submission closes`
             : "Submission deadline passed · new uploads are locked"}
         </p>
+      )}
+      {[
+        "General_Exhibition_Coordinator",
+        "Logistics",
+        "Logistics_Officer",
+      ].includes(role) && (
+        <details className="border-y border-[#DED5C4] py-4">
+          <summary className="cursor-pointer font-medium">
+            Freight consolidation candidates
+          </summary>
+          <p className="text-sm mt-3">
+            Nearby pickups within 150 km, compatible handling and customs route,
+            a shared destination and overlapping collection dates. Carrier
+            routing and packing compatibility still need review. No savings
+            assumed.
+          </p>
+          {consolidationCandidates(visible).length ? (
+            consolidationCandidates(visible).map((g) => (
+              <article
+                key={g.workIds.join(":")}
+                className="mt-3 rounded-lg bg-[#FFFDF9] p-4 text-sm"
+              >
+                <strong>
+                  {g.workIds.length} artworks · {g.cities.join(" / ")}
+                </strong>
+                <p>
+                  {g.destination} · {g.grossWeightKg} kg gross ·{" "}
+                  {g.collectionFrom} to {g.collectionUntil}
+                </p>
+                <p>
+                  Request comparable carrier quotes before selecting a route.
+                </p>
+              </article>
+            ))
+          ) : (
+            <p className="mt-3 text-sm">
+              No compatible groups yet. Record collection locations and windows
+              on approved artworks.
+            </p>
+          )}
+        </details>
       )}
       {invitation && (
         <div className="text-sm text-[#655D50]">
@@ -691,6 +733,16 @@ export default function ArtistCareWorkspace({
               <ArtistCareWork
                 key={`${invitation.id}:${w.id}:${w.revision}`}
                 work={w}
+                invitation={invitation}
+                shippingActive={
+                  ledger.curation?.phase === "ENDORSED" &&
+                  ledger.curation.snapshots.at(-1)?.id ===
+                    invitation.rosterId &&
+                  ledger.artworks.some(
+                    (a) =>
+                      a.id === invitation.artistId && a.state === "APPROVED",
+                  )
+                }
                 role={role}
                 state={state}
                 run={run}

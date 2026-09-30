@@ -39,7 +39,7 @@ test('one connected HTTP journey verifies permissions, documents, return, paymen
   await login('Museum_Operations');await json('/api/review/ecosystem/venue-clearance',await cmd());
   await login('Director');await json('/api/review/ecosystem/publish',await cmd());stamp('Director publication');assert.equal((await call('/api/review/ecosystem/archive-close',await cmd())).status,409);
   const label=Buffer.from(await(await call('/api/review/pilot/label.pdf')).arrayBuffer());assert.equal(label.subarray(0,5).toString(),'%PDF-');
-  const manifest=Buffer.from(await(await call('/api/review/pilot/manifest.pdf')).arrayBuffer());assert.equal(manifest.subarray(0,5).toString(),'%PDF-');
+  const blockedManifest=await call('/api/review/pilot/manifest.pdf');assert.equal(blockedManifest.status,409);const manifest=Buffer.from(await blockedManifest.arrayBuffer());assert.match(manifest.toString(),/pre-dispatch/);
   const twinUrl=new URL((await dossier()).twins[0].uri);const twin=await fetch(origin+twinUrl.pathname,{headers:{Cookie:cookie,Accept:'application/ld+json'}});assert.equal((await twin.json())['sadu:fileHash'],first.revision.media.file_hash);
   await login('Finance');assert.equal((await call('/api/review/pilot/action',{version:(await dossier()).version,action:'pay',tranche:2})).status,409);rejected++;
   await action('pay',{tranche:0});
@@ -77,7 +77,7 @@ test('one connected HTTP journey verifies permissions, documents, return, paymen
   const corrupt=structuredClone(runtime.repository.read());corrupt.archivalRecords[0].pdfBase64=Buffer.from('tampered').toString('base64');
   assert.throws(()=>archivalRecordService({repository:{read:()=>corrupt}}).download(actor,PILOT_ARTWORK),/integrity/);
   const evidence={date:'2026-09-30',directory,fictional:true,syntheticLocation:true,milestones,blockedNegativeCases:rejected,paymentsMinor:4500000,decisionCount:done.decisions.length,missingInputCasesExercised:2,externalDispatches:0,manualFollowupsObservedInScript:0,staffTimeSavings:'Not measured; no operational baseline',totalMs:Math.round(performance.now()-started)};
-  await writeFile(join(directory,'pilot-evidence.json'),JSON.stringify(evidence,null,2));await writeFile(join(directory,'label.pdf'),label);await writeFile(join(directory,'manifest.pdf'),manifest);
+  await writeFile(join(directory,'pilot-evidence.json'),JSON.stringify(evidence,null,2));await writeFile(join(directory,'label.pdf'),label);await writeFile(join(directory,'manifest-gate.json'),manifest);
   console.log('PILOT_EVIDENCE '+JSON.stringify(evidence));
  }finally{if(server?.listening)await new Promise(resolve=>server.close(resolve));}
 });

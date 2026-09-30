@@ -159,6 +159,53 @@ export function spatialLedgerRouter(service) {
       next(e);
     }
   });
+  router.get("/care/consolidation", (req, res, next) => {
+    try {
+      res.json(service.care.consolidation(res.locals.actor));
+    } catch (e) {
+      next(e);
+    }
+  });
+  router.get(
+    "/care/:invitationId/:workId/export-to-customs",
+    (req, res, next) => {
+      try {
+        res
+          .set("Cache-Control", "private, no-store")
+          .json(
+            service.care.exportToCustoms(
+              res.locals.actor,
+              req.params.invitationId,
+              req.params.workId,
+            ),
+          );
+      } catch (e) {
+        next(e);
+      }
+    },
+  );
+  router.get(
+    "/care/:invitationId/:workId/shipping-label.pdf",
+    async (req, res, next) => {
+      try {
+        res
+          .set({
+            "Cache-Control": "private, no-store",
+            "Content-Disposition": "attachment; filename=SADU-crate-label.pdf",
+          })
+          .type("pdf")
+          .send(
+            await service.care.shippingLabel(
+              res.locals.actor,
+              req.params.invitationId,
+              req.params.workId,
+            ),
+          );
+      } catch (e) {
+        next(e);
+      }
+    },
+  );
   router.post("/care", async (req, res, next) => {
     try {
       res.json(await service.care.mutate(res.locals.actor, req.body));

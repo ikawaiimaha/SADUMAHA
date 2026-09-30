@@ -16,7 +16,7 @@ test('manifest requires approved content and complete logistics; stores one stab
  await assert.rejects(act(coordinator, { action: 'save', logistics }), e => e.status === 403);
  await act(artist, { action: 'save', logistics }); const id = store.read(artist).artwork_records[0].id;
  await act(artist, { action: 'save', logistics }); assert.equal(store.read(artist).artwork_records[0].id, id);
- const pdf = store.manifest(artist, id); assert.equal(pdf.subarray(0,5).toString(), '%PDF-');
+ assert.throws(() => store.manifest(artist, id), e => e.status === 409 && /pre-dispatch/.test(e.message));
  revise(); assert.throws(() => store.manifest(artist, id), e => e.status === 409);
  const blocked = await openLogisticsStore(join(tmpdir(), `unapproved-${Date.now()}.json`), () => ({ revisions: [] }));
  await assert.rejects(blocked.act(artist, { version: 0, action: 'save', logistics }), e => e.status === 409);

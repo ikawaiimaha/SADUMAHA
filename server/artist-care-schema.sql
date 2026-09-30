@@ -70,3 +70,17 @@ CREATE TABLE consultation_message (
 );
 -- GC_CONSULTATION drafts and all messages are projected only to the owner and assigned desk.
 -- Committee responses exclude consultation history even after formal submission.
+
+CREATE TABLE freight_draft (
+ work_id TEXT NOT NULL, revision INTEGER NOT NULL, draft_json TEXT NOT NULL CHECK(json_valid(draft_json)),
+ PRIMARY KEY(work_id,revision), FOREIGN KEY(work_id,revision) REFERENCES artist_submission_revision(work_id,revision)
+);
+CREATE TABLE condition_checkpoint (
+ id TEXT PRIMARY KEY, work_id TEXT NOT NULL, revision INTEGER NOT NULL,
+ freight_revision INTEGER NOT NULL DEFAULT 0,
+ stage TEXT NOT NULL CHECK(stage IN ('PRE_DISPATCH','ARRIVAL','DEINSTALLATION')),
+ actor_id TEXT NOT NULL, recorded_at TEXT NOT NULL, note TEXT NOT NULL,
+ evidence_json TEXT NOT NULL CHECK(json_valid(evidence_json)), previous_hash TEXT, sha256 TEXT NOT NULL,
+ UNIQUE(work_id,revision,freight_revision,stage), FOREIGN KEY(work_id,revision) REFERENCES artist_submission_revision(work_id,revision)
+);
+-- Condition checkpoints are append-only. Customs exports are drafts for broker review, not clearance.

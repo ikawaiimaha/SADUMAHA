@@ -60,6 +60,7 @@ export async function openLogisticsStore(file, reviewFor, locationPolicy = arriv
       const revision = reviewFor(actor).revisions.at(-1);
       const changed = revision?.status !== 'Publication_Approved' || revision.number !== record.approved_revision;
       if (changed && record.physical_status === 'Pending_Shipment') fail(409, 'The artwork revision changed. Update its shipment record after approval before printing.');
+      if (record.physical_status === 'Pending_Shipment') fail(409, 'Use Invitations & artist care to record the pre-dispatch condition checkpoint and generate a gated crate label. This legacy preview cannot authorize a new shipment.');
       return shippingManifest(record, changed);
     },
     act(actor, command) {

@@ -1,4 +1,9 @@
 import {
+  customsExport,
+  consolidationCandidates,
+} from "../src/lib/artistFreight.ts";
+import { artistShippingPdf } from "../src/lib/artistShippingPdf.ts";
+import {
   applyArtistCare,
   emptyArtistCare,
   prepareInvitations,
@@ -58,6 +63,70 @@ export function createArtistCareService(
         actor,
         s.spatialLedger,
       );
+    },
+    exportToCustoms(actor, invitationId, workId) {
+      if (
+        ![
+          "Artist",
+          "Artist_Portal",
+          "Logistics",
+          "Logistics_Officer",
+          "General_Exhibition_Coordinator",
+          "Director",
+        ].includes(actor?.role)
+      )
+        throw Object.assign(
+          new Error(
+            "Customs export belongs to the artist and authorized shipment desks.",
+          ),
+          { status: 403 },
+        );
+      const state = this.read(actor),
+        invitation = state.invitations.find((i) => i.id === invitationId),
+        work = invitation?.works.find((w) => w.id === workId);
+      if (!work)
+        throw Object.assign(new Error("Artwork unavailable in this scope."), {
+          status: 404,
+        });
+      return customsExport(invitation, work);
+    },
+    async shippingLabel(actor, invitationId, workId) {
+      this.exportToCustoms(actor, invitationId, workId);
+      const ledger = repository.read().spatialLedger;
+      const invitation = this.read(actor).invitations.find(
+        (i) => i.id === invitationId,
+      );
+      if (
+        ledger.curation?.phase !== "ENDORSED" ||
+        ledger.curation.snapshots.at(-1)?.id !== invitation.rosterId ||
+        !ledger.artworks.some(
+          (a) => a.id === invitation.artistId && a.state === "APPROVED",
+        )
+      )
+        throw Object.assign(
+          new Error(
+            "An active allocation and current endorsed roster are required.",
+          ),
+          { status: 409 },
+        );
+      const state = this.read(actor),
+        work = state.invitations
+          .find((i) => i.id === invitationId)
+          .works.find((w) => w.id === workId);
+      return Buffer.from(await artistShippingPdf(work));
+    },
+    consolidation(actor) {
+      if (
+        ![
+          "Logistics",
+          "Logistics_Officer",
+          "General_Exhibition_Coordinator",
+        ].includes(actor?.role)
+      )
+        throw Object.assign(new Error("Freight planning access denied."), {
+          status: 403,
+        });
+      return consolidationCandidates(this.read(actor));
     },
     mutate(actor, command) {
       return repository.transaction(async (s) => {
