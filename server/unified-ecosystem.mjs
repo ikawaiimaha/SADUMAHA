@@ -48,7 +48,7 @@ function revisionFor(state, artwork, expected) {
 function decision(state, actor, revision, action) { state.decisions.push({ id: randomUUID(), actorId: actor.id, targetId: revision.artworkId, versionHash: revision.versionHash, action, at: new Date().toISOString() }); }
 
 /** Actor is supplied by authentication middleware, never by request body. */
-export function createEcosystemControllers({ repository, storage, dockPolicy = arrivalPolicy(), endpointOrigin }) {
+export function createEcosystemControllers({ repository, storage, dockPolicy = arrivalPolicy(), endpointOrigin, validateDispatch = () => {} }) {
   const origin = new URL(endpointOrigin);
   if (origin.username || origin.password || origin.search || origin.hash || origin.pathname !== '/' || !(origin.protocol === 'https:' || origin.protocol === 'http:' && ['localhost','127.0.0.1'].includes(origin.hostname))) throw new Error('Use a trusted HTTPS origin or local development origin.');
   return {
@@ -151,6 +151,7 @@ export function createEcosystemControllers({ repository, storage, dockPolicy = a
     receiveCrate(actor, command) {
       return repository.transaction(state => {
         const artwork = scoped(state, actor, command.artworkId, ['General_Exhibition_Coordinator', 'Logistics']); const revision = revisionFor(state, artwork, command.versionHash);
+        validateDispatch(state);
         const check = checkArrivalLocation({ ...dockPolicy, required: true }, command.location); if (!check.allowed) reject(409, check.reason);
         if (artwork.physicalStatus === 'On_Site_Sharjah') return { physicalStatus: artwork.physicalStatus };
         if (!['Pending_Shipment','In_Transit','Customs_Clearance'].includes(artwork.physicalStatus)) reject(409, 'Arrival would regress or skip an unsupported physical state.');

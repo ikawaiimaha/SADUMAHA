@@ -1,3 +1,4 @@
+import { dispatchView } from './pilot-dispatch.mjs';
 /** Read-only projection. Authorization remains in the mutation handlers. */
 export function pilotActions(state, role) {
   const artwork = state.artworks[0];
@@ -16,6 +17,10 @@ export function pilotActions(state, role) {
     add(role, 'Continue acquisition closeout', 'Use the acquisition panel; the return-loan workflow no longer applies.');
     return tasks;
   }
+  const dispatch=dispatchView(state);
+  if(!dispatch.report&&revision.state==='PUBLISHED'&&state.agreement?.accepted) add('Artist','Submit pre-dispatch condition evidence');
+  else if(!dispatch.decision) add('General_Exhibition_Coordinator','Review pre-dispatch condition evidence');
+  else if(dispatch.decision.action==='REPAIR') add('Artist','Repair and submit a new condition report');
   const current = approval => approval?.hash === revision.versionHash;
   const placed = state.placements.some(p => p.revisionId === revision.id);
   if (!revision.approvals.venue) add('Museum_Operations', 'Review venue conservation capability', !placed ? 'Coordinator must save the spatial placement first.' : '');
@@ -27,7 +32,7 @@ export function pilotActions(state, role) {
   if (!current(revision.approvals.pr)) add('PR', 'Review identity and travel evidence');
   if (!current(revision.approvals.technical)) add('Technical', 'Review technical evidence', !placed ? 'Coordinator must save the artwork placement first.' : '');
   if (revision.state !== 'PUBLISHED') add('Director', 'Review publication', !current(revision.approvals.coordinator) ? 'Await coordinator endorsement of this revision.' : '');
-  if (!state.returnClearance) add('Logistics', 'Reconcile receipt, condition and return', artwork.physicalStatus === 'Pending_Shipment' ? 'Receipt and condition evidence are still outstanding.' : '');
+  if (!state.returnClearance) add('Logistics', 'Reconcile receipt, condition and return', artwork.physicalStatus === 'Pending_Shipment' ? dispatch.blocker || 'Receipt and condition evidence are still outstanding.' : '');
   const tranche = [0, 1, 2].find(n => !state.payments.some(p => p.tranche === n));
   if (tranche !== undefined) {
     const blocker = !state.agreement?.accepted || state.agreement.revisionId !== revision.id ? 'Await artist acceptance of the current agreement.'

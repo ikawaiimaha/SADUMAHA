@@ -1,7 +1,7 @@
 # Connected local pilot
 
 Run `npm run build:rehearsal`, then `npm run start:connected-pilot`. Open
-http://127.0.0.1:3025/review and unlock the existing private preview gate.
+http://127.0.0.1:3025/connected-pilot and unlock the existing private preview gate.
 The server binds to loopback and stores state under `.local/connected-pilot`.
 No external connectors are activated. Do not deploy the local account selector.
 
@@ -84,3 +84,23 @@ destination. Logistics has no sovereign dossier or manifest access. Other backen
 hosts must install equivalent query/storage policies before adopting these routes.
 
 Reference: https://help.collections.axiell.com/en/Topics/Acquisition%20items.htm
+
+## Persisted pre-dispatch checkpoint
+
+After publication and agreement acceptance, the Artist submits a PNG condition
+photograph, explicit damage declaration and structured shipping details through
+`POST /api/review/pilot/pre-dispatch`. A successful upload is bound to the exact
+revision and store version; interrupted uploads do not create evidence records.
+Staged files from failed uploads are retained for explicit cleanup.
+
+The General Coordinator records CLEAR, REPAIR or CANCEL through
+`POST /api/review/pilot/pre-dispatch/review`. Damaged reports cannot be cleared.
+Repair requires a new photograph and another review. Previous reports and review
+reasons remain stored. Cancellation stops dispatch, not the legal agreement.
+As-is acceptance is deliberately unavailable until insurance and packing controls
+are connected. These actions neither authorize nor record Finance payments.
+
+The draft manifest and receipt action require current reviewed evidence. The
+manifest contains the condition report ID and photo hash. Evidence downloads
+recheck role scope and file integrity. External shipping and customs integrations
+remain paused. Both main and rehearsal entries expose the loopback-only route.

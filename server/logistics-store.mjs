@@ -19,6 +19,7 @@ export function shippingManifest(record, historical = false) {
   if (historical) { pdf.setTextColor(150, 40, 30); pdf.setFontSize(9); pdf.text('HISTORICAL SHIPMENT SNAPSHOT - PUBLICATION REVISION HAS CHANGED', 18, 40); pdf.setTextColor(0, 0, 0); }
   let y = 50;
   const rows = [['Artist', record.artist_name], ['Artwork', record.title], ['Artwork Record ID', record.id], ['Approved revision', String(record.approved_revision)], ['Collection point', record.logistics.origin], ['Delivery point', record.logistics.destination], ['Carrier / reference', record.logistics.carrier], ['Package', `1 of 1 - ${record.logistics.gross_weight_kg} kg gross`], ['Handling', record.logistics.handling]];
+  if(record.conditionEvidence) rows.push(['Condition report',record.conditionEvidence.id],['Photo SHA-256',record.conditionEvidence.hash]);
   for (const [label, value] of rows) {
     pdf.setFont('helvetica', 'bold'); pdf.text(label, 18, y);
     pdf.setFont('helvetica', 'normal'); const lines = pdf.splitTextToSize(value, 120);

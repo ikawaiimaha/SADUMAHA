@@ -41,6 +41,14 @@ test('one connected HTTP journey verifies permissions, documents, return, paymen
   const label=Buffer.from(await(await call('/api/review/pilot/label.pdf')).arrayBuffer());assert.equal(label.subarray(0,5).toString(),'%PDF-');
   const blockedManifest=await call('/api/review/pilot/manifest.pdf');assert.equal(blockedManifest.status,409);const manifest=Buffer.from(await blockedManifest.arrayBuffer());assert.match(manifest.toString(),/pre-dispatch/);
   const twinUrl=new URL((await dossier()).twins[0].uri);const twin=await fetch(origin+twinUrl.pathname,{headers:{Cookie:cookie,Accept:'application/ld+json'}});assert.equal((await twin.json())['sadu:fileHash'],first.revision.media.file_hash);
+  await login('Logistics');assert.equal((await call('/api/review/pilot/simulated-arrival',await cmd())).status,409);
+  await login('Artist');
+  const dispatchMeta={version:(await dossier()).version,versionHash:(await cmd()).versionHash,damaged:false,notes:'Synthetic pre-dispatch review: no damage declared.',logistics:{origin:'Fictional studio',destination:'Fictional museum loading dock',carrier:'TEST-BOOKING',handling:'Upright; padded crate',gross_weight_kg:100}};
+  const dispatchUpload=await fetch(origin+'/api/review/pilot/pre-dispatch',{method:'POST',headers:{Cookie:cookie,Origin:origin,'Content-Type':'application/octet-stream','x-sadu-metadata':encodeURIComponent(JSON.stringify(dispatchMeta))},body:image});assert.equal(dispatchUpload.status,200);
+  assert.equal((await call('/api/review/pilot/manifest.pdf')).status,409);
+  await login('General_Exhibition_Coordinator');let dispatchDossier=await dossier();
+  await json('/api/review/pilot/pre-dispatch/review',{version:dispatchDossier.version,versionHash:dispatchDossier.revision.versionHash,reportId:dispatchDossier.dispatch.report.id,action:'CLEAR',reason:'Reviewed fictional photograph and declaration.'});
+  const readyManifest=await call('/api/review/pilot/manifest.pdf');assert.equal(readyManifest.status,200);const manifestPdf=Buffer.from(await readyManifest.arrayBuffer());assert.equal(manifestPdf.subarray(0,5).toString(),'%PDF-');await writeFile(join(directory,'reviewed-draft-manifest.pdf'),manifestPdf);
   await login('Finance');assert.equal((await call('/api/review/pilot/action',{version:(await dossier()).version,action:'pay',tranche:2})).status,409);rejected++;
   await action('pay',{tranche:0});
   await login('Logistics');assert.equal((await call('/api/review/ecosystem/arrival',await cmd(),'PATCH')).status,409);rejected++;

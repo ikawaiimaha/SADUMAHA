@@ -17,16 +17,20 @@ payment, blanket geofencing, immutable hashes, and production readiness.
 
 ## Release blockers still requiring implementation and verification
 
-1. Connect pre-dispatch evidence and damage resolution to this same persisted
-   journey. The browser artist-care demonstration remains a separate store.
+1. The connected pilot now supports persisted pre-dispatch photographs, explicit
+   damage declarations, coordinator review, repair resubmission and dispatch
+   cancellation. Draft manifests require current clearance; receipt checks it
+   transactionally. As-is acceptance and full browser artist-care synchronization
+   remain outstanding. Cancelling dispatch does not void a legal agreement.
 2. Provide contract amendment records and affected-item revision routing. Current
    accepted agreements block direct resubmission; this is not an amendment workflow.
 3. Connect attributed verbal instructions and explicit confirmation/delegation;
    recording an instruction must never execute the attributed person's approval.
 4. Replace the strict receipt geofence with supporting evidence plus a separately
    authorized, recorded exception path. Preserve independent Finance authorization.
-5. Test aborted uploads, stale edits across independent browser sessions, and
-   recovery with retained documents before marking the release reviewed.
+5. Automated tests now cover aborted uploads, competing submissions, stale
+   revisions and restart recovery for pre-dispatch evidence. Independent browser
+   sessions and human usability testing remain required.
 6. Measure actual staff task durations, missing information and follow-up counts
    against an observed manual baseline. Script runtime is not operational ROI.
 
