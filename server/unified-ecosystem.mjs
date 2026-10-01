@@ -1,3 +1,4 @@
+import { validateInvitationSubmission } from './pilot-invitations.mjs';
 import { validateHeritage, institutionalAssertion, socialActorTypes } from '../src/heritage/taxonomy.mjs';
 import { requireRecordAccess } from './acquisition.mjs';
 import { validateConservation, conservationWarnings, normalizedPin, budgetGauge } from '../src/logistics/museumCare.mjs';
@@ -85,6 +86,7 @@ export function createEcosystemControllers({ repository, storage, dockPolicy = a
     },
     async submitArtwork(actor, command, mediaStream) {
       const initial = repository.read(); const existing = scoped(initial, actor, command.artworkId, ['Artist']);
+      validateInvitationSubmission(initial,actor,command);
       if(existing.acquisition) reject(409, 'Acquisition freezes the approved revision.');
       if (existing.lifecycleStatus === 'ARCHIVED_CLOSED') reject(409, 'Archived dossiers are read-only.');
       if ((existing.currentRevisionId ?? null) !== command.expectedRevisionId) reject(409, 'Revision changed before upload.');
@@ -102,6 +104,7 @@ export function createEcosystemControllers({ repository, storage, dockPolicy = a
         if ((artwork.currentRevisionId ?? null) !== command.expectedRevisionId) reject(409, 'Revision changed during upload. Staging object retained for reconciliation.');
         validateHeritage(heritage, state.socialActors ?? [], artwork.exhibitionId);
         const tags = extractKeywords(command.concept_text);
+        validateInvitationSubmission(state,actor,command);
         const revision = { id: randomUUID(), artworkId: artwork.id, sequence: state.revisions.filter(r => r.artworkId === artwork.id).length + 1, state: 'EDITORIAL_DRAFT', heritage, conservation_reqs: conservation, artistName: { en: command.artistName.en, ar: command.artistName.ar }, title: { en: command.title.en, ar: command.title.ar }, concept_text: command.concept_text, width_cm: command.width_cm, height_cm: command.height_cm, year: command.year, media: { objectId: staged.objectId, ...integrity }, curatorial_tags: tags,
           Arabic_Terms: tags.flatMap(term => { const entry = state.dictionary.filter(d => d.exhibitionId === artwork.exhibitionId && d.english.toLowerCase() === term && d.approvedBy && d.approvedAt).sort((a,b) => b.version - a.version)[0]; return entry ? [{ term, arabic: entry.arabic, dictionaryId: entry.id, dictionaryVersion: entry.version, status: 'SUGGESTED' }] : []; }),
           technicalRequirements: requirements.map(r => ({ id: randomUUID(), item: r.item, quantity: r.quantity, external: r.external })), approvals: {},
@@ -109,6 +112,7 @@ export function createEcosystemControllers({ repository, storage, dockPolicy = a
         revision.versionHash = hash(revision);
         state.requests.filter(r => r.artworkId === artwork.id && r.state !== 'ALLOCATED').forEach(r => r.state = 'SUPERSEDED');
         state.placements = state.placements.filter(p => p.artworkId !== artwork.id);
+        if(state.portalInvitations?.length) revision.invitationSubmission={invitationId:state.portalInvitations.at(-1).id,targetDiscipline:command.targetDiscipline,participationRoute:command.participationRoute,...(command.participationRoute==='COMMISSION'?{productionBudgetLines:structuredClone(command.productionBudgetLines)}:{existingWorkWeightKg:command.existingWorkWeightKg,packing:command.packing}),...(command.targetDiscipline==='VIDEO_DIGITAL'?{screenWidthCm:command.screenWidthCm,screenHeightCm:command.screenHeightCm,avRequirements:command.avRequirements}:{})};
         artwork.currentRevisionId = revision.id; state.revisions.push(revision); decision(state, actor, revision, 'SUBMITTED');
         return revision;
       });

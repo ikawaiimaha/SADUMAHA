@@ -120,7 +120,42 @@ that same transaction. External notification delivery is paused. The snapshot
 hash is not a signature, and local simulated accounts are not institutional SSO.
 
 The invitation readiness panel checks publication, template, roster and deadline
-prerequisites. It does not dispatch invitations or claim the separate artist-care
-invitation preparation is fully bound to these publication snapshots. That
-recipient-specific integration remains a subsequent release step. Existing
+prerequisites. It does not dispatch invitations. The local invitation bridge described below
+binds recipient-specific previews to these publication snapshots; the separate
+browser artist-care workflow is not automatically migrated. Existing
 browser-only Theme & Editorial remains a separate demonstration.
+
+## Local invitation preview and identity gate
+
+`/api/review/pilot/invitation` supports a local invitation snapshot referencing the
+latest preserved theme publication, approved template hash, endorsed roster,
+active gallery allocation and future deadline. The General Coordinator alone
+sets a discipline mandate and permitted routes. Commission proposals require
+edition-level permission. Both reviewed template languages must contain
+`[Target_Discipline]`; adding it requires the existing template review process.
+
+The connected pilot Invitation & identity workspace renders the bilingual preview
+and a one-use local link. No email is sent and no delivered status is asserted.
+Tokens are random, stored only as hashes, expire after 24 hours and require the
+assigned simulated Artist account. Reissue replaces the previous token. The URL
+fragment is removed when loaded into the panel. Old preview snapshots remain
+stored; changed dependencies prevent reuse. Existing submissions require an
+amendment before replacing their invitation or discipline brief.
+
+The Artist declares a legal name separately from bilingual public display names.
+PR records a separate local verification referencing reviewed evidence. Agreements
+must reference that current verification. These are simulated identities, not
+identity-provider certification. Names never overwrite the tentative nomination
+or historical approved records. Legal names and evidence references are returned
+only to Artist and PR through this module; decisions contain operational metadata.
+
+The selected route belongs to the pilot submission, not the artist globally.
+VIDEO_DIGITAL requires screen dimensions and AV requirements; existing works
+require weight and packing; commission proposals require budget line items.
+The upload serves as the concept sketch for commissions. Invited submissions require a file; actual image quality validation remains
+a prototype limitation. These checks
+validate declared fields; they cannot visually determine the artwork's medium.
+
+The connected interface reads prerequisite planning/template records from the
+existing backend modules. It does not migrate browser-only planning automatically.
+Live delivery, production authentication and legal signing remain paused.
