@@ -4,7 +4,7 @@ export type Proposal = { en: string; ar: string; rationale: string; feasibility:
 export type Essay = { introduction: { en: string; ar: string }; context: { en: string; ar: string }; checkedEn: boolean; checkedAr: boolean };
 export type Phase = 'Proposal draft' | 'Director review' | 'Chairman review' | 'Editorial draft' | 'Final review' | 'Published';
 export type Note = { id: number; area: 'proposal' | 'essay'; reason: string; text: string; anchor: string; resolution?: string; explanation?: string };
-export type ThemeEvent = { role: SandboxRole; action: 'SUBMIT_PROPOSAL' | 'PREFLIGHT' | 'ENDORSE' | 'SELECT' | 'RETURN' | 'RESOLVE' | 'SUBMIT_ESSAY' | 'PUBLISH' | 'NEW_VERSION'; at: string; expected: number; preflight?: string; proposals?: Proposal[]; essay?: Essay; selected?: number; note?: Omit<Note, 'id' | 'area'>; noteId?: number; resolution?: string; explanation?: string };
+export type ThemeEvent = { role: SandboxRole; action: 'SAVE_PROPOSAL_DRAFT' | 'SAVE_ESSAY_DRAFT' | 'SUBMIT_PROPOSAL' | 'PREFLIGHT' | 'ENDORSE' | 'SELECT' | 'RETURN' | 'RESOLVE' | 'SUBMIT_ESSAY' | 'PUBLISH' | 'NEW_VERSION'; at: string; expected: number; preflight?: string; proposals?: Proposal[]; essay?: Essay; selected?: number; note?: Omit<Note, 'id' | 'area'>; noteId?: number; resolution?: string; explanation?: string };
 export type ThemeState = { revision: number; phase: Phase; preflight?: string; proposals: Proposal[]; selected?: number; essay?: Essay; notes: Note[]; snapshots: { revision: number; proposals: Proposal[]; essay?: Essay; selected?: number; kind: string }[]; published?: { proposals: Proposal[]; essay: Essay; selected: number; revision: number }; events: ThemeEvent[] };
 export const reasons = ['Requires stronger local context', 'Budgetary scope concern', 'Translation or cultural concern', 'Evidence or clarity required'];
 export const emptyTheme = (): ThemeState => ({ revision: 0, phase: 'Proposal draft', proposals: [], notes: [], snapshots: [], events: [] });
@@ -15,6 +15,14 @@ export function applyTheme(s: ThemeState, e: ThemeEvent): ThemeState {
   const allow = (role: SandboxRole, phase: Phase) => { if (e.role !== role || s.phase !== phase) throw new Error('This action is not available to this role at this stage.'); };
   const resolved = (area: Note['area']) => { if (s.notes.some(x => x.area === area && (!x.resolution || x.resolution === 'Clarification needed'))) throw new Error('Resolve every review note before resubmitting.'); };
   switch (e.action) {
+    case 'SAVE_PROPOSAL_DRAFT':
+      allow('Committee', 'Proposal draft');
+      if (!Array.isArray(e.proposals) || e.proposals.length !== 3 || e.proposals.some(p => !p || !['en','ar','rationale','feasibility','translation'].every(k => typeof p[k as keyof Proposal] === 'string' && p[k as keyof Proposal].length <= 12000))) throw new Error('Use three bounded proposal drafts.');
+      n.proposals = structuredClone(e.proposals); break;
+    case 'SAVE_ESSAY_DRAFT':
+      allow('Editorial', 'Editorial draft');
+      if (!e.essay || ![e.essay.introduction?.en,e.essay.introduction?.ar,e.essay.context?.en,e.essay.context?.ar].every(v => typeof v === 'string' && v.length <= 12000)) throw new Error('Use bounded bilingual sections.');
+      n.essay = { ...structuredClone(e.essay), checkedEn: false, checkedAr: false }; break;
     case 'SUBMIT_PROPOSAL':
       allow('Committee', 'Proposal draft'); resolved('proposal');
       if (!Array.isArray(e.proposals) || e.proposals.length !== 3 || e.proposals.some(p => !['en','ar','rationale','feasibility','translation'].every(k => required(p[k as keyof Proposal])))) throw new Error('Complete all three bilingual proposals, including feasibility and translation concerns.');

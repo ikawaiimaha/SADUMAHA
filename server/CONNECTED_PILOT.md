@@ -104,3 +104,23 @@ The draft manifest and receipt action require current reviewed evidence. The
 manifest contains the condition report ID and photo hash. Evidence downloads
 recheck role scope and file integrity. External shipping and customs integrations
 remain paused. Both main and rehearsal entries expose the loopback-only route.
+
+## Connected Theme & Editorial workspace
+
+Select a planning role and open Theme & Editorial inside `/connected-pilot`.
+The existing editor calls GET/POST `/api/review/spatial-ledger/theme`; this mode
+never reads or writes the browser theme journal. Drafts can be saved while
+feedback remains open. Submission gates still require resolved feedback and
+Editorial preflight before executive endorsement.
+
+Transitions use the server-selected local account and expected revision. The
+repository stores attributed decisions, preserved Chairman publication snapshots
+and SHA-256 fingerprints. Chairman selection saves an in-app planning alert in
+that same transaction. External notification delivery is paused. The snapshot
+hash is not a signature, and local simulated accounts are not institutional SSO.
+
+The invitation readiness panel checks publication, template, roster and deadline
+prerequisites. It does not dispatch invitations or claim the separate artist-care
+invitation preparation is fully bound to these publication snapshots. That
+recipient-specific integration remains a subsequent release step. Existing
+browser-only Theme & Editorial remains a separate demonstration.

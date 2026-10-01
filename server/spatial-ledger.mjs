@@ -1,3 +1,4 @@
+import { createHash, randomUUID } from 'node:crypto';
 import { createArtistCareService } from "./artist-care.mjs";
 import { prepareInvitations } from "../src/lib/artistCare.ts";
 import { projectCuratorialLedger } from "../src/lib/curatorialAccess.ts";
@@ -53,6 +54,18 @@ export function createSpatialLedgerService(repository) {
   };
   return {
     care: createArtistCareService(repository),
+    readTheme(actor) {
+      authorized(actor);
+      const s=repository.read();
+      const theme=s.themeWorkflow??emptyTheme();
+      const owner=theme.phase==='Director review'&&!theme.preflight?'Editorial':{'Proposal draft':'Committee','Director review':'Director','Chairman review':'Chairman','Editorial draft':'Editorial','Final review':'Chairman','Published':'General_Exhibition_Coordinator'}[theme.phase];
+      const blockers=[];
+      if(!s.themePublications?.length) blockers.push('Chairman must authorize the bilingual theme.');
+      if(!s.artistCare?.template?.hash) blockers.push('Director must approve the invitation template.');
+      if(s.spatialLedger?.curation?.phase!=='ENDORSED') blockers.push('Director must endorse the recipient roster.');
+      if(!s.artistCare?.settings?.deadline || !Number.isFinite(Date.parse(s.artistCare.settings.deadline)) || Date.parse(s.artistCare.settings.deadline)<=Date.now()) blockers.push('Set a future submission deadline.');
+      return {theme,owner,decisions:s.themeDecisions??[],publications:s.themePublications??[],planningAlerts:actor.role==='General_Exhibition_Coordinator'?(s.themeAlerts??[]):[],invitationReadiness:{blockers,externalDispatchPaused:true}};
+    },
     read(actor) {
       authorized(actor);
       const s = repository.read();
@@ -79,12 +92,19 @@ export function createSpatialLedgerService(repository) {
           throw Object.assign(new Error("Edition access denied."), {
             status: 403,
           });
-        s.spatialLedger ??= initial(s, actor);
-        s.themeWorkflow = applyTheme(s.themeWorkflow ?? emptyTheme(), {
-          ...command,
+        let next;
+        try { next = applyTheme(s.themeWorkflow ?? emptyTheme(), {
+          ...Object.fromEntries(['action','expected','proposals','essay','preflight','selected','note','noteId','resolution','explanation'].filter(key=>Object.hasOwn(command,key)).map(key=>[key,command[key]])),
           role: actor.role,
           at: new Date().toISOString(),
-        });
+        }); } catch(error) { throw Object.assign(error,{status:409}); }
+        s.themeWorkflow=next;
+        (s.themeDecisions??=[]).push({id:randomUUID(),actorId:actor.id,role:actor.role,action:command.action,revision:next.revision,at:new Date().toISOString()});
+        if(command.action==='SELECT') (s.themeAlerts??=[]).push({id:randomUUID(),revision:next.revision,owner:'General_Exhibition_Coordinator',message:'Theme approved for planning. Publication text remains under Editorial review.',delivery:'IN_APP',at:new Date().toISOString()});
+        if(command.action==='PUBLISH') {
+          const snapshot=structuredClone(next.published);
+          (s.themePublications??=[]).push({id:randomUUID(),revision:next.revision,actorId:actor.id,snapshot,hash:createHash('sha256').update(JSON.stringify(snapshot)).digest('hex'),at:new Date().toISOString()});
+        }
         return s.themeWorkflow;
       });
     },
@@ -220,6 +240,7 @@ export function spatialLedgerRouter(service) {
       next(e);
     }
   });
+  router.get('/theme',(req,res,next)=>{try{res.json(service.readTheme(res.locals.actor));}catch(e){next(e);}});
   router.post("/theme", async (req, res, next) => {
     try {
       res.json(await service.theme(res.locals.actor, req.body));
