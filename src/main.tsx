@@ -12,6 +12,7 @@ const ExecutiveLanding = lazy(() => import('./components/ExecutiveLanding'));
 const GalleryConsignmentForm = lazy(() => import('./components/GalleryConsignmentForm'));
 const AuthenticatedPilot = lazy(() => import('./components/AuthenticatedPilot'));
 const Workbench = lazy(() => import('./App'));
+const ConnectedPilot = lazy(() => import('./components/ConnectedPilot'));
 const PublicationReview = lazy(() => import('./components/PublicationReview'));
 
 function ReadyApp() {
@@ -19,6 +20,7 @@ function ReadyApp() {
   useEffect(() => { window.dispatchEvent(new Event('sadu:ready')); }, []);
   const path = normalizePreviewPath(window.location.pathname);
   const local = isLocalPreview(window.location.hostname);
+  if (path === '/connected-pilot') return local ? <Suspense fallback={<p role="status">Loading connected pilot…</p>}><ConnectedPilot /></Suspense> : <PreviewUnavailable review />;
   if (executiveMode && (journeyPaths.includes(path) || path === '/review')) return <ExecutiveDashboard />;
   if (path === '/overview') return <Suspense fallback={<p role="status">Loading presentation…</p>}><ExecutiveLanding /></Suspense>;
   if (path === '/review' && !local) return <PreviewUnavailable review />;
