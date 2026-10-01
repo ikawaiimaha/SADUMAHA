@@ -43,8 +43,14 @@ test('one connected HTTP journey verifies permissions, documents, return, paymen
   const twinUrl=new URL((await dossier()).twins[0].uri);const twin=await fetch(origin+twinUrl.pathname,{headers:{Cookie:cookie,Accept:'application/ld+json'}});assert.equal((await twin.json())['sadu:fileHash'],first.revision.media.file_hash);
   await login('Logistics');assert.equal((await call('/api/review/pilot/simulated-arrival',await cmd())).status,409);
   await login('Artist');
+  await login('Logistics');
+  const collectionPath='/api/review/pilot/collection/'+PILOT_ARTWORK;
+  const collectionAction=async(action,extra={})=>json(collectionPath,{version:(await json(collectionPath)).version,action,...extra});
+  await collectionAction('SAVE',{details:{address:'Synthetic studio 1',city:'Paris',country:'France',contact:'Test collection desk',sourceRef:'SYNTHETIC-SOURCE',timezone:'Europe/Paris',availability:{start:'2026-10-01',end:'2026-10-31'},closures:[],conflict:false}});
+  await collectionAction('CONFIRM',{checked:true});await collectionAction('PLAN',{pickupDate:'2026-10-05'});
+  await login('Artist');
   const dispatchMeta={version:(await dossier()).version,versionHash:(await cmd()).versionHash,damaged:false,notes:'Synthetic pre-dispatch review: no damage declared.',logistics:{origin:'Fictional studio',destination:'Fictional museum loading dock',carrier:'TEST-BOOKING',handling:'Upright; padded crate',gross_weight_kg:100}};
-  const dispatchUpload=await fetch(origin+'/api/review/pilot/pre-dispatch',{method:'POST',headers:{Cookie:cookie,Origin:origin,'Content-Type':'application/octet-stream','x-sadu-metadata':encodeURIComponent(JSON.stringify(dispatchMeta))},body:image});assert.equal(dispatchUpload.status,200);
+  const dispatchUpload=await fetch(origin+'/api/review/pilot/pre-dispatch',{method:'POST',headers:{Cookie:cookie,Origin:origin,'Content-Type':'application/octet-stream','x-sadu-metadata':encodeURIComponent(JSON.stringify(dispatchMeta))},body:image});assert.equal(dispatchUpload.status,200);assert.equal(runtime.repository.read().dispatchReports.at(-1).logistics.origin,'Synthetic studio 1, Paris, France');
   assert.equal((await call('/api/review/pilot/manifest.pdf')).status,409);
   await login('General_Exhibition_Coordinator');let dispatchDossier=await dossier();
   await json('/api/review/pilot/pre-dispatch/review',{version:dispatchDossier.version,versionHash:dispatchDossier.revision.versionHash,reportId:dispatchDossier.dispatch.report.id,action:'CLEAR',reason:'Reviewed fictional photograph and declaration.'});

@@ -1,3 +1,9 @@
+## 2026-10-01 — Isolated collection handoff demonstration
+
+The collection-only runtime uses a fresh synthetic `.local/collection-demo-runs/run-*` repository, separate from the existing connected pilot. Its server allowlist exposes only simulated account selection, collection views and SAVE/CONFIRM/PLAN/ASSIGN commands. No external adapter, live database, booking, email or payment operation is configured. The launcher excludes application credentials and does not load project environment files. This is a loopback-only demonstration, not institutional authentication.
+
+Collection readiness is derived independently from ArtistStatus and ThemeStatus. Only the active Logistics owner may record, confirm or plan collection; the General Exhibition Coordinator assigns primary/backup responsibility with an attributed reason. Changes invalidate current confirmation and planning, preserve history, and reject stale versions. Queue refresh is polling/focus-based, not instantaneous push delivery. Runs are retained; restart restores records but requires selecting a simulated account again. One process owns each local repository.
+
 # 29 September 2026 — Unified guest identity, finalization and arrival-based reminders
 
 The supplied visa and identification Excel templates were inspected as parallel English/Arabic forms; the guest-list Word table was inspected for headers only. No personal source records were seeded. Shared identity/contact fields now live once in a private JSONB intake, with the legal name taken from the accepted agreement. Additional family/identification fields are optional because a blank template label does not establish a mandatory disclosure. PR-managed hotel, visa, transport and ticket outcomes remain separate from guest preferences; nothing is inferred as booked.

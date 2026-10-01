@@ -1,0 +1,8 @@
+@import 'tailwindcss' source(none);
+@source './components/ConnectedCollection.tsx';
+@source './components/CollectionHandoffDemo.tsx';
+body { margin: 0; background: #F7F1E6; color: #111817; font-family: system-ui, sans-serif; }
+button, summary, select { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+:focus-visible { outline: 3px solid #8B4513; outline-offset: 3px; }
+input[type=checkbox] { width: 1.25rem; height: 1.25rem; }

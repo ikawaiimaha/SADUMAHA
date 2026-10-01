@@ -1,10 +1,11 @@
+import { collectionTasks, collectionView } from './pilot-collection.mjs';
 import { dispatchView } from './pilot-dispatch.mjs';
 /** Read-only projection. Authorization remains in the mutation handlers. */
-export function pilotActions(state, role) {
+export function pilotActions(state, role, actor) {
   const artwork = state.artworks[0];
   if (!artwork || artwork.lifecycleStatus === 'ARCHIVED_CLOSED') return [];
   const revision = state.revisions.find(r => r.id === artwork.currentRevisionId);
-  const tasks = [];
+  const tasks = actor ? collectionTasks(state, actor) : [];
   const add = (owner, title, blocker = '') => {
     if (owner === role) tasks.push({ owner, title, blocker });
   };
@@ -18,7 +19,7 @@ export function pilotActions(state, role) {
     return tasks;
   }
   const dispatch=dispatchView(state);
-  if(!dispatch.report&&revision.state==='PUBLISHED'&&state.agreement?.accepted) add('Artist','Submit pre-dispatch condition evidence');
+  if(!dispatch.report&&revision.state==='PUBLISHED'&&state.agreement?.accepted) add('Artist','Submit pre-dispatch condition evidence',state.collectionWorkflowEnabled?collectionView(state,artwork.id).blocker:'');
   else if(!dispatch.decision) add('General_Exhibition_Coordinator','Review pre-dispatch condition evidence');
   else if(dispatch.decision.action==='REPAIR') add('Artist','Repair and submit a new condition report');
   const current = approval => approval?.hash === revision.versionHash;
