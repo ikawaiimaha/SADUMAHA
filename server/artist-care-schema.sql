@@ -81,6 +81,16 @@ CREATE TABLE condition_checkpoint (
  stage TEXT NOT NULL CHECK(stage IN ('PRE_DISPATCH','ARRIVAL','DEINSTALLATION')),
  actor_id TEXT NOT NULL, recorded_at TEXT NOT NULL, note TEXT NOT NULL,
  evidence_json TEXT NOT NULL CHECK(json_valid(evidence_json)), previous_hash TEXT, sha256 TEXT NOT NULL,
- UNIQUE(work_id,revision,freight_revision,stage), FOREIGN KEY(work_id,revision) REFERENCES artist_submission_revision(work_id,revision)
+ FOREIGN KEY(work_id,revision) REFERENCES artist_submission_revision(work_id,revision)
 );
 -- Condition checkpoints are append-only. Customs exports are drafts for broker review, not clearance.
+
+CREATE TABLE pre_transit_decision (
+ id TEXT PRIMARY KEY, work_id TEXT NOT NULL, revision INTEGER NOT NULL, freight_revision INTEGER NOT NULL,
+ action TEXT NOT NULL CHECK(action IN ('REPAIR','AS_IS','CANCEL','RELEASE_REPAIR','PACKING_CONFIRMED')),
+ report_hash TEXT NOT NULL, damage_hash TEXT NOT NULL, actor_id TEXT NOT NULL, recorded_at TEXT NOT NULL,
+ reason TEXT NOT NULL, insurance_reference TEXT, packing_instructions TEXT,
+ FOREIGN KEY(work_id,revision) REFERENCES artist_submission_revision(work_id,revision)
+);
+-- Repeat PRE_DISPATCH checkpoints require repair authorization in the command service.
+-- Cancellation stops shipment; it does not automatically void a signed agreement.

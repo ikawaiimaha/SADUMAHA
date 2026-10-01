@@ -20,3 +20,7 @@ Remaining material limitations:
 - Arabic/English parity across the complete product, production access control and external integrations require separate verification. No live institutional integration was activated by this audit.
 
 Release validation: 207 guard tests and 50 review tests passed; TypeScript and executive rehearsal build passed. Browser checks confirmed next-step guidance and blocked return explanation, with no console errors. See .local/ux-audit-build-final.log. Only files changed for this audit are included in its commit; pre-existing uncommitted project work remains untouched.
+
+1 October 2026 update — Pre-dispatch damage resolution
+Implemented explicit damage declaration, persistent shipment/customs hold, Coordinator repair authorization and reviewed new baseline, as-is review reference plus Logistics packing confirmation, and shipment cancellation/substitution routing. Original reports and attributed decisions remain available. Risk acknowledgement export is a non-binding draft, not an executed waiver; contract cancellation and insurance coverage remain institutional decisions. De-installation damage resolution is still outstanding. Browser visual verification was blocked by the existing preview password gate; automated branch and regression checks cover this change.
+Reference: https://collectionstrust.org.uk/resource/condition-checking-and-technical-assessment-suggested-procedure/

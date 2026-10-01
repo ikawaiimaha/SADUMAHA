@@ -1,3 +1,4 @@
+import { preTransitHold } from "../lib/preTransit";
 import { consolidationCandidates } from "../lib/artistFreight";
 import type { ThemeState } from "../lib/themeWorkflow";
 import { useEffect, useRef, useState } from "react";
@@ -311,7 +312,9 @@ export default function ArtistCareWorkspace({
           in guidance ·{" "}
           {
             invitation.works.filter(
-              (w) => w.condition?.damage && !w.condition.repaired,
+              (w) =>
+                (!w.condition && !!preTransitHold(w)) ||
+                (w.condition?.damage && !w.condition.repaired),
             ).length
           }{" "}
           condition holds ·{" "}

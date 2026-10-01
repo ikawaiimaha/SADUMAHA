@@ -1,3 +1,4 @@
+import { preTransitHold } from "./preTransit";
 import type { ArtistCare, Work } from "./artistCare";
 
 export function returnReadiness(
@@ -28,6 +29,9 @@ export function returnReadiness(
 }
 
 export function careNextStep(s: ArtistCare, w: Work, now = Date.now()) {
+  const hold = preTransitHold(w);
+  if (hold && !w.condition)
+    return { owner: "Coordinator / Artist / Logistics", text: hold };
   if (w.state === "RETURNED")
     return {
       owner: "Artist",

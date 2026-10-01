@@ -1,3 +1,4 @@
+import { preTransitHold, latestPreDispatch } from "./preTransit";
 import type { ArtistCare, CareInvitation, MediaRef, Work } from "./artistCare";
 export type FreightDetails = {
   originCountry: string;
@@ -130,6 +131,8 @@ export function validateFreight(d: FreightDetails): FreightDetails {
 export function customsExport(invitation: CareInvitation, w: Work) {
   if (w.state !== "APPROVED" || !w.freight)
     fail("Approved artwork and completed freight details are required.");
+  const hold = preTransitHold(w);
+  if (hold) throw Object.assign(new Error(hold), { status: 409 });
   const f = validateFreight(w.freight);
   return {
     schemaVersion: 1,
@@ -169,6 +172,8 @@ export function customsExport(invitation: CareInvitation, w: Work) {
 }
 export function shippingReadiness(w: Work): string | null {
   if (w.state !== "APPROVED") return "Director approval is required.";
+  const hold = preTransitHold(w);
+  if (hold) return hold;
   if (!w.freight) return "Complete the freight and customs draft first.";
   try {
     validateFreight(w.freight);
@@ -177,16 +182,10 @@ export function shippingReadiness(w: Work): string | null {
   }
   if (w.freight.regime === "PERMANENT_IMPORT_REVIEW")
     return "Acquisition / permanent import requires broker review before shipping documents are regenerated.";
-  const report = w.conditionHistory?.find(
-    (r) =>
-      r.stage === "PRE_DISPATCH" &&
-      r.revision === w.revision &&
-      (r.freightRevision ?? 0) === (w.freightRevision ?? 0),
-  );
+  const report = latestPreDispatch(w);
   if (!report)
     return "Record the current revision’s pre-dispatch condition photographs and acknowledgement first.";
-  if (report.damage)
-    return "Pre-dispatch damage requires condition review; a shipping label cannot be generated.";
+
   return null;
 }
 function distance(a: FreightDetails, b: FreightDetails) {
@@ -208,6 +207,7 @@ export function consolidationCandidates(state: ArtistCare) {
           (w) =>
             w.state === "APPROVED" &&
             w.freight &&
+            !preTransitHold(w) &&
             !w.condition &&
             !w.returnAt &&
             w.freight.regime !== "PERMANENT_IMPORT_REVIEW",

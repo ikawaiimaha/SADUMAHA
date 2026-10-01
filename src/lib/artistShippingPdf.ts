@@ -1,3 +1,4 @@
+import { latestPreDispatch } from "./preTransit";
 import { jsPDF } from "jspdf";
 import QRCode from "qrcode";
 import type { Work } from "./artistCare";
@@ -23,12 +24,7 @@ export async function artistShippingPdf(work: Work): Promise<ArrayBuffer> {
   pdf.text("Attach the reviewed shipment instructions separately.", 18, 82);
   const qr = await QRCode.toDataURL(work.id, { width: 500, margin: 4 });
   pdf.addImage(qr, "PNG", 50, 95, 110, 110);
-  const report = work.conditionHistory!.find(
-    (r) =>
-      r.stage === "PRE_DISPATCH" &&
-      r.revision === work.revision &&
-      (r.freightRevision ?? 0) === (work.freightRevision ?? 0),
-  )!;
+  const report = latestPreDispatch(work)!;
   pdf.setFontSize(8);
   pdf.text("Pre-dispatch report SHA-256:", 18, 230);
   pdf.text(pdf.splitTextToSize(report.hash, 170), 18, 238);

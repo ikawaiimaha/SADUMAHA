@@ -1,3 +1,9 @@
+import {
+  latestPreDispatch,
+  lastDamage,
+  transitDecision,
+  type TransitDecision,
+} from "./preTransit";
 import { returnReadiness } from "./artistCareExperience";
 import { arrivalPolicy, checkArrivalLocation } from "../logistics/geofence.mjs";
 import {
@@ -44,6 +50,7 @@ export function approvedTheme(theme?: ThemeState): ThemeAnchor | undefined {
   };
 }
 export type Work = {
+  transitDecisions?: TransitDecision[];
   freight?: FreightDetails;
   freightRevision?: number;
   conditionHistory?: ConditionSnapshot[];
@@ -407,6 +414,11 @@ export async function applyArtistCare(
         422,
       );
     if (
+      !(
+        stage === "PRE_DISPATCH" &&
+        transitDecision(w)?.action === "REPAIR" &&
+        latestPreDispatch(w)?.hash === transitDecision(w)?.reportHash
+      ) &&
       w.conditionHistory?.some(
         (r) =>
           r.stage === stage &&
@@ -437,6 +449,96 @@ export async function applyArtistCare(
     });
   };
   switch (c.action) {
+    case "TRANSIT_RESOLUTION": {
+      role("General_Exhibition_Coordinator");
+      if (
+        !w ||
+        w.state !== "APPROVED" ||
+        w.condition ||
+        !i ||
+        !currentRoster(ledger, i)
+      )
+        reject(
+          "Triage requires an approved, unreceived work with an active allocation.",
+        );
+      const report = latestPreDispatch(w),
+        damage = lastDamage(w),
+        prior = transitDecision(w);
+      if (
+        !report ||
+        !damage ||
+        w.transitDecisions?.some((x) => x.action === "CANCEL")
+      )
+        reject("Select an unresolved pre-dispatch damage record.");
+      if (
+        !["REPAIR", "AS_IS", "CANCEL", "RELEASE_REPAIR"].includes(d.path) ||
+        !text(d.note, 10) ||
+        d.note.length > 4000
+      )
+        reject("Choose a resolution and record the review reason.", 422);
+      if (
+        d.path === "RELEASE_REPAIR" &&
+        (prior?.action !== "REPAIR" ||
+          report.hash === prior.reportHash ||
+          report.damage)
+      )
+        reject("Review a new damage-free report after the authorized repair.");
+      if (
+        d.path === "AS_IS" &&
+        (!text(d.insuranceReference, 5) ||
+          d.insuranceReference.length > 500 ||
+          !text(d.packing, 10) ||
+          d.packing.length > 4000)
+      )
+        reject(
+          "Record the insurance/legal review reference and specific protective packing instructions.",
+          422,
+        );
+      w.transitDecisions ??= [];
+      w.transitDecisions.push({
+        id: crypto.randomUUID(),
+        action: d.path,
+        reportHash: report.hash,
+        damageHash: damage.hash,
+        revision: w.revision,
+        freightRevision: w.freightRevision ?? 0,
+        actorId: actor.id,
+        at: now,
+        note: d.note,
+        ...(d.path === "AS_IS"
+          ? { insuranceReference: d.insuranceReference, packing: d.packing }
+          : {}),
+      });
+      break;
+    }
+    case "CONFIRM_TRANSIT_PACKING": {
+      role("Logistics", "Logistics_Officer");
+      if (!w || w.condition || !i || !currentRoster(ledger, i))
+        reject("An active, unreceived shipment is required.");
+      const prior = transitDecision(w),
+        report = latestPreDispatch(w);
+      if (
+        prior?.action !== "AS_IS" ||
+        !report ||
+        report.hash !== prior.reportHash ||
+        d.confirmed !== true ||
+        !text(d.note, 10) ||
+        d.note.length > 4000
+      )
+        reject(
+          "Confirm the exact approved packing plan and record completion evidence.",
+        );
+      w.transitDecisions!.push({
+        ...prior,
+        id: crypto.randomUUID(),
+        action: "PACKING_CONFIRMED",
+        actorId: actor.id,
+        at: now,
+        note: d.note,
+      });
+      break;
+    }
+
     case "SAVE_FREIGHT":
       if (["Artist", "Artist_Portal"].includes(actor.role)) own();
       else
@@ -475,6 +577,21 @@ export async function applyArtistCare(
         reject(
           "Acknowledge your pre-dispatch report for an approved, unreceived artwork.",
         );
+      if (typeof d.damage !== "boolean")
+        reject("Answer the pre-dispatch damage question explicitly.", 422);
+      if (w.transitDecisions?.some((x) => x.action === "CANCEL"))
+        reject(
+          "This shipment is cancelled. Submit a separate substitute proposal.",
+        );
+      if (
+        transitDecision(w)?.action === "REPAIR" &&
+        latestPreDispatch(w)?.hash === transitDecision(w)?.reportHash &&
+        !(d.photos ?? []).some(
+          (f: MediaRef) =>
+            !latestPreDispatch(w)!.photos.some((old) => old.hash === f.hash),
+        )
+      )
+        reject("Upload at least one new post-repair photograph.", 422);
       await recordCondition("PRE_DISPATCH", d.photos ?? [], true);
       break;
     case "DEINSTALL_CONDITION":

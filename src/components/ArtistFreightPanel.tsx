@@ -1,3 +1,9 @@
+import PreTransitReview from "./PreTransitReview";
+import {
+  latestPreDispatch,
+  preTransitHold,
+  transitDecision,
+} from "../lib/preTransit";
 import { useState } from "react";
 import type {
   CareCommand,
@@ -68,22 +74,22 @@ export default function ArtistFreightPanel({
   const [amending, setAmending] = useState(false);
   const [photos, setPhotos] = useState<MediaRef[]>([]),
     [note, setNote] = useState(""),
-    [damage, setDamage] = useState(false),
+    [damage, setDamage] = useState<boolean | undefined>(undefined),
     [ack, setAck] = useState(false),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
   const reports = w.conditionHistory ?? [],
-    pre = reports.find(
-      (r) =>
-        r.stage === "PRE_DISPATCH" &&
-        r.revision === w.revision &&
-        (r.freightRevision ?? 0) === (w.freightRevision ?? 0),
-    ),
+    pre = latestPreDispatch(w),
     removal = reports.find(
       (r) => r.stage === "DEINSTALLATION" && r.revision === w.revision,
     );
   const removalOpen =
     !!w.nextMaintenance && !!closesAt && Date.now() >= Date.parse(closesAt);
+  const hold = preTransitHold(w);
+  const repairRequested =
+    transitDecision(w)?.action === "REPAIR" &&
+    pre?.hash === transitDecision(w)?.reportHash;
+  const cancelled = w.transitDecisions?.some((d) => d.action === "CANCEL");
   const reason = active
     ? shippingReadiness(w)
     : "An active allocation and current endorsed roster are required.";
@@ -133,6 +139,7 @@ export default function ArtistFreightPanel({
         Freight, customs & condition checkpoints
       </summary>
       <div className="mt-4 space-y-5">
+        <PreTransitReview work={w} role={role} run={run} />
         <p className="text-sm text-[#655D50]">
           Prepare a broker-reviewed draft. Customs value, taxes, permits and
           Carnet eligibility require confirmation; no automatic clearance or
@@ -263,7 +270,7 @@ export default function ArtistFreightPanel({
         {(allowed || role === "Director") && (
           <div className="flex flex-wrap gap-3">
             <button
-              disabled={busy || !w.freight}
+              disabled={busy || !w.freight || !!hold}
               className={careButton}
               onClick={() =>
                 void operation(async () =>
@@ -302,7 +309,7 @@ export default function ArtistFreightPanel({
         {reason && (
           <p className="text-sm text-[#8B261E]">Crate label: {reason}</p>
         )}
-        {((artist && !pre && !w.condition) ||
+        {((artist && (!pre || repairRequested) && !cancelled && !w.condition) ||
           (logistics && w.condition && !removal && !w.returnAt)) && (
           <div className="rounded-lg bg-[#F7F1E6] p-4 space-y-3">
             {logistics && !removalOpen && (
@@ -354,13 +361,25 @@ export default function ArtistFreightPanel({
                 onChange={(e) => setNote(e.target.value)}
               />
             </label>
-            <label className="flex gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={damage}
-                onChange={(e) => setDamage(e.target.checked)}
-              />
-              Damage or discrepancy observed
+            <label className="block text-sm">
+              Does the artwork currently have existing damage, structural
+              weaknesses, or alterations not present in the original proposal?
+              <select
+                required
+                className={careInput}
+                value={damage === undefined ? "" : damage ? "yes" : "no"}
+                onChange={(e) =>
+                  setDamage(
+                    e.target.value === ""
+                      ? undefined
+                      : e.target.value === "yes",
+                  )
+                }
+              >
+                <option value="">Choose an answer</option>
+                <option value="yes">Yes · requires review</option>
+                <option value="no">No</option>
+              </select>
             </label>
             {artist && (
               <label className="flex gap-2 text-sm">
@@ -378,6 +397,7 @@ export default function ArtistFreightPanel({
               disabled={
                 busy ||
                 (logistics && !removalOpen) ||
+                damage === undefined ||
                 !photos.length ||
                 note.trim().length < 10 ||
                 (artist && (!ack || !w.freight))
@@ -397,6 +417,7 @@ export default function ArtistFreightPanel({
                     setPhotos([]);
                     setNote("");
                     setAck(false);
+                    setDamage(undefined);
                   }
                 })
               }
@@ -409,12 +430,14 @@ export default function ArtistFreightPanel({
           <div className="grid gap-4 md:grid-cols-3">
             {(["PRE_DISPATCH", "ARRIVAL", "DEINSTALLATION"] as const).map(
               (stage) => {
-                const r = reports.find(
-                  (x) =>
-                    x.stage === stage &&
-                    x.revision === w.revision &&
-                    (x.freightRevision ?? 0) === (w.freightRevision ?? 0),
-                );
+                const r = [...reports]
+                  .reverse()
+                  .find(
+                    (x) =>
+                      x.stage === stage &&
+                      x.revision === w.revision &&
+                      (x.freightRevision ?? 0) === (w.freightRevision ?? 0),
+                  );
                 return (
                   <section
                     key={stage}

@@ -1,3 +1,4 @@
+import { preTransitHold, latestPreDispatch } from "../src/lib/preTransit";
 import { careNextStep, returnReadiness } from "../src/lib/artistCareExperience";
 import {
   customsExport,
@@ -171,6 +172,7 @@ const work = (): Work => ({
   thematicDefense: {
     conceptual: "Shared practice connects this artwork to the theme.",
     material: "Bronze expresses the continuity of shared practice.",
+    damage: false,
     acknowledged: true,
     themeRevision: 6,
   },
@@ -890,6 +892,20 @@ test("customs export separates valuation and origin; checkpoint gates PDF and lo
   const j = await freightJourney();
   const w = () => j.s.invitations[0].works[0];
   await j.act("Artist_Portal", "SAVE_FREIGHT", { freight }, "work");
+  await assert.rejects(
+    () =>
+      j.act(
+        "Artist_Portal",
+        "PRE_DISPATCH_CONDITION",
+        {
+          photos: [image],
+          note: "Missing explicit damage answer",
+          acknowledged: true,
+        },
+        "work",
+      ),
+    /explicitly/,
+  );
   const payload = customsExport(j.s.invitations[0], w());
   assert.equal(payload.countryOfOrigin, "FR");
   assert.equal(payload.pickup.country, "DE");
@@ -918,6 +934,7 @@ test("customs export separates valuation and origin; checkpoint gates PDF and lo
         {
           photos: [image],
           note: "Ready for dispatch report",
+          damage: false,
           acknowledged: true,
         },
         "work",
@@ -927,7 +944,12 @@ test("customs export separates valuation and origin; checkpoint gates PDF and lo
   await j.act(
     "Artist_Portal",
     "PRE_DISPATCH_CONDITION",
-    { photos: [image], note: "Ready for dispatch report", acknowledged: true },
+    {
+      photos: [image],
+      note: "Ready for dispatch report",
+      damage: false,
+      acknowledged: true,
+    },
     "work",
   );
   assert.equal(shippingReadiness(w()), null);
@@ -947,6 +969,7 @@ test("customs export separates valuation and origin; checkpoint gates PDF and lo
         {
           photos: [image],
           note: "Overwrite the same report",
+          damage: false,
           acknowledged: true,
         },
         "work",
@@ -967,6 +990,7 @@ test("customs export separates valuation and origin; checkpoint gates PDF and lo
     {
       photos: [image],
       note: "Rechecked after repacking into two crates.",
+      damage: false,
       acknowledged: true,
     },
     "work",
@@ -1087,4 +1111,201 @@ test("unchanged freight saves preserve the checkpoint; next steps identify respo
   assert.equal(careNextStep(j.s, w).owner, "Director");
   w.state = "RETURNED";
   assert.equal(careNextStep(j.s, w).owner, "Artist");
+});
+
+async function damagedTransitJourney() {
+  const j = await freightJourney();
+  await j.act("Artist_Portal", "SAVE_FREIGHT", { freight }, "work");
+  await j.act(
+    "Artist_Portal",
+    "PRE_DISPATCH_CONDITION",
+    {
+      photos: [image],
+      note: "Structural weakness observed before studio packing.",
+      acknowledged: true,
+      damage: true,
+    },
+    "work",
+  );
+  return j;
+}
+test("pre-transit hold blocks customs, labels and freight grouping without a resolution", async () => {
+  const j = await damagedTransitJourney(),
+    w = () => j.s.invitations[0].works[0];
+  assert.match(preTransitHold(w())!, /triage/);
+  assert.throws(() => customsExport(j.s.invitations[0], w()), /hold/);
+  await assert.rejects(() => artistShippingPdf(w()), /hold/);
+  await assert.rejects(
+    () =>
+      j.act(
+        "Artist_Portal",
+        "TRANSIT_RESOLUTION",
+        { path: "AS_IS", note: "Approve my own damaged artwork." },
+        "work",
+      ),
+    /another desk/,
+  );
+  await j.act(
+    "Artist_Portal",
+    "SAVE_FREIGHT",
+    { freight: { ...freight, packageCount: 2 } },
+    "work",
+  );
+  await j.act(
+    "Artist_Portal",
+    "PRE_DISPATCH_CONDITION",
+    {
+      photos: [image],
+      note: "New packing does not erase the previous damage.",
+      acknowledged: true,
+      damage: false,
+    },
+    "work",
+  );
+  assert.match(preTransitHold(w())!, /triage/);
+});
+test("repair needs new evidence and explicit Coordinator release; original evidence survives", async () => {
+  const j = await damagedTransitJourney(),
+    w = () => j.s.invitations[0].works[0];
+  const original = structuredClone(w().conditionHistory![0]);
+  await j.act(
+    "General_Exhibition_Coordinator",
+    "TRANSIT_RESOLUTION",
+    {
+      path: "REPAIR",
+      note: "Studio repair authorized after specialist review.",
+    },
+    "work",
+  );
+  await assert.rejects(
+    () =>
+      j.act(
+        "General_Exhibition_Coordinator",
+        "TRANSIT_RESOLUTION",
+        {
+          path: "RELEASE_REPAIR",
+          note: "Cannot release without updated evidence.",
+        },
+        "work",
+      ),
+    /new damage-free/,
+  );
+  await j.act(
+    "Artist_Portal",
+    "PRE_DISPATCH_CONDITION",
+    {
+      photos: [{ ...image, id: "repair-photo", hash: "b".repeat(64) }],
+      note: "Studio repair completed and condition rechecked.",
+      acknowledged: true,
+      damage: false,
+    },
+    "work",
+  );
+  assert.match(preTransitHold(w())!, /Coordinator review/);
+  await j.act(
+    "General_Exhibition_Coordinator",
+    "TRANSIT_RESOLUTION",
+    {
+      path: "RELEASE_REPAIR",
+      note: "Reviewed new photographs and specialist assessment.",
+    },
+    "work",
+  );
+  assert.equal(preTransitHold(w()), null);
+  assert.equal(shippingReadiness(w()), null);
+  assert.deepEqual(w().conditionHistory![0], original);
+  assert.equal(latestPreDispatch(w())!.previousHash, original.hash);
+});
+test("as-is acceptance needs reference and separate packing confirmation; cancellation persists", async () => {
+  const j = await damagedTransitJourney(),
+    w = () => j.s.invitations[0].works[0];
+  await assert.rejects(
+    () =>
+      j.act(
+        "General_Exhibition_Coordinator",
+        "TRANSIT_RESOLUTION",
+        { path: "AS_IS", note: "Minor damage acceptable for the display." },
+        "work",
+      ),
+    /insurance/,
+  );
+  await j.act(
+    "General_Exhibition_Coordinator",
+    "TRANSIT_RESOLUTION",
+    {
+      path: "AS_IS",
+      note: "Minor frame scratch reviewed by specialist.",
+      insuranceReference: "SYNTHETIC-REVIEW-001",
+      packing: "Use reviewed cavity supports away from the weak edge.",
+    },
+    "work",
+  );
+  assert.match(preTransitHold(w())!, /Logistics/);
+  await assert.rejects(
+    () =>
+      j.act(
+        "General_Exhibition_Coordinator",
+        "CONFIRM_TRANSIT_PACKING",
+        { confirmed: true, note: "Cannot confirm my own packing instruction." },
+        "work",
+      ),
+    /another desk/,
+  );
+  await j.act(
+    "Logistics_Officer",
+    "CONFIRM_TRANSIT_PACKING",
+    {
+      confirmed: true,
+      note: "Cavity supports installed per reviewed packing plan.",
+    },
+    "work",
+  );
+  assert.equal(shippingReadiness(w()), null);
+  assert.equal(
+    customsExport(j.s.invitations[0], w()).status,
+    "DRAFT_FOR_BROKER_REVIEW",
+  );
+  await j.act(
+    "Artist_Portal",
+    "SAVE_FREIGHT",
+    { freight: { ...freight, packageCount: 2 } },
+    "work",
+  );
+  assert.match(preTransitHold(w())!, /triage/);
+  await j.act(
+    "Artist_Portal",
+    "PRE_DISPATCH_CONDITION",
+    {
+      photos: [image],
+      note: "Updated packing report still records the frame scratch.",
+      acknowledged: true,
+      damage: true,
+    },
+    "work",
+  );
+  await j.act(
+    "General_Exhibition_Coordinator",
+    "TRANSIT_RESOLUTION",
+    {
+      path: "CANCEL",
+      note: "Cancel this shipment and request a separate substitute proposal.",
+    },
+    "work",
+  );
+  assert.match(preTransitHold(w())!, /cancelled/);
+  await assert.rejects(
+    () =>
+      j.act(
+        "Artist_Portal",
+        "PRE_DISPATCH_CONDITION",
+        {
+          photos: [image],
+          note: "Attempt to bypass shipment cancellation.",
+          acknowledged: true,
+          damage: false,
+        },
+        "work",
+      ),
+    /cancelled/,
+  );
 });
