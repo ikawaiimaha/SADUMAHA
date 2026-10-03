@@ -3,6 +3,7 @@ import { I18nProvider } from '../context/I18nContext';
 import { LivingRecordProvider, useLivingRecord } from '../context/LivingRecordContext';
 import type { DemoActor } from '../data/livingRecord';
 import { PublishingCase } from './PublishingCase';
+import LocalHandoffRegister from './LocalHandoffRegister';
 
 function PrintDesk() {
   const [actor, setActor] = useState<DemoActor>('COORDINATOR');
@@ -14,5 +15,5 @@ function PrintDesk() {
   </div>;
 }
 export default function PitchPrintDemo() {
-  return <section id="print-release" className="sadu-experience"><div className="sadu-section-heading"><div><p className="sadu-eyebrow">PRINT RELEASE / إذن الطباعة</p><h2>The right revision.<br/><em>Through the final copy.</em></h2></div><p>Correct the proof, approve its revision, record the supplier’s acknowledgment, then track printing to completion—or reopen the correction loop.</p></div><details><summary>Try the print-release demonstration</summary><I18nProvider initialLang="en"><LivingRecordProvider checkpointKey="sadu:pitch:print:v2"><PrintDesk/></LivingRecordProvider></I18nProvider></details></section>;
+  return <section id="print-release" className="sadu-experience"><div className="sadu-section-heading"><div><p className="sadu-eyebrow">PRINT RELEASE / إذن الطباعة</p><h2>The right revision.<br/><em>Through the final copy.</em></h2></div><p>Correct the proof, approve its revision, record the supplier’s acknowledgment, then track printing to completion—or reopen the correction loop.</p></div><details><summary>Try the print-release demonstration</summary><I18nProvider initialLang="en"><LivingRecordProvider checkpointKey="sadu:pitch:print:v2"><PrintDesk/></LivingRecordProvider></I18nProvider></details>{(import.meta.env.DEV || import.meta.env.VITE_LOCAL_SOURCE_REGISTER === 'true') && <LocalHandoffRegister phase="print"/>}</section>;
 }

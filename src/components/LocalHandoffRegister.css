@@ -1,0 +1,20 @@
+.sadu-local-register { border-block-start:1px solid #c6bca9; margin-block:24px; padding-block:12px; text-align:start; color:#1d2a39; }
+.sadu-local-register summary { min-block-size:48px; padding-block:12px; cursor:pointer; }
+.sadu-local-register p { margin-block:12px; line-height:1.7; }
+.sadu-local-register label { display:block; font-weight:600; margin-block:16px 8px; }
+.sadu-local-register input { max-inline-size:100%; min-block-size:48px; font:inherit; }
+.sadu-local-register button { min-block-size:48px; padding:10px 16px; margin-block:12px; border:1px solid #8a7c67; background:transparent; font:inherit; color:inherit; cursor:pointer; }
+.sadu-local-register h2 { margin-block:24px 12px; font-size:22px; }
+.sadu-local-register h3 { margin-block:12px; font-size:20px; }
+.sadu-local-register article { padding-block:20px; border-block-start:1px solid #c6bca9; }
+.sadu-local-register dl>div { display:grid; grid-template-columns:minmax(110px,1fr) 3fr; gap:16px; margin-block:12px; }
+.sadu-local-register dt { font-weight:600; }
+.sadu-local-register dd { margin:0; }
+.sadu-local-register ul { padding-inline-start:24px; margin-block:0; }
+.sadu-local-register li { margin-block:8px; }
+.sadu-local-register blockquote { white-space:pre-wrap; border-inline-start:3px solid #ac864f; padding-inline:16px; margin-inline:0; }
+.sadu-local-register code { overflow-wrap:anywhere; font-size:13px; }
+.sadu-local-register .register-note { font-size:15px; color:#505850; }
+.sadu-local-register .register-status { font-weight:600; color:#783f20; }
+.sadu-local-register :focus-visible { outline:3px solid #8b4513; outline-offset:4px; }
+@media(max-width:600px) { .sadu-local-register dl>div { grid-template-columns:1fr; gap:4px; } }

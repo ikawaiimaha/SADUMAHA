@@ -3,6 +3,8 @@ import '@fontsource/amiri/400.css';
 import { useDemoCheckpoint } from '../lib/useDemoCheckpoint';
 import { acknowledgeGuidedProof, canAdvanceGuided, createGuidedSession, guidedCollection, validGuidedSession, type GuidedCommand } from '../data/guidedPresentation';
 import './GuidedPresentation.css';
+import LocalHandoffRegister from './LocalHandoffRegister';
+import { handoffPhase } from '../data/handoffRegister';
 
 const scenes = [
   ['الفكرة', 'The idea'],
@@ -126,6 +128,7 @@ export default function GuidedPresentation() {
           {warning && <p className="guide-error" role="alert">{t('تعذّر حفظ الخطوات أو استعادتها في هذا التبويب. أبقي الصفحة مفتوحة؛ قد تحتاجين إلى بدء المثال مجدداً بعد التحديث.', 'Steps could not be saved or restored in this tab. Keep the page open; refreshing may require restarting the example.')}</p>}
         </>}
       </section>
+      {(import.meta.env.DEV || import.meta.env.VITE_LOCAL_SOURCE_REGISTER === 'true') && <LocalHandoffRegister phase={session.scene === 3 ? 'print' : handoffPhase(c.stage)} isAr={ar}/>}
       <nav className="guide-controls" aria-label={t('التنقل في العرض', 'Presentation controls')}>
         <button disabled={session.scene === 0 || session.paused} onClick={() => move(session.scene - 1)}>{t('السابق', 'Previous')}</button>
         <span>{session.paused ? t('العرض متوقف مؤقتاً', 'Presentation paused') : session.scene === 5 ? t('انتهى العرض — وقت الأسئلة', 'Presentation complete — questions') : !complete ? t('أكملي الإجراء الظاهر للمتابعة', 'Complete the action above to continue') : t('يمكنك المتابعة عندما تكونين مستعدة', 'Continue when you are ready')}</span>

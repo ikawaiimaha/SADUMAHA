@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useDemoCheckpoint } from '../lib/useDemoCheckpoint';
 import { CommunicationConfirmation } from './CommunicationConfirmation';
 import { NextActionCard } from './NextActionCard';
+import LocalHandoffRegister from './LocalHandoffRegister';
+import { handoffPhase } from '../data/handoffRegister';
 import { backupOfficers, createCollectionDemo, collectionTransition, collectionTask, type CollectionCommand } from '../data/collectionReadiness';
 export { pickupError } from '../data/collectionReadiness';
 
@@ -40,5 +42,6 @@ export default function PitchCollectionDemo() {
     }}/>}</div></div>
     <details className="sadu-demo-history"><summary>What this record remembers ({record.history.length})</summary><ol><li>Prepared fixture: address confirmed; packaging missing.</li>{record.history.map((e, i) => <li key={i}>{e.actor} · {e.action} · task v{e.version} · {new Date(e.at).toLocaleString('en-GB', { timeZone: 'Asia/Dubai' })} Dubai</li>)}</ol></details>
     <p className="sadu-example-foot">Synthetic tab checkpoint · Saved steps resume after refresh or unlock · Reset starts a fresh example · No external action.</p>
+    {(import.meta.env.DEV || import.meta.env.VITE_LOCAL_SOURCE_REGISTER === 'true') && <LocalHandoffRegister phase={handoffPhase(stage)}/>}
   </section>;
 }

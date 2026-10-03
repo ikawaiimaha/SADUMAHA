@@ -9,6 +9,8 @@ export default defineConfig({
   base: './',
   publicDir: false,
   envDir: false,
+  // Local reference files are selected in memory; never bundled into the rehearsal.
+  define: { 'import.meta.env.VITE_LOCAL_SOURCE_REGISTER': JSON.stringify('true') },
   plugins: [prelaunchVitePlugin(), react(), tailwindcss()],
   build: {
     manifest: true,
