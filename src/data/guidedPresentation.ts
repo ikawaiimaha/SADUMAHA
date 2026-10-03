@@ -52,6 +52,22 @@ export function canAdvanceGuided(s: GuidedSession): boolean {
   if (s.scene === 3) return s.print.supplierAck?.version === s.print.version;
   return true;
 }
+// Keep stored scene IDs stable; print is an optional detour after the collection story.
+export const guidedMainScenes = [0, 1, 2, 4, 5] as const;
+export function guidedNavigation(s: GuidedSession): { previous: number | null; next: number | null } {
+  if (s.paused) return { previous: null, next: null };
+  if (s.scene === 3) return { previous: 4, next: 4 };
+  const index = guidedMainScenes.findIndex(scene => scene === s.scene);
+  return {
+    previous: guidedMainScenes[index - 1] ?? null,
+    next: canAdvanceGuided(s) ? guidedMainScenes[index + 1] ?? null : null,
+  };
+}
+export function navigateGuidedSession(s: GuidedSession, scene: number): GuidedSession {
+  const { previous, next } = guidedNavigation(s);
+  const optionalPrint = !s.paused && s.scene === 4 && scene === 3;
+  return scene === previous || scene === next || optionalPrint ? { ...s, scene } : s;
+}
 export function validGuidedSession(value: unknown): value is GuidedSession {
   const v = value as GuidedSession | undefined;
   if (!v || !Number.isInteger(v.scene) || v.scene < 0 || v.scene > 5 || !['ar', 'en'].includes(v.language) || typeof v.paused !== 'boolean') return false;

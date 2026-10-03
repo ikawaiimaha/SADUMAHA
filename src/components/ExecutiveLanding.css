@@ -35,5 +35,17 @@
 .sadu-print-desk li { overflow-wrap:anywhere; }
 
 .sadu-demo-index { display:flex; flex-wrap:wrap; align-items:center; gap:1rem 2rem; padding:1.5rem clamp(1.5rem,6vw,6rem); border-block:1px solid #d9ceba; }
+
+/* The opening uses the existing palette and makes the collection case concrete. */
+.sadu-hero { min-height:0; padding-block:48px; }
+.sadu-hero h1 { font-size:clamp(36px,3.5vw,56px); letter-spacing:-1.2px; line-height:1.12; }
+.sadu-collection-brief { border:1px solid #ffffff35; padding:clamp(24px,2.5vw,36px); background:#172a3b; }
+.sadu-collection-brief h2 { font:400 clamp(28px,2.5vw,36px)/1.25 Georgia,serif; letter-spacing:-.5px; }
+.sadu-collection-brief dl { margin-block:20px; }
+.sadu-collection-brief dl>div { display:grid; grid-template-columns:110px 1fr; gap:12px; padding-block:14px; border-block-end:1px solid #ffffff25; }
+.sadu-collection-brief dt { color:var(--gold); font-size:13px; margin-block-end:5px; }
+.sadu-collection-brief dd { margin:0; font-size:17px; }
+.sadu-collection-brief>p:last-child { font-size:13px; color:var(--muted); }
+@media(max-width:700px) { .sadu-header nav { flex-wrap:wrap; justify-content:start; gap:8px 20px; } .sadu-collection-brief dl>div { grid-template-columns:90px 1fr; } }
 .sadu-demo-index span { font-size:.85rem; }
 .sadu-demo-index a { padding-block:.5rem; color:inherit; text-underline-offset:.3em; }

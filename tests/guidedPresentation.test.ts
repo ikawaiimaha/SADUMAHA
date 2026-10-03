@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createGuidedSession, guidedCollection, acknowledgeGuidedProof, canAdvanceGuided, validGuidedSession } from '../src/data/guidedPresentation';
+import { createGuidedSession, guidedCollection, acknowledgeGuidedProof, canAdvanceGuided, validGuidedSession, guidedNavigation, navigateGuidedSession } from '../src/data/guidedPresentation';
 import { collectionTransition } from '../src/data/collectionReadiness';
 const at = '2026-10-03T10:00:00Z';
 test('guided handoff retains acceptance, date and packing gates', () => {
@@ -45,4 +45,34 @@ test('checkpoint validation rejects incomplete states and unsupported language o
   assert.equal(validGuidedSession({ ...s, language: 'bad' }), false);
   assert.equal(validGuidedSession({ ...s, collection: { ...s.collection, stage: 'ready', packing: null } }), false);
   assert.equal(validGuidedSession(null), false);
+});
+
+test('the main pitch completes collection before the proposal, without completing the optional print job', () => {
+  let s = navigateGuidedSession(createGuidedSession(), 1);
+  assert.equal(navigateGuidedSession(s, 4), s, 'cannot skip ownership');
+  s = { ...s, collection: guidedCollection(s.collection, 'ASSIGN', at) };
+  assert.equal(navigateGuidedSession(s, 2), s, 'assignment still needs acceptance');
+  s = { ...s, collection: guidedCollection(s.collection, 'ACCEPT', at) };
+  s = navigateGuidedSession(s, 2);
+  assert.equal(navigateGuidedSession(s, 4), s, 'cannot skip date and packing');
+  s = { ...s, collection: guidedCollection(s.collection, 'DATE', at, '2026-10-16') };
+  s = { ...s, collection: guidedCollection(s.collection, 'PREPARE_PACKING', at) };
+  assert.equal(guidedNavigation(s).next, null, 'a plan is not completion evidence');
+  s = { ...s, collection: guidedCollection(s.collection, 'COMPLETE_PACKING', at) };
+  assert.equal(guidedNavigation(s).next, 4);
+  const proposal = navigateGuidedSession(s, 4);
+  assert.equal(proposal.scene, 4);
+  assert.equal(proposal.print.supplierAck, null);
+  assert.equal(proposal.collection, s.collection);
+  const optional = navigateGuidedSession(proposal, 3);
+  assert.equal(optional.scene, 3);
+  assert.equal(validGuidedSession(JSON.parse(JSON.stringify(optional))), true);
+  const returned = navigateGuidedSession(optional, 4);
+  assert.equal(returned.scene, 4);
+  assert.equal(returned.print, proposal.print, 'leaving the optional example cannot acknowledge a proof');
+  assert.equal(guidedNavigation(returned).previous, 2);
+  assert.equal(navigateGuidedSession(returned, 5).scene, 5);
+  const paused = { ...returned, paused: true };
+  assert.equal(navigateGuidedSession(paused, 3), paused);
+  assert.deepEqual(guidedNavigation(paused), { previous: null, next: null });
 });
