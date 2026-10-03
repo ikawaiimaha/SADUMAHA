@@ -1,3 +1,17 @@
+## 2026-10-03 — Curatorial comparison demonstration
+
+Both synthetic candidates are submitted and reviewed as one comparison revision. Committee recommendation explicitly selects A, B or neither; neither cannot reach executive approval or an invitation. Invitations use the selected candidate, and amendments clear the selection and dependent reviews while retaining decision history. This bounded comparison is not a replacement for item-level production permissions.
+
+## 2026-10-03 — Holds and recoverable synthetic demonstrations
+
+Collection readiness is a derived sub-workflow, not an ArtistStatus or ThemeStatus transition. The shared `src/logistics/collectionRules.mjs` governs packing and readiness in the local service and presentation. A nominated Logistics owner must explicitly accept. Packing requires a plan and named owner, technical clearance when required (or a recorded reason for non-applicability), separate Finance cost approval including zero-cost arrangements, and Logistics completion evidence. Collection-detail/date changes clear dependent checks; assignment changes clear acceptance. Earlier local records without these facts remain blocked rather than receiving fabricated approvals. No booking, receipt or payment follows from readiness.
+
+Print defects immediately hold internal progression. A dispatched job cannot be replaced until the Publishing Manager records supplier stop acknowledgment or completed-stock disposition. That fact has its own actor/time/reference; an internal hold does not claim a physical press has stopped. Replacement creates a new proof revision and requires new approvals.
+
+Presentation examples use isolated, versioned synthetic tab checkpoints. Saved steps survive refresh/authentication remount when storage is available; unsaved form input is not guaranteed. These checkpoints are not authentication, server authorization, or a connected institutional dossier. The local backend remains single-process, transactional and file-backed; transient file-lock replacement retries are bounded and never publish success before replacement. Persistent failures retain the previous state. Live integrations remain paused.
+
+---
+
 ## 2026-10-01 — Isolated collection handoff demonstration
 
 The collection-only runtime uses a fresh synthetic `.local/collection-demo-runs/run-*` repository, separate from the existing connected pilot. Its server allowlist exposes only simulated account selection, collection views and SAVE/CONFIRM/PLAN/ASSIGN commands. No external adapter, live database, booking, email or payment operation is configured. The launcher excludes application credentials and does not load project environment files. This is a loopback-only demonstration, not institutional authentication.

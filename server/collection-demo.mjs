@@ -10,6 +10,8 @@ export const DEMO_ARTWORK='collection-demo-artwork';
 export const DEMO_ACCOUNTS=[
   {id:'pilot-Logistics',role:'Logistics',name:'Logistics A — primary'},
   {id:'demo-backup',role:'Logistics',name:'Logistics B — backup'},
+  {id:'demo-technical',role:'Technical',name:'Technical — packing review'},
+  {id:'demo-finance',role:'Finance',name:'Finance — cost review'},
   {id:'demo-coordinator',role:'General_Exhibition_Coordinator',name:'General Exhibition Coordinator'},
 ].map(a=>({...a,exhibitionId:'collection-demo'}));
 export async function createCollectionDemo(directory) {

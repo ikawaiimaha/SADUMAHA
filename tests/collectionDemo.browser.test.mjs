@@ -25,6 +25,7 @@ test('browser handoff, retained drafts, saved-refresh failure and tablet layout'
     await a.getByRole('button',{name:'Add closure',exact:true}).click();
     await a.getByLabel('Closure 1 start').fill('2026-10-10');await a.getByLabel('Closure 1 end').fill('2026-10-15');
     await a.getByRole('button',{name:'Save collection revision'}).click();
+    await a.getByRole('button',{name:'Accept collection responsibility'}).click();
     await a.getByLabel('I checked this address, contact and availability against the recorded source').check();
     await a.getByRole('button',{name:'Confirm source details'}).click();
     await a.getByLabel('Proposed pickup date').fill('2026-10-10');await a.getByRole('button',{name:'Save pickup plan — no booking'}).click();
@@ -36,9 +37,10 @@ test('browser handoff, retained drafts, saved-refresh failure and tablet layout'
     await coordinator.getByRole('button',{name:'Activate backup',exact:true}).click();
     await expect(a.getByText('Read-only. The active Logistics owner handles collection changes.')).toBeVisible({timeout:10000});
     const b=await account('demo-backup');
-    await expect(b.getByRole('region',{name:'Your next actions'})).toContainText('Choose an available pickup date');
+    await expect(b.getByRole('region',{name:'Your next actions'})).toContainText('accept this handoff');
+    await b.getByRole('button',{name:'Accept collection responsibility'}).click();
     await b.getByLabel('Proposed pickup date').fill('2026-10-16');await b.getByRole('button',{name:'Save pickup plan — no booking'}).click();
-    await expect(b.getByRole('region',{name:'Your next actions'})).toContainText('Pickup planned locally');
+    await expect(b.getByRole('region',{name:'Your next actions'})).toContainText('Packing requirements are unresolved');
     await b.getByRole('button',{name:'Amend collection details'}).click();await b.getByLabel('Physical collection address').fill('Retained local draft');
     const current=await coordinator.request.get(origin+'/api/review/pilot');const snapshot=await current.json();
     const response=await coordinator.request.post(origin+'/api/review/pilot/collection/'+snapshot.artwork.id,{headers:{Origin:origin},data:{version:snapshot.collection.version,action:'ASSIGN',primaryId:'pilot-Logistics',backupId:'demo-backup',activeId:'demo-backup',reason:'Concurrent confirmed assignment'}});assert.equal(response.status(),200);

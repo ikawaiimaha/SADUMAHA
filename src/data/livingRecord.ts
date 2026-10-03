@@ -54,6 +54,7 @@ export function livingRecordReducer(state: LivingRecord, action: DemoAction): Li
     case 'START_PRINT':
     case 'COMPLETE_PRINT':
     case 'REQUEST_PRINT_CORRECTION':
+    case 'CONFIRM_PRINT_STOP':
     case 'RECORD_PRINT_DISPATCH': {
       const publishing = reducePublishingRecord(state.publishing, action);
       if (publishing === state.publishing) return state;

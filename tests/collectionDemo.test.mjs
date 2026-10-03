@@ -22,7 +22,7 @@ test('isolated collection handoff rejects all other operations and preserves res
     await login('pilot-Logistics');
     await send('SAVE',{details:{...details,address:''}},422);
     await send('SAVE',{details:{...details,conflict:true}});await send('CONFIRM',{checked:true},409);
-    await send('SAVE',{details});await send('CONFIRM',{checked:true});
+    await send('SAVE',{details});await send('ACCEPT');await send('CONFIRM',{checked:true});
     const before=runtime.repository.read();
     for(const pickupDate of ['2026-10-10','2026-10-15'])await send('PLAN',{pickupDate},409);
     assert.deepEqual(runtime.repository.read(),before);
@@ -35,7 +35,13 @@ test('isolated collection handoff rejects all other operations and preserves res
     await send('PLAN',{pickupDate:'2026-10-16'},403);
     await login('demo-backup');
     const q=await(await call('/api/review/pilot')).json();assert.equal(q.nextActions[0].ownerId,'demo-backup');assert.equal(q.nextActions[0].id,`${DEMO_ARTWORK}-collection`);
-    await send('PLAN',{pickupDate:'2026-10-16'});assert.equal((await view()).state,'PLANNED_ONLY');
+    await send('PLAN',{pickupDate:'2026-10-16'},409);await send('ACCEPT');
+    await send('PLAN',{pickupDate:'2026-10-16'});assert.equal((await view()).state,'PACKING_REQUIRED');
+    await send('PACK',{value:'Crate',packingOwner:'Demo packer',amount:100,requiresTechnical:true});
+    await login('demo-technical');await send('TECHNICAL',{value:'TEST-TECH'});
+    await login('demo-finance');await send('COST',{value:'TEST-COST'});
+    await login('demo-backup');await send('EVIDENCE',{value:'TEST-PACKING'});
+    assert.equal((await view()).ready,true);
     const stable=runtime.repository.read();
     for(const endpoint of ['/api/review/pilot/action','/api/review/ecosystem/arrival','/api/review/acquisition/initiate','/api/review/pilot/invitation','/api/review/pilot/manifest.pdf','/api/anything']) {
       assert.equal((await call(endpoint,{action:'pay'})).status,403);

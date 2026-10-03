@@ -33,3 +33,7 @@
 .sadu-print-desk details { margin-block:18px; }
 .sadu-print-desk summary { cursor:pointer; min-block-size:44px; }
 .sadu-print-desk li { overflow-wrap:anywhere; }
+
+.sadu-demo-index { display:flex; flex-wrap:wrap; align-items:center; gap:1rem 2rem; padding:1.5rem clamp(1.5rem,6vw,6rem); border-block:1px solid #d9ceba; }
+.sadu-demo-index span { font-size:.85rem; }
+.sadu-demo-index a { padding-block:.5rem; color:inherit; text-underline-offset:.3em; }

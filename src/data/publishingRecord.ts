@@ -11,7 +11,7 @@ export interface PublishingRecord {
   dispatch: { version: number; actor: DemoActor; at: string } | null;
   supplierAck: { version: number; actor: DemoActor; at: string; reference: string; evidence?: SupplierEvidence } | null;
   production: { version: number; actor: DemoActor; at: string; completedAt?: string; completionReference?: string } | null;
-  correction: { version: number; actor: DemoActor; at: string; reason: string; stopReference: string } | null;
+  correction: { version: number; actor: DemoActor; at: string; reason: string; stopReference: string; stopActor?: DemoActor; stopAt?: string } | null;
   previous: Omit<PublishingRecord, 'previous'>[];
 }
 type Envelope = { actor: DemoActor; at: string };
@@ -22,6 +22,7 @@ export type PublishingAction =
   | ({ type: 'RECORD_PRINT_DISPATCH'; version: number } & Envelope)
   | ({ type: 'ACKNOWLEDGE_PRINT_PROOF' | 'COMPLETE_PRINT'; version: number; reference: string; evidence?: SupplierEvidence } & Envelope)
   | ({ type: 'START_PRINT'; version: number } & Envelope)
+  | ({ type: 'CONFIRM_PRINT_STOP'; version: number; reference: string } & Envelope)
   | ({ type: 'REQUEST_PRINT_CORRECTION'; version: number; reason: string; stopReference: string } & Envelope);
 
 export const createPublishingRecord = (): PublishingRecord => ({ version: 0, proofs: [], review: null, decision: null, dispatch: null, supplierAck: null, production: null, correction: null, previous: [] });
@@ -29,12 +30,17 @@ export const createPublishingRecord = (): PublishingRecord => ({ version: 0, pro
 export function reducePublishingRecord(state: PublishingRecord, action: PublishingAction): PublishingRecord {
   if (!Number.isFinite(Date.parse(action.at))) return state;
   if (action.type === 'ATTACH_PRINT_PROOF') {
-    if (action.actor !== 'COORDINATOR' || (state.dispatch && !state.correction)) return state;
+    if (action.actor !== 'COORDINATOR' || (state.dispatch && !state.correction?.stopReference)) return state;
     const version = state.version + 1;
     const { previous, ...snapshot } = state;
     return { ...createPublishingRecord(), version, proofs: [...state.proofs, { version, actor: action.actor, at: action.at }], previous: state.version ? [...previous, snapshot] : previous };
   }
-  if (!state.version || action.version !== state.version || state.correction) return state;
+  if (!state.version || action.version !== state.version) return state;
+  if (action.type === 'CONFIRM_PRINT_STOP') {
+    if (action.actor !== 'PUBLISHING_MANAGER' || !state.dispatch || !state.correction || state.correction.stopReference || !action.reference.trim()) return state;
+    return { ...state, correction: { ...state.correction, stopReference: action.reference.trim(), stopActor: action.actor, stopAt: action.at } };
+  }
+  if (state.correction) return state;
   switch (action.type) {
     case 'ROUTE_PRINT_PROOF':
       if (action.actor !== 'PUBLISHING_MANAGER' || state.review || state.decision || !action.editorialChecked || !action.rightsChecked || action.route !== PRINT_ROUTE_ID) return state;
@@ -56,9 +62,9 @@ export function reducePublishingRecord(state: PublishingRecord, action: Publishi
       if (action.actor !== 'PUBLISHING_MANAGER' || !state.production || state.production.completedAt || !action.reference.trim()) return state;
       return { ...state, production: { ...state.production, completedAt: action.at, completionReference: action.reference.trim() } };
     case 'REQUEST_PRINT_CORRECTION':
-      // A sent job cannot be silently replaced. Record stop/recall or reprint disposition first.
-      if (!['COORDINATOR', 'PUBLISHING_MANAGER'].includes(action.actor) || !action.reason.trim() || (state.dispatch && !action.stopReference.trim())) return state;
-      return { ...state, correction: { version: action.version, actor: action.actor, at: action.at, reason: action.reason.trim(), stopReference: action.stopReference.trim() } };
+      // A defect immediately holds internal progression; stopping the supplier is a separate fact.
+      if (!['COORDINATOR', 'PUBLISHING_MANAGER'].includes(action.actor) || !action.reason.trim()) return state;
+      return { ...state, correction: { version: action.version, actor: action.actor, at: action.at, reason: action.reason.trim(), stopReference: '' } };
   }
 }
 

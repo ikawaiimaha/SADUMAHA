@@ -14,5 +14,5 @@ function PrintDesk() {
   </div>;
 }
 export default function PitchPrintDemo() {
-  return <section id="print-release" className="sadu-experience"><div className="sadu-section-heading"><div><p className="sadu-eyebrow">PRINT RELEASE / إذن الطباعة</p><h2>The right revision.<br/><em>Through the final copy.</em></h2></div><p>Correct the proof, approve its revision, record the supplier’s acknowledgment, then track printing to completion—or reopen the correction loop.</p></div><details><summary>Try the print-release demonstration</summary><I18nProvider initialLang="en"><LivingRecordProvider><PrintDesk/></LivingRecordProvider></I18nProvider></details></section>;
+  return <section id="print-release" className="sadu-experience"><div className="sadu-section-heading"><div><p className="sadu-eyebrow">PRINT RELEASE / إذن الطباعة</p><h2>The right revision.<br/><em>Through the final copy.</em></h2></div><p>Correct the proof, approve its revision, record the supplier’s acknowledgment, then track printing to completion—or reopen the correction loop.</p></div><details><summary>Try the print-release demonstration</summary><I18nProvider initialLang="en"><LivingRecordProvider checkpointKey="sadu:pitch:print:v2"><PrintDesk/></LivingRecordProvider></I18nProvider></details></section>;
 }

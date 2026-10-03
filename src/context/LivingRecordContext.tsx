@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useReducer, useState } from 'react';
+import React, { createContext, useContext, useCallback, useState } from 'react';
+import { useDemoCheckpoint } from '../lib/useDemoCheckpoint';
 import { createLivingRecord, livingRecordReducer, DemoAction, LivingRecord } from '../data/livingRecord';
 
 interface LivingRecordContextValue {
@@ -8,10 +9,11 @@ interface LivingRecordContextValue {
   setLeadershipView: React.Dispatch<React.SetStateAction<'CHAIRMAN' | 'DIRECTORATE' | 'MANAGER'>>;
 }
 const Context = createContext<LivingRecordContextValue | null>(null);
-export function LivingRecordProvider({ children }: { children: React.ReactNode }) {
-  const [state, dispatch] = useReducer(livingRecordReducer, undefined, createLivingRecord);
+export function LivingRecordProvider({ children, checkpointKey }: { children: React.ReactNode; checkpointKey?: string }) {
+  const [state, setState, warning] = useDemoCheckpoint(checkpointKey, createLivingRecord, (v: any) => v?.caseId && Array.isArray(v.events) && Array.isArray(v.publishing?.proofs) && Array.isArray(v.publishing?.previous));
+  const dispatch = useCallback((action: DemoAction) => setState(previous => livingRecordReducer(previous, action)), [setState]);
   const [leadershipView, setLeadershipView] = useState<'CHAIRMAN' | 'DIRECTORATE' | 'MANAGER'>('CHAIRMAN');
-  return <Context.Provider value={{ state, dispatch, leadershipView, setLeadershipView }}>{children}</Context.Provider>;
+  return <Context.Provider value={{ state, dispatch, leadershipView, setLeadershipView }}>{warning && <p role="alert">{warning}</p>}{children}</Context.Provider>;
 }
 export function useLivingRecord() {
   const value = useContext(Context);

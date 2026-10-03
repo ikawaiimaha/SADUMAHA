@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 export type Period = { start:string; end:string };
 export type CollectionDetails = { address:string; city:string; country:string; contact:string; sourceRef:string; timezone:string; availability:Period; closures:Period[]; conflict:boolean };
-export type CollectionView = { version:number; state?:string; blocker:string; ready:boolean; accounts:{id:string;name:string}[]; assignment:{primaryId:string;backupId:string|null;activeId:string}; record:(CollectionDetails & {confirmation:{actorId:string}|null;plan:{pickupDate:string;state:string}|null})|null };
+export type PackingPlan = { specification:string;owner:string;amount:number;requiresTechnical:boolean;technicalReference:string;costReference:string;evidence:string };
+export type CollectionView = { version:number; state?:string; role?:string; blocker:string; ready:boolean; accounts:{id:string;name:string}[]; assignment:{primaryId:string;backupId:string|null;activeId:string;acceptedBy?:string|null}; record:(CollectionDetails & {confirmation:{actorId:string}|null;plan:{pickupDate:string;state:string}|null;packing?:PackingPlan|null})|null };
 
 export function useCollectionWorkflow(initial:CollectionView, artworkId:string, onChanged:()=>Promise<void>) {
   const [view,setView]=useState(initial),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');

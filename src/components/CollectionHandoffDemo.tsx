@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import ConnectedCollection from './ConnectedCollection';
 import type { CollectionView } from '../lib/useCollectionWorkflow';
 type Account={id:string;name:string;role:string};
-type Snapshot={artwork:{id:string;title:string};collection:CollectionView;nextActions:{id:string;title:string;ownerId:string;blocker:string;deadline:string|null;timezone:string|null}[]};
+type Snapshot={artwork:{id:string;title:string};collection:CollectionView;nextActions:{id:string;title:string;owner:string;ownerId:string|null;blocker:string;deadline:string|null;timezone:string|null}[]};
 async function read(path:string,body?:object){const r=await fetch(path,{cache:'no-store',...(body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{})});const result=await r.json();if(!r.ok)throw new Error(result.error);return result;}
 export default function CollectionHandoffDemo(){
   const [accounts,setAccounts]=useState<Account[]>([]),[actor,setActor]=useState<Account|null>(null),[data,setData]=useState<Snapshot|null>(null);
@@ -18,7 +18,7 @@ export default function CollectionHandoffDemo(){
       <label className="block">Demonstration account<select className="mt-2 block min-h-12 w-full rounded border border-[#D9CEBA] bg-white p-3" disabled={busy||dirty} value={actor?.id??''} onChange={e=>void select(e.target.value)}><option value="" disabled>Choose an account</option>{accounts.map(a=><option key={a.id} value={a.id}>{a.name}</option>)}</select></label>
       {dirty&&<p>Save or discard your draft before switching accounts.</p>}{error&&<p role="alert">{error}</p>}
       {actor&&data&&<><section className="rounded-xl border border-[#D9CEBA] bg-white p-5"><h2 className="text-xl font-semibold">{data.artwork.title}</h2><p className="mt-2">Synthetic collection exercise · Artwork approval and shipment status remain unchanged.</p></section>
-      <section aria-label="Your next actions" className="rounded-xl border border-[#D9CEBA] bg-white p-5"><h2 className="text-xl font-semibold">Your next actions</h2>{data.nextActions.length?<ul className="mt-3 space-y-3">{data.nextActions.map(t=><li key={t.id}><a href="#collection-plan" className="font-semibold underline">{t.title}</a><p>Owner: {accounts.find(a=>a.id===t.ownerId)?.name}</p><p>{t.blocker}</p>{t.deadline&&<p>Window ends: {t.deadline} · {t.timezone}</p>}</li>)}</ul>:<p className="mt-3">{data.collection.ready?'Pickup planned locally. No carrier booking has been made.':'No collection task assigned to this account.'}</p>}</section>
+      <section aria-label="Your next actions" className="rounded-xl border border-[#D9CEBA] bg-white p-5"><h2 className="text-xl font-semibold">Your next actions</h2>{data.nextActions.length?<ul className="mt-3 space-y-3">{data.nextActions.map(t=><li key={t.id}><a href="#collection-plan" className="font-semibold underline">{t.title}</a><p>Owner: {accounts.find(a=>a.id===t.ownerId)?.name??t.owner}</p><p>{t.blocker}</p>{t.deadline&&<p>Window ends: {t.deadline} · {t.timezone}</p>}</li>)}</ul>:<p className="mt-3">{data.collection.ready?'Ready for collection. No carrier booking or physical handover has been recorded.':'No collection task assigned to this account.'}</p>}</section>
       <ConnectedCollection key={actor.id} view={data.collection} artworkId={data.artwork.id} role={actor.role} actorId={actor.id} locked={false} onChanged={refresh} onDirtyChange={setDirty}/></>}
     </main></>;
 }

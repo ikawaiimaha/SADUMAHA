@@ -22,6 +22,8 @@ test('packing requires named owner, specification, cost authorization and eviden
   assert.throws(() => act(s, 'PACK', { value: 'Crate', packingOwner: 'Packer', amount: NaN }));
   s = act(s, 'PACK', { value: 'Crate', packingOwner: 'Packer', amount: 1200 });
   assert.throws(() => act(s, 'COST', { actor: 'Logistics B', value: 'cost' }));
+  assert.throws(() => act(s, 'COST', { actor: 'Finance', value: 'DEMO-COST' }));
+  s = act(s, 'TECHNICAL', { value: 'DEMO-TECH' });
   s = act(s, 'COST', { value: 'DEMO-COST' });
   assert.throws(() => act(s, 'EVIDENCE', { value: ' ' }));
   s = act(s, 'EVIDENCE', { value: 'DEMO-PACK-CHECK' });

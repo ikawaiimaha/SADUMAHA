@@ -3,7 +3,8 @@ import { validateHeritage, institutionalAssertion, socialActorTypes } from '../s
 import { requireRecordAccess } from './acquisition.mjs';
 import { validateConservation, conservationWarnings, normalizedPin, budgetGauge } from '../src/logistics/museumCare.mjs';
 import { createHash, randomUUID } from 'node:crypto';
-import { mkdir, readFile, writeFile, rename } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { replaceLocalFile } from './local-file-recovery.mjs';
 import { dirname } from 'node:path';
 import { hashUploadStream } from './file-integrity.mjs';
 import { extractKeywords } from '../src/curation/keywords.mjs';
@@ -28,7 +29,7 @@ export async function openEcosystemRepository(file, seed = emptyEcosystem()) {
   return {
     read: () => structuredClone(state),
     transaction(work) {
-      const result = queue.then(async () => { const next = structuredClone(state); const output = await work(next); next.version++; const temp = `${file}.${randomUUID()}.tmp`; await writeFile(temp, JSON.stringify(next), { mode: 0o600 }); await rename(temp, file); state = next; return structuredClone(output); });
+      const result = queue.then(async () => { const next = structuredClone(state); const output = await work(next); next.version++; const temp = `${file}.${randomUUID()}.tmp`; await writeFile(temp, JSON.stringify(next), { mode: 0o600 }); await replaceLocalFile(temp, file); state = next; return structuredClone(output); });
       queue = result.catch(() => {}); return result;
     },
   };

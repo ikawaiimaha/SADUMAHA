@@ -1,9 +1,10 @@
 import { useState } from 'react';
+import { useDemoCheckpoint } from '../lib/useDemoCheckpoint';
 import { createCommunicationReview, communicationTransition, type CommunicationCommand } from '../data/communicationReview';
 import { NextActionCard } from './NextActionCard';
 
-export function CommunicationConfirmation({ onApply }: { onApply: (date: string, source: string) => void }) {
-  const [record, setRecord] = useState(createCommunicationReview);
+export function CommunicationConfirmation({ checkpointKey, onApply }: { checkpointKey?: string; onApply: (date: string, source: string) => void }) {
+  const [record, setRecord, recoveryWarning] = useDemoCheckpoint(checkpointKey, createCommunicationReview, (v: any) => Array.isArray(v?.history) && v?.original?.reference === 'SYNTHETIC-VOICE-01' && Number.isInteger(v.version));
   const [error, setError] = useState('');
   function act(type: CommunicationCommand['type'], data: Partial<CommunicationCommand> = {}) {
     try {
@@ -21,7 +22,7 @@ export function CommunicationConfirmation({ onApply }: { onApply: (date: string,
     {record.step === 'proposed' && <><p>Proposed: {record.correction?.date} · response {record.correction?.reference}. Original December request remains unchanged.</p><button onClick={() => act('CONFIRM')}>Confirm correction as assigned Logistics</button></>}
     {record.step === 'confirmed' && <button onClick={() => act('APPLY')}>Apply confirmed date to collection</button>}
     {record.step === 'applied' && <p role="status">Confirmed date applied for this session. This is a pickup plan, not a transport booking.</p>}
-    <p role="alert">{error}</p>
+    <p role="alert">{error || recoveryWarning}</p>
     <details><summary>Message and confirmation history</summary><ol>{record.history.map((e, i) => <li key={i}>{e.action} · {e.reference} · {e.actor} · {e.at}</li>)}</ol></details>
   </section>;
 }

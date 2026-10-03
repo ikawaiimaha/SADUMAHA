@@ -37,7 +37,7 @@ test('optional specialist route feeds recommendation, separate executive approva
   for (const specialist of [true, false]) {
     let s = reviewed(specialist);
     assert.throws(() => c(s, 'APPROVE', { note: 'Committee approval' }));
-    s = c(s, 'RECOMMEND', { note: 'Candidate A matches the wall better than B' });
+    s = c(s, 'RECOMMEND', { candidate: 'A', note: 'Candidate A matches the wall better than B' });
     assert.equal(s.decision, '');
     assert.throws(() => c(s, 'PREPARE'));
     assert.throws(() => c(s, 'APPROVE', { actor: 'Committee', note: 'Yes' }));
@@ -59,4 +59,22 @@ test('reason-bearing returns and stale actions cannot advance review', () => {
   const returned = c(s, 'RETURN', { note: 'Clarify fit to brief' });
   assert.equal(curatorialOwner(returned), 'Coordinator');
   assert.equal(c(returned, 'REVISE', { note: 'Address committee feedback' }).revision, 2);
+});
+
+test('explicit candidate choice survives approval and neither cannot advance', () => {
+  const base = reviewed(false);
+  assert.throws(() => c(base, 'RECOMMEND', { note: 'Missing choice' }));
+  let b = c(base, 'RECOMMEND', { candidate: 'B', note: 'B better fits the brief' });
+  b = c(c(b, 'APPROVE', { note: 'Authorize B' }), 'PREPARE');
+  assert.equal(b.selectedCandidate, 'B');
+  assert.equal(b.alternative.title, 'Rhythm Study');
+  const revision = c(b, 'REVISE', { note: 'Reconsider size' });
+  assert.equal(revision.selectedCandidate, null);
+  assert.equal(revision.decision, '');
+  const neither = c(base, 'RECOMMEND', { candidate: 'NONE', note: 'Neither fits the brief' });
+  assert.equal(neither.stage, 'not-recommended');
+  assert.throws(() => c(neither, 'APPROVE', { note: 'Cannot bypass committee' }));
+  assert.throws(() => c(neither, 'PREPARE'));
+  assert.equal(c(neither, 'REVISE', { note: 'Research a better fit' }).stage, 'proposal');
+  assert.throws(() => c(base, 'UNKNOWN' as CuratorialCommand['type']));
 });

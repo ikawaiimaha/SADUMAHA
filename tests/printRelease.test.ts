@@ -40,10 +40,12 @@ test('release → acknowledgment → printing → completion requires ordered, v
 test('correction preserves old production and requires new approval and supplier evidence', () => {
   const old = reduce(reduce(released(), ack), start);
   assert.equal(reduce(old, attach), old);
-  assert.equal(reduce(old, { ...correct, stopReference: '' }), old);
+  assert.ok(reduce(old, { ...correct, stopReference: '' }).correction);
   const held = reduce(old, correct);
   assert.equal(reduce(held, complete), held);
-  const next = reduce(held, attach);
+  assert.equal(reduce(held, attach), held);
+  const stopped = reduce(held, { type: 'CONFIRM_PRINT_STOP', actor: 'PUBLISHING_MANAGER', at, version: 1, reference: 'SYNTHETIC-STOP-01' });
+  const next = reduce(stopped, attach);
   assert.equal(next.version, 2);
   assert.equal(next.decision, null);
   assert.equal(next.supplierAck, null);
@@ -55,7 +57,9 @@ test('correction preserves old production and requires new approval and supplier
 test('post-completion defects preserve completion; wrong roles cannot open corrections', () => {
   const finished = reduce(reduce(reduce(released(), ack), start), complete);
   assert.equal(reduce(finished, { ...correct, actor: 'ARTIST' }), finished);
-  const revised = reduce(reduce(finished, correct), attach);
+  const held = reduce(finished, correct);
+  const stopped = reduce(held, { type: 'CONFIRM_PRINT_STOP', actor: 'PUBLISHING_MANAGER', at, version: 1, reference: 'SYNTHETIC-DISPOSITION-01' });
+  const revised = reduce(stopped, attach);
   assert.equal(revised.previous[0].production?.completionReference, 'SYNTHETIC-QC-01');
   assert.equal(finished.correction, null);
 });
