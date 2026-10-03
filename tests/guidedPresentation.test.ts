@@ -1,0 +1,48 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createGuidedSession, guidedCollection, acknowledgeGuidedProof, canAdvanceGuided, validGuidedSession } from '../src/data/guidedPresentation';
+import { collectionTransition } from '../src/data/collectionReadiness';
+const at = '2026-10-03T10:00:00Z';
+test('guided handoff retains acceptance, date and packing gates', () => {
+  const initial = createGuidedSession();
+  let c = initial.collection;
+  assert.equal(canAdvanceGuided({ ...initial, scene: 1 }), false);
+  assert.throws(() => guidedCollection(c, 'COMPLETE_PACKING', at));
+  c = guidedCollection(c, 'ASSIGN', at);
+  assert.equal(c.stage, 'acceptance');
+  assert.equal(canAdvanceGuided({ ...initial, scene: 1, collection: c }), false);
+  assert.throws(() => guidedCollection(c, 'DATE', at, '2026-10-16'));
+  c = guidedCollection(c, 'ACCEPT', at);
+  assert.throws(() => guidedCollection(c, 'DATE', at, '2026-10-12'));
+  assert.throws(() => guidedCollection(c, 'DATE', at, '2026-12-03'));
+  c = guidedCollection(c, 'DATE', at, '2026-10-16');
+  assert.equal(canAdvanceGuided({ ...initial, scene: 2, collection: c }), false);
+  c = guidedCollection(c, 'PREPARE_PACKING', at);
+  assert.equal(c.stage, 'pack-evidence');
+  assert.deepEqual(c.history.slice(-3).map(e => e.actor), ['Logistics B', 'Technical', 'Finance']);
+  assert.throws(() => collectionTransition(c, { type: 'EVIDENCE', actor: 'Coordinator', version: c.version, at, value: 'wrong authority' }));
+  c = guidedCollection(c, 'COMPLETE_PACKING', at);
+  assert.equal(canAdvanceGuided({ ...initial, scene: 2, collection: c }), true);
+  assert.equal(c.stage, 'ready');
+  assert.equal(canAdvanceGuided({ ...initial, scene: 2, collection: c, paused: true }), false);
+  assert.equal(validGuidedSession(JSON.parse(JSON.stringify({ ...initial, scene: 2, collection: c }))), true);
+  assert.equal(createGuidedSession().collection.stage, 'unavailable');
+});
+test('prepared proof preserves old approval but rejects stale supplier acknowledgment', () => {
+  const s = createGuidedSession();
+  assert.equal(s.print.previous[0].decision?.outcome, 'release');
+  assert.equal(s.print.supplierAck, null);
+  assert.equal(acknowledgeGuidedProof(s.print, 1, at), s.print);
+  const next = acknowledgeGuidedProof(s.print, 2, at);
+  assert.equal(next.supplierAck?.version, 2);
+  assert.equal(next.production, null);
+  assert.equal(canAdvanceGuided({ ...s, scene: 3, print: next }), true);
+});
+test('checkpoint validation rejects incomplete states and unsupported language or scenes', () => {
+  const s = createGuidedSession();
+  assert.equal(validGuidedSession(s), true);
+  assert.equal(validGuidedSession({ ...s, scene: 9 }), false);
+  assert.equal(validGuidedSession({ ...s, language: 'bad' }), false);
+  assert.equal(validGuidedSession({ ...s, collection: { ...s.collection, stage: 'ready', packing: null } }), false);
+  assert.equal(validGuidedSession(null), false);
+});

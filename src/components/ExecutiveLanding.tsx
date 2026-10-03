@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import '@fontsource/amiri/400.css';
 import './ExecutiveLanding.css';
+import GuidedPresentation from './GuidedPresentation';
 import PitchCollectionDemo from './PitchCollectionDemo';
 import PitchPrintDemo from './PitchPrintDemo';
 import { ClientPresentation, TechnicalExplainer } from './ClientProposal';
@@ -14,12 +15,16 @@ const chapters = [
   {name:'Legacy',ar:'الأرشيف',owner:'Logistics · Finance · General Coordinator',title:'Close the exhibition. Keep the knowledge.',body:'Bring condition evidence, return records and outstanding obligations into view before closing the dossier.',output:'A traceable closeout record',boundary:'Financial clearance and physical receipt retain separate authorities.'},
 ];
 export default function ExecutiveLanding() {
+  const detailed = new URLSearchParams(window.location.search).get('view') === 'explore';
+  return detailed ? <DetailedOverview /> : <GuidedPresentation />;
+}
+function DetailedOverview() {
   const [chapter,setChapter]=useState(0);
   useEffect(()=>{document.title='SADU — More room for the art';},[]);
   const phase=chapters[chapter];
   return <div className="sadu-executive" lang="en" dir="ltr">
     <a className="sadu-skip" href="#pitch-content">Skip to presentation</a>
-    <header className="sadu-header"><a className="sadu-brand" href="#top" aria-label="SADU home"><span lang="ar" dir="rtl">سدو</span><span>SADU<small>CULTURAL WORK, CONNECTED</small></span></a><nav aria-label="Presentation navigation"><a href="#top">Overview</a><a href="#presentation">Presentation</a><a href="#prototype">Prototype</a><a href="#technical">Technical</a><a href="#next">Next step</a></nav><span className="sadu-private">PRIVATE PRESENTATION</span></header>
+    <header className="sadu-header"><a className="sadu-brand" href="#top" aria-label="SADU home"><span lang="ar" dir="rtl">سدو</span><span>SADU<small>CULTURAL WORK, CONNECTED</small></span></a><nav aria-label="Presentation navigation"><a href="/overview">العرض الموجّه / Guided tour</a><a href="#top">Overview</a><a href="#presentation">Presentation</a><a href="#prototype">Prototype</a><a href="#technical">Technical</a><a href="#next">Next step</a></nav><span className="sadu-private">PRIVATE PRESENTATION</span></header>
     <main id="pitch-content">
       <section id="top" className="sadu-hero">
         <div className="sadu-hero-copy"><p className="sadu-eyebrow">BUILT AROUND THE PEOPLE BEHIND AN EXHIBITION</p><h1>More room<br/>for <em>the art.</em></h1><p className="sadu-lead">A clearer path for the decisions,<br className="sadu-wide-break"/> people and details that bring it to life.</p><p className="sadu-hero-note">SADU is designed to connect exhibition work from the first curatorial brief to the final return—with clear ownership at every handoff.</p><div className="sadu-actions"><a className="sadu-cta" href="#presentation">Start the presentation <span aria-hidden="true">↗</span></a><a className="sadu-text-link" href="#journey">Explore the whole journey ↓</a></div><p className="sadu-prototype-note">Functional prototype · Separate synthetic workflow examples · Live integrations paused</p></div>

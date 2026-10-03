@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import './ClientProposal.css';
 
 const slides = [
@@ -16,11 +16,18 @@ const slides = [
 export function ClientPresentation() {
   const [index, setIndex] = useState(0);
   const slide = slides[index];
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const firstRender = useRef(true);
+  useEffect(() => {
+    if (firstRender.current) { firstRender.current = false; return; }
+    titleRef.current?.focus({ preventScroll: true });
+    titleRef.current?.scrollIntoView({ block: 'start', behavior: 'auto' });
+  }, [index]);
   return <section id="presentation" className="sadu-section sadu-client-presentation" aria-label="Client presentation">
     <div className="sadu-section-heading"><div><p className="sadu-eyebrow">THE CASE FOR SADU / العرض</p><h2>A focused case.<br/><em>Evidence before expansion.</em></h2></div><p>Nine slides. Three practical controls. One bounded decision. Explore a working example, then return here without losing your place.</p></div>
     <div className="sadu-deck-toolbar"><label>Choose a slide<select value={index} onChange={e => setIndex(Number(e.target.value))}>{slides.map((s, i) => <option key={s.title} value={i}>{i + 1}. {s.title}</option>)}</select></label><span>Client presentation · Synthetic examples</span></div>
     <article className="sadu-deck-slide" aria-live="polite" aria-atomic="true">
-      <p className="sadu-eyebrow">SLIDE {index + 1} / {slides.length}</p><h3>{slide.title}</h3><p className="sadu-deck-lead">{slide.body}</p>
+      <p className="sadu-eyebrow">SLIDE {index + 1} / {slides.length}</p><h3 ref={titleRef} tabIndex={-1}>{slide.title}</h3><p className="sadu-deck-lead">{slide.body}</p>
       <ul>{slide.points.map(point => <li key={point}>{point}</li>)}</ul><p className="sadu-deck-foot">{slide.foot}</p>
       {slide.demo && <a className="sadu-text-link" href={slide.demo}>{slide.label} →</a>}
     </article>
