@@ -1,0 +1,11 @@
+.sadu-task-card { border-block-start:2px solid #c1a679; padding-block:18px; margin-block:18px; text-align:start; }
+.sadu-task-card small { font-size:12px; letter-spacing:.04em; }
+.sadu-task-card h3 { margin-block:10px; font-size:22px; line-height:1.4; }
+.sadu-task-card p { font-size:15px; line-height:1.65; margin-block:10px; }
+.sadu-task-card summary { cursor:pointer; padding-block:14px; min-block-size:44px; }
+.sadu-task-card dl { display:grid; gap:12px; margin-block:12px; }
+.sadu-task-card dl>div { display:grid; grid-template-columns:minmax(100px,1fr) 2fr; gap:16px; }
+.sadu-task-card dt { font-size:13px; font-weight:600; }
+.sadu-task-card dd { margin:0; font-size:14px; overflow-wrap:anywhere; }
+.sadu-task-card :focus-visible { outline:3px solid #8b4513; outline-offset:3px; }
+@media(max-width:480px){.sadu-task-card dl>div{grid-template-columns:1fr;gap:3px}}

@@ -2,13 +2,14 @@ import type { DemoActor } from './livingRecord';
 
 export const PRINT_CASE_ID = 'DEMO-PUB-01';
 export const PRINT_ROUTE_ID = 'DEMO-ROUTE-PRINT-01'; // Proposed route, never an institutional delegation.
+export interface SupplierEvidence { source: 'Email' | 'WhatsApp' | 'Portal' | 'Verbal'; sender: string; receivedAt: string }
 export interface PublishingRecord {
   version: number;
   proofs: { version: number; actor: DemoActor; at: string }[];
   review: { version: number; actor: DemoActor; at: string; route: string } | null;
   decision: { version: number; actor: DemoActor; at: string; outcome: 'release' | 'return' } | null;
   dispatch: { version: number; actor: DemoActor; at: string } | null;
-  supplierAck: { version: number; actor: DemoActor; at: string; reference: string } | null;
+  supplierAck: { version: number; actor: DemoActor; at: string; reference: string; evidence?: SupplierEvidence } | null;
   production: { version: number; actor: DemoActor; at: string; completedAt?: string; completionReference?: string } | null;
   correction: { version: number; actor: DemoActor; at: string; reason: string; stopReference: string } | null;
   previous: Omit<PublishingRecord, 'previous'>[];
@@ -19,7 +20,7 @@ export type PublishingAction =
   | ({ type: 'ROUTE_PRINT_PROOF'; version: number; editorialChecked: boolean; rightsChecked: boolean; route: string } & Envelope)
   | ({ type: 'DECIDE_PRINT_PROOF'; version: number; acknowledged: boolean; outcome: 'release' | 'return' } & Envelope)
   | ({ type: 'RECORD_PRINT_DISPATCH'; version: number } & Envelope)
-  | ({ type: 'ACKNOWLEDGE_PRINT_PROOF' | 'COMPLETE_PRINT'; version: number; reference: string } & Envelope)
+  | ({ type: 'ACKNOWLEDGE_PRINT_PROOF' | 'COMPLETE_PRINT'; version: number; reference: string; evidence?: SupplierEvidence } & Envelope)
   | ({ type: 'START_PRINT'; version: number } & Envelope)
   | ({ type: 'REQUEST_PRINT_CORRECTION'; version: number; reason: string; stopReference: string } & Envelope);
 
@@ -46,7 +47,8 @@ export function reducePublishingRecord(state: PublishingRecord, action: Publishi
       return { ...state, dispatch: { version: action.version, actor: action.actor, at: action.at } };
     case 'ACKNOWLEDGE_PRINT_PROOF':
       if (action.actor !== 'PUBLISHING_MANAGER' || !state.dispatch || state.supplierAck || !action.reference.trim()) return state;
-      return { ...state, supplierAck: { version: action.version, actor: action.actor, at: action.at, reference: action.reference.trim() } };
+      if (action.evidence && (!['Email', 'WhatsApp', 'Portal', 'Verbal'].includes(action.evidence.source) || !action.evidence.sender.trim() || !Number.isFinite(Date.parse(action.evidence.receivedAt)) || Date.parse(action.evidence.receivedAt) > Date.parse(action.at))) return state;
+      return { ...state, supplierAck: { version: action.version, actor: action.actor, at: action.at, reference: action.reference.trim(), evidence: action.evidence ? { ...action.evidence } : undefined } };
     case 'START_PRINT':
       if (action.actor !== 'PUBLISHING_MANAGER' || state.supplierAck?.version !== action.version || state.production) return state;
       return { ...state, production: { version: action.version, actor: action.actor, at: action.at } };

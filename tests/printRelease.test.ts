@@ -13,6 +13,16 @@ const ack = { type: 'ACKNOWLEDGE_PRINT_PROOF', actor: 'PUBLISHING_MANAGER', at, 
 const start = { type: 'START_PRINT', actor: 'PUBLISHING_MANAGER', at, version: 1 } as const;
 const complete = { type: 'COMPLETE_PRINT', actor: 'PUBLISHING_MANAGER', at, version: 1, reference: 'SYNTHETIC-QC-01' } as const;
 const correct = { type: 'REQUEST_PRINT_CORRECTION', actor: 'COORDINATOR', at, version: 1, reason: 'Correct title', stopReference: 'SYNTHETIC-STOP-01' } as const;
+test('supplier source is attributed separately and invalid receipt metadata cannot acknowledge', () => {
+  const s = released();
+  assert.equal(reduce(s, { ...ack, evidence: { source: 'Email', sender: ' ', receivedAt: at } }), s);
+  assert.equal(reduce(s, { ...ack, evidence: { source: 'Email', sender: 'Supplier', receivedAt: '2099-01-01' } }), s);
+  const evidence = { source: 'WhatsApp' as const, sender: 'Synthetic supplier', receivedAt: at };
+  const recorded = reduce(s, { ...ack, evidence });
+  evidence.sender = 'Changed input';
+  assert.equal(recorded.supplierAck?.evidence?.sender, 'Synthetic supplier');
+  assert.equal(recorded.supplierAck?.actor, 'PUBLISHING_MANAGER');
+});
 test('release → acknowledgment → printing → completion requires ordered, version-bound evidence', () => {
   let s = released();
   for (const a of [start, complete, { ...ack, version: 2 }, { ...ack, actor: 'ARTIST' as const }, { ...ack, reference: ' ' }]) assert.equal(reduce(s, a), s);
