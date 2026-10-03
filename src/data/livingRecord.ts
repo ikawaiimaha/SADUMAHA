@@ -12,7 +12,7 @@ export const DEMO_PROGRAMME: ExhibitionProgramme = {
   progressPercent: 0, gatesReady: 0, gatesTotal: 3, criticalRisks: 0, unresolvedHandoffs: 1,
 };
 export type DemoActor = 'CHAIRMAN' | 'DIRECTORATE' | 'MANAGER' | 'LOGISTICS' | 'TECHNICAL' | 'COORDINATOR' | 'FINANCE' | 'PUBLISHING_MANAGER' | 'ARTIST' | 'SELECTION' | 'OBSERVER';
-export type EventKind = 'receipt' | 'receipt-issue' | 'condition' | 'handover' | 'statement-missing' | 'statement-task' | 'statement-restored' | 'finance-pack' | 'finance-escalated' | 'delivery-escalated' | 'print-proof' | 'print-routed' | 'print-decision' | 'print-dispatch';
+export type EventKind = 'receipt' | 'receipt-issue' | 'condition' | 'handover' | 'statement-missing' | 'statement-task' | 'statement-restored' | 'finance-pack' | 'finance-escalated' | 'delivery-escalated' | 'print-proof' | 'print-routed' | 'print-decision' | 'print-dispatch' | 'print-progress';
 export interface DemoEvent { id: string; kind: EventKind; actor: DemoActor; at: string; reference: string }
 export interface ConditionEvidence { id: string; version: number; outcome: 'clear' | 'issue'; at: string; actor: DemoActor }
 export interface LivingRecord {
@@ -50,11 +50,15 @@ export function livingRecordReducer(state: LivingRecord, action: DemoAction): Li
     case 'ATTACH_PRINT_PROOF':
     case 'ROUTE_PRINT_PROOF':
     case 'DECIDE_PRINT_PROOF':
+    case 'ACKNOWLEDGE_PRINT_PROOF':
+    case 'START_PRINT':
+    case 'COMPLETE_PRINT':
+    case 'REQUEST_PRINT_CORRECTION':
     case 'RECORD_PRINT_DISPATCH': {
       const publishing = reducePublishingRecord(state.publishing, action);
       if (publishing === state.publishing) return state;
-      const kind: EventKind = action.type === 'ATTACH_PRINT_PROOF' ? 'print-proof' : action.type === 'ROUTE_PRINT_PROOF' ? 'print-routed' : action.type === 'DECIDE_PRINT_PROOF' ? 'print-decision' : 'print-dispatch';
-      return record(kind, { publishing }, `${selectPublishingRecord(publishing).reference}${action.type === 'DECIDE_PRINT_PROOF' ? `/${action.outcome}` : ''}`);
+      const kind: EventKind = action.type === 'ATTACH_PRINT_PROOF' ? 'print-proof' : action.type === 'ROUTE_PRINT_PROOF' ? 'print-routed' : action.type === 'DECIDE_PRINT_PROOF' ? 'print-decision' : action.type === 'RECORD_PRINT_DISPATCH' ? 'print-dispatch' : 'print-progress';
+      return record(kind, { publishing }, `${selectPublishingRecord(publishing).reference}${action.type === 'DECIDE_PRINT_PROOF' ? `/${action.outcome}` : kind === 'print-progress' ? `/${action.type}` : ''}`);
     }
     case 'RECEIVE':
       if (action.actor !== 'LOGISTICS' || state.receipt || state.acceptance) return state;

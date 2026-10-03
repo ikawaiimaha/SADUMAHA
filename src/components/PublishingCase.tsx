@@ -3,6 +3,7 @@ import { useI18n } from '../context/I18nContext';
 import { useLivingRecord } from '../context/LivingRecordContext';
 import { PRINT_ROUTE_ID, selectPublishingRecord } from '../data/publishingRecord';
 import type { DemoActor } from '../data/livingRecord';
+import { PrintProduction } from './PrintProduction';
 
 export const printStages = {
   drafting: ['Drafting · demo', 'إعداد المسودة · تجريبي'],
@@ -11,6 +12,10 @@ export const printStages = {
   released: ['Print release recorded · demo', 'سُجل إذن الطباعة · تجريبي'],
   returned: ['Returned for revision · demo', 'أعيد للتعديل · تجريبي'],
   sent: ['Sent to print · demo', 'أُرسل للطباعة · تجريبي'],
+  acknowledged: ['Supplier acknowledged revision · demo', 'أكد المورد الإصدار · تجريبي'],
+  printing: ['Printing · demo', 'قيد الطباعة · تجريبي'],
+  completed: ['Printing completed · demo', 'اكتملت الطباعة · تجريبي'],
+  correction: ['Correction required · demo', 'يلزم تصحيح · تجريبي'],
 } as const;
 
 export function PublishingCase({ actor }: { actor: DemoActor }) {
@@ -39,12 +44,13 @@ export function PublishingCase({ actor }: { actor: DemoActor }) {
     <p className="lr-small">{t('Separate demonstration; not an issue of the seven magazines.', 'تجربة مستقلة؛ ليست عدداً من المجلات السبع.')}</p>
     <span className={`lr-status ${summary.stage === 'released' || summary.stage === 'sent' ? 'is-clear' : ''}`} data-testid="publishing-stage">{printStages[summary.stage][isAr ? 1 : 0]}</span>
     {publishing.version ? <p className="lr-small"><bdi>{summary.reference}</bdi> · {t('Source: prepared sample proof', 'المصدر: بروفة تجريبية معدة مسبقاً')}</p> : null}
-    {actor === 'COORDINATOR' ? <div className="lr-actions"><button className="lr-primary" disabled={Boolean(publishing.dispatch)} onClick={() => dispatch({ type: 'ATTACH_PRINT_PROOF', ...envelope() })}>{publishing.version ? t('Attach revised sample proof', 'إرفاق بروفة تجريبية معدلة') : t('Attach prepared sample proof', 'إرفاق البروفة التجريبية المعدة')}</button><p className="lr-small">{t('A new version clears the current review and decision; prior events remain in history.', 'يلغي الإصدار الجديد سريان المراجعة والقرار الحاليين؛ وتبقى الأحداث السابقة في السجل.')}</p></div> : null}
+    {actor === 'COORDINATOR' ? <div className="lr-actions"><button className="lr-primary" disabled={Boolean(publishing.dispatch && !publishing.correction)} onClick={() => dispatch({ type: 'ATTACH_PRINT_PROOF', ...envelope() })}>{publishing.version ? t('Attach revised sample proof', 'إرفاق بروفة تجريبية معدلة') : t('Attach prepared sample proof', 'إرفاق البروفة التجريبية المعدة')}</button><p className="lr-small">{t('A new version clears the current review and decision; prior events remain in history.', 'يلغي الإصدار الجديد سريان المراجعة والقرار الحاليين؛ وتبقى الأحداث السابقة في السجل.')}</p></div> : null}
     {actor === 'PUBLISHING_MANAGER' ? <div className="lr-actions">
-      <button className="lr-primary" disabled={!publishing.version || Boolean(publishing.review)} onClick={openReview}>{t('Review proof and route', 'مراجعة البروفة وإحالتها')}</button>
-      <button disabled={publishing.decision?.outcome !== 'release' || Boolean(publishing.dispatch)} onClick={() => dispatch({ type: 'RECORD_PRINT_DISPATCH', ...envelope(), version: publishing.version })}>{t('Record sample print dispatch', 'تسجيل إرسال تجريبي للطباعة')}</button>
+      <button className="lr-primary" disabled={!publishing.version || Boolean(publishing.review || publishing.correction)} onClick={openReview}>{t('Review proof and route', 'مراجعة البروفة وإحالتها')}</button>
+      <button disabled={publishing.decision?.outcome !== 'release' || Boolean(publishing.dispatch || publishing.correction)} onClick={() => dispatch({ type: 'RECORD_PRINT_DISPATCH', ...envelope(), version: publishing.version })}>{t('Record sample print dispatch', 'تسجيل إرسال تجريبي للطباعة')}</button>
     </div> : null}
     {actor === 'CHAIRMAN' && summary.queued ? <button className="lr-link" onClick={openReview}>{t('Review print-release brief', 'مراجعة موجز إذن الطباعة')}</button> : null}
+    <PrintProduction key={`${publishing.version}:${summary.stage}`} actor={actor}/>
     {publishing.decision ? <p className="lr-small" data-testid="print-decision">{t('Demo decision by ', 'قرار تجريبي من ')}<bdi>DEMO-{publishing.decision.actor}</bdi> · <bdi>v{publishing.decision.version}</bdi> · {new Date(publishing.decision.at).toLocaleString(isAr ? 'ar-AE' : 'en-GB', { timeZone: 'Asia/Dubai' })}</p> : null}
     {actor !== 'CHAIRMAN' ? <p className="lr-small">{t('A proof attachment updates the publishing record. Manager checks and a proposed routing reference are required before executive review.', 'يحدّث إرفاق البروفة سجل النشر. وتلزم مراجعات المدير ومرجع إحالة مقترح قبل المراجعة التنفيذية.')}</p> : null}
     <dialog ref={dialog} className="lr-dialog" aria-labelledby="print-dialog-title" onCancel={() => setOpen(false)} onClose={() => setOpen(false)}>
@@ -52,7 +58,7 @@ export function PublishingCase({ actor }: { actor: DemoActor }) {
       <h2 id="print-dialog-title">{t('Print-release brief', 'موجز إذن الطباعة')}</h2>
       <p>{t('SDC cultural bulletin — fictional issue', 'نشرة ثقافية للدائرة — عدد افتراضي')} · <bdi>DEMO-PUB-01/v{version}</bdi></p>
       <div className="lr-dossier-evidence">
-        <p><a href={`/demo/print-proof.html?version=${version}`} target="_blank" rel="noreferrer">{t('Open prepared bilingual proof', 'فتح البروفة التجريبية ثنائية اللغة')}</a></p>
+        <details><summary>{t('Read prepared bilingual proof', 'قراءة البروفة التجريبية ثنائية اللغة')}</summary><p><bdi>DEMO-PUB-01/v{version}</bdi> · {t('Synthetic template; each revision reuses this sample text.', 'قالب افتراضي؛ يعيد كل إصدار استخدام هذا النص التجريبي.')}</p><article lang="en" dir="ltr"><h3>Connecting cultural work</h3><p>This fictional bulletin connects a prepared proof, an attributed review, and a tracked printing outcome.</p></article><article lang="ar" dir="rtl"><h3>ترابط العمل الثقافي</h3><p>تربط هذه النشرة الافتراضية البروفة المعدة بالمراجعة الموثقة ونتيجة الطباعة المتابعة.</p></article></details>
         <p>{t('Prepared sample text and credits; no real authors, articles or print order.', 'نص وبيانات نسب تجريبية؛ لا كتّاب أو مقالات أو أمر طباعة فعلي.')}</p>
         <p>{t('Proposed review route: ', 'مسار مراجعة مقترح: ')}<bdi>{PRINT_ROUTE_ID}</bdi></p>
         <p>{t('This route demonstrates a possible Chairman review. It is not a verified delegation and does not apply to all publications.', 'يوضح هذا المسار مراجعة محتملة من رئيس الدائرة. وليس تفويضاً موثقاً ولا يسري على جميع الإصدارات.')}</p>

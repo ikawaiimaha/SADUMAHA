@@ -33,6 +33,7 @@ const roles: { actor: DemoActor; role: RoleKey; en: string; ar: string }[] = [
   { actor: 'ARTIST', role: 'ARTIST', en: 'Artist intake', ar: 'تقديم الفنان' },
 ];
 const eventLabels: Record<DemoEvent['kind'], [string, string]> = {
+  'print-progress': ['Print production update recorded', 'سُجل تحديث تنفيذ الطباعة'],
   'print-proof': ['Sample print proof attached', 'أُرفقت البروفة التجريبية'],
   'print-routed': ['Publishing manager routed the reviewed proof', 'أحال مدير النشر البروفة المراجعة'],
   'print-decision': ['Sample executive decision recorded for this proof version', 'سُجل القرار التنفيذي التجريبي لهذا الإصدار'],
