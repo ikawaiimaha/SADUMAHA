@@ -15,7 +15,8 @@ const chapters = [
   {name:'Legacy',ar:'الأرشيف',owner:'Logistics · Finance · General Coordinator',title:'Close the exhibition. Keep the knowledge.',body:'Bring condition evidence, return records and outstanding obligations into view before closing the dossier.',output:'A traceable closeout record',boundary:'Financial clearance and physical receipt retain separate authorities.'},
 ];
 export default function ExecutiveLanding() {
-  const detailed = new URLSearchParams(window.location.search).get('view') === 'explore';
+  const [detailed] = useState(() => new URLSearchParams(window.location.search).get('view') === 'explore'
+    || ['#experience', '#print-release', '#curatorial-handoff', '#prototype', '#technical', '#journey', '#next'].includes(window.location.hash));
   return detailed ? <DetailedOverview /> : <GuidedPresentation />;
 }
 function DetailedOverview() {
