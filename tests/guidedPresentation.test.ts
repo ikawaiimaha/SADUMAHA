@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createGuidedSession, guidedCollection, acknowledgeGuidedProof, canAdvanceGuided, validGuidedSession, guidedNavigation, navigateGuidedSession } from '../src/data/guidedPresentation';
 import { collectionTransition } from '../src/data/collectionReadiness';
+import { loadCheckpoint, saveCheckpoint } from '../src/lib/demoCheckpoint';
 const at = '2026-10-03T10:00:00Z';
 test('guided handoff retains acceptance, date and packing gates', () => {
   const initial = createGuidedSession();
@@ -45,6 +46,62 @@ test('checkpoint validation rejects incomplete states and unsupported language o
   assert.equal(validGuidedSession({ ...s, language: 'bad' }), false);
   assert.equal(validGuidedSession({ ...s, collection: { ...s.collection, stage: 'ready', packing: null } }), false);
   assert.equal(validGuidedSession(null), false);
+});
+
+test('every guided collection stage can resume, while malformed saved records recover without deleting the source', () => {
+  let s = createGuidedSession();
+  assert.equal(validGuidedSession(s), true);
+  for (const command of ['ASSIGN', 'ACCEPT', 'DATE', 'PREPARE_PACKING', 'COMPLETE_PACKING'] as const) {
+    s = { ...s, collection: guidedCollection(s.collection, command, at, command === 'DATE' ? '2026-10-16' : undefined) };
+    assert.equal(validGuidedSession(JSON.parse(JSON.stringify(s))), true, command);
+  }
+  const invalid = [
+    (v: any) => { v.collection.date = 'damaged-date'; },
+    (v: any) => { v.collection.date = '2026-10-32'; },
+    (v: any) => { v.collection.date = '2026-10-12'; },
+    (v: any) => { v.collection.date = ''; },
+    (v: any) => { v.collection.history[0] = null; },
+    (v: any) => { v.collection.history[0].at = 'damaged-time'; },
+    (v: any) => { v.collection.history[0].action = null; },
+    (v: any) => { v.collection.history[0].version = -1; },
+    (v: any) => { v.collection.history.find((e: any) => e.action === 'ACCEPT').actor = 'Coordinator'; },
+    (v: any) => { v.collection.packing.amount = '1200'; },
+    (v: any) => { v.collection.packing.amount = -1; },
+    (v: any) => { v.collection.packing.requiresTechnical = 'yes'; },
+    (v: any) => { v.collection.packing.specification = ''; },
+    (v: any) => { v.collection.packing.owner = null; },
+    (v: any) => { v.collection.packing.evidence = 'unrecorded-reference'; },
+    (v: any) => { v.collection.packing.technicalReference = 'unrecorded-review'; },
+    (v: any) => { v.collection.packing.costReference = ''; },
+  ];
+  for (const mutate of invalid) {
+    const damaged = JSON.parse(JSON.stringify(s)); mutate(damaged);
+    assert.equal(validGuidedSession(damaged), false);
+    const raw = JSON.stringify({ schema: 1, value: damaged });
+    let writes = 0;
+    const storage = { getItem: () => raw, setItem: () => { writes++; } };
+    const recovered = loadCheckpoint(storage, 'demo', createGuidedSession, validGuidedSession);
+    assert.equal(recovered.value.collection.stage, 'unavailable');
+    assert.match(recovered.warning, /could not be restored/);
+    assert.equal(storage.getItem(), raw);
+    assert.equal(writes, 0, 'recovery retains the rejected checkpoint');
+  }
+  assert.equal(validGuidedSession({ ...createGuidedSession(), scene: 5 }), false, 'a completed presentation cannot restore unfinished collection');
+});
+
+test('the first fresh save preserves rejected data and does not overwrite an older recovery copy', () => {
+  const raw = '{damaged checkpoint';
+  const entries = new Map([['demo', raw], ['demo:rejected', 'earlier damaged checkpoint']]);
+  const storage = { getItem: (key: string) => entries.get(key) ?? null, setItem: (key: string, value: string) => { entries.set(key, value); } };
+  const loaded = loadCheckpoint(storage, 'demo', createGuidedSession, validGuidedSession);
+  assert.equal(saveCheckpoint(storage, 'demo', loaded.value, loaded.rejected), '');
+  assert.equal(entries.get('demo:rejected'), 'earlier damaged checkpoint');
+  assert.equal(entries.get('demo:rejected:1'), raw);
+  assert.equal(validGuidedSession(JSON.parse(entries.get('demo')!).value), true);
+  entries.set('demo', 'another damaged checkpoint');
+  const blocked = { getItem: storage.getItem, setItem: () => { throw new Error('Quota exceeded'); } };
+  assert.match(saveCheckpoint(blocked, 'demo', loaded.value, 'another damaged checkpoint'), /could not be saved/);
+  assert.equal(entries.get('demo'), 'another damaged checkpoint', 'failed recovery copy must not replace the original');
 });
 
 test('the main pitch completes collection before the proposal, without completing the optional print job', () => {

@@ -1,15 +1,15 @@
 import type { CollectionDemo } from '../data/collectionReadiness';
-import { collectionReceipt, guidedCase } from '../data/guidedCase';
+import { collectionReceipt, guidedCase, formatCaseTimestamp } from '../data/guidedCase';
 
 export function GuidedCaseReceipt({ record, ar }: { record: CollectionDemo; ar: boolean }) {
   const t = (a: string, e: string) => ar ? a : e;
   const r = collectionReceipt(record, ar);
-  return <div className="guide-receipt">
+  return <div className="guide-receipt" tabIndex={-1}>
     <p className="guide-label"><bdi>{r.id}</bdi> · {r.work} · {t('حالة تجريبية', 'Synthetic case')}</p>
     <h2>{r.status}</h2>
     <dl><div><dt>{t('المسؤول', 'Owner')}</dt><dd>{r.owner} · {r.acceptance}</dd></div>
       <div><dt>{t('موعد الاستلام · باريس', 'Pickup · Paris')}</dt><dd>{r.date}</dd></div>
-      <div><dt>{t('دليل الإكمال', 'Completion evidence')}</dt><dd><bdi>{r.evidence}</bdi></dd></div>
+      <div><dt>{t('دليل الإكمال', 'Completion evidence')}</dt><dd>{r.evidenceLabel}{record.packing && <details><summary>{t('عرض ورقة فحص التغليف', 'View the packing check sheet')}</summary><GuidedPackingEvidence record={record} ar={ar}/></details>}</dd></div>
       <div><dt>{t('الحجز والتسليم', 'Booking and handover')}</dt><dd>{t('النقل غير محجوز · لم يُسجل تسليم فعلي', 'Transport not booked · no physical handover recorded')}</dd></div></dl>
   </div>;
 }
@@ -18,7 +18,7 @@ export function GuidedPackingEvidence({ record, ar }: { record: CollectionDemo; 
   const t = (a: string, e: string) => ar ? a : e;
   const r = collectionReceipt(record, ar);
   return <article className="guide-evidence">
-    <p className="guide-label">{t('ورقة فحص توضيحية — معدّة للمحاكاة فقط', 'Illustrative check sheet — prepared for simulation only')}</p>
+    <p className="guide-label">{t('ورقة فحص تجريبية', 'Synthetic check sheet')}</p>
     <h3>{t('صندوق مخصص مع دعامات واقية', 'Custom crate with protective supports')}</h3>
     <div className="guide-evidence-layout">
       <svg viewBox="0 0 280 200" role="img" aria-label={t('رسم توضيحي لصندوق يحيط بلوحة ودعامات عند الزوايا، وليس صورة فحص', 'Schematic of a crate surrounding an artwork with corner supports; not an inspection photograph')}>
@@ -34,7 +34,7 @@ export function GuidedPackingEvidence({ record, ar }: { record: CollectionDemo; 
       <div><dt>{t('المصدر', 'Source')}</dt><dd>{t('سجل مقاول التغليف التجريبي — ليس مستنداً مستلماً', 'Prepared packing-contractor fixture — not a received document')}</dd></div>
       <div><dt>{t('مراجعة الخطة', 'Plan review')}</dt><dd><bdi>{record.packing?.technicalReference}</bdi></dd></div>
       <div><dt>{t('موافقة التكلفة فقط', 'Cost approval only')}</dt><dd>AED {record.packing?.amount.toLocaleString(ar ? 'ar-AE' : 'en-GB')} · <bdi>{record.packing?.costReference}</bdi></dd></div>
-      <div><dt>{t('تأكيد الإكمال', 'Completion check')}</dt><dd>{r.recordedAt ? `${r.owner} · ${new Intl.DateTimeFormat(ar ? 'ar-AE' : 'en-GB', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Dubai' }).format(new Date(r.recordedAt))} · ${t('دبي · النسخة', 'Dubai · revision')} ${r.recordedVersion}` : t('بانتظار تسجيل تحقق مسؤولة الاستلام', 'Awaiting the collection officer’s recorded check')}</dd></div></dl></details>
-    <p className="guide-note">{t('الرسم وورقة الفحص توضيحيان. لم تُرفع صورة ميدانية ولا يمثل المثال اعتماد سلامة أو إذناً بالدفع.', 'The diagram and check sheet are illustrative. No field photograph was uploaded; this example is not a safety certification or payment authorization.')}</p>
+      <div><dt>{t('تأكيد الإكمال', 'Completion check')}</dt><dd>{r.recordedAt ? `${r.owner} · ${formatCaseTimestamp(r.recordedAt, ar)} · ${t('دبي · النسخة', 'Dubai · revision')} ${r.recordedVersion}` : t('بانتظار تسجيل تحقق مسؤولة الاستلام', 'Awaiting the collection officer’s recorded check')}</dd></div></dl></details>
+    <p className="guide-note">{t('مثال توضيحي، وليس صورة ميدانية أو اعتماد سلامة أو إذناً بالدفع.', 'Illustrative only; not a field photograph, safety certification or payment authorization.')}</p>
   </article>;
 }

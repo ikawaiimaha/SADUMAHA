@@ -5,7 +5,7 @@ import { acknowledgeGuidedProof, createGuidedSession, guidedCollection, guidedMa
 import './GuidedPresentation.css';
 import LocalHandoffRegister from './LocalHandoffRegister';
 import { handoffPhase } from '../data/handoffRegister';
-import { guidedCase, pilotBriefHtml } from '../data/guidedCase';
+import { guidedCase, pilotBriefHtml, formatCaseTimestamp, guidedHistoryLabel, guidedActorLabel } from '../data/guidedCase';
 import { GuidedCaseReceipt, GuidedPackingEvidence } from './GuidedCaseDetails';
 
 const scenes = [
@@ -22,6 +22,8 @@ export default function GuidedPresentation({ onExplore }: { onExplore: (hash: st
   const [error, setError] = useState<'date' | 'proof' | 'action' | ''>('');
   const [errorAttempt, setErrorAttempt] = useState(0);
   const heading = useRef<HTMLHeadingElement>(null);
+  const scenePanel = useRef<HTMLElement>(null);
+  const previousScene = useRef(session.scene);
   const feedback = useRef<HTMLParagraphElement>(null);
   const [resumePrompt, setResumePrompt] = useState(() => session.scene > 0 || session.collection.stage !== 'unavailable');
   const [showCase, setShowCase] = useState(false);
@@ -48,8 +50,11 @@ export default function GuidedPresentation({ onExplore }: { onExplore: (hash: st
   }, [ar]);
   useEffect(() => {
     if (!mounted.current) { mounted.current = true; return; }
-    heading.current?.focus({ preventScroll: true });
-    heading.current?.closest('.sadu-guided')?.scrollIntoView({ block: 'start', behavior: 'auto' });
+    const sameScene = previousScene.current === session.scene;
+    previousScene.current = session.scene;
+    const target = (sameScene && !session.paused ? scenePanel.current?.querySelector<HTMLElement>('.guide-task, .guide-receipt') : null) ?? heading.current;
+    target?.focus({ preventScroll: true });
+    target?.scrollIntoView({ block: 'start', behavior: 'auto' });
   }, [session.scene, session.paused, c.stage, session.print.supplierAck?.version]);
   useEffect(() => {
     if (error) { feedback.current?.focus({ preventScroll: true }); feedback.current?.scrollIntoView({ block: 'center', behavior: 'auto' }); }
@@ -107,24 +112,26 @@ export default function GuidedPresentation({ onExplore }: { onExplore: (hash: st
     <main id="presentation">
       {confirmReset && <div className="guide-resume" ref={resetPanel} role="region" aria-label={t('تأكيد إعادة العرض', 'Confirm restart')} tabIndex={-1}><p>{t('بدء عرض جديد؟ ستُستبدل خطوات هذه الحالة التجريبية فقط. لا يتغير أي سجل آخر.', 'Start a new presentation? Only this synthetic case’s steps will be replaced. No other record changes.')}</p><div className="guide-choices"><button className="guide-primary" onClick={confirmRestart}>{t('تأكيد بدء عرض جديد', 'Confirm new presentation')}</button><button onClick={() => { setConfirmReset(false); heading.current?.focus(); }}>{t('إلغاء والاحتفاظ بالخطوات', 'Cancel and keep progress')}</button></div></div>}
       {resumePrompt && <div className="guide-resume" role="region" aria-label={t('عرض محفوظ', 'Saved presentation')}><p>{t('لديكِ عرض محفوظ في هذا التبويب. تابعي من حيث توقفتِ، أو ابدئي عرضاً جديداً للحضور.', 'A presentation is saved in this tab. Continue where you left off, or start again for a new audience.')}</p><div className="guide-choices"><button className="guide-primary" onClick={() => { setResumePrompt(false); heading.current?.focus(); }}>{t('متابعة العرض المحفوظ', 'Continue saved presentation')}</button><button onClick={restart}>{t('بدء عرض جديد', 'Start a new presentation')}</button></div></div>}
+      {warning && <p className="guide-error" role="alert">{warning.startsWith('Saved demonstration') ? t('تعذّر استعادة الحالة المحفوظة. بدأنا مثالاً جديداً، واحتفظنا بالنسخة السابقة للمراجعة.', 'The saved case could not be restored. A fresh example is shown and the previous checkpoint is retained for review.') : t('تعذّر حفظ الخطوات في هذا التبويب. أبقي الصفحة مفتوحة؛ قد تحتاجين إلى بدء المثال مجدداً بعد التحديث.', 'Steps could not be saved in this tab. Keep the page open; refreshing may require restarting the example.')}</p>}
       <div className="guide-progress" aria-label={t('موضعك في العرض', 'Your place in the presentation')}>
         <p>{session.scene === 3 ? t('مثال إضافي اختياري · الطباعة', 'Optional example · Printing') : <>{t('المرحلة', 'Stage')} {number(position)} {t('من', 'of')} {number(guidedMainScenes.length)} · {scenes[session.scene][ar ? 0 : 1]}</>}</p>
         <progress value={position} max={guidedMainScenes.length} aria-label={t('تقدم العرض', 'Presentation progress')}/>
       </div>
       <div className="guide-case-bar"><p><bdi>{guidedCase.id}</bdi> · {guidedCase.work[ar ? 'ar' : 'en']} <span>· {t('عمل وشخصيات تجريبية', 'Fictional artwork and people')}</span></p><button aria-expanded={showCase} aria-controls="guided-case-details" onClick={() => setShowCase(value => !value)}>{showCase ? t('إغلاق تفاصيل الحالة', 'Close case details') : t('تفاصيل هذه الحالة', 'View this case')}</button></div>
-      {showCase && <div id="guided-case-details" className="guide-case-details" ref={casePanel} tabIndex={-1}><GuidedCaseReceipt record={c} ar={ar}/>{c.packing && <GuidedPackingEvidence record={c} ar={ar}/>}<p>{t('العنوان المؤكد: ١٢ شارع المثال، باريس. التوفر: ١–٣١ أكتوبر ٢٠٢٦، باستثناء ١٠–١٥ أكتوبر. هذه نفس الحالة والنسخة المعروضتان في الخطوات أدناه.', 'Confirmed address: 12 Example Lane, Paris. Available 1–31 October 2026, except 10–15 October. This is the same case and revision used in the steps below.')}</p><details><summary>{t('سجل الخطوات التجريبية', 'Synthetic step history')}</summary><ol>{c.history.map((entry, i) => <li key={i}><bdi>{entry.actor} · {entry.action} · {entry.at}</bdi></li>)}</ol></details><button onClick={() => { setShowCase(false); heading.current?.focus(); }}>{t('العودة إلى العرض', 'Return to the presentation')}</button></div>}
-      <section id="guided-scene" className="guide-scene" aria-labelledby="guide-heading">
+      {showCase && <div id="guided-case-details" className="guide-case-details" ref={casePanel} tabIndex={-1}><GuidedCaseReceipt record={c} ar={ar}/><p>{t('العنوان المؤكد: ١٢ شارع المثال، باريس. التوفر: ١–٣١ أكتوبر ٢٠٢٦، باستثناء ١٠–١٥ أكتوبر. هذه نفس الحالة والنسخة المعروضتان في الخطوات أدناه.', 'Confirmed address: 12 Example Lane, Paris. Available 1–31 October 2026, except 10–15 October. This is the same case and revision used in the steps below.')}</p><details><summary>{t('سجل الخطوات التجريبية', 'Synthetic step history')}</summary><ol>{c.history.map((entry, i) => <li key={i}><strong>{guidedHistoryLabel(entry.action, ar)}</strong><p>{guidedActorLabel(entry.actor, ar)} · {formatCaseTimestamp(entry.at, ar)}</p><details><summary>{t('المرجع التقني للخطوة', 'Technical step reference')}</summary><bdi>{entry.actor} · {entry.action} · {entry.at}</bdi></details></li>)}</ol></details><button onClick={() => { setShowCase(false); heading.current?.focus(); }}>{t('العودة إلى العرض', 'Return to the presentation')}</button></div>}
+      <section id="guided-scene" ref={scenePanel} className="guide-scene" aria-labelledby="guide-heading">
         <p className="guide-label">{t('مثال تجريبي — لا إرسال أو حجز أو دفع فعلي', 'Synthetic example — no real sending, booking or payment')}</p>
         <h1 id="guide-heading" ref={heading} tabIndex={-1}>{session.paused ? t('توقّفنا هنا. يمكنك المتابعة في أي وقت.', 'Paused here. Resume whenever you are ready.') : titles[session.scene]}</h1>
         {session.paused ? <p className="guide-intro">{t('مكانك محفوظ في هذه الصفحة. لا يوجد عدّ تنازلي ولا انتقال تلقائي.', 'Your place stays here. There is no countdown or automatic advancement.')}</p> : <>
           {session.scene === 0 && <>
+            <button className="guide-primary guide-start" onClick={() => move(1)}>{t('جرّبي حلّ حالة الاستلام', 'Try resolving this collection')}</button>
             <p className="guide-intro">{t('مسؤول الاستلام في إجازة، والعمل بلا تغليف، والموعد لم يُحسم. من يتولى المهمة، وما الذي يجب تأكيده قبل طلب النقل؟', 'The officer is on leave. The work has no packing. The pickup date is still unresolved. Who takes over, and what must be confirmed before transport is requested?')}</p>
             <div className="guide-facts"><article><span>{t('مؤكد', 'Confirmed')}</span><h2>{t('عنوان الاستلام', 'Collection address')}</h2><p>{t('موقع تجريبي في باريس', 'Synthetic location in Paris')}</p></article><article><span>{t('يحتاج إجراءً', 'Action needed')}</span><h2>{t('المسؤول والتغليف', 'Ownership and packing')}</h2><p>{t('سنحلّهما خطوة بخطوة.', 'We will resolve them step by step.')}</p></article></div>
             <p className="guide-note">{t('جرّبي حلّ الحالة بنفسك: بديل يقبل المهمة، ثم موعد صالح، ثم دليل اكتمال التغليف. كل البيانات معدّة؛ لا حاجة للكتابة أو المعرفة التقنية.', 'Try resolving this case: an accepted backup, a valid date, then packing completion evidence. The data is prepared; no typing or technical knowledge is needed.')}</p>
           </>}
           {session.scene === 1 && <>
             <p className="guide-role" role="status">{c.stage === 'unavailable' ? t('أنتِ الآن على شاشة المنسقة.', 'You are viewing the Coordinator’s screen.') : c.stage === 'acceptance' ? t('تم تعيين البديل. نعرض الآن شاشة مسؤول الاستلام البديل ليقبل المهمة.', 'The backup is assigned. Now viewing the backup officer’s screen so they can accept.') : t('قبل المسؤول البديل المهمة. أصبحت المسؤولية واضحة.', 'The backup accepted. Responsibility is now clear.')}</p>
-            <div className="guide-task">
+            <div className="guide-task" tabIndex={-1}>
               <h2>{c.stage === 'unavailable' ? t('المطلوب: تعيين مسؤول بديل', 'Next: assign a backup') : c.stage === 'acceptance' ? t('المطلوب: قبول المهمة', 'Next: accept responsibility') : t('تم قبول المهمة', 'Handoff accepted')}</h2>
               <p>{t('السبب المسجّل في المثال: المسؤول الأساسي في إجازة.', 'Prepared reason: the primary officer is on leave.')}<br/>{guidedCase.backup[ar ? 'ar' : 'en']}</p>
               {c.stage === 'unavailable' && <button className="guide-primary" onClick={() => act('ASSIGN')}>{t('تعيين مسؤول الاستلام البديل', 'Assign the backup officer')}</button>}
@@ -135,9 +142,9 @@ export default function GuidedPresentation({ onExplore }: { onExplore: (hash: st
           </>}
           {session.scene === 2 && <>
             <p className="guide-role">{t('نعرض شاشة مسؤول الاستلام البديل.', 'Viewing the backup collection officer’s screen.')}</p>
-            {c.stage === 'pickup' && <div className="guide-task"><h2>{t('اختاري موعد الاستلام.', 'Choose a collection date.')}</h2><p>{t('الموقع متاح خلال أكتوبر ٢٠٢٦، ويغلق من ١٠ إلى ١٥ أكتوبر.', 'The location is available in October 2026, except 10–15 October.')}</p><div className="guide-choices"><button onClick={() => act('DATE', '2026-10-12')}>{t('١٢ أكتوبر ٢٠٢٦ — يوم إغلاق', '12 October 2026 — closed')}</button><button className="guide-primary" onClick={() => act('DATE', '2026-10-16')}>{t('١٦ أكتوبر ٢٠٢٦ — موعد متاح', '16 October 2026 — available')}</button></div></div>}
-            {c.stage === 'packing' && <div className="guide-task"><h2>{t('الموعد صالح، لكن التغليف لم يُجهّز.', 'The date is valid, but packing is unresolved.')}</h2><p>{t('لتقصير العرض، سنحمّل خطة تجريبية أُعدّت مسبقاً: صندوق مخصص، مراجعة فنية، وموافقة المالية على ١٬٢٠٠ درهم. لا تُعدّ هذه موافقات حقيقية.', 'To keep the demo short, load a prepared fictional plan: a custom crate, technical review and Finance approval of AED 1,200. These are not real approvals.')}</p><button className="guide-primary" onClick={() => act('PREPARE_PACKING')}>{t('عرض خطة التغليف وموافقاتها التجريبية', 'Load the prepared packing example')}</button></div>}
-            {c.stage === 'pack-evidence' && <div className="guide-task"><h2>{t('بقي تأكيد اكتمال التغليف.', 'Packing completion still needs confirmation.')}</h2><p>{t('المالية وافقت على التكلفة، والمختص راجع الخطة. مسؤول الاستلام يتحقق الآن من سجل الإكمال التجريبي.', 'Finance approved the cost and the specialist reviewed the plan. The collection officer now checks the synthetic completion record.')}</p><GuidedPackingEvidence record={c} ar={ar}/><button className="guide-primary" onClick={() => act('COMPLETE_PACKING')}>{t('تسجيل التحقق من الإكمال التجريبي', 'Record the synthetic completion check')}</button></div>}
+            {c.stage === 'pickup' && <div className="guide-task" tabIndex={-1}><h2>{t('اختاري موعد الاستلام.', 'Choose a collection date.')}</h2><p>{t('الموقع متاح خلال أكتوبر ٢٠٢٦، ويغلق من ١٠ إلى ١٥ أكتوبر.', 'The location is available in October 2026, except 10–15 October.')}</p><div className="guide-choices"><button onClick={() => act('DATE', '2026-10-12')}>{t('١٢ أكتوبر ٢٠٢٦ — يوم إغلاق', '12 October 2026 — closed')}</button><button className="guide-primary" onClick={() => act('DATE', '2026-10-16')}>{t('١٦ أكتوبر ٢٠٢٦ — موعد متاح', '16 October 2026 — available')}</button></div></div>}
+            {c.stage === 'packing' && <div className="guide-task" tabIndex={-1}><h2>{t('الموعد صالح، لكن التغليف لم يُجهّز.', 'The date is valid, but packing is unresolved.')}</h2><p>{t('لتقصير العرض، سنحمّل خطة تجريبية أُعدّت مسبقاً: صندوق مخصص، مراجعة فنية، وموافقة المالية على ١٬٢٠٠ درهم. لا تُعدّ هذه موافقات حقيقية.', 'To keep the demo short, load a prepared fictional plan: a custom crate, technical review and Finance approval of AED 1,200. These are not real approvals.')}</p><button className="guide-primary" onClick={() => act('PREPARE_PACKING')}>{t('عرض خطة التغليف وموافقاتها التجريبية', 'Load the prepared packing example')}</button></div>}
+            {c.stage === 'pack-evidence' && <div className="guide-task" tabIndex={-1}><h2>{t('بقي تأكيد اكتمال التغليف.', 'Packing completion still needs confirmation.')}</h2><p>{t('المالية وافقت على التكلفة، والمختص راجع الخطة. تحققي الآن من ورقة الفحص التجريبية.', 'Finance approved the cost and the specialist reviewed the plan. Check the synthetic sheet below.')}</p><GuidedPackingEvidence record={c} ar={ar}/><button className="guide-primary" onClick={() => act('COMPLETE_PACKING')}>{t('تسجيل التحقق من الإكمال التجريبي', 'Record the synthetic completion check')}</button></div>}
             {c.stage === 'ready' && <GuidedCaseReceipt record={c} ar={ar}/>}
             {!['pickup','packing','pack-evidence','ready'].includes(c.stage) && <p>{t('ارجعي إلى المرحلة السابقة لإكمال تسليم المسؤولية.', 'Return to the previous stage to complete the handoff.')}</p>}
           </>}
@@ -162,15 +169,14 @@ export default function GuidedPresentation({ onExplore }: { onExplore: (hash: st
             <div className="guide-task"><h2>{t('القرار اليوم: من يمثل التشغيل وتقنية المعلومات في جلسة تحديد النطاق؟', 'Today’s decision: who will represent operations and IT in a scoping meeting?')}</h2><p>{t('سمّوا الشخصين واتفقوا على موعد الجلسة. لا نطلب اعتماد تشغيل أو ميزانية اليوم.', 'Name the two counterparts and agree a meeting date. No rollout or budget approval is requested today.')}</p><button className="guide-primary" onClick={downloadBrief}>{t('تنزيل ملخص التجربة للمناقشة', 'Download the pilot discussion brief')}</button><p className="guide-note">{t('صفحة قابلة للطباعة: النطاق، ما سنقيسه، شروط التوقف، والقرارات التي تنتظر الاتفاق. التنزيل لا يسجل موافقة ولا يرسل شيئاً.', 'A printable page: scope, measures, stop conditions and decisions still to agree. Downloading records no approval and sends nothing.')}</p></div>
           </>}
           {error && <p className="guide-error" role="alert" ref={feedback} tabIndex={-1}>{errorText}</p>}
-          {warning && <p className="guide-error" role="alert">{t('تعذّر حفظ الخطوات أو استعادتها في هذا التبويب. أبقي الصفحة مفتوحة؛ قد تحتاجين إلى بدء المثال مجدداً بعد التحديث.', 'Steps could not be saved or restored in this tab. Keep the page open; refreshing may require restarting the example.')}</p>}
         </>}
       </section>
       {(import.meta.env.DEV || import.meta.env.VITE_LOCAL_SOURCE_REGISTER === 'true') && <LocalHandoffRegister phase={session.scene === 3 ? 'print' : handoffPhase(c.stage)} isAr={ar}/>}
-      <nav className="guide-controls" aria-label={t('التنقل في العرض', 'Presentation controls')}>
+      {session.scene > 0 && <nav className="guide-controls" aria-label={t('التنقل في العرض', 'Presentation controls')}>
         <button disabled={navigation.previous === null} onClick={() => navigation.previous !== null && move(navigation.previous)}>{session.scene === 3 ? t('العودة إلى النتيجة', 'Back to the result') : t('السابق', 'Previous')}</button>
         <span>{session.paused ? t('العرض متوقف مؤقتاً', 'Presentation paused') : session.scene === 5 ? t('انتهى العرض — وقت الأسئلة', 'Presentation complete — questions') : navigation.next === null ? t('أكملي الإجراء الظاهر للمتابعة', 'Complete the action above to continue') : t('يمكنك المتابعة عندما تكونين مستعدة', 'Continue when you are ready')}</span>
         {session.scene < 5 && session.scene !== 3 && <button className="guide-primary" disabled={navigation.next === null} onClick={() => navigation.next !== null && move(navigation.next)}>{session.scene === 0 ? t('جرّبي حلّ حالة الاستلام', 'Try resolving this collection') : t('التالي: ', 'Next: ') + scenes[session.scene === 2 ? 4 : session.scene + 1][ar ? 0 : 1]}</button>}
-      </nav>
+      </nav>}
       <footer className="guide-footer">
         <button onClick={restart}>{t('إعادة العرض من البداية', 'Restart this presentation')}</button>
         <details><summary>{t('أمثلة مستقلة وشرح موسع — اختياري', 'Separate examples and expanded explanation — optional')}</summary><p>{t('للاطلاع بعد العرض فقط: هذه أمثلة إنجليزية مستقلة لها سجلاتها الخاصة. خطوات الحالة الحالية محفوظة، ولا تُنقل إلى المثال الآخر.', 'For later exploration: these are separate English examples with their own records. This presentation remains saved; its steps are not transferred to the other example.')}</p><div className="guide-links"><button onClick={() => onExplore('#experience')}>{t('فتح مثال استلام مستقل — بالإنجليزية', 'Open separate collection example — English')}</button><button onClick={() => onExplore('#technical')}>{t('فتح الشرح التقني الموسع — بالإنجليزية', 'Open expanded technical explanation — English')}</button></div></details>

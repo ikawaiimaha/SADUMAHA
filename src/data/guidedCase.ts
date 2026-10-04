@@ -9,6 +9,45 @@ export const guidedCase = {
   evidence: 'GUIDED-SYNTHETIC-PACKING-CHECK-01',
 };
 
+export function formatCaseTimestamp(value: string, ar: boolean): string {
+  const date = new Date(value);
+  return Number.isFinite(date.getTime())
+    ? new Intl.DateTimeFormat(ar ? 'ar-AE' : 'en-GB', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Dubai' }).format(date)
+    : ar ? 'وقت غير صالح — يلزم استعادة الحالة' : 'Invalid time — restore the case';
+}
+
+function formatPickupDate(value: string, ar: boolean): string {
+  if (!value) return ar ? 'لم يُحدد' : 'Not selected';
+  const date = new Date(`${value}T12:00:00Z`);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || !Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== value) {
+    return ar ? 'موعد غير صالح — يلزم استعادة الحالة' : 'Invalid date — restore the case';
+  }
+  return new Intl.DateTimeFormat(ar ? 'ar-AE' : 'en-GB', { dateStyle: 'long', timeZone: 'Europe/Paris' }).format(date);
+}
+
+export function guidedHistoryLabel(action: string, ar: boolean): string {
+  const labels: Record<string, [string, string]> = {
+    ABSENT: ['سُجّل غياب المسؤول الأساسي', 'Primary officer marked unavailable'],
+    ASSIGN: ['عُيّنت سارة مسؤولةً بديلة', 'Sara assigned as backup'],
+    ACCEPT: ['قُبلت مسؤولية الاستلام', 'Collection responsibility accepted'],
+    DATE: ['تأكد موعد الاستلام', 'Pickup date confirmed'],
+    PACK: ['سُجّلت خطة التغليف', 'Packing plan recorded'],
+    TECHNICAL: ['سُجّلت المراجعة الفنية', 'Technical review recorded'],
+    COST: ['سُجّلت موافقة تكلفة التغليف', 'Packing cost approval recorded'],
+    EVIDENCE: ['سُجّل التحقق من اكتمال التغليف', 'Packing completion check recorded'],
+  };
+  return labels[action.split(':')[0]]?.[ar ? 0 : 1] ?? (ar ? 'خطوة مسجلة' : 'Recorded step');
+}
+
+export function guidedActorLabel(actor: string, ar: boolean): string {
+  const labels: Record<string, [string, string]> = {
+    Coordinator: ['المنسقة', 'Coordinator'], 'Logistics A': ['مسؤول الاستلام الأساسي', 'Primary collection officer'],
+    'Logistics B': ['سارة — مسؤولة الاستلام البديلة', 'Sara — backup collection officer'],
+    Technical: ['المختص الفني', 'Technical specialist'], Finance: ['المالية', 'Finance'],
+  };
+  return labels[actor]?.[ar ? 0 : 1] ?? (ar ? 'مسؤول مسجل' : 'Recorded officer');
+}
+
 export function collectionReceipt(c: CollectionDemo, ar: boolean) {
   const t = (a: string, e: string) => ar ? a : e;
   const accepted = c.history.find(entry => entry.actor === c.owner && entry.action === 'ACCEPT');
@@ -18,9 +57,10 @@ export function collectionReceipt(c: CollectionDemo, ar: boolean) {
     work: guidedCase.work[ar ? 'ar' : 'en'],
     owner: c.owner === 'Logistics B' ? guidedCase.backup[ar ? 'ar' : 'en'] : t('مسؤول الاستلام الأساسي — تجريبي', 'Primary collection officer — fictional'),
     acceptance: accepted ? t('قبلت المهمة', 'Responsibility accepted') : t('بانتظار القبول', 'Acceptance pending'),
-    date: c.date ? new Intl.DateTimeFormat(ar ? 'ar-AE' : 'en-GB', { dateStyle: 'long', timeZone: 'Europe/Paris' }).format(new Date(`${c.date}T12:00:00Z`)) : t('لم يُحدد', 'Not selected'),
+    date: formatPickupDate(c.date, ar),
     status: c.stage === 'ready' ? t('جاهز للاستلام — النقل غير محجوز', 'Ready for collection — transport not booked') : t('الاستلام غير جاهز بعد', 'Collection is not ready yet'),
     evidence: c.packing?.evidence || t('بانتظار دليل الإكمال', 'Completion evidence pending'),
+    evidenceLabel: completion ? t('ورقة فحص التغليف — تحققت منها سارة', 'Packing check sheet — checked by Sara') : t('بانتظار التحقق من اكتمال التغليف', 'Packing completion check pending'),
     recordedAt: completion?.at ?? null,
     recordedVersion: completion ? completion.version + 1 : null,
   };
