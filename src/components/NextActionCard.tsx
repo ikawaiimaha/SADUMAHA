@@ -5,7 +5,7 @@ export interface ActionEvidence {
 }
 export function NextActionCard({ title, owner, blocker, evidence, children, isAr = false }: { title: string; owner: string; blocker: string; evidence?: ActionEvidence; children?: ReactNode; isAr?: boolean }) {
   return <section className="sadu-task-card" aria-label={isAr ? 'الخطوة التالية' : 'Next action'}>
-    <div role="status"><small>{isAr ? 'الخطوة التالية' : 'NEXT ACTION'}</small><h3>{title}</h3><p><strong>{isAr ? 'المسؤول: ' : 'Owner: '}</strong>{owner}</p><p>{blocker}</p></div>
+    <div role="status"><small>{isAr ? 'الخطوة التالية' : 'NEXT ACTION'}</small><h3 data-next-action-heading tabIndex={-1}>{title}</h3><p><strong>{isAr ? 'المسؤول: ' : 'Owner: '}</strong>{owner}</p><p>{blocker}</p></div>
     {children}
     {evidence && <details><summary>{isAr ? 'الدليل المرتبط بهذه المهمة' : 'Evidence for this action'}</summary><dl>{[
       [isAr ? 'المصدر' : 'Source', evidence.source], [isAr ? 'المرسل / المتحدث' : 'Sender / speaker', evidence.sender],

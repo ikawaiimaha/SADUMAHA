@@ -4,6 +4,7 @@ import { useLivingRecord } from '../context/LivingRecordContext';
 import { PRINT_ROUTE_ID, selectPublishingRecord, canReplacePrintProof } from '../data/publishingRecord';
 import type { DemoActor } from '../data/livingRecord';
 import { PrintProduction } from './PrintProduction';
+import { useTaskFocus } from '../lib/useTaskFocus';
 
 export const printStages = {
   drafting: ['Drafting · demo', 'إعداد المسودة · تجريبي'],
@@ -30,17 +31,19 @@ export function PublishingCase({ actor }: { actor: DemoActor }) {
   const [rightsChecked, setRightsChecked] = useState(false);
   const [acknowledged, setAcknowledged] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
+  const casePanel = useRef<HTMLDivElement>(null);
   const envelope = () => ({ actor, at: new Date().toISOString() });
   const stale = version !== publishing.version;
   const openReview = () => { setVersion(publishing.version); setEditorialChecked(false); setRightsChecked(false); setAcknowledged(false); setOpen(true); };
   useEffect(() => { if (open) dialog.current?.showModal(); else dialog.current?.close(); }, [open]);
   useEffect(() => { setOpen(false); }, [actor]);
+  useTaskFocus(casePanel, `${publishing.version}:${summary.stage}:${publishing.correction?.stopReference ?? ''}`);
   const decide = (outcome: 'release' | 'return') => {
     dispatch({ type: 'DECIDE_PRINT_PROOF', ...envelope(), version, acknowledged, outcome });
     setOpen(false);
   };
-  return <div className="lr-print-case">
-    <h3>{t('SDC cultural bulletin — fictional issue', 'نشرة ثقافية للدائرة — عدد افتراضي')}</h3>
+  return <div ref={casePanel} className="lr-print-case">
+    <h3 data-workflow-heading tabIndex={-1}>{t('SDC cultural bulletin — fictional issue', 'نشرة ثقافية للدائرة — عدد افتراضي')}</h3>
     <p className="lr-small">{t('Separate demonstration; not an issue of the seven magazines.', 'تجربة مستقلة؛ ليست عدداً من المجلات السبع.')}</p>
     <span className={`lr-status ${summary.stage === 'released' || summary.stage === 'sent' ? 'is-clear' : ''}`} data-testid="publishing-stage">{printStages[summary.stage][isAr ? 1 : 0]}</span>
     {publishing.version ? <p className="lr-small"><bdi>{summary.reference}</bdi> · {t('Source: prepared sample proof', 'المصدر: بروفة تجريبية معدة مسبقاً')}</p> : null}

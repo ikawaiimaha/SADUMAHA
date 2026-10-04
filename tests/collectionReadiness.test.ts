@@ -88,3 +88,37 @@ test('restoration rejects missing prerequisites, wrong actors and evidence reuse
   assert.equal(validCollectionDemo(null), false);
   assert.throws(() => act(s, 'UNKNOWN' as CollectionCommand['type']));
 });
+
+test('accepted packing owners round-trip with surrounding whitespace and embedded separators', () => {
+  for (const packingOwner of ['Packer ', ' Packer', '\t Packer \n', '  فريق التغليف · Team A  ']) {
+    let s = act(act(assigned(), 'ACCEPT'), 'DATE', { value: '2026-10-16' });
+    s = act(s, 'PACK', { value: '  Custom crate · protective supports  ', packingOwner, amount: 1200 });
+    for (const [type, value] of [['TECHNICAL', ' TECH-01 '], ['COST', ' COST-01 '], ['EVIDENCE', ' CHECK-01 ']] as const) {
+      assert.equal(validCollectionDemo(JSON.parse(JSON.stringify(s))), true, packingOwner);
+      s = act(s, type, { value });
+    }
+    assert.equal(validCollectionDemo(JSON.parse(JSON.stringify(s))), true);
+    assert.equal(s.packing?.owner, packingOwner.trim());
+  }
+});
+
+test('legacy whitespace checkpoints resume without rewriting history or accepting altered plan facts', () => {
+  let s = act(act(assigned(), 'ACCEPT'), 'DATE', { value: '2026-10-16' });
+  s = act(s, 'PACK', { value: 'Crate · supports', packingOwner: 'Packer · Team A', amount: 1200 });
+  s.history[4].action = 'PACK: Crate · supports ·   Packer · Team A  · AED 1200';
+  const original = JSON.stringify(s);
+  assert.equal(validCollectionDemo(s), true);
+  assert.equal(JSON.stringify(s), original, 'validation preserves original evidence');
+  for (const fields of [{ owner: 'Other packer' }, { specification: 'Other crate' }, { amount: 0 }]) {
+    assert.equal(validCollectionDemo({ ...s, packing: { ...s.packing, ...fields } }), false);
+  }
+  s = act(s, 'TECHNICAL', { value: 'TECH-01' });
+  s = act(s, 'COST', { value: 'COST-01' });
+  s = act(s, 'EVIDENCE', { value: 'CHECK-01' });
+  assert.equal(validCollectionDemo(s), true);
+  s = act(s, 'REOPEN', { value: 'New crate required' });
+  assert.equal(validCollectionDemo(s), true);
+  s = act(s, 'PACK', { value: 'Replacement crate', packingOwner: ' New packer ', amount: 0 });
+  assert.equal(validCollectionDemo(s), true);
+  assert.equal(s.stage, 'technical-review');
+});

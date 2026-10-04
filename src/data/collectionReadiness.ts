@@ -46,7 +46,7 @@ export function collectionTransition(s: CollectionDemo, c: CollectionCommand): C
     }
     default: return fail();
   }
-  return { ...s, ...patch, version: s.version + 1, history: [...s.history, { actor: c.actor, action: `${c.type}${value ? ': ' + value : ''}${c.reason ? ' — ' + c.reason : ''}${c.type === 'PACK' ? ` · ${c.packingOwner} · AED ${c.amount}` : ''}`, at: c.at, version: s.version }] };
+  return { ...s, ...patch, version: s.version + 1, history: [...s.history, { actor: c.actor, action: `${c.type}${value ? ': ' + value : ''}${c.reason ? ' — ' + c.reason : ''}${c.type === 'PACK' ? ` · ${patch.packing!.owner} · AED ${c.amount}` : ''}`, at: c.at, version: s.version }] };
 }
 
 /** Recovery check for every collection demonstration, not authentication.
@@ -74,6 +74,7 @@ export function validCollectionDemo(value: unknown): value is CollectionDemo {
       const match = /^([A-Z]+)(?:: ([\s\S]+))?$/.exec(e.action);
       if (!match) return false;
       const type = match[1] as CollectionCommand['type'];
+      let expectedAction = e.action;
       const command: CollectionCommand = { type, actor: e.actor, at: e.at, version: e.version, value: match[2] };
       if (type === 'ASSIGN') {
         const assignment = /^(Logistics [BC]) — ([\s\S]+)$/.exec(command.value ?? '');
@@ -88,6 +89,17 @@ export function validCollectionDemo(value: unknown): value is CollectionDemo {
         if (!plan) return false;
         const active = index === lastPlan && lastPlan > lastReopen;
         if (active && !p) return false;
+        // Older checkpoints kept surrounding owner whitespace in the display history.
+        // Accept only that normalization difference, preserving the original entry.
+        // Use the known prefix/suffix so separators inside names remain unambiguous.
+        if (active) {
+          const prefix = `PACK: ${p!.specification} · `, suffix = ` · AED ${p!.amount}`;
+          if (!e.action.startsWith(prefix) || !e.action.endsWith(suffix)
+            || e.action.slice(prefix.length, -suffix.length).trim() !== p!.owner) return false;
+          expectedAction = `${prefix}${p!.owner}${suffix}`;
+        } else {
+          expectedAction = `PACK: ${plan[1]} · ${plan[2].trim()} · AED ${plan[3]}`;
+        }
         // Current plan fields are authoritative within this synthetic checkpoint;
         // do not split a company name or specification that itself contains " · ".
         command.value = active ? p!.specification : plan[1];
@@ -98,7 +110,7 @@ export function validCollectionDemo(value: unknown): value is CollectionDemo {
         command.technicalReason = active ? p!.technicalReason : 'Closed legacy plan; original review policy not retained.';
       }
       restored = collectionTransition(restored, command);
-      if (restored.history.at(-1)?.action !== e.action) return false;
+      if (restored.history.at(-1)?.action !== expectedAction) return false;
     }
     if (restored.stage !== c.stage || restored.owner !== c.owner || restored.date !== c.date || restored.version !== c.version) return false;
     if (!restored.packing || !p) return restored.packing === p;

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { useTaskFocus } from '../lib/useTaskFocus';
 import { useDemoCheckpoint } from '../lib/useDemoCheckpoint';
 import { CommunicationConfirmation } from './CommunicationConfirmation';
 import { NextActionCard } from './NextActionCard';
@@ -10,16 +11,19 @@ export { pickupError } from '../data/collectionReadiness';
 export default function PitchCollectionDemo() {
   const [record, setRecord, recoveryWarning] = useDemoCheckpoint('sadu:pitch:collection:v2', createCollectionDemo, validCollectionDemo);
   const [error, setError] = useState('');
+  const [errorAttempt, setErrorAttempt] = useState(0);
+  const section = useRef<HTMLElement>(null);
+  useTaskFocus(section, record.version, errorAttempt);
   const [communicationOpen, setCommunicationOpen] = useDemoCheckpoint('sadu:pitch:message-open:v2', () => false, v => typeof v === 'boolean');
   const [run, setRun] = useDemoCheckpoint('sadu:pitch:message-run:v2', () => 0, v => Number.isInteger(v));
   const task = collectionTask(record);
   const stage = record.stage;
   function act(type: CollectionCommand['type'], fields: Partial<CollectionCommand> = {}) {
     try { setRecord(collectionTransition(record, { type, actor: task.owner, version: record.version, at: new Date().toISOString(), ...fields })); setError(''); }
-    catch (e) { setError(e instanceof Error ? e.message : 'Please review the current task.'); }
+    catch (e) { setError(e instanceof Error ? e.message : 'Please review the current task.'); setErrorAttempt(n => n + 1); }
   }
   const evidence = record.packing ? { source: record.packing.evidence || record.packing.costReference || record.packing.technicalReference || 'Synthetic packing proposal', sender: 'Not independently verified; synthetic evidence reference', receivedAt: 'Not recorded; these are simulated entries', revision: `Collection task v${record.version}`, recordedBy: record.packing.evidence ? record.owner : record.packing.costReference ? 'Demo Finance' : record.packing.technicalReference ? 'Demo Technical' : record.owner, confirmation: record.packing.evidence ? 'Completion check recorded in demo; no independent verification' : record.packing.costReference ? 'Simulated cost authorization only; packing completion pending' : record.packing.technicalReference ? 'Technical clearance recorded; cost approval pending' : 'Proposed packing plan; technical review pending' } : { source: 'DEMO-001 · prepared collection sheet', sender: 'Synthetic gallery representative', receivedAt: 'Prepared fixture; no actual message received', revision: 'Collection details v1', recordedBy: 'Demo Logistics A', confirmation: 'Address confirmed in fixture; packaging explicitly missing. No institutional approval.' };
-  return <section id="experience" className="sadu-experience">
+  return <section ref={section} id="experience" className="sadu-experience">
     <p className="sadu-boundary">Separate English practice case · This has its own saved record. Your guided presentation remains saved; its progress is not transferred here.</p>
     <div className="sadu-section-heading"><div><p className="sadu-eyebrow">THE DEMONSTRATION / YOUR TURN</p><h2>Make this collection ready.<br/><em>Resolve one handoff at a time.</em></h2></div><p>The address is confirmed. Start by marking the owner unavailable, then follow the next action through backup acceptance, date validation and packing evidence. All records are synthetic; nothing is sent, booked or paid.</p></div>
     <div className="sadu-demo-toolbar"><p>Simulated desk: <strong>{task.owner}</strong> · Task revision {record.version}</p><button onClick={() => { setRecord(createCollectionDemo()); setError(''); setCommunicationOpen(false); setRun(n => n + 1); }}>Reset demonstration</button></div>
@@ -35,7 +39,7 @@ export default function PitchCollectionDemo() {
       {stage === 'cost-review' && <form onSubmit={e => { e.preventDefault(); act('COST', { value: String(new FormData(e.currentTarget).get('ref')) }); }}><p>Finance simulation: AED {record.packing?.amount}. Record a sample authorization reference. This does not issue a payment or certify packing safety.</p><label htmlFor="packing-cost">Sample cost approval reference</label><input id="packing-cost" name="ref" required maxLength={160} placeholder="DEMO-COST-01"/><button className="sadu-cta">Record simulated cost approval</button></form>}
       {stage === 'pack-evidence' && <form onSubmit={e => { e.preventDefault(); act('EVIDENCE', { value: String(new FormData(e.currentTarget).get('ref')) }); }}><p>{record.owner} checks the completed packing against the plan. Use a synthetic completion record reference.</p><label htmlFor="packing-evidence">Packing completion evidence reference</label><input id="packing-evidence" name="ref" required maxLength={160} placeholder="DEMO-PACKING-CHECK-01"/><button className="sadu-cta">Confirm packing readiness</button></form>}
       {stage === 'ready' && <><p className="sadu-demo-feedback">The backup accepted, the date is valid and packing completion is recorded. Ready for booking review; no freight is booked and no asset is collected.</p><a className="sadu-text-link" href="#presentation">What this proves—and what we propose next →</a><details><summary>Packing changed?</summary><form onSubmit={e => { e.preventDefault(); act('REOPEN', { value: String(new FormData(e.currentTarget).get('reason')) }); }}><label htmlFor="packing-change">Reason for reopening</label><input id="packing-change" name="reason" required maxLength={160}/><button>Reopen packing checks</button></form></details></>}
-      {recoveryWarning && <p role="alert">{recoveryWarning}</p>}<p id="collection-error" role="alert" className="sadu-demo-error">{error}</p>
+      {recoveryWarning && <p role="alert">{recoveryWarning}</p>}<p id="collection-error" role="alert" className="sadu-demo-error" data-task-error tabIndex={-1}>{error}</p>
     </NextActionCard>
     {communicationOpen && <CommunicationConfirmation key={run} checkpointKey={`sadu:pitch:message:v2:${run}`} onApply={(date, source) => {
       const next = collectionTransition(record, { type: 'DATE', actor: record.owner, version: record.version, at: new Date().toISOString(), value: date, reason: `Confirmed response ${source}; original SYNTHETIC-VOICE-01 says 3 December 2026 and is preserved.` });
