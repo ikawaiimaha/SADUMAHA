@@ -27,4 +27,6 @@
 @media print { .sadu-deck-controls,.sadu-deck-toolbar { display:none; } }
 
 .sadu-deck-slide h3 { scroll-margin-block-start:24px; }
-.sadu-deck-controls { position:sticky; inset-block-end:0; z-index:2; background:#111f2e; padding-block:12px; }
+.sadu-deck-controls { background:#111f2e; padding-block:12px; }
+.sadu-optional-deck>summary { cursor:pointer; padding-block:16px; font-size:20px; }
+.sadu-optional-deck .sadu-section { padding-inline:0; }

@@ -22,7 +22,7 @@ export function ClientPresentation() {
     titleRef.current?.focus({ preventScroll: true });
     titleRef.current?.scrollIntoView({ block: 'start', behavior: 'auto' });
   }, [index]);
-  return <section id="presentation" className="sadu-section sadu-client-presentation" aria-label="Client presentation">
+  return <section className="sadu-section sadu-client-presentation" aria-label="Client presentation">
     <div className="sadu-section-heading"><div><p className="sadu-eyebrow">THE CASE FOR SADU / العرض</p><h2>One collection case.<br/><em>One bounded proposal.</em></h2></div><p>Eight slides explain the collection controls you can test above, the strongest adoption objection and the proposed next step. The wider exhibition workflows are optional detail.</p></div>
     <div className="sadu-deck-toolbar"><label>Choose a slide<select value={index} onChange={e => setIndex(Number(e.target.value))}>{slides.map((s, i) => <option key={s.title} value={i}>{i + 1}. {s.title}</option>)}</select></label><span>Client presentation · Synthetic examples</span></div>
     <article className="sadu-deck-slide" aria-live="polite" aria-atomic="true">

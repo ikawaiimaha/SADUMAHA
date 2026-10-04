@@ -22,14 +22,14 @@ export default function GlobalPasswordGate({ children }: { children: ReactNode }
   useEffect(() => { window.dispatchEvent(new Event('sadu:ready')); void check(); const id = setInterval(check, 60000); return () => clearInterval(id); }, [check]);
   useEffect(() => { try { if (verified) sessionStorage.setItem('sadu-prelaunch-verified', 'true'); else sessionStorage.removeItem('sadu-prelaunch-verified'); } catch { /* Storage is optional, never an auth source. */ } }, [verified]);
   if (verified) return <><aside aria-label="Preview session" className="flex flex-wrap items-center justify-between gap-2 border-b border-[#D9CEBA] bg-[#F7F1E6] ps-5 pe-5 py-2 text-sm text-[#111817]">
-    {!executiveMode && <span>Private SADU preview · Fictional data</span>}<LocalReplayControls/>
+    {!executiveMode && <span lang="ar" dir="rtl">عرض سدو الخاص · بيانات تجريبية</span>}<LocalReplayControls/>
     <button className="rounded border border-[#8C8173] ps-3 pe-3 py-2 font-semibold focus-visible:outline-2 focus-visible:outline-offset-2" disabled={busy} onClick={async () => {
       if (!window.confirm('Lock this preview? Saved synthetic presentation steps can resume in this tab. Unsaved form entries and other session-only work may be lost.')) return;
       setBusy(true); setError('');
       try { const r = await fetch('/api/prelaunch/lock', { method: 'POST', signal: AbortSignal.timeout(10000) }); if (!r.ok) throw new Error(); setVerified(false); }
       catch { setError('Unable to lock the preview. Check your connection and retry.'); }
       finally { setBusy(false); }
-    }}>{busy ? 'Locking…' : 'Lock preview'}</button>
+    }}>{busy ? 'جارٍ القفل…' : 'قفل العرض'}</button>
     {error && <p role="alert" className="w-full">{error}</p>}
   </aside>{children}</>;
   if (checking) return <main className="min-h-screen grid place-items-center bg-[#F7F1E6] text-[#111817]"><p role="status">Checking preview access…</p></main>;

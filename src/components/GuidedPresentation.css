@@ -38,7 +38,7 @@
 .guide-choices { display:flex; flex-wrap:wrap; gap:16px; margin-block:24px; }
 .sadu-guided .guide-success { color:#235a46; font-weight:600; margin-block:18px; }
 .sadu-guided .guide-error { color:#8a2f1c; background:#fbe7dc; padding:16px; border-inline-start:3px solid #8a2f1c; margin-block:16px; }
-.guide-controls { position:sticky; inset-block-end:0; z-index:2; display:flex; align-items:center; justify-content:space-between; gap:16px; padding:16px 0 calc(16px + env(safe-area-inset-bottom)); border-block-start:1px solid #c6bca9; background:var(--ivory); }
+.guide-controls { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:16px 0 calc(16px + env(safe-area-inset-bottom)); border-block-start:1px solid #c6bca9; background:var(--ivory); }
 .guide-controls span { font-size:14px; flex:1; text-align:center; }
 .guide-footer { padding-block:24px 50px; color:#5d625d; font-size:14px; }
 .guide-footer>p { margin-block-start:28px; }
@@ -48,9 +48,28 @@
 .guide-links a { padding-block:12px; }
 .guide-ask { padding-inline-start:24px; }
 .guide-ask li { margin-block:16px; }
+.guide-resume,.guide-case-details { padding:24px; margin-block:20px; background:#e9e0cf; }
+.guide-case-bar { display:flex; align-items:center; justify-content:space-between; gap:16px; border-block-end:1px solid #c6bca9; padding-block:16px; font-size:15px; }
+.guide-case-bar span { color:#625c51; }
+.guide-case-bar button { font-size:15px; }
+.guide-receipt { margin-block:20px; padding:24px; background:#fffdf8; border-inline-start:4px solid #235a46; }
+.guide-evidence { margin-block:20px; padding:20px; border:1px solid #d2c5ae; }
+.guide-evidence h3 { margin-block:8px 16px; font-size:21px; }
+.guide-evidence-layout { display:grid; grid-template-columns:minmax(160px,1fr) 2fr; gap:20px; align-items:center; }
+.guide-evidence svg { inline-size:100%; max-block-size:200px; }
+.guide-evidence ul { padding-inline-start:24px; }
+.guide-evidence li { margin-block:8px; }
+.sadu-guided dl { margin-block:16px; }
+.sadu-guided dl>div { display:grid; grid-template-columns:minmax(130px,1fr) 3fr; gap:16px; padding-block:10px; border-block-end:1px solid #e0d8c9; }
+.sadu-guided dt { color:#625c51; font-size:16px; }
+.sadu-guided dd { margin:0; overflow-wrap:anywhere; }
+.guide-case-details { scroll-margin-block-start:16px; }
+.guide-case-details ol { padding-inline-start:24px; overflow-wrap:anywhere; font-size:15px; }
+.guide-case-details button { margin-block-start:20px; }
 @media(max-width:700px) {
  .guide-header { flex-wrap:wrap; gap:12px; padding:16px 5%; }.guide-duration { flex-basis:calc(100% - 160px); }.guide-header button { flex:1; }
  .guide-facts,.guide-proofs { grid-template-columns:1fr; gap:16px; }.guide-controls { flex-wrap:wrap; gap:10px; }.guide-controls span { order:3; flex-basis:100%; }.guide-controls button { flex:1; padding-inline:12px; font-size:16px; }
  .guide-choices { flex-direction:column; }.guide-scene { min-block-size:0; }.sadu-guided .guide-intro { font-size:19px; }.guide-task { padding:20px; }
+ .guide-case-bar { flex-wrap:wrap; }.guide-evidence-layout { grid-template-columns:1fr; }.sadu-guided dl>div { grid-template-columns:1fr; gap:4px; }.guide-evidence,.guide-receipt,.guide-case-details { padding:16px; }
 }
 @media(prefers-reduced-motion:reduce) { .sadu-guided * { scroll-behavior:auto!important; animation:none!important; transition:none!important; } }

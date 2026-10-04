@@ -15,24 +15,49 @@ const chapters = [
   {name:'Legacy',ar:'الأرشيف',owner:'Logistics · Finance · General Coordinator',title:'Close the exhibition. Keep the knowledge.',body:'Bring condition evidence, return records and outstanding obligations into view before closing the dossier.',output:'A traceable closeout record',boundary:'Financial clearance and physical receipt retain separate authorities.'},
 ];
 export default function ExecutiveLanding() {
-  const [detailed] = useState(() => new URLSearchParams(window.location.search).get('view') === 'explore'
-    || ['#experience', '#print-release', '#curatorial-handoff', '#prototype', '#technical', '#journey', '#next'].includes(window.location.hash));
-  return detailed ? <DetailedOverview /> : <GuidedPresentation />;
+  const wantsDetails = () => new URLSearchParams(window.location.search).get('view') === 'explore'
+    || ['#experience', '#print-release', '#curatorial-handoff', '#prototype', '#technical', '#journey', '#next'].includes(window.location.hash);
+  const [detailed, setDetailed] = useState(wantsDetails);
+  useEffect(() => {
+    const onBack = () => setDetailed(wantsDetails());
+    window.addEventListener('popstate', onBack);
+    return () => window.removeEventListener('popstate', onBack);
+  }, []);
+  function navigate(explore: boolean, hash = '') {
+    // In-page navigation preserves the local replay buffer; no beforeunload/export trap.
+    window.history.pushState(null, '', `/overview${explore ? '?view=explore' : ''}${hash}`);
+    setDetailed(explore);
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+  return detailed ? <DetailedOverview onReturn={() => navigate(false)}/> : <GuidedPresentation onExplore={hash => navigate(true, hash)}/>;
 }
-function DetailedOverview() {
+function DetailedOverview({ onReturn }: { onReturn: () => void }) {
   const [chapter,setChapter]=useState(0);
   useEffect(()=>{document.title='SADU — From confirmed address to collection readiness';},[]);
+  useEffect(() => {
+    const scrollToTarget = () => {
+      const target = document.getElementById(window.location.hash.slice(1));
+      if (!target) return;
+      // Expand optional reference sections before positioning the requested anchor.
+      if (target instanceof HTMLDetailsElement) target.open = true;
+      target.closest('details')?.setAttribute('open', '');
+      target.scrollIntoView({ block: 'start', behavior: 'instant' });
+    };
+    const frame = requestAnimationFrame(scrollToTarget);
+    window.addEventListener('hashchange', scrollToTarget);
+    return () => { cancelAnimationFrame(frame); window.removeEventListener('hashchange', scrollToTarget); };
+  }, []);
   const phase=chapters[chapter];
   return <div className="sadu-executive" lang="en" dir="ltr">
     <a className="sadu-skip" href="#pitch-content">Skip to presentation</a>
-    <header className="sadu-header"><a className="sadu-brand" href="#top" aria-label="SADU home"><span lang="ar" dir="rtl">سدو</span><span>SADU<small>CULTURAL WORK, CONNECTED</small></span></a><nav aria-label="Presentation navigation"><a href="/overview" lang="ar">العرض بالعربية</a><a href="#experience">Try collection</a><a href="#presentation">The proposal</a><a href="#next">Next step</a><a href="#technical">For IT</a></nav><span className="sadu-private">PRIVATE PRESENTATION</span></header>
+    <header className="sadu-header"><a className="sadu-brand" href="#top" aria-label="SADU home"><span lang="ar" dir="rtl">سدو</span><span>SADU<small>CULTURAL WORK, CONNECTED</small></span></a><nav aria-label="Presentation navigation"><a href="/overview" onClick={e => { e.preventDefault(); onReturn(); }} lang="ar">العودة إلى عرضك المحفوظ</a><a href="#experience">Separate collection example</a><a href="#presentation">Optional slides</a><a href="#next">Next step</a><a href="#technical">For IT</a></nav><span className="sadu-private">PRIVATE PRESENTATION</span></header>
     <main id="pitch-content">
       <section id="top" className="sadu-hero">
         <div className="sadu-hero-copy"><p className="sadu-eyebrow">ONE COLLECTION. THREE UNRESOLVED HANDOFFS.</p><h1>The address is confirmed.<br/><em>The artwork is not ready.</em></h1><p className="sadu-lead">The officer is on leave. The work has no packing. The pickup date is still unresolved.</p><p className="sadu-hero-note">SADU shows who must act, what remains missing and which evidence makes collection ready. Try the handoff yourself.</p><div className="sadu-actions"><a className="sadu-cta" href="#experience">Try the collection demonstration <span aria-hidden="true">↓</span></a><a className="sadu-text-link" href="#presentation">Review the proposal</a></div><p className="sadu-prototype-note">Prepared synthetic case · Reset and replay · No live shipping, emails or payments</p></div>
         <aside className="sadu-collection-brief" aria-label="Prepared collection case"><p className="sadu-eyebrow">THE CASE YOU WILL RESOLVE</p><h2>What is stopping<br/>this collection?</h2><dl><div><dt>Address</dt><dd>Confirmed · Paris</dd></div><div><dt>Responsible officer</dt><dd>Unavailable · needs an accepted backup</dd></div><div><dt>Pickup date</dt><dd>Not planned · gallery closure to check</dd></div><div><dt>Packing</dt><dd>Missing · completion evidence required</dd></div></dl><p>This is the starting scenario. Your progress appears in the demonstration below.</p></aside>
       </section>
-      <PitchCollectionDemo /><a className="sadu-demo-return" href="#presentation">Next: review the collection proposal ↓</a>
-      <ClientPresentation />
+      <PitchCollectionDemo />
+      <details id="presentation" className="sadu-section sadu-optional-deck"><summary>Optional English presentation — eight reference slides</summary><p>The guided demonstration already covers the collection case. Use these slides for a separate discussion; they are not required to finish it.</p><ClientPresentation /></details>
       <section id="next" className="sadu-section sadu-next"><p className="sadu-eyebrow">THE ASK / VALIDATE ONE COLLECTION WORKFLOW</p><h2>Prove the collection handoff.<br/><em>Then decide what comes next.</em></h2><div className="sadu-roadmap"><article><small>NOW</small><h3>Demonstrate the workflow</h3><p>Test a prepared address, an unavailable owner, a valid pickup window and missing packing in the synthetic case.</p></article><article><small>WITH THE INSTITUTION</small><h3>Confirm the requirements</h3><p>Name an operational owner and an IT counterpart. Agree the collection scope, permitted data, fee, duration and acceptance criteria before commissioning.</p></article><article><small>AFTER AGREEMENT</small><h3>Run a supervised pilot</h3><p>Compare collection-task time, follow-ups and missing information with the current process. Deliver findings and a costed production backlog; decide whether to proceed, revise or stop.</p></article></div><div className="sadu-closing"><p>The decision today: scope a collection-workflow trial.<br/>Wider rollout follows evidence and a separate agreement.</p><a className="sadu-cta" href="#experience">Try the collection demonstration <span aria-hidden="true">↗</span></a></div><details className="sadu-readiness"><summary>What is—and is not—connected?</summary><p>This page explains the proposed exhibition journey. These examples save synthetic steps in this browser tab; refresh and unlock can resume them when tab storage is available. They are separate workflow examples, not a shared live dossier. The local backend persists collection records and uses the same packing and readiness rules. Other workspaces have different persistence boundaries. Institutional identity, government storage, live communications, shipping and payments require separately scoped integration and validation. Operational savings have not yet been measured.</p></details></section>
       <section id="journey" className="sadu-section sadu-journey"><div className="sadu-section-heading"><div><p className="sadu-eyebrow">OPTIONAL / THE WIDER EXHIBITION JOURNEY</p><h2>Many responsibilities.<br/><em>A shared direction.</em></h2></div><p>The collection case is the starting scope. Explore the wider proposed journey when you need the context; these phases are not all included in the first engagement.</p></div><div className="sadu-chapters" aria-label="Explore exhibition phases">{chapters.map((c,i)=><button key={c.name} aria-pressed={chapter===i} aria-controls="phase-detail" onClick={()=>setChapter(i)}><small>0{i+1}</small><strong>{c.name}</strong><span lang="ar" dir="rtl">{c.ar}</span></button>)}</div><div id="phase-detail" className="sadu-phase-detail" aria-live="polite"><div><p className="sadu-eyebrow">{phase.owner}</p><h3>{phase.title}</h3><p>{phase.body}</p></div><div className="sadu-phase-output"><small>WHAT PASSES FORWARD</small><strong>{phase.output}</strong><p>{phase.boundary}</p></div></div></section>
       <nav id="prototype" className="sadu-demo-index" aria-label="Demonstration navigation"><span>Optional separate examples</span><a href="#experience">Return to collection</a><a href="#curatorial-handoff">Curatorial review</a><a href="#print-release">Print release</a></nav>
