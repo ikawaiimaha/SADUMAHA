@@ -24,6 +24,11 @@ export function validateHeritage(value, registry = [], exhibitionId) {
 export function institutionalAssertion(revision) {
   return { record_type:'Institutional_Assertion', target_entity_id:revision.artworkId, revision_id:revision.id, version_hash:revision.versionHash,
     source_decision:heritageDecision, decision_year:2025, mapping_authority:'SADU_LOCAL_VOCABULARY', evidence_status:revision.heritage ? 'DECLARED_NOT_INDEPENDENTLY_VERIFIED' : 'NOT_RECORDED',
-    criteria_mapping:{transmission_method:['R.1'],safeguarding_measure:['G.1'],social_actors:['G.3'],material_provenance:['R.2']},
+    // Local thematic crosswalk, not UNESCO requirements or a compliance assessment.
+    // G.1 discusses documentation and knowledge transfer; G.3 discusses participants.
+    // The cited decision does not evaluate an R.2 criterion for material provenance.
+    criteria_mapping_version:2,
+    criteria_mapping:{transmission_method:['G.1'],safeguarding_measure:['G.1'],social_actors:['G.3'],material_provenance:[]},
+    criteria_mapping_notes:{material_provenance:'Local descriptive field; no direct criterion mapping in Decision 20.COM 7.C.1.'},
     declaration:revision.heritage ?? null, compliance_determination:'NOT_ASSESSED' };
 }

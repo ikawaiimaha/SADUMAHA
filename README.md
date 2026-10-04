@@ -1,8 +1,12 @@
-# SADUVISION — repaired bilingual demonstration
+# SADU exhibition workflow prototype
 
-Complete runnable source prepared for GitHub on 18 September 2026, based on the audited `SADUVISION-main (5).zip`.
+SADU is an Arabic-first exhibition-workflow prototype prepared for institutional discussion. Start at `/overview` for the guided collection demonstration; the optional expanded view contains the presentation, independent workflow examples and technical explanation. The collection case follows an unavailable owner, an accepted backup, a valid pickup date and packing clearance. Readiness remains separate from a transport booking, physical collection or payment.
 
-The connected fictional demonstration now includes a shared delivery record, manager handover, Directorate oversight, SDC Chairman brief, publishing pipeline, and bilingual artist intake. Legacy workspaces remain illustrative. There is no production authentication, server persistence, institutional authorization, or real submission service.
+Presentation examples use synthetic roles and isolated browser-tab checkpoints. Separate local Node services provide file-backed persistence and server-validated demonstration commands; the presentation does not submit to those services. Institutional identity, production authorization and live integrations remain outside the demonstrated scope. See [SADU_ARCHITECTURE.md](SADU_ARCHITECTURE.md) for current workflow rules and [the research and claims brief](docs/research-and-claims-brief.md) before preparing research or proposal copy.
+
+## Additional demonstrations
+
+The repository also retains earlier delivery, publishing and artist-intake workspaces. Their implementation and persistence boundaries differ from `/overview`; do not infer a connected production journey from their presence.
 
 Use **Join Institutional Roster** in the navigation or open `/join` directly for standalone registration (`/artist/register` is an alias). Open `/roster` to create a sample programme using three fictional pre-registered profiles. New registrations remain pending review.
 
@@ -25,15 +29,17 @@ npm run build
 npm run preview -- --host 127.0.0.1
 ```
 
-`lint` runs TypeScript checking. `build` runs that check and then produces the Vite application in `dist/`. No API key or environment file is required for this demonstration.
+`lint` runs TypeScript checking. `build` runs TypeScript, the guard suite and the focused workflow suite before producing the Vite application in `dist/`. Synthetic examples require no external service credentials. The restricted preview still requires its local access-gate configuration; see [server/README.md](server/README.md#restricted-local-preview). Never put credentials in browser-exposed variables or commits.
 
-## Deployment & Data Sovereignty
+## Hosting and institutional readiness
 
-SADU utilizes a secure, containerized architecture specifically designed for seamless deployment onto Sahab Smart Solutions infrastructure or whichever local sovereign cloud the Sharjah Digital Department (SDD) mandates. This deployment model keeps institutional data within the required UAE jurisdiction and allows hosting, networking, identity, backup, and retention controls to align with applicable Sharjah government requirements.
+Publishing the Vite presentation on Vercel does not deploy the local Node services or establish an approved government hosting environment. This repository does not demonstrate a production container deployment, approved Sahab integration or compliance with an institution's data-residency requirements. The preview password gate protects access to the demonstration; it is not institutional identity or role authorization.
 
-The current repository is a browser-only demonstration and does not itself provide production authentication, server persistence, encryption, or institutional authorization. A production deployment should package the application and its supporting services as approved containers, apply SDD-mandated security controls, and complete the relevant infrastructure, data-classification, and operational approval reviews before handling live institutional records.
+Before a live pilot, the institution and IT must confirm the permitted hosting environment, data classes, authority assignments, retention, encryption, backups and restore procedures. Authentication, storage and other provider adapters require specific implementation and integration tests. Local JSON persistence and synthetic role selection are demonstration mechanisms, not evidence of production readiness. Shipping, email, payments and government integrations remain paused.
 
-## Upload to GitHub
+## Earlier ZIP handoff notes
+
+These instructions describe the original September 2026 ZIP handoff. Continue current development in the existing Git checkout; they are not instructions to overwrite it with an older archive.
 
 1. Extract the ZIP.
 2. Open the `SADUVISION` folder.
@@ -66,7 +72,9 @@ vite.config.ts
 
 Edit `src/`: `index.html` loads `src/main.tsx`, which loads `src/App.tsx`.
 
-## What is implemented
+## Earlier presentation features
+
+The following describes retained presentation and workspace features, not the default `/overview` collection demonstration. The current pitch keeps one bounded collection case at its centre.
 
 - All nine presentation chapters share a viewport-sized frame with stable card boundaries and navigation. Text and visuals sit side by side on desktop; mobile stacks the content inside a scrollable reading card while keeping navigation visible. Arabic mirrors the layout.
 - Leadership presentation order is Al Qasimi, Al Owais, then Al Qaseer. Each uses the person's name as the heading and the existing operational theme as the subtitle, without a header icon. Typography, portrait scale, and an exclusive first-slide accent preserve this hierarchy within the shared frame. The Directorate overview uses three separate rows in the same order.
@@ -79,8 +87,8 @@ Edit `src/`: `index.html` loads `src/main.tsx`, which loads `src/App.tsx`.
 
 ## Demonstration boundaries
 
-This is a browser-only prototype with sample data. It does not implement real sign-in, server authorization, durable case storage, encryption, messaging, signatures, or payments. Local workflow state may reset when changing views or reloading. Programme selection does not yet consistently filter all records. Role names and policy examples do not establish institutional authority.
+The `/overview` examples save submitted synthetic steps in separate versioned tab checkpoints when browser storage is available. Refresh and unlocking can restore those steps; unsaved input, closed tabs and unavailable storage have different limits. The examples do not share a live dossier. Older workspaces may still reset. The separate local services serialize file-backed changes within one server process; they do not establish multi-instance database durability or institutional disaster recovery. Role names and policy examples do not establish delegated authority.
 
 External Google Fonts require connectivity on an uncached first load. Arabic report export opens a printable view; choose the browser's PDF destination. Sample reports and RFQs are not approved institutional instruments.
 
-See `CHANGELOG.md` for the included fixes and verification summary. This repository update contains the repaired demonstration and its handoff documentation; it does not add a new deployment configuration or implement the proposed shared custody workflow.
+Use [SADU_ARCHITECTURE.md](SADU_ARCHITECTURE.md) and the route-specific notes in `docs/` and `server/` for current boundaries. Dated audits, codebase exports and earlier presentation scripts describe their own revisions; they are not proof of the current deployment or live institutional integration.

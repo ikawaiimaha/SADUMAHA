@@ -16,3 +16,16 @@ test('assertions identify source revision and never declare UNESCO compliance',(
  assert.equal(output.decision_year,2025);assert.equal(output.compliance_determination,'NOT_ASSESSED');assert.equal(output.version_hash,'hash');
  assert.equal(institutionalAssertion({id:'old'}).evidence_status,'NOT_RECORDED');
 });
+
+test('criterion references are versioned local interpretations of the cited decision',()=>{
+ const output=institutionalAssertion({id:'revision',heritage:validateHeritage(value,registry,'demo')});
+ assert.equal(output.mapping_authority,'SADU_LOCAL_VOCABULARY');
+ assert.equal(output.criteria_mapping_version,2);
+ assert.deepEqual(output.criteria_mapping.transmission_method,['G.1']);
+ assert.deepEqual(output.criteria_mapping.safeguarding_measure,['G.1']);
+ assert.deepEqual(output.criteria_mapping.social_actors,['G.3']);
+ assert.deepEqual(output.criteria_mapping.material_provenance,[]);
+ assert.match(output.criteria_mapping_notes.material_provenance,/local descriptive field/i);
+ assert.equal(output.declaration.material_provenance,'NATURAL_RAW');
+ assert.equal(output.compliance_determination,'NOT_ASSESSED');
+});
