@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createGuidedSession, guidedCollection, acknowledgeGuidedProof, canAdvanceGuided, validGuidedSession, guidedNavigation, navigateGuidedSession } from '../src/data/guidedPresentation';
-import { collectionTransition } from '../src/data/collectionReadiness';
+import { collectionTransition, validCollectionDemo } from '../src/data/collectionReadiness';
+import { validPublishingRecord } from '../src/data/publishingRecord';
 import { loadCheckpoint, saveCheckpoint } from '../src/lib/demoCheckpoint';
 const at = '2026-10-03T10:00:00Z';
 test('guided handoff retains acceptance, date and packing gates', () => {
@@ -53,6 +54,7 @@ test('every guided collection stage can resume, while malformed saved records re
   assert.equal(validGuidedSession(s), true);
   for (const command of ['ASSIGN', 'ACCEPT', 'DATE', 'PREPARE_PACKING', 'COMPLETE_PACKING'] as const) {
     s = { ...s, collection: guidedCollection(s.collection, command, at, command === 'DATE' ? '2026-10-16' : undefined) };
+    assert.equal(validCollectionDemo(s.collection), true, 'the guided flow uses the shared collection contract');
     assert.equal(validGuidedSession(JSON.parse(JSON.stringify(s))), true, command);
   }
   const invalid = [
@@ -87,6 +89,25 @@ test('every guided collection stage can resume, while malformed saved records re
     assert.equal(writes, 0, 'recovery retains the rejected checkpoint');
   }
   assert.equal(validGuidedSession({ ...createGuidedSession(), scene: 5 }), false, 'a completed presentation cannot restore unfinished collection');
+});
+
+test('guided and detailed print examples reject the same damaged revision and actor evidence', () => {
+  const original = createGuidedSession();
+  for (const damage of [
+    (s: any) => { s.print.review = null; },
+    (s: any) => { s.print.decision.outcome = 'return'; },
+    (s: any) => { s.print.decision.actor = 'COORDINATOR'; },
+    (s: any) => { s.print.dispatch.version = 1; },
+    (s: any) => { s.print.previous[0].proofs[0].at = 'bad'; },
+  ]) {
+    const bad = structuredClone(original); damage(bad);
+    assert.equal(validPublishingRecord(bad.print), false);
+    assert.equal(validGuidedSession(bad), false);
+    const raw = JSON.stringify({ schema: 1, value: bad });
+    const recovered = loadCheckpoint({ getItem: () => raw, setItem: () => assert.fail('loading must not discard the source') }, 'guided', createGuidedSession, validGuidedSession);
+    assert.equal(recovered.rejected, raw);
+    assert.equal(validGuidedSession(recovered.value), true);
+  }
 });
 
 test('the first fresh save preserves rejected data and does not overwrite an older recovery copy', () => {

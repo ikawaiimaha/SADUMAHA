@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useCallback, useState } from 'react';
 import { useDemoCheckpoint } from '../lib/useDemoCheckpoint';
-import { createLivingRecord, livingRecordReducer, DemoAction, LivingRecord } from '../data/livingRecord';
+import { createLivingRecord, livingRecordReducer, validLivingRecord, DemoAction, LivingRecord } from '../data/livingRecord';
 
 interface LivingRecordContextValue {
   state: LivingRecord;
@@ -10,7 +10,7 @@ interface LivingRecordContextValue {
 }
 const Context = createContext<LivingRecordContextValue | null>(null);
 export function LivingRecordProvider({ children, checkpointKey }: { children: React.ReactNode; checkpointKey?: string }) {
-  const [state, setState, warning] = useDemoCheckpoint(checkpointKey, createLivingRecord, (v: any) => v?.caseId && Array.isArray(v.events) && Array.isArray(v.publishing?.proofs) && Array.isArray(v.publishing?.previous));
+  const [state, setState, warning] = useDemoCheckpoint(checkpointKey, createLivingRecord, validLivingRecord);
   const dispatch = useCallback((action: DemoAction) => setState(previous => livingRecordReducer(previous, action)), [setState]);
   const [leadershipView, setLeadershipView] = useState<'CHAIRMAN' | 'DIRECTORATE' | 'MANAGER'>('CHAIRMAN');
   return <Context.Provider value={{ state, dispatch, leadershipView, setLeadershipView }}>{warning && <p role="alert">{warning}</p>}{children}</Context.Provider>;

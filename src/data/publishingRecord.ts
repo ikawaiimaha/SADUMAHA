@@ -27,10 +27,57 @@ export type PublishingAction =
 
 export const createPublishingRecord = (): PublishingRecord => ({ version: 0, proofs: [], review: null, decision: null, dispatch: null, supplierAck: null, production: null, correction: null, previous: [] });
 
+export const canReplacePrintProof = (state: Pick<PublishingRecord, 'dispatch' | 'correction'>) =>
+  !state.dispatch || Boolean(state.correction?.stopReference);
+
+/** Shared recovery boundary for the guided example and the print workspace.
+ * A stored status cannot substitute for its revision-specific prerequisite records.
+ */
+export function validPublishingRecord(value: unknown): value is PublishingRecord {
+  const p = value as PublishingRecord | null;
+  const text = (v: unknown): v is string => typeof v === 'string' && v.trim().length > 0;
+  const time = (v: unknown): v is string => typeof v === 'string' && Number.isFinite(Date.parse(v));
+  if (!p || !Number.isSafeInteger(p.version) || p.version < 0 || !Array.isArray(p.proofs)
+    || !Array.isArray(p.previous) || p.proofs.length !== p.version || p.previous.length !== Math.max(0, p.version - 1)) return false;
+  const entry = (v: unknown, version: number, actor: DemoActor) => {
+    const e = v as Envelope & { version: number } | null;
+    return !!e && e.version === version && e.actor === actor && time(e.at);
+  };
+  if (!p.proofs.every((proof, i) => entry(proof, i + 1, 'COORDINATOR'))) return false;
+  function snapshot(s: Omit<PublishingRecord, 'previous'>, version: number): boolean {
+    if (!s || s.version !== version || !Array.isArray(s.proofs) || s.proofs.length !== version
+      || !s.proofs.every((proof, i) => entry(proof, i + 1, 'COORDINATOR') && proof.at === p!.proofs[i].at)) return false;
+    if (!version) return [s.review, s.decision, s.dispatch, s.supplierAck, s.production, s.correction].every(v => v === null);
+    if (s.review !== null && (!entry(s.review, version, 'PUBLISHING_MANAGER') || s.review.route !== PRINT_ROUTE_ID)) return false;
+    if (s.decision !== null && (!s.review || !entry(s.decision, version, 'CHAIRMAN') || !['release', 'return'].includes(s.decision.outcome))) return false;
+    if (s.dispatch !== null && (s.decision?.outcome !== 'release' || !entry(s.dispatch, version, 'PUBLISHING_MANAGER'))) return false;
+    if (s.supplierAck !== null) {
+      if (!s.dispatch || !entry(s.supplierAck, version, 'PUBLISHING_MANAGER') || !text(s.supplierAck.reference)) return false;
+      const evidence = s.supplierAck.evidence;
+      if (evidence !== undefined && (!evidence || !['Email', 'WhatsApp', 'Portal', 'Verbal'].includes(evidence.source)
+        || !text(evidence.sender) || !time(evidence.receivedAt) || Date.parse(evidence.receivedAt) > Date.parse(s.supplierAck.at))) return false;
+    }
+    if (s.production !== null) {
+      if (!s.supplierAck || !entry(s.production, version, 'PUBLISHING_MANAGER')) return false;
+      if (s.production.completedAt !== undefined || s.production.completionReference !== undefined) {
+        if (!time(s.production.completedAt) || !text(s.production.completionReference)) return false;
+      }
+    }
+    if (s.correction !== null) {
+      const c = s.correction;
+      if ((!entry(c, version, 'COORDINATOR') && !entry(c, version, 'PUBLISHING_MANAGER')) || !text(c.reason) || typeof c.stopReference !== 'string') return false;
+      if (c.stopReference ? !text(c.stopReference) || !s.dispatch || c.stopActor !== 'PUBLISHING_MANAGER' || !time(c.stopAt)
+        : c.stopActor !== undefined || c.stopAt !== undefined) return false;
+    }
+    return true;
+  }
+  return snapshot(p, p.version) && p.previous.every((old, i) => snapshot(old, i + 1) && canReplacePrintProof(old));
+}
+
 export function reducePublishingRecord(state: PublishingRecord, action: PublishingAction): PublishingRecord {
   if (!Number.isFinite(Date.parse(action.at))) return state;
   if (action.type === 'ATTACH_PRINT_PROOF') {
-    if (action.actor !== 'COORDINATOR' || (state.dispatch && !state.correction?.stopReference)) return state;
+    if (action.actor !== 'COORDINATOR' || !canReplacePrintProof(state)) return state;
     const version = state.version + 1;
     const { previous, ...snapshot } = state;
     return { ...createPublishingRecord(), version, proofs: [...state.proofs, { version, actor: action.actor, at: action.at }], previous: state.version ? [...previous, snapshot] : previous };

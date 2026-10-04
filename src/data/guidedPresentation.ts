@@ -1,6 +1,5 @@
-import { createCollectionDemo, collectionTransition, collectionTask, pickupError, type CollectionDemo, type CollectionCommand } from './collectionReadiness';
-import { packingStage } from '../logistics/collectionRules.mjs';
-import { createPublishingRecord, reducePublishingRecord, PRINT_ROUTE_ID, type PublishingRecord } from './publishingRecord';
+import { createCollectionDemo, collectionTransition, collectionTask, validCollectionDemo, type CollectionDemo, type CollectionCommand } from './collectionReadiness';
+import { createPublishingRecord, reducePublishingRecord, PRINT_ROUTE_ID, validPublishingRecord, type PublishingRecord } from './publishingRecord';
 
 const preparedAt = '2026-10-03T09:00:00Z';
 export type GuidedCommand = 'ASSIGN' | 'ACCEPT' | 'DATE' | 'PREPARE_PACKING' | 'COMPLETE_PACKING';
@@ -73,33 +72,10 @@ export function validGuidedSession(value: unknown): value is GuidedSession {
   const v = value as GuidedSession | undefined;
   if (!v || !Number.isInteger(v.scene) || v.scene < 0 || v.scene > 5 || !['ar', 'en'].includes(v.language) || typeof v.paused !== 'boolean') return false;
   const c = v.collection, p = v.print;
-  if (!validCollectionCheckpoint(c)) return false;
+  if (!validCollectionDemo(c) || !['unavailable', 'acceptance', 'pickup', 'packing', 'pack-evidence', 'ready'].includes(c.stage)
+    || (c.stage === 'unavailable' ? c.owner !== 'Logistics A' : c.owner !== 'Logistics B')) return false;
   if (v.scene === 2 && ['unavailable', 'acceptance'].includes(c.stage)) return false;
   if (v.scene >= 3 && c.stage !== 'ready') return false;
-  return !!p && p.version === 2 && Array.isArray(p.previous) && Array.isArray(p.proofs) && p.decision?.version === 2 && p.dispatch?.version === 2 && (!p.supplierAck || p.supplierAck.version === 2);
-}
-
-// Validate restored presentation data before any date formatting or task rendering.
-// This is recovery validation, never authentication or institutional authorization.
-function validCollectionCheckpoint(c: CollectionDemo | undefined): c is CollectionDemo {
-  if (!c || !['unavailable', 'acceptance', 'pickup', 'packing', 'pack-evidence', 'ready'].includes(c.stage)
-    || !Number.isInteger(c.version) || !Array.isArray(c.history) || !['Logistics A', 'Logistics B'].includes(c.owner)
-    || typeof c.date !== 'string' || c.version !== c.history.length + 1 || !c.history.length) return false;
-  const text = (v: unknown): v is string => typeof v === 'string' && v.trim().length > 0;
-  if (!c.history.every((entry, index) => entry && ['Coordinator', 'Logistics A', 'Logistics B', 'Technical', 'Finance'].includes(entry.actor)
-    && text(entry.action) && typeof entry.at === 'string' && Number.isFinite(Date.parse(entry.at)) && entry.version === index + 1)) return false;
-  const recorded = (actor: string, action: string) => c.history.some(entry => entry.actor === actor && entry.action === action);
-  if (!recorded('Coordinator', 'ABSENT')) return false;
-  if (c.stage === 'unavailable' ? c.owner !== 'Logistics A' : c.owner !== 'Logistics B') return false;
-  if (!['unavailable', 'acceptance'].includes(c.stage) && !recorded(c.owner, 'ACCEPT')) return false;
-  const needsDate = ['packing', 'pack-evidence', 'ready'].includes(c.stage);
-  if (needsDate ? !!pickupError(c.date) || !recorded(c.owner, `DATE: ${c.date}`) : c.date !== '') return false;
-  if (!['pack-evidence', 'ready'].includes(c.stage)) return c.packing === null;
-  const packing = c.packing;
-  if (!packing || !text(packing.specification) || !text(packing.owner) || !Number.isFinite(packing.amount) || packing.amount < 0
-    || typeof packing.requiresTechnical !== 'boolean' || typeof packing.technicalReason !== 'string'
-    || typeof packing.technicalReference !== 'string' || !text(packing.costReference) || typeof packing.evidence !== 'string') return false;
-  if (packing.requiresTechnical ? !text(packing.technicalReference) || !recorded('Technical', `TECHNICAL: ${packing.technicalReference}`) : !text(packing.technicalReason)) return false;
-  if (!recorded('Finance', `COST: ${packing.costReference}`) || packingStage(packing) !== c.stage) return false;
-  return c.stage !== 'ready' || (text(packing.evidence) && recorded(c.owner, `EVIDENCE: ${packing.evidence}`));
+  return validPublishingRecord(p) && p.version === 2 && p.decision?.outcome === 'release' && p.dispatch?.version === 2
+    && p.correction === null && p.production === null;
 }

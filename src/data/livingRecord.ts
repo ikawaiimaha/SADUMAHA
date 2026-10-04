@@ -1,6 +1,6 @@
 // Fictional, session-only demonstration. These guards are not server authorization.
 import type { ExhibitionProgramme } from '../types';
-import { createPublishingRecord, reducePublishingRecord, selectPublishingRecord, type PublishingRecord, type PublishingAction } from './publishingRecord';
+import { createPublishingRecord, reducePublishingRecord, selectPublishingRecord, validPublishingRecord, type PublishingRecord, type PublishingAction } from './publishingRecord';
 export const CASE_ID = 'DEMO-MF-04';
 export const DEMO_PROGRAMME_ID = 'living-record-demo';
 // Selector metadata only; live readiness is derived by selectLivingRecord below.
@@ -30,6 +30,31 @@ export interface LivingRecord {
   events: DemoEvent[];
 }
 export const createLivingRecord = (caseId = CASE_ID): LivingRecord => ({ caseId, receipt: null, receiptIssue: false, condition: null, conditionHistory: [], acceptance: null, statementPresent: true, statementTask: false, deliveryEscalated: false, finance: 'draft', publishing: createPublishingRecord(), events: [] });
+
+export function validLivingRecord(value: unknown): value is LivingRecord {
+  const s = value as LivingRecord | null;
+  const text = (v: unknown) => typeof v === 'string' && v.trim().length > 0;
+  const entry = (v: unknown, actor: DemoActor) => {
+    const e = v as { actor: DemoActor; at: string } | null;
+    return !!e && e.actor === actor && typeof e.at === 'string' && Number.isFinite(Date.parse(e.at));
+  };
+  if (!s || !text(s.caseId) || !validPublishingRecord(s.publishing) || !Array.isArray(s.events) || !Array.isArray(s.conditionHistory)
+    || !['draft', 'submitted', 'escalated'].includes(s.finance)
+    || ![s.receiptIssue, s.statementPresent, s.statementTask, s.deliveryEscalated].every(v => typeof v === 'boolean')) return false;
+  const actors: DemoActor[] = ['CHAIRMAN', 'DIRECTORATE', 'MANAGER', 'LOGISTICS', 'TECHNICAL', 'COORDINATOR', 'FINANCE', 'PUBLISHING_MANAGER', 'ARTIST', 'SELECTION', 'OBSERVER'];
+  const kinds: EventKind[] = ['receipt', 'receipt-issue', 'condition', 'handover', 'statement-missing', 'statement-task', 'statement-restored', 'finance-pack', 'finance-escalated', 'delivery-escalated', 'print-proof', 'print-routed', 'print-decision', 'print-dispatch', 'print-progress'];
+  if (!s.events.every((e, i) => e && e.id === `DEMO-E${i + 1}` && kinds.includes(e.kind) && actors.includes(e.actor) && entry(e, e.actor) && text(e.reference))) return false;
+  if (s.receipt !== null && (!entry(s.receipt, 'LOGISTICS') || s.receiptIssue)) return false;
+  if (!s.conditionHistory.every((c, i) => c && entry(c, 'TECHNICAL') && text(c.id) && c.version === i + 1 && ['clear', 'issue'].includes(c.outcome))) return false;
+  if (s.condition !== null) {
+    const latest = s.conditionHistory.at(-1);
+    if (!s.receipt || !latest || !entry(s.condition, 'TECHNICAL')
+      || !(['id', 'version', 'outcome', 'at', 'actor'] as const).every(key => s.condition![key] === latest[key])) return false;
+  } else if (s.conditionHistory.length) return false;
+  if (s.acceptance !== null && (!entry(s.acceptance, 'MANAGER') || !s.receipt || s.receiptIssue || s.condition?.outcome !== 'clear'
+    || s.acceptance.reportId !== s.condition.id || s.acceptance.reportVersion !== s.condition.version || s.acceptance.declarationVersion !== 'DEMO-ACK-1')) return false;
+  return true;
+}
 type Envelope = { actor: DemoActor; at: string };
 export type DemoAction =
   | PublishingAction

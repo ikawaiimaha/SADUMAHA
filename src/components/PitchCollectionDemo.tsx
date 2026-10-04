@@ -4,11 +4,11 @@ import { CommunicationConfirmation } from './CommunicationConfirmation';
 import { NextActionCard } from './NextActionCard';
 import LocalHandoffRegister from './LocalHandoffRegister';
 import { handoffPhase } from '../data/handoffRegister';
-import { backupOfficers, createCollectionDemo, collectionTransition, collectionTask, type CollectionCommand } from '../data/collectionReadiness';
+import { backupOfficers, createCollectionDemo, collectionTransition, collectionTask, validCollectionDemo, type CollectionCommand } from '../data/collectionReadiness';
 export { pickupError } from '../data/collectionReadiness';
 
 export default function PitchCollectionDemo() {
-  const [record, setRecord, recoveryWarning] = useDemoCheckpoint('sadu:pitch:collection:v2', createCollectionDemo, (v: any) => Number.isInteger(v?.version) && Array.isArray(v.history) && ['confirmed','unavailable','acceptance','pickup','packing','technical-review','cost-review','pack-evidence','ready'].includes(v.stage));
+  const [record, setRecord, recoveryWarning] = useDemoCheckpoint('sadu:pitch:collection:v2', createCollectionDemo, validCollectionDemo);
   const [error, setError] = useState('');
   const [communicationOpen, setCommunicationOpen] = useDemoCheckpoint('sadu:pitch:message-open:v2', () => false, v => typeof v === 'boolean');
   const [run, setRun] = useDemoCheckpoint('sadu:pitch:message-run:v2', () => 0, v => Number.isInteger(v));

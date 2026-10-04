@@ -44,8 +44,67 @@ export function collectionTransition(s: CollectionDemo, c: CollectionCommand): C
       const packing = packingTransition(s.packing, { ...c, requiresTechnical: c.requiresTechnical ?? true }, role);
       patch = { packing, stage: packingStage(packing) as CollectionStage }; break;
     }
+    default: return fail();
   }
   return { ...s, ...patch, version: s.version + 1, history: [...s.history, { actor: c.actor, action: `${c.type}${value ? ': ' + value : ''}${c.reason ? ' — ' + c.reason : ''}${c.type === 'PACK' ? ` · ${c.packingOwner} · AED ${c.amount}` : ''}`, at: c.at, version: s.version }] };
+}
+
+/** Recovery check for every collection demonstration, not authentication.
+ * Replay the recorded handoffs through the same transition rules as new actions.
+ * Closed legacy plans retain display history, but only the current plan can establish readiness.
+ */
+export function validCollectionDemo(value: unknown): value is CollectionDemo {
+  const c = value as CollectionDemo | null;
+  if (!c || !Number.isSafeInteger(c.version) || !Array.isArray(c.history)
+    || c.version !== c.history.length + 1 || typeof c.date !== 'string') return false;
+  const text = (v: unknown): v is string => typeof v === 'string' && v.trim().length > 0;
+  const p = c.packing;
+  if (p !== null && (!p || !text(p.specification) || !text(p.owner) || !Number.isFinite(p.amount) || p.amount < 0
+    || typeof p.requiresTechnical !== 'boolean' || typeof p.technicalReason !== 'string'
+    || typeof p.technicalReference !== 'string' || typeof p.costReference !== 'string' || typeof p.evidence !== 'string')) return false;
+  if (!c.history.every(e => e && text(e.actor) && text(e.action) && typeof e.at === 'string' && Number.isFinite(Date.parse(e.at)))) return false;
+  let lastPlan = -1, lastReopen = -1;
+  c.history.forEach((e, i) => {
+    if (e.action.startsWith('PACK: ')) lastPlan = i;
+    if (e.action.startsWith('REOPEN: ')) lastReopen = i;
+  });
+  try {
+    let restored = createCollectionDemo();
+    for (const [index, e] of c.history.entries()) {
+      const match = /^([A-Z]+)(?:: ([\s\S]+))?$/.exec(e.action);
+      if (!match) return false;
+      const type = match[1] as CollectionCommand['type'];
+      const command: CollectionCommand = { type, actor: e.actor, at: e.at, version: e.version, value: match[2] };
+      if (type === 'ASSIGN') {
+        const assignment = /^(Logistics [BC]) — ([\s\S]+)$/.exec(command.value ?? '');
+        if (!assignment) return false;
+        command.value = assignment[1]; command.reason = assignment[2];
+      } else if (type === 'DATE') {
+        const date = /^(\d{4}-\d{2}-\d{2})(?: — ([\s\S]+))?$/.exec(command.value ?? '');
+        if (!date) return false;
+        command.value = date[1]; command.reason = date[2];
+      } else if (type === 'PACK') {
+        const plan = /^([\s\S]+) · ([\s\S]+) · AED (\d+(?:\.\d+)?(?:e[+-]?\d+)?)$/.exec(command.value ?? '');
+        if (!plan) return false;
+        const active = index === lastPlan && lastPlan > lastReopen;
+        if (active && !p) return false;
+        // Current plan fields are authoritative within this synthetic checkpoint;
+        // do not split a company name or specification that itself contains " · ".
+        command.value = active ? p!.specification : plan[1];
+        command.packingOwner = active ? p!.owner : plan[2]; command.amount = active ? p!.amount : Number(plan[3]);
+        command.requiresTechnical = active ? p!.requiresTechnical : c.history[index + 1]?.action.startsWith('TECHNICAL: ') === true;
+        // This placeholder is used only while checking a discarded historical plan.
+        // It is never saved, displayed or used to clear a current hold.
+        command.technicalReason = active ? p!.technicalReason : 'Closed legacy plan; original review policy not retained.';
+      }
+      restored = collectionTransition(restored, command);
+      if (restored.history.at(-1)?.action !== e.action) return false;
+    }
+    if (restored.stage !== c.stage || restored.owner !== c.owner || restored.date !== c.date || restored.version !== c.version) return false;
+    if (!restored.packing || !p) return restored.packing === p;
+    return (Object.keys(restored.packing) as (keyof NonNullable<CollectionDemo['packing']>)[])
+      .every(key => restored.packing![key] === p[key]);
+  } catch { return false; }
 }
 export function collectionTask(s: CollectionDemo) {
   const owner = ['confirmed', 'unavailable'].includes(s.stage) ? 'Coordinator' : s.stage === 'technical-review' ? 'Technical' : s.stage === 'cost-review' ? 'Finance' : s.owner;

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useI18n } from '../context/I18nContext';
 import { useLivingRecord } from '../context/LivingRecordContext';
-import { PRINT_ROUTE_ID, selectPublishingRecord } from '../data/publishingRecord';
+import { PRINT_ROUTE_ID, selectPublishingRecord, canReplacePrintProof } from '../data/publishingRecord';
 import type { DemoActor } from '../data/livingRecord';
 import { PrintProduction } from './PrintProduction';
 
@@ -44,7 +44,7 @@ export function PublishingCase({ actor }: { actor: DemoActor }) {
     <p className="lr-small">{t('Separate demonstration; not an issue of the seven magazines.', 'تجربة مستقلة؛ ليست عدداً من المجلات السبع.')}</p>
     <span className={`lr-status ${summary.stage === 'released' || summary.stage === 'sent' ? 'is-clear' : ''}`} data-testid="publishing-stage">{printStages[summary.stage][isAr ? 1 : 0]}</span>
     {publishing.version ? <p className="lr-small"><bdi>{summary.reference}</bdi> · {t('Source: prepared sample proof', 'المصدر: بروفة تجريبية معدة مسبقاً')}</p> : null}
-    {actor === 'COORDINATOR' ? <div className="lr-actions"><button className="lr-primary" disabled={Boolean(publishing.dispatch && !publishing.correction?.stopReference)} onClick={() => dispatch({ type: 'ATTACH_PRINT_PROOF', ...envelope() })}>{publishing.version ? t('Attach revised sample proof', 'إرفاق بروفة تجريبية معدلة') : t('Attach prepared sample proof', 'إرفاق البروفة التجريبية المعدة')}</button><p className="lr-small">{t('A new version clears the current review and decision; prior events remain in history.', 'يلغي الإصدار الجديد سريان المراجعة والقرار الحاليين؛ وتبقى الأحداث السابقة في السجل.')}</p></div> : null}
+    {actor === 'COORDINATOR' ? <div className="lr-actions"><button className="lr-primary" disabled={!canReplacePrintProof(publishing)} onClick={() => dispatch({ type: 'ATTACH_PRINT_PROOF', ...envelope() })}>{publishing.version ? t('Attach revised sample proof', 'إرفاق بروفة تجريبية معدلة') : t('Attach prepared sample proof', 'إرفاق البروفة التجريبية المعدة')}</button><p className="lr-small">{t('A new version clears the current review and decision; prior events remain in history.', 'يلغي الإصدار الجديد سريان المراجعة والقرار الحاليين؛ وتبقى الأحداث السابقة في السجل.')}</p></div> : null}
     {actor === 'PUBLISHING_MANAGER' && ['manager-review', 'released'].includes(summary.stage) ? <div className="lr-actions">
       {summary.stage === 'manager-review' && <button className="lr-primary" onClick={openReview}>{t('Review proof and route', 'مراجعة البروفة وإحالتها')}</button>}
       {summary.stage === 'released' && <button onClick={() => dispatch({ type: 'RECORD_PRINT_DISPATCH', ...envelope(), version: publishing.version })}>{t('Record sample print dispatch', 'تسجيل إرسال تجريبي للطباعة')}</button>}

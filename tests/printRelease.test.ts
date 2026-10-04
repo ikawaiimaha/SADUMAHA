@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createPublishingRecord, reducePublishingRecord as reduce, selectPublishingRecord, PRINT_ROUTE_ID } from '../src/data/publishingRecord';
+import { createPublishingRecord, reducePublishingRecord as reduce, selectPublishingRecord, validPublishingRecord, canReplacePrintProof, PRINT_ROUTE_ID } from '../src/data/publishingRecord';
+import { createLivingRecord, livingRecordReducer, validLivingRecord } from '../src/data/livingRecord';
 const at = '2026-10-03T09:00:00Z';
 const attach = { type: 'ATTACH_PRINT_PROOF', actor: 'COORDINATOR', at } as const;
 function released() {
@@ -62,4 +63,73 @@ test('post-completion defects preserve completion; wrong roles cannot open corre
   const revised = reduce(stopped, attach);
   assert.equal(revised.previous[0].production?.completionReference, 'SYNTHETIC-QC-01');
   assert.equal(finished.correction, null);
+});
+
+test('all print stages and preserved revisions resume without clearing correction holds', () => {
+  let s = createPublishingRecord();
+  const check = () => {
+    const saved = JSON.parse(JSON.stringify(s));
+    assert.equal(validPublishingRecord(saved), true, selectPublishingRecord(s).stage);
+    assert.equal(validLivingRecord({ ...createLivingRecord(), publishing: saved }), true);
+    assert.deepEqual(selectPublishingRecord(saved), selectPublishingRecord(s));
+  };
+  check();
+  for (const action of [attach,
+    { type: 'ROUTE_PRINT_PROOF', actor: 'PUBLISHING_MANAGER', at, version: 1, editorialChecked: true, rightsChecked: true, route: PRINT_ROUTE_ID },
+    { type: 'DECIDE_PRINT_PROOF', actor: 'CHAIRMAN', at, version: 1, outcome: 'release', acknowledged: true },
+    { type: 'RECORD_PRINT_DISPATCH', actor: 'PUBLISHING_MANAGER', at, version: 1 }, ack, start, complete, correct,
+  ] as const) { s = reduce(s, action); check(); }
+  assert.equal(canReplacePrintProof(s), false);
+  s = JSON.parse(JSON.stringify(s));
+  assert.equal(reduce(s, attach), s, 'refresh cannot clear an unconfirmed supplier stop');
+  s = reduce(s, { type: 'CONFIRM_PRINT_STOP', actor: 'PUBLISHING_MANAGER', at, version: 1, reference: 'STOP-01' }); check();
+  assert.equal(canReplacePrintProof(s), true);
+  s = reduce(s, attach); check();
+  assert.equal(s.supplierAck, null);
+  assert.equal(s.previous[0].production?.completionReference, 'SYNTHETIC-QC-01');
+});
+
+test('restoration cannot manufacture print approval, supplier acknowledgment or a stopped press', () => {
+  const base = reduce(reduce(reduce(released(), ack), start), correct);
+  for (const damage of [
+    (s: any) => { s.review = null; },
+    (s: any) => { s.review.route = 'unapproved-route'; },
+    (s: any) => { s.decision.outcome = 'return'; },
+    (s: any) => { s.decision.actor = 'COORDINATOR'; },
+    (s: any) => { s.dispatch.version = 2; },
+    (s: any) => { s.supplierAck.version = 0; },
+    (s: any) => { s.supplierAck.reference = ''; },
+    (s: any) => { s.supplierAck.evidence = { source: 'Email', sender: 'Demo', receivedAt: '2099-01-01' }; },
+    (s: any) => { s.production.at = 'bad'; },
+    (s: any) => { s.production.completionReference = 'Missing completion time'; },
+    (s: any) => { s.correction.stopReference = 'Missing actor and time'; },
+    (s: any) => { s.proofs[0] = null; },
+    (s: any) => { s.previous = [null]; },
+  ]) {
+    const bad = structuredClone(base); damage(bad);
+    assert.equal(validPublishingRecord(bad), false);
+    assert.equal(validLivingRecord({ ...createLivingRecord(), publishing: bad }), false);
+  }
+  const stopped = reduce(base, { type: 'CONFIRM_PRINT_STOP', actor: 'PUBLISHING_MANAGER', at, version: 1, reference: 'STOP-01' });
+  const next = reduce(stopped, attach);
+  next.previous[0].correction!.stopReference = '';
+  assert.equal(validPublishingRecord(next), false, 'new proof cannot hide an unresolved supplier hold in its predecessor');
+  assert.equal(validLivingRecord({ ...createLivingRecord(), events: [null] }), false);
+});
+
+test('shared context validation preserves the independent custody and Finance demonstration', () => {
+  let s = createLivingRecord();
+  for (const action of [
+    { type: 'RECEIVE', actor: 'LOGISTICS', crateId: s.caseId, sealMatches: false, at },
+    { type: 'RECEIVE', actor: 'LOGISTICS', crateId: s.caseId, sealMatches: true, at },
+    { type: 'CONDITION', actor: 'TECHNICAL', outcome: 'issue', at },
+    { type: 'CONDITION', actor: 'TECHNICAL', outcome: 'clear', at },
+    { type: 'ACCEPT', actor: 'MANAGER', reportVersion: 2, acknowledged: true, at },
+    { type: 'SUBMIT_FINANCE', actor: 'FINANCE', at },
+    { type: 'ESCALATE_FINANCE', actor: 'MANAGER', at },
+  ] as const) {
+    s = livingRecordReducer(s, action);
+    assert.equal(validLivingRecord(JSON.parse(JSON.stringify(s))), true, action.type);
+  }
+  assert.equal(s.publishing.version, 0);
 });
