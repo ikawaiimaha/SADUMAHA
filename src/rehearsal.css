@@ -1,4 +1,12 @@
 @import "./index.css";
+@source "./components/ConnectedPilot.tsx";
+@source "./components/ConnectedCollection.tsx";
+@source "./components/ConnectedOperations.tsx";
+@source "./components/RenewalQueue.tsx";
+@source "./components/OperationalWorkspace.tsx";
+@source "./components/OperationalForms.tsx";
+@source "./components/EvidencePreview.tsx";
+@source "./components/AmendmentImpact.tsx";
 @source "./components/RehearsalJourney.tsx";
 @source "./components/PublicationReview.tsx";
 @source "./components/SpatialPlanner.tsx";

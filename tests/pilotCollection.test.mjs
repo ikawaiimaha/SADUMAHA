@@ -15,7 +15,14 @@ test('collection HTTP workflow: closure blocks, source confirmation, scoped back
   const call=(url,body)=>fetch(origin+url,{method:body?'POST':'GET',headers:{Cookie:cookie,Origin:origin,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});
   const login=async id=>{const r=await call('/api/review/session',{accountId:'pilot-'+id});assert.equal(r.status,200);cookie=r.headers.get('set-cookie').split(';')[0];};
   const read=async()=>{const r=await call(path);assert.equal(r.status,200);return r.json();};
-  const mutate=async(action,extra={},expected=200)=>{const v=await read();const r=await call(path,{version:v.version,action,...extra});const b=await r.json();assert.equal(r.status,expected,JSON.stringify(b));return b;};
+  const mutate=async(action,extra={},expected=200)=>{const v=await read();const command={version:v.version,action,...extra};if(expected===200&&['SAVE','PLAN','REOPEN'].includes(action)){const p=await call(path+'/impact',command);assert.equal(p.status,200);const impact=await p.json();if(impact.required)command.impactToken=impact.token;}const r=await call(path,command);const b=await r.json();assert.equal(r.status,expected,JSON.stringify(b));return b;};
+  const acceptRenewal=async(key,owner)=>{
+    const previousCookie=cookie;await login('General_Exhibition_Coordinator');
+    const op='/api/review/pilot/operations/'+PILOT_ARTWORK;
+    const view=await(await call(op)).json(),task=view.renewals.filter(c=>!c.supersededAt).flatMap(c=>c.tasks).find(t=>t.key===key);
+    let r=await call(op,{action:'ASSIGN_RENEWAL',version:view.version,operationId:crypto.randomUUID(),taskId:task.id,ownerId:'pilot-'+owner,dueAt:new Date(Date.now()+86400000).toISOString(),reason:'Test renewal handoff'});assert.equal(r.status,200,await r.text());
+    cookie=previousCookie;const next=await(await call(op)).json();r=await call(op,{action:'ACCEPT_RENEWAL',version:next.version,operationId:crypto.randomUUID(),taskId:task.id});assert.equal(r.status,200,await r.text());
+  };
   const details={address:'Synthetic gallery collection store',city:'Paris',country:'France',contact:'Synthetic gallery desk',sourceRef:'TEST-EMAIL-01',timezone:'Europe/Paris',availability:{start:'2026-07-01',end:'2026-09-15'},closures:[{start:'2026-07-25',end:'2026-09-02'}],conflict:false};
   try {
     assert.equal((await call(path)).status,401);
@@ -29,16 +36,16 @@ test('collection HTTP workflow: closure blocks, source confirmation, scoped back
     await mutate('SAVE',{details:{...details,conflict:true}});
     await mutate('CONFIRM',{checked:true},409);
     await mutate('SAVE',{details});await mutate('ACCEPT');await mutate('PLAN',{pickupDate:'2026-07-24'},409);
-    await mutate('CONFIRM',{checked:true});
+    await acceptRenewal('source','Logistics');await mutate('CONFIRM',{checked:true});await acceptRenewal('pickup','Logistics');
     const confirmed=runtime.repository.read();
     for(const pickupDate of ['2026-07-25','2026-08-10','2026-09-02'])await mutate('PLAN',{pickupDate},409);
     assert.deepEqual(runtime.repository.read(),confirmed,'Failed plans must not change history or confirmations');
     await mutate('PLAN',{pickupDate:'2026-09-16'},422);
     await mutate('PLAN',{pickupDate:'2026-07-24'});
     assert.equal((await read()).ready,false);
-    await mutate('PACK',{value:'Crate',packingOwner:'Synthetic packer',amount:0,requiresTechnical:false,technicalReason:'Standard packing reviewed against the recorded rider.'});
-    await login('Finance');await mutate('COST',{value:'TEST-COST'});
-    await login('Logistics');await mutate('EVIDENCE',{value:'TEST-PACKED'});
+    await acceptRenewal('plan','Logistics');await mutate('PACK',{value:'Crate',packingOwner:'Synthetic packer',amount:0,requiresTechnical:false,technicalReason:'Standard packing reviewed against the recorded rider.'});
+    await login('Finance');await acceptRenewal('cost','Finance');await mutate('COST',{value:'TEST-COST'});
+    await login('Logistics');await acceptRenewal('packing','Logistics');await mutate('EVIDENCE',{value:'TEST-PACKED'});
     assert.equal((await read()).ready,true);
     assert.equal(requireCollectionReady(runtime.repository.read(),PILOT_ARTWORK).country,'France');
     const staleVersion=(await read()).version;
@@ -56,11 +63,11 @@ test('collection HTTP workflow: closure blocks, source confirmation, scoped back
     await login('Logistics-Backup');
     const queue=await(await call('/api/review/pilot')).json();assert.ok(queue.nextActions.some(t=>t.href==='#collection-plan'&&t.ownerId==='pilot-Logistics-Backup'));
     await mutate('CONFIRM',{checked:true},409);await mutate('ACCEPT');
-    await mutate('CONFIRM',{checked:true});await mutate('PLAN',{pickupDate:'2026-09-03'});
-    await mutate('PACK',{value:'Revised crate',packingOwner:'Synthetic packer',amount:50,requiresTechnical:true});
-    await login('Technical');await mutate('TECHNICAL',{value:'TEST-TECH'});
-    await login('Finance');await mutate('COST',{value:'TEST-COST-2'});
-    await login('Logistics-Backup');await mutate('EVIDENCE',{value:'TEST-PACKED-2'});
+    await acceptRenewal('source','Logistics-Backup');await mutate('CONFIRM',{checked:true});await acceptRenewal('pickup','Logistics-Backup');await mutate('PLAN',{pickupDate:'2026-09-03'});
+    await acceptRenewal('plan','Logistics-Backup');await mutate('PACK',{value:'Revised crate',packingOwner:'Synthetic packer',amount:50,requiresTechnical:true});
+    await login('Technical');await acceptRenewal('technical','Technical');await mutate('TECHNICAL',{value:'TEST-TECH'});
+    await login('Finance');await acceptRenewal('cost','Finance');await mutate('COST',{value:'TEST-COST-2'});
+    await login('Logistics-Backup');await acceptRenewal('packing','Logistics-Backup');await mutate('EVIDENCE',{value:'TEST-PACKED-2'});
     const state=runtime.repository.read();
     assert.deepEqual(state.payments,[]);assert.equal(state.artworks[0].physicalStatus,'Pending_Shipment');
     assert.equal(state.collectionHandovers[0].enteredBy,'pilot-General_Exhibition_Coordinator');

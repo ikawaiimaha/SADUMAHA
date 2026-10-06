@@ -6,7 +6,7 @@ Collection now requires backup acceptance, a valid October rehearsal date, a pac
 
 Print acknowledgment can retain channel, sender, simulated receipt time, recorder and exact revision. A verbal message or transcript is not independently verified approval. The demo states when receipt is simulated and when source metadata was not recorded. Older reference-only records remain readable.
 
-No ArtistStatus/ThemeStatus or institutional authority is changed. Both demonstrations are browser-session simulations; reset/refresh clears them. No real correspondence, passport, external integration or live database is used. This is not authenticated backend authorization.
+No ArtistStatus/ThemeStatus or institutional authority is changed. The pitch demonstrations use isolated versioned tab checkpoints: saved steps survive refresh when storage is available; unsaved inputs are not guaranteed. Reset starts the synthetic scenario again. These checkpoints are not authenticated backend authorization. The separate [connected local evidence workflow](shared-evidence-workflow.md) now persists collection and print packages in one local repository with simulated accounts. No real correspondence, passport, external integration or live database is used.
 
 ## Production work requiring institutional scope
 

@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { requireRecordAccess } from './acquisition.mjs';
 import { collectionReadiness, packingTransition } from '../src/logistics/collectionRules.mjs';
+import { amendmentImpact, requireImpactConfirmation, recordImpactReview } from './amendment-impact.mjs';
+import { startRenewal, finishRenewal, requireRenewalAcceptance, hasRenewal, renewalView } from './renewal-tasks.mjs';
 const fail = (status, message) => { throw Object.assign(new Error(message), { status }); };
 const text = (v, max = 300) => typeof v === 'string' && v.trim().length > 0 && v.length <= max;
 const date = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) && Number.isFinite(Date.parse(v)) && new Date(v).toISOString().slice(0,10) === v;
@@ -27,16 +29,14 @@ export function collectionTasks(s, actor) {
     return [{id:`${a.id}-collection`,taskType:'collection',owner:view.role,ownerId:view.role==='Logistics'?view.assignment.activeId:null,title:view.blocker,blocker:view.blocker,href:'#collection-plan',artworkId:a.id,deadline:view.record?.availability.end??null,timezone:view.record?.timezone??null}];
   });
 }
-export function createCollectionService(repository, accounts) {
+export function createCollectionService(repository, accounts, { renewalTasks=false, now=()=>new Date() }={}) {
   const scoped=(s,actor,id)=>{
     const artwork=s.artworks.find(a=>a.id===id && a.exhibitionId===actor?.exhibitionId);
     if(!artwork||!['Logistics','Technical','Finance','General_Exhibition_Coordinator'].includes(actor?.role)) fail(403,'Collection access is restricted to the assigned operational roles.');
     requireRecordAccess(actor,artwork);
     return artwork;
   };
-  return {
-    read(actor,id) { const s=repository.read();scoped(s,actor,id);return {version:s.version,...collectionView(s,id),accounts:accounts.filter(a=>a.role==='Logistics'&&a.exhibitionId===actor.exhibitionId).map(a=>({id:a.id,name:a.name})),paused:true}; },
-    mutate(actor,command) { return repository.transaction(s=>{
+  const apply=(s,actor,command)=>{
       const a=scoped(s,actor,command.artworkId);
       if(s.version!==command.version) fail(409,'Shared record changed. Refresh and review before saving.');
       if(a.acquisition||a.lifecycleStatus==='ARCHIVED_CLOSED'||a.physicalStatus!=='Pending_Shipment') fail(409,'This artwork is no longer available for collection planning.');
@@ -49,18 +49,22 @@ export function createCollectionService(repository, accounts) {
       } else if(command.action==='ACCEPT') {
         if(actor.role!=='Logistics'||actor.id!==view.assignment.activeId) fail(403,'Only the named owner may accept the handoff.');
         if(view.assignment.acceptedBy===actor.id) fail(409,'This handoff is already accepted.');
-        s.collectionAssignments??={};s.collectionAssignments[a.id]={...view.assignment,acceptedBy:actor.id,acceptedAt:new Date().toISOString()};
+        s.collectionAssignments??={};s.collectionAssignments[a.id]={...view.assignment,acceptedBy:actor.id,acceptedAt:now().toISOString()};
       } else {
         const packingAction=['PACK','TECHNICAL','COST','EVIDENCE','REOPEN'].includes(command.action);
         const requiredRole=command.action==='TECHNICAL'?'Technical':command.action==='COST'?'Finance':'Logistics';
+        const task=s.operationTasks?.[`${a.id}:${command.action==='TECHNICAL'?'packing-technical':command.action==='COST'?'packing-cost':''}`];
+        if(task&&!hasRenewal(s,a.id,command.action==='TECHNICAL'?'technical':'cost')&&(task.ownerId!==actor.id||task.acceptedBy!==actor.id))fail(409,'The named task owner must accept this handoff first.');
         if(actor.role!==requiredRole||(requiredRole==='Logistics'&&actor.id!==view.assignment.activeId)) fail(403,'Only the authorized owner can perform this collection action.');
         if(command.action!=='SAVE' && view.assignment.acceptedBy!==view.assignment.activeId) fail(409,'The named Logistics owner must accept this handoff first.');
+        if(renewalTasks)requireRenewalAcceptance(s,actor,a.id,command.action);
         let record;
         if(command.action==='SAVE') {
           const d=command.details;
           if(!d||!text(d.address)||!text(d.city)||!text(d.country)||!text(d.contact)||!text(d.sourceRef)||typeof d.conflict!=='boolean'||!range(d.availability)||!Array.isArray(d.closures)||d.closures.length>20||!d.closures.every(range)) fail(422,'Complete the collection address, contact, source, valid availability and closure dates.');
           try { if(!text(d.timezone,80))throw Error();new Intl.DateTimeFormat('en',{timeZone:d.timezone}).format(); } catch { fail(422,'Enter a valid collection timezone, for example Europe/Paris.'); }
           record={artworkId:a.id,address:d.address.trim(),city:d.city.trim(),country:d.country.trim(),contact:d.contact.trim(),sourceRef:d.sourceRef.trim(),timezone:d.timezone,conflict:d.conflict,availability:{start:d.availability.start,end:d.availability.end},closures:d.closures.map(r=>({start:r.start,end:r.end})),confirmation:null,plan:null,packing:null};
+          if(view.record&&['address','city','country','contact','sourceRef','timezone','conflict','availability','closures'].every(key=>JSON.stringify(record[key])===JSON.stringify(view.record[key])))return {saved:true,unchanged:true};
         } else {
           if(!view.record) fail(409,'Save collection information first.');
           record=structuredClone(view.record);
@@ -69,23 +73,39 @@ export function createCollectionService(repository, accounts) {
             record.packing=packingTransition(record.packing,{...command,type:command.action},actor.role);
           } else if(command.action==='CONFIRM') {
             if(record.conflict||command.checked!==true) fail(409,'Resolve conflicts and explicitly verify the source before confirmation.');
-            record.confirmation={actorId:actor.id,at:new Date().toISOString(),sourceRef:record.sourceRef};
+            record.confirmation={actorId:actor.id,at:now().toISOString(),sourceRef:record.sourceRef};
           } else if(command.action==='PLAN') {
             if(!record.confirmation||record.conflict) fail(409,'Confirmed, conflict-free collection details are required.');
             const day=command.pickupDate;
             if(!date(day)||day<record.availability.start||day>record.availability.end) fail(422,'Pickup must fall within the confirmed local-date availability window.');
             if(record.closures.some(r=>day>=r.start&&day<=r.end)) fail(409,'Pickup conflicts with a confirmed closure (both boundary dates are closed).');
-            record.plan={pickupDate:day,timezone:record.timezone,state:'PLANNED_ONLY',actorId:actor.id,at:new Date().toISOString()};
+            if(record.plan?.pickupDate===day)return {saved:true,unchanged:true};
+            record.plan={pickupDate:day,timezone:record.timezone,state:'PLANNED_ONLY',actorId:actor.id,at:now().toISOString()};
             record.packing=null;
           } else fail(422,'Unknown collection action.');
         }
-        record.id=randomUUID();record.previousId=view.record?.id??null;record.actorId=actor.id;record.at=new Date().toISOString();
+        record.id=randomUUID();record.previousId=view.record?.id??null;record.actorId=actor.id;record.at=now().toISOString();
         s.collectionRevisions??=[];s.collectionRevisions.push(record);
       }
       // Operational metadata only: addresses, contact details and handover prose stay out of audit payloads.
-      s.decisions.push({id:randomUUID(),actorId:actor.id,targetId:a.id,action:`COLLECTION_${command.action}`,recordId:current(s,a.id)?.id??null,at:new Date().toISOString()});
-      if(command.action==='ASSIGN') {s.collectionHandovers??=[];s.collectionHandovers.push({artworkId:a.id,...s.collectionAssignments[a.id],enteredBy:actor.id,reason:command.reason,at:new Date().toISOString()});}
+      s.decisions.push({id:randomUUID(),actorId:actor.id,targetId:a.id,action:`COLLECTION_${command.action}`,recordId:current(s,a.id)?.id??null,at:now().toISOString()});
+      if(command.action==='ASSIGN') {s.collectionHandovers??=[];s.collectionHandovers.push({artworkId:a.id,...s.collectionAssignments[a.id],enteredBy:actor.id,reason:command.reason,at:now().toISOString()});}
       return {saved:true};
+    };
+  return {
+    read(actor,id) { const s=repository.read();scoped(s,actor,id);const tasks=renewalTasks?renewalView(s,id,actor,accounts,now().toISOString()).filter(c=>c.kind==='collection'&&!c.supersededAt).flatMap(c=>c.tasks):[];return {version:s.version,...collectionView(s,id),renewalTasks:tasks.map(({key,canAct,status,blocker})=>({key,canAct,status,blocker})),accounts:accounts.filter(a=>a.role==='Logistics'&&a.exhibitionId===actor.exhibitionId).map(a=>({id:a.id,name:a.name})),paused:true}; },
+    preview(actor,command) {
+      if(!['SAVE','PLAN','REOPEN'].includes(command.action))fail(422,'This action has no amendment preview.');
+      const before=repository.read(),after=structuredClone(before);apply(after,actor,command);
+      const impact=amendmentImpact(before,after,actor,command.artworkId,command,accounts);
+      return {...impact,taskAssignmentRequired:renewalTasks&&impact.required};
+    },
+    mutate(actor,command) { return repository.transaction(s=>{
+      const before=structuredClone(s),result=apply(s,actor,command);
+      const impact=amendmentImpact(before,s,actor,command.artworkId,command,accounts);
+      requireImpactConfirmation(impact,command);recordImpactReview(s,actor,command.artworkId,command,impact);
+      if(renewalTasks){startRenewal(s,actor,command.artworkId,command,impact,now().toISOString());finishRenewal(s,actor,command.artworkId,command,now().toISOString());}
+      return result;
     }); }
   };
 }

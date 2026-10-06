@@ -9,7 +9,7 @@ import { createConnectedPilot, PILOT_ARTWORK } from '../server/connected-pilot.m
 
 test('one connected HTTP journey verifies permissions, documents, return, payments and restart recovery',async()=>{
  const directory=await mkdtemp(join(tmpdir(),'sadu-connected-'));const started=performance.now();const milestones=[];let rejected=0;
- const options={directory,gate:(_q,_r,next)=>next(),simulatedLocation:true};let runtime=await createConnectedPilot(options);let server;
+ const options={directory,gate:(_q,_r,next)=>next(),simulatedLocation:true,now:()=>new Date('2026-10-05T10:00:00Z')};let runtime=await createConnectedPilot(options);let server;
  const listen=async()=>{server=runtime.app.listen(0,'127.0.0.1');await new Promise(resolve=>server.once('listening',resolve));return `http://127.0.0.1:${server.address().port}`;};let origin=await listen();let cookie='';
  const call=async(path,body,method='POST')=>fetch(origin+path,{...(body?{method,body:JSON.stringify(body)}:{}),headers:{Cookie:cookie,Origin:origin,'Content-Type':'application/json'}});
  const json=async(path,body,method)=>{const r=await call(path,body,method);const result=await r.json();assert.equal(r.status,200,JSON.stringify(result));return result;};
@@ -53,6 +53,10 @@ test('one connected HTTP journey verifies permissions, documents, return, paymen
   await login('Technical');await collectionAction('TECHNICAL',{value:'TEST-TECH'});
   await login('Finance');await collectionAction('COST',{value:'TEST-COST'});
   await login('Logistics');await collectionAction('EVIDENCE',{value:'TEST-PACKING'});
+  const opsPath='/api/review/pilot/operations/'+PILOT_ARTWORK;
+  const packingFile=await fetch(origin+opsPath+'/evidence',{method:'POST',headers:{Cookie:cookie,Origin:origin,'Content-Type':'application/octet-stream','x-sadu-metadata':encodeURIComponent(JSON.stringify({version:(await dossier()).version,operationId:'journey-packing-upload',kind:'PACKING',name:'packing.png',source:'TEST-PACKING',sender:'Synthetic packer'}))},body:image});
+  assert.equal(packingFile.status,200);const uploadedPacking=await packingFile.json();
+  await json(opsPath,{version:(await dossier()).version,operationId:'journey-packing-review',action:'VERIFY_PACKING',evidenceId:uploadedPacking.evidenceId,checked:true});
   await login('Artist');
   const dispatchMeta={version:(await dossier()).version,versionHash:(await cmd()).versionHash,damaged:false,notes:'Synthetic pre-dispatch review: no damage declared.',logistics:{origin:'Fictional studio',destination:'Fictional museum loading dock',carrier:'TEST-BOOKING',handling:'Upright; padded crate',gross_weight_kg:100}};
   const dispatchUpload=await fetch(origin+'/api/review/pilot/pre-dispatch',{method:'POST',headers:{Cookie:cookie,Origin:origin,'Content-Type':'application/octet-stream','x-sadu-metadata':encodeURIComponent(JSON.stringify(dispatchMeta))},body:image});assert.equal(dispatchUpload.status,200);assert.equal(runtime.repository.read().dispatchReports.at(-1).logistics.origin,'Synthetic studio 1, Paris, France');

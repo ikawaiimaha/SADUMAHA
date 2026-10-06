@@ -19,13 +19,14 @@
     "test:demo": "node --import tsx --test tests/livingRecord.test.ts tests/artistIntake.test.ts tests/intakeWorkflow.test.ts tests/bilingualTimeline.test.tsx tests/prWorkspace.test.tsx",
     "test:e2e": "playwright test",
     "test:workflows": "node --import tsx --test tests/collectionReadiness.test.ts tests/guidedPresentation.test.ts tests/printRelease.test.ts tests/holdsRecovery.test.ts",
-    "test:guards": "node --import tsx --test tests/demoBoundaries.test.ts tests/previewNavigation.test.tsx tests/digitalArchive.test.mjs tests/integrityLocation.test.mjs tests/unifiedEcosystem.test.mjs tests/museumCare.test.mjs tests/connectedPilot.test.mjs tests/pilotActions.test.mjs tests/pilotDispatch.test.mjs tests/pilotInvitations.test.mjs tests/acquisition.test.mjs tests/demoReplay.test.ts tests/executiveSandbox.test.ts tests/themeWorkflow.test.ts tests/connectedTheme.test.mjs tests/spatialLedger.test.ts tests/curatorialBoard.test.ts tests/artistCare.test.ts tests/heritage.test.mjs tests/localDraft.test.ts tests/workflowHandoffs.test.ts tests/arrivalPackage.test.tsx tests/governanceMiddleware.test.ts tests/cms-publication.test.mjs tests/invitationArchive.test.ts tests/rehearsalJourney.test.ts",
+    "test:guards": "node --import tsx --test tests/demoBoundaries.test.ts tests/previewNavigation.test.tsx tests/digitalArchive.test.mjs tests/integrityLocation.test.mjs tests/unifiedEcosystem.test.mjs tests/museumCare.test.mjs tests/connectedPilot.test.mjs tests/committeeSpectator.test.mjs tests/pilotActions.test.mjs tests/pilotCollection.test.mjs tests/pilotOperations.test.mjs tests/operationalWorkspace.test.tsx tests/pilotDrafts.test.mjs tests/workspaceDraft.test.ts tests/pilotDispatch.test.mjs tests/pilotInvitations.test.mjs tests/acquisition.test.mjs tests/demoReplay.test.ts tests/executiveSandbox.test.ts tests/themeWorkflow.test.ts tests/connectedTheme.test.mjs tests/spatialLedger.test.ts tests/curatorialBoard.test.ts tests/artistCare.test.ts tests/heritage.test.mjs tests/localDraft.test.ts tests/workflowHandoffs.test.ts tests/arrivalPackage.test.tsx tests/governanceMiddleware.test.ts tests/cms-publication.test.mjs tests/invitationArchive.test.ts tests/rehearsalJourney.test.ts",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "chromatic": "npx chromatic --project-token=chpt_b93f012ea65c898"
+    "chromatic": "npx chromatic"
   },
   "dependencies": {
     "@fontsource/amiri": "^5.3.0",
+    "@fontsource/fraunces": "5.3.0",
     "@google/genai": "^2.4.0",
     "@microsoft/clarity": "^1.0.2",
     "@supabase/supabase-js": "2.117.2",
@@ -38,6 +39,7 @@
     "lucide-react": "^0.546.0",
     "mixpanel-browser": "^2.83.0",
     "motion": "^12.23.24",
+    "pdfjs-dist": "6.4.299",
     "qrcode": "1.5.4",
     "react": "^19.0.1",
     "react-compare-slider": "^4.0.0",

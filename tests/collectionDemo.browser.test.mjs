@@ -52,6 +52,7 @@ test('browser handoff, retained drafts, saved-refresh failure and tablet layout'
     // A successful mutation followed by failed reads must not be called a failed save.
     await b.route('**/api/review/pilot**',route=>route.request().method()==='GET'?route.abort():route.continue());
     await b.getByRole('button',{name:'Save collection revision'}).click();
+    await b.getByRole('button',{name:'حفظ التعديل بعد المراجعة / Confirm change and save',exact:true}).click();
     await expect(b.getByText('Saved; refresh unavailable. Refresh before making another change.')).toBeVisible();
     assert.equal(runtime.repository.read().collectionRevisions.at(-1).address,'Retained local draft');
     assert.equal(runtime.repository.read().collectionRevisions.at(-1).confirmation,null);

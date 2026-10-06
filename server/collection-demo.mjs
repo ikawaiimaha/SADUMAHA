@@ -28,7 +28,7 @@ export async function createCollectionDemo(directory) {
   });
   app.use('/api',(req,res,next)=>{
     const session=req.path==='/review/session';
-    const collection=req.path===`/review/pilot/collection/${DEMO_ARTWORK}`;
+    const collection=req.path===`/review/pilot/collection/${DEMO_ARTWORK}` || req.path===`/review/pilot/collection/${DEMO_ARTWORK}/impact`&&req.method==='POST';
     const summary=req.path==='/review/pilot'&&req.method==='GET';
     if(!((session||collection)&&['GET','POST'].includes(req.method))&&!summary)return res.status(403).json({error:'Only collection actions are available in this isolated demonstration.'});
     if(req.method!=='GET'&&req.get('origin')!==`http://${req.get('host')}`)return res.status(403).json({error:'Same-origin requests required.'});
@@ -45,6 +45,7 @@ export async function createCollectionDemo(directory) {
   app.use('/api',async(req,res,next)=>{res.locals.actor=await actorFor(req);if(!res.locals.actor)return res.status(401).json({error:'Choose a demonstration account.'});next();});
   app.get('/api/review/pilot',(req,res)=>res.json({artwork:{id:DEMO_ARTWORK,title:'Gallery collection — synthetic example'},nextActions:collectionTasks(repository.read(),res.locals.actor),collection:service.read(res.locals.actor,DEMO_ARTWORK)}));
   app.get(`/api/review/pilot/collection/${DEMO_ARTWORK}`,(req,res)=>res.json(service.read(res.locals.actor,DEMO_ARTWORK)));
+  app.post(`/api/review/pilot/collection/${DEMO_ARTWORK}/impact`,(req,res,next)=>{try{res.json(service.preview(res.locals.actor,{...req.body,artworkId:DEMO_ARTWORK}));}catch(e){next(e);}});
   app.post(`/api/review/pilot/collection/${DEMO_ARTWORK}`,async(req,res,next)=>{try{await service.mutate(res.locals.actor,{...req.body,artworkId:DEMO_ARTWORK});res.json({saved:true});}catch(e){next(e);}});
   app.use('/api',(_req,res)=>res.status(403).json({error:'Unavailable in this demonstration.'}));
   app.use((e,_req,res,_next)=>res.status(e.status??500).json({error:e.status?e.message:'Local operation failed.'}));

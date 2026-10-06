@@ -1,3 +1,36 @@
+# SADU SOURCE OF TRUTH
+- All state transitions must adhere strictly to established ThemeStatus and ArtistStatus enums.
+- Arabic RTL parity is mandatory: NEVER use physical CSS (pl-, pr-, ml-, mr-, text-left, text-right). Exclusively use Tailwind logical properties (ps-, pe-, ms-, me-, text-start, text-end).
+- Institutional role labels must use official Arabic terminology (رئيس الدائرة, مدير الملتقى, اللجنة التحضيرية, قسم التحرير, المنسقة, المالية).
+- "Head of International Programs" (HIP) is permanently removed; master coordination belongs exclusively to General Exhibition Coordinator (Fatima Al Zarooni / Um Suhail).
+- Decouple curatorial assessment from executive decisions: Committee outputs a recommendation minute, not a database approval.
+
+## Authority and implementation status — 2026-10-01
+
+These rules supersede conflicting historical notes below. This file is a version-controlled architecture anchor, not a technically immutable or signed record. Legacy HIP references in code still require a scoped migration; this configuration update does not claim that migration is complete. Existing enums are in src/types.ts; additional workflow models must be mapped explicitly rather than silently renamed.
+
+## 2026-10-05 — Shared local evidence and operational release
+
+### 2026-10-06 — Private operational draft recovery
+
+Recovery comparisons use a server-derived reference captured at the first save against the matching shared version. Later autosaves preserve that reference. Late first saves and older drafts without a reference are explicitly marked unavailable; client-supplied baselines are ignored. Comparisons contain only the account's collection or print read scope. Changed fields distinguish the original shared value, current shared value and unsubmitted input; pending reviews and their current owners come from the existing task queue. This is explanatory context, not merge authority: stale drafts remain reference-only and approvals never carry forward.
+
+The selected collection/print workspace autosaves one private working draft per authenticated account, role, exhibition and artwork, carrying the exact task, editing mode and business version. `private-drafts.json` is a separate single-process local store: autosave cannot increment the shared dossier version, write a decision, assign authority or clear a hold. Draft writes serialize with a per-entry optimistic revision, retaining a revision tombstone after clearing so a delayed tab cannot recreate the draft. Session identity, exhibition access and sovereign restrictions are checked on every draft request; the expected account header detects browser-session switches but never supplies authority.
+
+Recovery requires an explicit choice. Changed records, missing task authority and drafts with an attempted submission are reference-only. No command is replayed or silently rebased. Inspection results, approval checkboxes and file bytes are excluded; files must be reattached and review assertions made again. A durable attempted-submission marker precedes sending a working form, so an unknown network outcome is not automatically retried after restart. The live command endpoints remain the authority for permissions and transitions. Local role simulation, host storage and single-process recovery are not production identity or backup guarantees. Integrations remain paused.
+
+The connected pilot now creates a revision-specific renewal cycle after a confirmed amendment. Collection and print cycles are independent; replacing one supersedes only that workflow's older task IDs. The General Exhibition Coordinator assigns an eligible named owner, a future due time and a reason. Owners explicitly accept or return with a reason; reassignments never inherit acceptance. A backup change clears outstanding assignments held by the former Logistics owner. Assigning responsibility grants no new approval power.
+
+Required renewal actions enforce accepted ownership in the same transaction as the actual workflow change. Tasks close from those changes, with actor/time/revision/evidence references; there is no manual completion switch. A recorded technical exemption is distinct from approval. Current departure, correction, supplier-stop, evidence-integrity and financial gates still apply even when a renewal cycle is complete. Read-only views derive overdue status from the server clock. No reminder is sent. Earlier cycles and assignment/return/completion events are retained through restart. Existing unamended records do not acquire fabricated historical tasks; the isolated collection-only demo keeps its original scope.
+
+Amendments now require a server-derived impact review before replacing collection details, an existing pickup date, a packing plan or a print package. Preview applies the same transition to a private copy; saving recomputes its actor/command/version binding inside the transaction. Cancelled previews never mutate records. Completed checks needing renewal are distinguished from pending work and preserved historical production/deliveries. Existing role, supplier-stop and departure gates remain authoritative. Identical collection details/date resubmission preserves approvals; no new institutional authority or external notification is introduced.
+
+The connected pilot adds immutable evidence objects and print packages to its existing local repository. Collection preparation, current-file packing verification, condition/agreement clearance and elapsed pickup dates remain separate derived checks. Draft manifest release requires all current prerequisites; nothing books transport, records physical custody or authorizes payment automatically. Existing condition reports remain the authority for that sub-workflow.
+
+Print packages bind a PDF and specification to the existing demonstration review route. A new package preserves old files/decisions and resets dependent approvals. Supplier acknowledgment is specific to the file/package. Production completion, partial delivery and General Coordinator acceptance are separate. Correction holds still require recorded supplier stop/stock disposition before replacing a dispatched package. Session actors and server timestamps are retained with revision/file references; hashes are not signatures.
+
+Named task assignments can set explicit due times for Technical, Finance and Editorial. Assigned staff must accept before the associated review; unaccepted assignments and expired pickup dates remain visible. These are local simulated accounts, not institutional identity verification. The browser-only pitch and collection-only isolated runtime retain their separate boundaries. See `docs/shared-evidence-workflow.md`. No ArtistStatus/ThemeStatus enum, institutional delegation or live integration changes.
+
 ## 2026-10-03 — Curatorial comparison demonstration
 
 Both synthetic candidates are submitted and reviewed as one comparison revision. Committee recommendation explicitly selects A, B or neither; neither cannot reach executive approval or an invitation. Invitations use the selected candidate, and amendments clear the selection and dependent reviews while retaining decision history. This bounded comparison is not a replacement for item-level production permissions.

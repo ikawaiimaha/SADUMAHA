@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react';
+import { useAmendmentReview } from './AmendmentImpact';
 
 import { useCollectionWorkflow, type CollectionDetails as Details, type CollectionView as View } from '../lib/useCollectionWorkflow';
-type Props = { view:View; artworkId:string; role:string; actorId:string; locked:boolean; onChanged:()=>Promise<void>; onDirtyChange:(dirty:boolean)=>void };
+type Props = { fileEvidence?:boolean; view:View; artworkId:string; role:string; actorId:string; locked:boolean; onChanged:()=>Promise<void>; onDirtyChange:(dirty:boolean)=>void };
 const input='block w-full rounded border border-[#D9CEBA] bg-white p-3 text-start';
 const button='min-h-12 rounded border border-[#D9CEBA] px-4 py-2 disabled:opacity-40';
-export default function ConnectedCollection({view:initial,artworkId,role,actorId,locked,onChanged,onDirtyChange}:Props) {
-  const {view,busy,error,notice,needsRefresh,send:command,refresh}=useCollectionWorkflow(initial,artworkId,onChanged);
+export default function ConnectedCollection({fileEvidence=false,view:initial,artworkId,role,actorId,locked,onChanged,onDirtyChange}:Props) {
+  const {view,busy:saving,error,notice,needsRefresh,send:command,refresh}=useCollectionWorkflow(initial,artworkId,onChanged);
+  const amendment=useAmendmentReview(view.version);
+  const busy=saving||amendment.pending;
+  const [previewError,setPreviewError]=useState('');
   const [baseVersion,setBaseVersion]=useState(initial.version);
   const [draft,setDraft]=useState<Details>(()=>view.record??{address:'',city:'',country:'',contact:'',sourceRef:'',timezone:'',availability:{start:'',end:''},closures:[],conflict:false});
   const [assignment,setAssignment]=useState(view.assignment);
@@ -24,17 +28,27 @@ export default function ConnectedCollection({view:initial,artworkId,role,actorId
   const change=()=>{if(!dirty)setBaseVersion(view.version);setDirty(true);onDirtyChange(true);};
   const stale=needsRefresh||(dirty&&baseVersion!==view.version);
   const send=async(action:string,extra:object)=>{
-    if(await command(action,extra,dirty?baseVersion:view.version)){setDirty(false);onDirtyChange(false);setEditing(false);setChecked(false);setReason('');}
+    if(busy||stale||locked)return;
+    const version=dirty?baseVersion:view.version;
+    setPreviewError('');
+    try {
+      const acknowledgment=['SAVE','PLAN','REOPEN'].includes(action)?await amendment.review(`/api/review/pilot/collection/${encodeURIComponent(artworkId)}`,{action,...extra,version}):{};
+      if(acknowledgment===null)return;
+      if(await command(action,{...extra,...acknowledgment},version)){setDirty(false);onDirtyChange(false);setEditing(false);setChecked(false);setReason('');}
+    }catch(e){setPreviewError((e as Error).message);}
   };
+  const renewalBlocked=(key:string)=>{const t=view.renewalTasks?.find(t=>t.key===key);return !!t&&!t.canAct;};
   const canEdit=role==='Logistics'&&actorId===view.assignment.activeId&&!locked;
   const canAdvance=canEdit&&view.assignment.acceptedBy===actorId;
   const owner=view.accounts.find(a=>a.id===view.assignment.activeId)?.name??view.assignment.activeId;
-  return <section id="collection-plan" className="rounded-xl border border-[#D9CEBA] bg-white p-5 space-y-4" aria-label="Collection and pickup">
+  return <section id="collection-plan" tabIndex={-1} className="rounded-xl border border-[#D9CEBA] bg-white p-5 space-y-4" aria-label="Collection and pickup">
     <h2 className="text-xl font-semibold">Collection &amp; pickup</h2>
     <p>Currently responsible: {owner}</p><p role="status">{view.blocker||`Planned for ${view.record?.plan?.pickupDate} (${view.record?.timezone}).`}</p>
     <p className="text-sm">Planning only. No carrier booking, email or payment is sent. Dates use the collection location’s timezone; closure boundaries are inclusive.</p>
     {canEdit && view.assignment.acceptedBy!==actorId && <button className={button} disabled={busy||stale} onClick={()=>void send('ACCEPT',{})}>Accept collection responsibility</button>}
+    {!!view.renewalTasks?.some(t=>!['COMPLETE','NOT_REQUIRED'].includes(t.status))&&<p className="border-s-2 border-[#8B4513] ps-3">يلزم قبول مهام التجديد قبل تنفيذ المراجعات. / Accept the renewal tasks before completing these checks. <a className="underline" href="#renewal-queue">عرض المسؤول والموعد / Review owner and deadline</a></p>}
     {notice&&<p role="status">{notice}</p>}
+    {previewError&&<p role="alert" className="text-[#8B261E]">{previewError} · المسودة محفوظة في النموذج / Your draft remains in the form.</p>}
     {dirty&&<button type="button" className={button} disabled={busy} onClick={reset}>Discard draft</button>}
     {stale&&<div role="alert"><p>The shared record changed. Your draft is retained. Review the latest record before saving.</p><button className={button} disabled={busy} onClick={()=>void refresh().then(latest=>setBaseVersion(latest.version)).catch(()=>{})}>Review latest record and retain draft</button><p>Latest collection: {view.record?.address??'Not recorded'} · {view.record?.availability.start} — {view.record?.availability.end}. Responsible: {owner}.</p></div>}
     <h3 className="text-lg font-semibold">Collection details</h3>
@@ -57,11 +71,12 @@ export default function ConnectedCollection({view:initial,artworkId,role,actorId
       <p>{view.record.packing?.specification ?? 'No packing plan recorded.'}</p>
       {view.record.packing && <p>Technical: {view.record.packing.requiresTechnical ? view.record.packing.technicalReference || 'Pending' : 'Not required — reason recorded'} · Finance: {view.record.packing.costReference || 'Pending'} · Completion: {view.record.packing.evidence || 'Pending'}</p>}
       {!locked && !editing && view.assignment.acceptedBy===view.assignment.activeId && <>
-        {canEdit && view.state==='PACKING_REQUIRED' && <form onSubmit={e=>{e.preventDefault();const f=new FormData(e.currentTarget);void send('PACK',{value:String(f.get('specification')),packingOwner:String(f.get('packingOwner')),amount:Number(f.get('amount')),requiresTechnical:f.get('technical')==='yes',technicalReason:String(f.get('technicalReason')??'')});}}><fieldset disabled={busy||stale||dirty} className="space-y-3"><label className="block">Packing specification<input className={input} name="specification" required maxLength={1000}/></label><label className="block">Named packing owner<input className={input} name="packingOwner" required maxLength={160}/></label><label className="block">Proposed cost · AED<input className={input} name="amount" type="number" min="0" step="0.01" required/></label><label className="block">Specialist review<select className={input} name="technical" defaultValue="yes"><option value="yes">Required</option><option value="no">Not required — explain below</option></select></label><label className="block">Reason if specialist review is not required<input className={input} name="technicalReason" maxLength={1000}/></label><button className={button}>Record packing plan</button></fieldset></form>}
-        {((view.state==='TECHNICAL_REVIEW_REQUIRED'&&role==='Technical')||(view.state==='COST_REVIEW_REQUIRED'&&role==='Finance')||(view.state==='PACKING_EVIDENCE_REQUIRED'&&canEdit)) && <form onSubmit={e=>{e.preventDefault();void send(view.state==='TECHNICAL_REVIEW_REQUIRED'?'TECHNICAL':view.state==='COST_REVIEW_REQUIRED'?'COST':'EVIDENCE',{value:String(new FormData(e.currentTarget).get('reference'))});}}><fieldset disabled={busy||stale||dirty}><label className="block">{view.state==='TECHNICAL_REVIEW_REQUIRED'?'Technical clearance':view.state==='COST_REVIEW_REQUIRED'?'Cost approval':'Packing completion'} evidence reference<input className={input} name="reference" required maxLength={1000}/></label><button className={button}>Record evidence for this packing revision</button></fieldset></form>}
+        {canEdit && view.state==='PACKING_REQUIRED' && <form onSubmit={e=>{e.preventDefault();const f=new FormData(e.currentTarget);void send('PACK',{value:String(f.get('specification')),packingOwner:String(f.get('packingOwner')),amount:Number(f.get('amount')),requiresTechnical:f.get('technical')==='yes',technicalReason:String(f.get('technicalReason')??'')});}}><fieldset disabled={busy||stale||dirty||renewalBlocked('plan')} className="space-y-3"><label className="block">Packing specification<input className={input} name="specification" required maxLength={1000}/></label><label className="block">Named packing owner<input className={input} name="packingOwner" required maxLength={160}/></label><label className="block">Proposed cost · AED<input className={input} name="amount" type="number" min="0" step="0.01" required/></label><label className="block">Specialist review<select className={input} name="technical" defaultValue="yes"><option value="yes">Required</option><option value="no">Not required — explain below</option></select></label><label className="block">Reason if specialist review is not required<input className={input} name="technicalReason" maxLength={1000}/></label><button className={button}>Record packing plan</button></fieldset></form>}
+        {((view.state==='TECHNICAL_REVIEW_REQUIRED'&&role==='Technical')||(view.state==='COST_REVIEW_REQUIRED'&&role==='Finance')||(view.state==='PACKING_EVIDENCE_REQUIRED'&&canEdit&&!fileEvidence)) && <form onSubmit={e=>{e.preventDefault();void send(view.state==='TECHNICAL_REVIEW_REQUIRED'?'TECHNICAL':view.state==='COST_REVIEW_REQUIRED'?'COST':'EVIDENCE',{value:String(new FormData(e.currentTarget).get('reference'))});}}><fieldset disabled={busy||stale||dirty||renewalBlocked(view.state==='TECHNICAL_REVIEW_REQUIRED'?'technical':'cost')}><label className="block">{view.state==='TECHNICAL_REVIEW_REQUIRED'?'Technical clearance':view.state==='COST_REVIEW_REQUIRED'?'Cost approval':'Packing completion'} evidence reference<input className={input} name="reference" required maxLength={1000}/></label><button className={button}>Record evidence for this packing revision</button></fieldset></form>}
         {canEdit && view.record.packing && <details><summary>Packing changed?</summary><form onSubmit={e=>{e.preventDefault();void send('REOPEN',{value:String(new FormData(e.currentTarget).get('reason'))});}}><label>Reason<input className={input} name="reason" required maxLength={1000}/></label><button className={button} disabled={busy||stale||dirty}>Reopen packing checks</button></form></details>}
       </>}
-      {view.ready && <p role="status">Ready for collection. Transport is not booked and physical handover is not recorded.</p>}
+      {fileEvidence&&canEdit&&view.state==='PACKING_EVIDENCE_REQUIRED'&&<a className="underline" href="#shared-operations">إرفاق وفحص دليل التغليف / Attach and inspect the packing file below</a>}
+      {view.ready && <p role="status">Collection preparation complete. Check the condition and departure holds below. Transport is not booked and physical handover is not recorded.</p>}
     </section>}
     <p>Primary: {view.accounts.find(a=>a.id===view.assignment.primaryId)?.name} · Backup: {view.accounts.find(a=>a.id===view.assignment.backupId)?.name??'Not assigned'}</p>
     {!canEdit&&role==='Logistics'&&<p>Read-only. The active Logistics owner handles collection changes.</p>}
@@ -75,5 +90,6 @@ export default function ConnectedCollection({view:initial,artworkId,role,actorId
         <button type="button" className={button} disabled={!reason.trim()||view.assignment.activeId===assignment.primaryId} onClick={()=>void send('ASSIGN',{...assignment,activeId:assignment.primaryId,reason})}>Return to primary</button>
       </div><p className="text-sm">This handover grants no Finance, Director or technical approval powers.</p>
     </fieldset></form>}
+    {amendment.dialog}
   </section>;
 }

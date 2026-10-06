@@ -14,7 +14,7 @@ test('isolated collection handoff rejects all other operations and preserves res
   const call=(url,body,method)=>fetch(origin+url,{method:method??(body?'POST':'GET'),headers:{Origin:origin,Cookie:cookie,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});
   const login=async accountId=>{const r=await call('/api/review/session',{accountId});assert.equal(r.status,200);cookie=r.headers.get('set-cookie').split(';')[0];};
   const view=async()=>{const r=await call(path);assert.equal(r.status,200);return r.json();};
-  const send=async(action,extra={},status=200)=>{const r=await call(path,{version:(await view()).version,action,...extra});assert.equal(r.status,status,await r.text());};
+  const send=async(action,extra={},status=200)=>{const command={version:(await view()).version,action,...extra};if(status===200&&['SAVE','PLAN','REOPEN'].includes(action)){const p=await call(path+'/impact',command);assert.equal(p.status,200);const impact=await p.json();if(impact.required)command.impactToken=impact.token;}const r=await call(path,command);assert.equal(r.status,status,await r.text());};
   const details={address:'Synthetic store 1',city:'Paris',country:'France',contact:'Demo desk',sourceRef:'SYNTHETIC-01',timezone:'Europe/Paris',availability:{start:'2026-10-01',end:'2026-10-31'},closures:[{start:'2026-10-10',end:'2026-10-15'}],conflict:false};
   try {
     assert.equal((await call(path)).status,401);
