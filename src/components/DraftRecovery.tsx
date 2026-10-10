@@ -24,11 +24,14 @@ export default function DraftRecovery({language,status,candidate,canResume,onRes
     return value;
   };
   if(candidate)return <div className="work-recovery" role="region" aria-label={t('استعادة المسودة','Draft recovery')}>
-    <h3 ref={titleRef} tabIndex={-1}>{t('لديك مسودة خاصة محفوظة','You have a saved private draft')} · {taskTitles[candidate.key]?.[language]}</h3>
-    <p>{candidate.savedAt&&new Date(candidate.savedAt).toLocaleString(language==='ar'?'ar-AE':'en-GB')} · {t('هذه المسودة لم تغيّر السجل المشترك','This draft has not changed the shared record')}</p>
+    <h3 ref={titleRef} tabIndex={-1}>{t('تعديل غير مُرسل','Unsubmitted change')} · {taskTitles[candidate.key]?.[language]}</h3>
+    <p>{canResume?t('استأنف التعديل أو افتح السجل الحالي.','Resume your change or open the current record.'):t('تغيّر السجل. تعديلك محفوظ للمراجعة ولم يُطبّق.','The record changed. Your saved change has not been applied.')}</p>
+    <details className="work-recovery-details"><summary>{t('مراجعة التعديل المحفوظ','Review saved change')}</summary>
+    <p>{candidate.savedAt&&new Date(candidate.savedAt).toLocaleString(language==='ar'?'ar-AE':'en-GB')}</p>
     {!canResume&&(candidate.attempted||candidate.baseVersion===version)&&<p role="status">{candidate.attempted?t('سبق محاولة إرسال هذه المسودة. راجع السجل الحالي قبل بدء إجراء جديد؛ لن نعيد إرسالها.','Submission was attempted. Check the current record before starting a new action; this draft will not be replayed.'):t('تغيّرت صلاحية المهمة. النص متاح للمراجعة فقط.','Task permission changed. This text is for reference only.')}</p>}
     {version!==undefined&&candidate.baseVersion!==version&&<DraftComparison comparison={comparison} draft={candidate} version={version} language={language} tasks={tasks} references={references} label={label} display={display}/>}
     <details><summary>{t('عرض الإدخال المحفوظ','Inspect saved input')}</summary><dl>{Object.entries(candidate.fields).filter(([,v])=>v).map(([key,value])=><div key={key}><dt>{label(key)}</dt><dd dir="auto">{display(key,value)}</dd></div>)}{candidate.fileName&&<div><dt>{t('ملف يحتاج إلى إعادة إرفاق','File to reattach')}</dt><dd dir="auto">{candidate.fileName}</dd></div>}</dl></details>
+    </details>
     <div className="work-recovery-actions">{canResume&&<button className="work-secondary" disabled={busy||status==='loading'} onClick={onResume}>{dirty?t('استبدال الإدخال بهذه المسودة','Replace input with saved draft'):t('استئناف المسودة','Resume draft')}</button>}<button className="work-link" disabled={busy||status==='loading'} onClick={onDiscard}>{t('تجاهل المسودة وفتح السجل الحالي','Discard draft and open current record')}</button></div>
   </div>;
   if(status==='error'||status==='conflict')return <div className="work-alert" role="alert"><strong>{status==='conflict'?t('تغيّرت المسودة في نافذة أخرى','The draft changed in another tab'):t('تعذر تأكيد حفظ المسودة','Draft saving could not be confirmed')}</strong><p>{t('إدخالك باقٍ هنا. راجع النسخة المحفوظة قبل المتابعة.','Your input remains here. Review the saved copy before continuing.')}</p><button className="work-secondary" disabled={busy} onClick={onReload}>{t('مراجعة المسودة المحفوظة','Review saved draft')}</button></div>;

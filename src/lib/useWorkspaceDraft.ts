@@ -1,8 +1,10 @@
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {DraftWriter,type WorkspaceDraft,type DraftEnvelope,type DraftComparison} from './workspaceDraft';
 
-export function useWorkspaceDraft(artworkId:string,actorId:string) {
+/** Treatment-only roles must name the treatment workflow; the server refuses them on the default draft service. */
+export function useWorkspaceDraft(artworkId:string,actorId:string,workflow?:'treatment') {
   const path=`/api/review/pilot/drafts/${encodeURIComponent(artworkId)}`;
+  const readPath=workflow?`${path}?workflow=${workflow}`:path;
   const [status,setStatus]=useState<'loading'|'ready'|'saving'|'saved'|'error'|'conflict'>('loading');
   const [candidate,setCandidate]=useState<WorkspaceDraft|null>(null);
   const [savedAt,setSavedAt]=useState<string|null>(null);
@@ -14,7 +16,7 @@ export function useWorkspaceDraft(artworkId:string,actorId:string) {
   const load=useCallback(async()=>{
     cancel();generation.current++;setStatus('loading');await writer.current?.settled();
     try{
-      const response=await fetch(path,{headers:{'x-sadu-draft-owner':actorId}}),result=await response.json();
+      const response=await fetch(readPath,{headers:{'x-sadu-draft-owner':actorId}}),result=await response.json();
       if(!response.ok)throw Error(result.error);
       if(!mounted.current)return;
       writer.current=new DraftWriter(result.revision,async(revision,draft)=>{
@@ -23,7 +25,7 @@ export function useWorkspaceDraft(artworkId:string,actorId:string) {
       });
       latest.current=null;setCandidate(result.draft);setComparison(result.comparison??null);setSavedAt(result.draft?.savedAt??null);setStatus('ready');
     }catch{if(mounted.current)setStatus('error');}
-  },[path,actorId]);
+  },[path,readPath,actorId]);
   useEffect(()=>{mounted.current=true;void load();return()=>{mounted.current=false;cancel();};},[load]);
   const persist=async(draft:WorkspaceDraft|null,ownGeneration=generation.current)=>{
     if(!writer.current||writer.current.blocked)return false;

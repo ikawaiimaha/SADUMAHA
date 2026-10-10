@@ -8,6 +8,7 @@ import { amendmentImpact, requireImpactConfirmation, recordImpactReview } from '
 import { startRenewal, finishRenewal, requireRenewalAcceptance, changeRenewal, renewalView, hasRenewal } from './renewal-tasks.mjs';
 import { packingTransition } from '../src/logistics/collectionRules.mjs';
 import { createPublishingRecord, reducePublishingRecord, selectPublishingRecord, PRINT_ROUTE_ID } from '../src/data/publishingRecord.ts';
+import { TREATMENT_ROLES, TREATMENT_KINDS, TREATMENT_TASK, TREATMENT_ACTIONS, applyTreatment, treatmentView, treatmentTasks, treatmentEvidenceRoles, treatmentScope, requireTreatmentUpload, requireTreatmentAssignable } from './pilot-treatment.mjs';
 
 const fail = (status, message) => { throw Object.assign(new Error(message), { status }); };
 const text = (v, max = 1000) => typeof v === 'string' && v.trim().length > 0 && v.length <= max;
@@ -15,7 +16,9 @@ const digest = value => createHash('sha256').update(JSON.stringify(value)).diges
 const shippingRoles = ['Logistics', 'Technical', 'Finance', 'General_Exhibition_Coordinator'];
 const printRoles = ['Exhibition_Coordinator', 'Editorial', 'Technical', 'Chairman', 'General_Exhibition_Coordinator'];
 const roles = [...new Set([...shippingRoles, ...printRoles])];
-const taskRoles = { 'packing-technical': 'Technical', 'packing-cost': 'Finance', 'print-review': 'Editorial' };
+const taskRoles = { 'packing-technical': 'Technical', 'packing-cost': 'Finance', 'print-review': 'Editorial', [TREATMENT_TASK]: 'Technical' };
+const readRoles = [...new Set([...roles, ...TREATMENT_ROLES])];
+const evidenceRoles = kind => treatmentEvidenceRoles(kind) ?? (kind === 'PACKING' ? shippingRoles : printRoles);
 const stamp = (actor, at) => ({ actorId: actor.id, at });
 const printJob = (s, id) => s.printJobs?.[id] ?? { record: createPublishingRecord(), packages: [], deliveries: [] };
 const latestCollection = (s, id) => (s.collectionRevisions ?? []).filter(r => r.artworkId === id).at(-1);
@@ -36,17 +39,17 @@ export function createPilotOperations({ repository, storage, readObject, account
     if (!a || !allowed.includes(actor?.role)) fail(403, 'This account cannot access this workflow.');
     requireRecordAccess(actor, a); return a;
   };
-  const writable = (s, actor, id, version) => {
-    const a = scope(s, actor, id);
+  const writable = (s, actor, id, version, allowed = roles) => {
+    const a = scope(s, actor, id, allowed);
     if (a.lifecycleStatus === 'ARCHIVED_CLOSED' || a.acquisition) fail(409, 'This record is frozen.');
     if (version !== s.version) fail(409, 'The shared record changed. Refresh and review before retrying.');
     return a;
   };
   const evidence = (s, actor, id, evidenceId, kind) => {
-    scope(s, actor, id);
     const e = (s.operationalEvidence ?? []).find(x => x.id === evidenceId && x.artworkId === id);
+    scope(s, actor, id, e ? evidenceRoles(e.kind) : roles);
     if (!e || (kind && e.kind !== kind)) fail(422, 'Select evidence belonging to this record and purpose.');
-    if (!(e.kind === 'PACKING' ? shippingRoles : printRoles).includes(actor.role)) fail(403, 'Evidence access is restricted to its workflow.');
+    if (!evidenceRoles(e.kind).includes(actor.role)) fail(403, 'Evidence access is restricted to its workflow.');
     return e;
   };
   const bytesFor = async e => {
@@ -66,13 +69,14 @@ export function createPilotOperations({ repository, storage, readObject, account
     (s.operationReceipts ??= []).push({ id: command.operationId, artworkId: id, fingerprint, ...stamp(actor, at), result });
     const pkg=currentPackage(printJob(s,id));
     const printAction=['SET_PRINT_PACKAGE','PREFLIGHT','REVIEW_PRINT','APPROVE_PRINT','DISPATCH_PRINT','ACK_PRINT','START_PRINT','COMPLETE_PRINT','RECORD_DELIVERY','ACCEPT_DELIVERY','CORRECT_PRINT','STOP_PRINT'].includes(command.action);
-    const event={ id: randomUUID(), targetId: id, action: command.action ?? `UPLOAD_${command.kind}`, ...stamp(actor, at), ...(printAction&&pkg?{printRevision:pkg.revision,proofId:pkg.proofId,proofHash:pkg.proofHash,specificationHash:digest(pkg.spec)}:{}), ...(command.action==='VERIFY_PACKING'?{evidenceId:command.evidenceId,packingScope:packingScope(latestCollection(s,id))}:{}) };
+    const event={ id: randomUUID(), targetId: id, action: command.action ?? `UPLOAD_${command.kind}`, ...stamp(actor, at), ...(printAction&&pkg?{printRevision:pkg.revision,proofId:pkg.proofId,proofHash:pkg.proofHash,specificationHash:digest(pkg.spec)}:{}), ...(command.action==='VERIFY_PACKING'?{evidenceId:command.evidenceId,packingScope:packingScope(latestCollection(s,id))}:{}), ...(TREATMENT_ACTIONS.includes(command.action)?{treatmentRevision:command.revision??command.baseRevision??null,...(command.evidenceId?{evidenceId:command.evidenceId}:{}),...(command.mode?{mode:command.mode}:{}),...(command.decision?{decision:command.decision}:{})}:{}) };
     s.decisions.push(event);
     if(printAction&&pkg)(pkg.decisions??=[]).push(event);
     return result;
   };
   const authorizeUpload = (s, actor, id, kind) => {
-    scope(s, actor, id, kind === 'PACKING' ? ['Logistics'] : kind === 'PRINT_PROOF' ? ['Exhibition_Coordinator','General_Exhibition_Coordinator'] : kind === 'PREFLIGHT' ? ['Technical','Editorial'] : []);
+    scope(s, actor, id, kind === 'PACKING' ? ['Logistics'] : kind === 'PRINT_PROOF' ? ['Exhibition_Coordinator','General_Exhibition_Coordinator'] : kind === 'PREFLIGHT' ? ['Technical','Editorial'] : kind === 'TREATMENT_SOURCE' ? ['General_Exhibition_Coordinator'] : TREATMENT_KINDS.includes(kind) ? ['Technical'] : []);
+    if (TREATMENT_KINDS.includes(kind)) requireTreatmentUpload(s, actor, id, kind);
     if (kind === 'PACKING') {
       const view = collectionView(s, id);
       if (view.assignment.activeId !== actor.id || view.assignment.acceptedBy !== actor.id || !view.record?.packing) fail(409, 'Accept the collection handoff and record a packing plan first.');
@@ -88,6 +92,7 @@ export function createPilotOperations({ repository, storage, readObject, account
       if (readiness.expired) add({ id: `${id}:pickup-expired`, owner: 'Logistics', ownerId: collection.assignment.activeId, title: 'Reconfirm the expired pickup plan', blocker: 'The local pickup date or availability window has elapsed. No collection is inferred.', href: '#collection-plan', overdue: true });
     }
     for (const [key, role] of Object.entries(taskRoles)) {
+      if(key===TREATMENT_TASK)continue;
       if(hasRenewal(s,id,{'packing-technical':'technical','packing-cost':'cost','print-review':'editorial'}[key]))continue;
       const needed = key === 'packing-technical' ? collection.state === 'TECHNICAL_REVIEW_REQUIRED' : key === 'packing-cost' ? collection.state === 'COST_REVIEW_REQUIRED' : !!pkg && selectPublishingRecord(job.record).stage === 'manager-review';
       if (!needed) continue;
@@ -108,12 +113,13 @@ export function createPilotOperations({ repository, storage, readObject, account
   };
   return {
     async read(actor, id) {
-      const s = repository.read(); scope(s, actor, id);
+      const s = repository.read(); scope(s, actor, id, readRoles);
       const job = printJob(s, id), readiness = await readinessFor(s, id);
-      const files = (s.operationalEvidence ?? []).filter(e => e.artworkId === id && (e.kind === 'PACKING' ? shippingRoles : printRoles).includes(actor.role)).map(({objectId, ...e}) => ({...e, url: `/api/review/pilot/operations/${id}/evidence/${e.id}`}));
+      const treatment = treatmentView(s, id, actor, now().toISOString()), treatmentNow = treatmentScope(s, id).scope;
+      const files = (s.operationalEvidence ?? []).filter(e => e.artworkId === id && evidenceRoles(e.kind).includes(actor.role)).map(({objectId, ...e}) => ({...e, currentScope:e.kind==='PACKING'?e.scope===packingScope(latestCollection(s,id)):TREATMENT_KINDS.includes(e.kind)?e.scope===treatmentNow:undefined, url: `/api/review/pilot/operations/${id}/evidence/${e.id}`}));
       const renewals=renewalView(s,id,actor,accounts,now().toISOString(),files);
       const renewalActions=renewals.filter(c=>!c.supersededAt).flatMap(c=>c.tasks.filter(t=>!['COMPLETE','NOT_REQUIRED'].includes(t.status)&&(actor.role==='General_Exhibition_Coordinator'||t.ownerId===actor.id)).map(t=>({id:t.id,owner:t.ownerId?accounts.find(a=>a.id===t.ownerId)?.role:'General_Exhibition_Coordinator',ownerId:t.ownerId,title:t.title,blocker:t.blocker,dueAt:t.dueAt,overdue:t.overdue,href:'#renewal-queue',renewal:true})));
-      return { version: s.version, serverTime: now().toISOString(), mode: 'local-simulation', readiness: shippingRoles.includes(actor.role) ? readiness : null, job: printRoles.includes(actor.role) ? job : null, files, renewals, tasks: [...tasksFor(s,id,readiness,job,actor),...renewalActions], accounts: accounts.filter(a => a.exhibitionId === actor.exhibitionId).map(({id,name,role}) => ({id,name,role})), paused: true };
+      return { version: s.version, serverTime: now().toISOString(), mode: 'local-simulation', readiness: shippingRoles.includes(actor.role) ? readiness : null, job: printRoles.includes(actor.role) ? job : null, files, renewals, treatment, tasks: [...tasksFor(s,id,readiness,job,actor),...renewalActions,...treatmentTasks(s,id,actor,now().toISOString())], accounts: accounts.filter(a => a.exhibitionId === actor.exhibitionId).map(({id,name,role}) => ({id,name,role})), paused: true };
     },
     async requireDeparture(id) {
       const s = repository.read(), readiness = await readinessFor(s, id);
@@ -131,12 +137,13 @@ export function createPilotOperations({ repository, storage, readObject, account
       let integrity; try { integrity = await hashUploadStream(stream, staged.stream, { maxBytes: 10 * 1024 * 1024 }); } catch { fail(422, 'Upload interrupted, empty or larger than 10 MB. No evidence was committed.'); }
       const bytes = await readObject(staged.objectId);
       const mime = bytes.subarray(0,5).toString() === '%PDF-' && bytes.subarray(-1024).includes(Buffer.from('%%EOF')) ? 'application/pdf' : bytes.subarray(0,8).toString('hex') === '89504e470d0a1a0a' ? 'image/png' : bytes.subarray(0,3).toString('hex') === 'ffd8ff' ? 'image/jpeg' : null;
-      if (!mime || (command.kind !== 'PACKING' && mime !== 'application/pdf')) fail(422, 'Use a PDF, or a PNG/JPEG packing photograph. File content must match its format.');
+      const photoOnly = ['TREATMENT_SAMPLE', 'TREATMENT_COMPLETION'].includes(command.kind);
+      if (!mime || (photoOnly ? mime === 'application/pdf' : command.kind !== 'PACKING' && mime !== 'application/pdf')) fail(422, photoOnly ? 'Use an actual PNG or JPEG photograph. File content must match its format.' : 'Use a PDF, or a PNG/JPEG packing photograph. File content must match its format.');
       const fingerprint = digest({ ...command, version: undefined, ...integrity });
       return repository.transaction(s => {
         scope(s,actor,id); const prior = receipt(s,actor,id,command,fingerprint); if (prior) return prior.result;
         writable(s,actor,id,command.version); authorizeUpload(s,actor,id,command.kind);
-        const entry = { id: randomUUID(), artworkId:id, objectId:staged.objectId, kind:command.kind, name:command.name.trim(), mime, source:command.source.trim(), sender:command.sender.trim(), receivedAt:command.receivedAt ?? null, ...integrity, ...stamp(actor,now().toISOString()), scope:command.kind==='PACKING'?packingScope(latestCollection(s,id)):null };
+        const entry = { id: randomUUID(), artworkId:id, objectId:staged.objectId, kind:command.kind, name:command.name.trim(), mime, source:command.source.trim(), sender:command.sender.trim(), receivedAt:command.receivedAt ?? null, ...integrity, ...stamp(actor,now().toISOString()), scope:command.kind==='PACKING'?packingScope(latestCollection(s,id)):null, ...(TREATMENT_KINDS.includes(command.kind)?treatmentScope(s,id):{}) };
         (s.operationalEvidence ??= []).push(entry);
         return complete(s,actor,id,command,fingerprint,{ evidenceId:entry.id });
       });
@@ -149,11 +156,14 @@ export function createPilotOperations({ repository, storage, readObject, account
       const fingerprint = digest({...command,version:undefined});
       const work=async s => {
         const before=structuredClone(s);
-        scope(s,actor,id); const prior=receipt(s,actor,id,command,fingerprint); if(prior&&!previewOnly)return prior.result;
-        writable(s,actor,id,command.version);
+        const treatmentAction=TREATMENT_ACTIONS.includes(command.action), accessible=treatmentAction?TREATMENT_ROLES:roles;
+        scope(s,actor,id,accessible); const prior=receipt(s,actor,id,command,fingerprint); if(prior&&!previewOnly)return prior.result;
+        writable(s,actor,id,command.version,accessible);
         const at=now().toISOString(), allowed=(list)=>scope(s,actor,id,list);
         requireRenewalAcceptance(s,actor,id,command.action);
-        if(['ASSIGN_RENEWAL','ACCEPT_RENEWAL','RETURN_RENEWAL'].includes(command.action)) {
+        if(treatmentAction) {
+          await applyTreatment({s,actor,id,command,at,accounts,bytesFor});
+        } else if(['ASSIGN_RENEWAL','ACCEPT_RENEWAL','RETURN_RENEWAL'].includes(command.action)) {
           changeRenewal(s,actor,id,command,accounts,at);
         } else if(command.action==='VERIFY_PACKING') {
           allowed(['Logistics']); const view=collectionView(s,id), r=view.record;
@@ -166,7 +176,7 @@ export function createPilotOperations({ repository, storage, readObject, account
           next.packing={...next.packing,evidence:e.id,evidenceFileId:e.id,evidenceScope:e.scope,verifiedBy:actor.id,verifiedAt:at};
           next.id=randomUUID();next.previousId=r.id;next.actorId=actor.id;next.at=at;s.collectionRevisions.push(next);
         } else if(command.action==='ASSIGN_TASK') {
-          allowed(['General_Exhibition_Coordinator']);const role=taskRoles[command.key];
+          allowed(['General_Exhibition_Coordinator']);const role=taskRoles[command.key];if(command.key===TREATMENT_TASK)requireTreatmentAssignable(s,id);
           if(hasRenewal(s,id,{'packing-technical':'technical','packing-cost':'cost','print-review':'editorial'}[command.key]))fail(409,'Assign the revision-specific renewal task instead.');
           if(!role||!accounts.some(a=>a.id===command.ownerId&&a.role===role&&a.exhibitionId===actor.exhibitionId)||!text(command.reason)||!Number.isFinite(Date.parse(command.dueAt)))fail(422,'Choose the correct role, a due time and a handover reason.');
           s.operationTasks??={};const key=`${id}:${command.key}`;const old=s.operationTasks[key];

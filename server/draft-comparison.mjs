@@ -3,6 +3,7 @@
 export const draftWorkflowRoles = {
   collection: ['Logistics', 'Technical', 'Finance', 'General_Exhibition_Coordinator'],
   print: ['Exhibition_Coordinator', 'Editorial', 'Technical', 'Chairman', 'General_Exhibition_Coordinator'],
+  treatment: ['General_Exhibition_Coordinator', 'Technical', 'Artist', 'Museum_Operations', 'Finance'],
 };
 const value = v => v == null ? '' : String(v);
 const check = v => v ? 'complete' : 'pending';
@@ -25,6 +26,13 @@ export function draftContext(state, id, kind) {
     put('technicalCheck', r?.packing?.requiresTechnical === false ? 'notRequired' : check(r?.packing?.technicalReference));
     put('costCheck', check(r?.packing?.costReference));
     put('packingCheck', check(r?.packing?.evidenceFileId));
+  } else if (kind === 'treatment') {
+    const t = state.treatments?.[id], cur = t?.revisions.at(-1);
+    put('treatmentRevision', cur?.revision); put('workTitle', cur?.workTitle); put('method', cur?.method); put('sourceRef', cur?.sourceRef);
+    put('decisionMakerName', cur?.decisionMaker.name); put('conditions', JSON.stringify(cur?.conditions.map(c => [c.domain, c.text]) ?? []));
+    put('authorizationCheck', check(cur && t.authorizations.some(a => a.revision === cur.revision)));
+    const trial = cur && t.trials.findLast(x => x.revision === cur.revision && !x.supersededAt);
+    put('trialEvidenceId', trial?.evidenceId); put('trialDecision', trial?.decision?.decision ?? 'pending');
   } else {
     const job = state.printJobs?.[id], pkg = job?.packages.find(p => p.revision === job.record.version);
     put('printRevision', job?.record.version); put('evidenceId', pkg?.proofId);

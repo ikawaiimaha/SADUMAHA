@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { workspaceTasks, retainTaskSelection, localized, accountLabel } from '../src/lib/operationalWorkspace';
-import OperationalForms from '../src/components/OperationalForms';
+import { workspaceTasks, retainTaskSelection, localized, accountLabel, waitingExplanation, readinessExplanation } from '../src/lib/operationalWorkspace';
+import OperationalForms, {EvidenceUpload} from '../src/components/OperationalForms';
 import DraftRecovery from '../src/components/DraftRecovery';
 import { createPublishingRecord } from '../src/data/publishingRecord';
 import type { OperationsView } from '../src/components/ConnectedOperations';
@@ -63,6 +63,26 @@ test('Arabic decision form contains one language and no future review form',()=>
   const html=renderToStaticMarkup(createElement(OperationalForms,{task,ops:view,collection,actor,language:'ar',disabled:false,mark:()=>{},run:async()=>true,evidenceId:'',onEvidence:()=>{}}));
   assert.match(html,/تأكيد فحص التغليف/);assert.doesNotMatch(html,/Confirm packing inspection|Submit editorial review|إحالة المراجعة/);
   assert.match(html,/required=""/);
+  assert.match(html,/<button class="work-primary" disabled="">/);
+});
+
+test('packing approval excludes superseded files and remains blocked before evidence renders',()=>{
+  const view=ops(),task={...workspaceTasks(view,collection,actor)[0],key:'packing',canAct:true};
+  const file={id:'old',kind:'PACKING',name:'old.png',url:'/file',source:'TEST',sender:'Tester',receivedAt:null,actorId:'l',at:'now',file_hash:'hash',byte_length:100,currentScope:false};
+  view.files=[file,{...file,id:'fresh',name:'fresh.png',currentScope:true}];
+  const html=renderToStaticMarkup(createElement(OperationalForms,{task,ops:view,collection,actor,language:'en',disabled:false,mark:()=>{},run:async()=>true,evidenceId:'fresh',evidenceReady:false,onEvidence:()=>{}}));
+  assert.doesNotMatch(html,/old.png/);assert.match(html,/fresh.png/);
+  assert.match(html,/<button class="work-primary" disabled="">Confirm packing inspection/);
+});
+
+test('required upload is the primary control and extra guidance is collapsed',()=>{
+  for(const kind of ['PACKING','PRINT_PROOF','PREFLIGHT']){
+    const html=renderToStaticMarkup(createElement(EvidenceUpload,{kind,language:'en',disabled:false,mark:()=>{},run:async()=>true}));
+    assert.match(html,/<input (?=[^>]*required="")(?=[^>]*type="file")(?=[^>]*name="file")[^>]*>/);
+    assert.match(html,/<button class="work-primary" disabled="">Upload and review/);
+    assert.match(html,/<details class="work-help"><summary>Optional details and help/);
+    if(kind!=='PACKING')assert.doesNotMatch(html,/image\/png/);
+  }
 });
 test('controlled blockers localize without changing arbitrary source text',()=>{
   assert.equal(localized('العنوان / Address','ar'),'العنوان');
@@ -84,4 +104,18 @@ test('conflicting collection sources open correction rather than a doomed confir
   const tasks=workspaceTasks(ops(),conflicted,actor);
   assert.equal(tasks[0].key,'amendSource');assert.equal(tasks[0].canAct,true);
   assert.equal(tasks.some(t=>t.key==='source'),false);
+});
+
+
+test('waiting guidance identifies assignment or acceptance without treating every dependency as the employees task',()=>{
+  const view=ops();view.renewals=[{id:'cycle',kind:'collection',revision:'c1',createdAt:'now',completed:0,total:1,tasks:[renewal({key:'plan',roles:['Logistics']})]}];
+  const pending=workspaceTasks(view,collection,actor).find(t=>t.key==='plan')!;
+  assert.equal(pending.status,'waiting');assert.equal(pending.canAct,false);
+  assert.match(waitingExplanation(pending,'Logistics','en'),/Coordinator to assign an owner/);
+  pending.renewal!.status='ASSIGNED';pending.ownerId='another-officer';
+  assert.match(waitingExplanation(pending,'Hana','en'),/Hana to accept/);
+  assert.match(waitingExplanation(pending,'هناء','ar'),/هناء لقبول/);
+  assert.equal(pending.canAct,false);
+  assert.match(readinessExplanation('Inspect and verify the packing photograph or PDF for the current plan.','en'),/^After packing is complete/);
+  assert.equal(readinessExplanation('Unrecognized hold','en'),'Unrecognized hold');
 });

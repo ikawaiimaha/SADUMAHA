@@ -58,7 +58,14 @@ async function assignRenewal(gc, owner, key, ownerId, {accept=true,dueAt='2026-1
 test('packing evidence is inspectable, revision-bound, private and held when missing or changed',async t=>{
   const f=await fixture(t),l=await f.client('Logistics'),tech=await f.client('Technical'),fin=await f.client('Finance'),gc=await f.client('General_Exhibition_Coordinator');
   await prepareCollection(l,tech,fin);
+  const initial=f.runtime.repository.read();
+  await l.command('VERIFY_PACKING',{checked:true},422);
+  await l.command('VERIFY_PACKING',{evidenceId:'typed-reference-is-not-a-file',checked:true},422);
+  assert.deepEqual(f.runtime.repository.read(),initial,'Missing evidence must not create a decision or advance the record');
   const file=await l.upload('PACKING',png,'packing.png');assert.deepEqual(await l.file(file),png);
+  assert.equal((await l.view()).files.find(e=>e.id===file).currentScope,true);
+  assert.equal((await l.view()).readiness.packingVerified,false,'Uploading alone is not an inspection');
+  await l.command('VERIFY_PACKING',{evidenceId:file,checked:false},409);
   await l.command('VERIFY_PACKING',{evidenceId:file,checked:true});let view=await l.view();
   assert.equal(view.readiness.packingVerified,true);assert.equal(view.readiness.preparationComplete,true);assert.equal(view.readiness.departureReady,false);assert.match(view.readiness.blockers.join(' '),/Publish/);
   const anonymous=await fetch(f.origin+f.path+'/evidence/'+file);assert.equal(anonymous.status,401);
@@ -66,6 +73,7 @@ test('packing evidence is inspectable, revision-bound, private and held when mis
   const outsider=await f.client('Editorial');await outsider.file(file,403);
   await gc.command('VERIFY_PACKING',{evidenceId:file,checked:true},403);
   await l.collection('PLAN',{pickupDate:'2026-10-11'});assert.equal((await l.view()).readiness.packingVerified,false);
+  assert.equal((await l.view()).files.find(e=>e.id===file).currentScope,false,'Prior files remain inspectable but cannot satisfy a changed plan');
   await assignRenewal(gc,l,'plan','Logistics');
   await l.collection('PACK',{value:'Padded crate',packingOwner:'Synthetic packer',amount:0,requiresTechnical:true});await assignRenewal(gc,tech,'technical','Technical');await tech.collection('TECHNICAL',{value:'Technical plan review'});await assignRenewal(gc,fin,'cost','Finance');await fin.collection('COST',{value:'Zero-cost approval'});
   await assignRenewal(gc,l,'packing','Logistics');

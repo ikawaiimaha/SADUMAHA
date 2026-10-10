@@ -1,5 +1,5 @@
 export type DraftFields=Record<string,string>;
-export type WorkspaceDraft={taskId:string;key:string;kind:'collection'|'print';panel:'decision'|'upload'|'assign'|'return';baseVersion:number;fields:DraftFields;fileName:string|null;attempted:boolean;savedAt?:string};
+export type WorkspaceDraft={taskId:string;key:string;kind:'collection'|'print'|'treatment';panel:'decision'|'upload'|'assign'|'return';baseVersion:number;fields:DraftFields;fileName:string|null;attempted:boolean;savedAt?:string};
 export type DraftComparison={currentVersion:number;baselineAvailable:boolean;changes:{key:string;before:string;current:string}[]};
 export type DraftEnvelope={revision:number;draft:WorkspaceDraft|null;currentVersion:number;comparison?:DraftComparison|null};
 

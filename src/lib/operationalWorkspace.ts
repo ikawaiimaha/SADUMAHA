@@ -30,13 +30,36 @@ export const taskTitles: Record<string, Copy> = {
   owners: copy('إدارة المسؤول والبديل', 'Manage owner and backup'), acceptCollection: copy('قبول مسؤولية الاستلام', 'Accept collection responsibility'),
   amendSource: copy('تعديل بيانات الاستلام', 'Amend collection details'), amendPickup: copy('تعديل موعد الاستلام', 'Amend pickup date'),
   reopen: copy('تعديل خطة التغليف', 'Amend packing plan'), amendPackage: copy('إصدار بروفة جديدة', 'Create a new print revision'),
+  tRecord: copy('تسجيل المعالجة المشروطة', 'Record the conditional treatment'), amendTreatment: copy('تعديل إصدار المعالجة', 'Revise the treatment'),
+  tAuthorize: copy('تسجيل تفويض تجربة الحرف الواحد', 'Record one-letter trial authorization'),
+  tVenue: copy('مراجعة متطلب الموقع', 'Clear the venue requirement'), tEngineering: copy('مراجعة المتطلب الهندسي', 'Clear the engineering requirement'),
+  tFinancial: copy('مراجعة المتطلب المالي', 'Clear the financial requirement'), tOther: copy('مراجعة شرط آخر', 'Clear the other condition'),
+  tSample: copy('تجربة حرف واحد وصورتها', 'One-letter trial and photograph'), tArtist: copy('مراجعة الفنان لصورة العيّنة', 'Artist review of the trial photograph'),
+  tComplete: copy('تسجيل اكتمال المعالجة', 'Record batch completion'),
 };
 export type WorkspaceTask = {
-  id: string; key: string; kind: 'collection' | 'print'; title: Copy; status: 'now' | 'waiting' | 'complete';
+  id: string; key: string; kind: 'collection' | 'print' | 'treatment'; title: Copy; status: 'now' | 'waiting' | 'complete';
   ownerId: string | null; ownerRole: string; blocker: string; canAct: boolean; acceptance?: 'renewal' | 'legacy';
   dueAt?: string | null; overdue?: boolean; renewal?: RenewalTask; legacyKey?: string; evidenceIds: string[];
 };
 export const complete = (t: RenewalTask) => ['COMPLETE', 'NOT_REQUIRED'].includes(t.status);
+// Employee-facing descriptions. These explain existing holds; they never clear them.
+export function readinessExplanation(value: string, language: Language): string {
+  const descriptions: Record<string, Copy> = {
+    'Packing requirements are unresolved. Record the plan and named packing owner.': copy('لم تُسجّل خطة التغليف واسم المسؤول عن تنفيذها بعد.', 'The packing plan and the person responsible for it have not been recorded yet.'),
+    'Inspect and verify the packing photograph or PDF for the current plan.': copy('بعد إتمام التغليف، تتحقق الشؤون اللوجستية من صورته أو ملفه.', 'After packing is complete, Logistics must check its photograph or PDF.'),
+    'Publish the current artwork revision first.': copy('الإصدار الحالي للعمل لم يُعتمد ويُثبت في السجل بعد.', 'The current artwork version still needs approval and publication in the work record.'),
+  };
+  return descriptions[value]?.[language] ?? localized(value, language);
+}
+export function waitingExplanation(task: WorkspaceTask, owner: string, language: Language): string {
+  if (task.status !== 'waiting') return '';
+  if (task.renewal && ['UNASSIGNED', 'RETURNED'].includes(task.renewal.status))
+    return language === 'ar' ? 'بانتظار المنسقة لتعيين المسؤول والموعد.' : 'Waiting for the Coordinator to assign an owner and deadline.';
+  if (task.renewal?.status === 'ASSIGNED')
+    return language === 'ar' ? `بانتظار ${owner} لقبول المهمة.` : `Waiting for ${owner} to accept the task.`;
+  return task.blocker ? localized(task.blocker, language) : language === 'ar' ? `بانتظار إجراء من ${owner}.` : `Waiting for ${owner} to act.`;
+}
 export function localized(value: string, language: Language): string {
   // Only controlled workflow messages use this helper; never split user-authored evidence or notes.
   const pair = value.split(' / ');
@@ -134,6 +157,13 @@ export function workspaceTasks(ops: OperationsView, collection: CollectionView |
         if (job.deliveries.some(d => d.revision === pkg.revision && !d.acceptance)) add('acceptance', 'print', 'General_Exhibition_Coordinator', true, '', null, proof);
       }
     }
+  }
+  // Presentation of the SYNTHETIC treatment case. The server computes who can act; nothing is decided here.
+  for (const s of ops.treatment?.steps ?? []) {
+    if (!(coordinator || s.ownerRole === actor.role || !!s.authModes?.length)) continue;
+    tasks.push({ id: `treatment:${s.key}`, key: s.key, kind: 'treatment', title: taskTitles[s.key], ownerId: s.ownerId, ownerRole: s.ownerRole, blocker: s.blocker,
+      status: s.state === 'done' ? 'complete' : s.canAct || s.acceptance || s.assign ? 'now' : 'waiting', canAct: s.canAct, acceptance: s.acceptance ? 'legacy' : undefined,
+      legacyKey: s.key === 'tSample' ? 'treatment-trial' : undefined, dueAt: s.dueAt, overdue: s.overdue, evidenceIds: s.evidenceIds });
   }
   return tasks.sort((a, b) => ({ now: 0, waiting: 1, complete: 2 }[a.status] - { now: 0, waiting: 1, complete: 2 }[b.status]) || Number(!!b.overdue) - Number(!!a.overdue));
 }
