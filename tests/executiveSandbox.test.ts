@@ -44,6 +44,25 @@ test('artist revisions invalidate prior specialist evidence and require fresh ap
   assert.equal(f.state.dossiers[id].status, 'Under coordinator review');
   assert.throws(() => f.act('Director', 'PUBLISH'), /Coordinator/);
 });
+test('Director returns a dossier with a mandatory reason and the Coordinator can resubmit', () => {
+  const f = fixture();
+  f.act('Artist_Portal', 'SUBMIT', { submission: 'Synthetic artwork with verified dimensions.' });
+  assert.throws(() => f.act('Director', 'DIRECTOR_RETURN', { reason: 'Too early for review.' }), /Executive review/);
+  f.act('General_Exhibition_Coordinator', 'READY');
+  assert.throws(() => f.act('General_Exhibition_Coordinator', 'DIRECTOR_RETURN', { reason: 'Not my authority.' }), /another role/);
+  assert.throws(() => f.act('Director', 'DIRECTOR_RETURN', { reason: '  ' }), /required fields/);
+  assert.throws(() => f.act('Director', 'DIRECTOR_RETURN', {}), /required fields/);
+  f.act('Director', 'DIRECTOR_RETURN', { reason: 'Insurance valuation is missing.' });
+  assert.equal(f.state.dossiers[id].status, 'Returned by Director');
+  assert.equal(f.state.dossiers[id].directorReason, 'Insurance valuation is missing.');
+  assert.throws(() => f.act('Director', 'PUBLISH'), /Coordinator/);
+  assert.throws(() => f.act('Artist_Portal', 'SUBMIT', { submission: 'Artist cannot bypass the Coordinator.' }), /locked/);
+  assert.equal(f.state.decisions.at(-1)?.action, 'DIRECTOR_RETURN');
+  f.act('General_Exhibition_Coordinator', 'READY');
+  assert.equal(f.state.dossiers[id].status, 'Executive review');
+  assert.equal(f.state.dossiers[id].directorReason, '');
+  assert.deepEqual(restoreSandbox(JSON.stringify({ version: 1, events: f.events })).state, f.state);
+});
 test('invalid input, role forgery, stale and duplicate actions are rejected', () => {
   const f = fixture();
   f.act('Artist_Portal', 'SUBMIT', { submission: 'Synthetic initial artwork proposal.' });
