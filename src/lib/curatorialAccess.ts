@@ -25,6 +25,11 @@ export function projectCuratorialLedger(source: Ledger, role: string): Ledger {
   b.benchmarks = [];
   b.slots = b.slots.filter((x) => !x.restricted);
   b.nominations = b.nominations.filter((x) => !slots.has(x.slotId));
+  const visible = new Set(b.nominations.map((x) => x.id));
+  if (b.recommendations)
+    b.recommendations = b.recommendations.filter((r) =>
+      visible.has(r.proposalId),
+    );
   // Prior boards may contain previously allocated restricted identities.
   b.snapshots = [];
   s.artworks = s.artworks.filter((x) => !ids.has(x.id));

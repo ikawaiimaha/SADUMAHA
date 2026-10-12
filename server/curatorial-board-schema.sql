@@ -12,7 +12,19 @@ CREATE TABLE curatorial_slot (
  benchmark_seed_id TEXT REFERENCES committee_benchmark_seed(id),
  FOREIGN KEY(block_id,gallery_id) REFERENCES spatial_block_gallery(block_id,gallery_id)
 );
+-- COMMITTEE_APPROVED is legacy: retained so saved rows stay valid, never written by the current workflow.
 CREATE TABLE curatorial_proposal (id TEXT PRIMARY KEY, slot_id TEXT NOT NULL REFERENCES curatorial_slot(id), author_id TEXT NOT NULL REFERENCES actor(id), state TEXT NOT NULL CHECK(state IN ('SUBMITTED','RETURNED','SHORTLISTED','COMMITTEE_APPROVED','ENDORSED')));
+-- Curatorial assessment only: append-only, bound to the exact revision and locked snapshot. Never changes proposal state.
+-- REFERENCE DESIGN ONLY: the local pilot does not load this file. Recommendations are currently persisted in the JSON store
+-- (state.spatialLedger.curation.recommendations) via repository.transaction. This is not deployed enforcement.
+CREATE TABLE committee_recommendation (
+ id TEXT PRIMARY KEY, proposal_id TEXT NOT NULL, revision INTEGER NOT NULL, snapshot_id TEXT NOT NULL REFERENCES defense_board_snapshot(id),
+ outcome TEXT NOT NULL CHECK(outcome='RECOMMEND_ENDORSEMENT'), minute TEXT NOT NULL CHECK(length(trim(minute))>=10),
+ actor_id TEXT NOT NULL REFERENCES actor(id), recorded_at TEXT NOT NULL, UNIQUE(snapshot_id,proposal_id,revision),
+ FOREIGN KEY(proposal_id,revision) REFERENCES curatorial_proposal_revision(proposal_id,revision)
+);
+CREATE TRIGGER committee_recommendation_no_update BEFORE UPDATE ON committee_recommendation BEGIN SELECT RAISE(ABORT,'Committee recommendations are append-only'); END;
+CREATE TRIGGER committee_recommendation_no_delete BEFORE DELETE ON committee_recommendation BEGIN SELECT RAISE(ABORT,'Committee recommendations are append-only'); END;
 CREATE TABLE curatorial_proposal_revision (
  proposal_id TEXT NOT NULL REFERENCES curatorial_proposal(id), revision INTEGER NOT NULL CHECK(revision>0), artwork_id TEXT NOT NULL REFERENCES artwork(id),
  thematic_rationale TEXT NOT NULL, research_reference TEXT NOT NULL, footprint_m2 REAL NOT NULL CHECK(footprint_m2>0), estimated_cost_minor INTEGER NOT NULL CHECK(estimated_cost_minor>=0),

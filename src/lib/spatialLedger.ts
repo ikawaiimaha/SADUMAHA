@@ -189,12 +189,33 @@ export function downstreamBlock(s: Ledger, a: Allocation) {
     return "Technical must clear the current location.";
   return "";
 }
+export type LedgerJournalEvent = {
+  actor: LedgerActor;
+  command: LedgerCommand;
+  themeApprovalId: string | null;
+  at: string;
+};
+/**
+ * Rebuilds a ledger from a saved session journal without altering it. Events
+ * recorded before recommendation minutes existed (CURATE_COMMITTEE_APPROVE)
+ * replay as they were recorded; live commands never get this allowance.
+ */
+export function restoreLedger(
+  events: LedgerJournalEvent[],
+  seed: Ledger = ledgerSeed(),
+): Ledger {
+  let state = seed;
+  for (const e of events)
+    state = applyLedger(state, e.actor, e.command, e.themeApprovalId, e.at, true);
+  return state;
+}
 export function applyLedger(
   state: Ledger,
   actor: LedgerActor,
   c: LedgerCommand,
   themeApprovalId: string | null,
   at = new Date().toISOString(),
+  legacyReplay = false,
 ): Ledger {
   if (actor.exhibitionId !== state.exhibitionId)
     fail("This edition is outside your access.", 403);
@@ -226,7 +247,14 @@ export function applyLedger(
     row.authorizedVersion = null;
   };
   if (c.action.startsWith("CURATE_")) {
-    applyCuration(s, actor, c as CurationCommand, at, themeApprovalId);
+    applyCuration(
+      s,
+      actor,
+      c as CurationCommand,
+      at,
+      themeApprovalId,
+      legacyReplay,
+    );
     s.version++;
     s.decisions.push({
       actorId: actor.id,

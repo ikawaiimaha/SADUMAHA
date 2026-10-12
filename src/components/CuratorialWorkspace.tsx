@@ -1,9 +1,11 @@
 import BenchmarkSeeds from "./BenchmarkSeeds";
 import { useState } from "react";
 import { useSandbox } from "./SandboxProvider";
+import { useMockupText } from "../i18n/useMockupText";
 import {
   activeGallery,
   curationReasons,
+  currentRecommendation,
   emptyCuration,
   type CurationCommand,
 } from "../lib/curatorialBoard";
@@ -31,6 +33,7 @@ export default function CuratorialWorkspace({
   run: (c: Omit<CurationCommand, "expected">, actorId?: string) => boolean;
 }) {
   const { role } = useSandbox();
+  const tr = useMockupText();
   const board = ledger.curation ?? emptyCuration();
   const [staff, setStaff] = useState(ledger.staff[0].id);
   const [gallery, setGallery] = useState("");
@@ -48,6 +51,7 @@ export default function CuratorialWorkspace({
   const [returnNotes, setReturnNotes] = useState<
     Record<string, { reason: string; note: string }>
   >({});
+  const [minutes, setMinutes] = useState<Record<string, string>>({});
   const [revisionId, setRevisionId] = useState<string | null>(null);
   const [moveGallery, setMoveGallery] = useState("");
   const [moveReason, setMoveReason] = useState("");
@@ -65,13 +69,19 @@ export default function CuratorialWorkspace({
     return n ? [{ slot: s, n, revision: n.revisions.at(-1)! }] : [];
   });
   const total = selected.reduce((sum, x) => sum + x.revision.costMinor, 0);
+  // Proposals still lacking a current minute (includes legacy boards saved before minutes existed).
+  const missingMinutes = selected.filter(
+    (x) => x.n.status !== "ENDORSED" && !currentRecommendation(board, x.n.id),
+  ).length;
   const owner =
     board.phase === "ENDORSED"
       ? "Roster endorsed · proceed to Technical review and contracting"
       : board.phase === "DIRECTOR_REVIEW"
-        ? "Director · endorse the exact Committee-approved board"
+        ? missingMinutes
+          ? "Committee · record the missing recommendation minutes for the Director"
+          : "Director · decide on the board using the Committee recommendation minutes"
         : board.phase === "COMMITTEE_REVIEW"
-          ? "Committee · approve or return each selected proposal"
+          ? "Committee · record a recommendation minute or return each selected proposal"
           : coordinator
             ? "Issue briefs, review submissions, then lock the complete shortlist"
             : "Assigned coordinators · research and submit against the brief";
@@ -95,7 +105,7 @@ export default function CuratorialWorkspace({
         </p>
       </div>
       <p className="border-s-2 border-[#8B261E] ps-4 text-sm">
-        <strong>{owner}</strong>
+        <strong>{tr(owner)}</strong>
       </p>
       {ledger.block.state !== "ACTIVE" && (
         <p role="status" className="text-sm text-[#8B261E]">
@@ -645,12 +655,29 @@ export default function CuratorialWorkspace({
               </button>
             )}
             {role === "Director" && board.phase === "DIRECTOR_REVIEW" && (
-              <button
-                className={primary}
-                onClick={() => run({ action: "CURATE_ENDORSE" })}
-              >
-                Endorse &amp; lock roster
-              </button>
+              <div>
+                <button
+                  className={primary}
+                  disabled={missingMinutes > 0}
+                  aria-describedby={
+                    missingMinutes > 0 ? "endorse-needs-minutes" : undefined
+                  }
+                  onClick={() => run({ action: "CURATE_ENDORSE" })}
+                >
+                  {tr("Endorse & lock roster")}
+                </button>
+                {missingMinutes > 0 && (
+                  <p
+                    id="endorse-needs-minutes"
+                    role="status"
+                    className="mt-2 max-w-sm text-sm text-[#8B261E]"
+                  >
+                    {tr(
+                      "Endorsement needs a current Committee recommendation minute for every selected proposal.",
+                    )}
+                  </p>
+                )}
+              </div>
             )}
           </div>
           {!selected.length && (
@@ -662,6 +689,7 @@ export default function CuratorialWorkspace({
           <div className="grid gap-5 lg:grid-cols-2">
             {selected.map(({ slot: s, n, revision: r }) => {
               const note = feedback(n.id);
+              const recommendation = currentRecommendation(board, n.id);
               return (
                 <article
                   key={s.id}
@@ -710,33 +738,77 @@ export default function CuratorialWorkspace({
                       </p>
                     )}
                   </details>
+                  {recommendation && (
+                    <p className="mt-4 border-s-2 border-[#8B261E] ps-3 text-sm whitespace-pre-wrap">
+                      {tr("Committee recommendation")} ({tr("revision")}{" "}
+                      {r.number}): <bdi>{recommendation.minute}</bdi>
+                    </p>
+                  )}
+                  {n.status === "COMMITTEE_APPROVED" && !recommendation && (
+                    <p
+                      role="status"
+                      className="mt-4 border-s-2 border-[#8B261E] ps-3 text-sm"
+                    >
+                      {tr(
+                        "Legacy approval saved before recommendation minutes existed. No minute is on file.",
+                      )}
+                    </p>
+                  )}
                   {role === "Committee" &&
-                    board.phase === "COMMITTEE_REVIEW" &&
+                    (board.phase === "COMMITTEE_REVIEW" ||
+                      (board.phase === "DIRECTOR_REVIEW" && !recommendation)) &&
                     ["SHORTLISTED", "COMMITTEE_APPROVED"].includes(
                       n.status,
                     ) && (
                       <div className="mt-5 space-y-3">
-                        {n.status === "SHORTLISTED" && (
-                          <button
-                            className={primary}
-                            onClick={() =>
-                              run({
-                                action: "CURATE_COMMITTEE_APPROVE",
-                                id: n.id,
-                                revision: r.number,
-                              })
-                            }
-                          >
-                            Approve this proposal
-                          </button>
+                        {!recommendation && (
+                          <div>
+                            <label
+                              htmlFor={`recommendation-minute-${n.id}`}
+                              className="block text-sm"
+                            >
+                              {tr("Recommendation minute")}
+                            </label>
+                            <textarea
+                              id={`recommendation-minute-${n.id}`}
+                              dir="auto"
+                              className={input}
+                              value={minutes[n.id] ?? ""}
+                              onChange={(e) =>
+                                setMinutes((old) => ({
+                                  ...old,
+                                  [n.id]: e.target.value,
+                                }))
+                              }
+                            />
+                            <button
+                              className={`${primary} mt-3`}
+                              disabled={(minutes[n.id] ?? "").trim().length < 10}
+                              onClick={() =>
+                                run({
+                                  action: "CURATE_COMMITTEE_RECOMMEND",
+                                  id: n.id,
+                                  revision: r.number,
+                                  note: minutes[n.id],
+                                })
+                              }
+                            >
+                              {tr("Record recommendation for Director")}
+                            </button>
+                            <p className="mt-2 text-xs text-[#655D50]">
+                              {tr(
+                                "A recommendation is advice only. The Director decides separately.",
+                              )}
+                            </p>
+                          </div>
                         )}
                         {!s.restricted && (
                           <details>
                             <summary className="cursor-pointer text-sm">
-                              Object to this proposal
+                              {tr("Object to this proposal")}
                             </summary>
                             <label className="block text-sm mt-3">
-                              Committee reason
+                              {tr("Committee reason")}
                               <select
                                 className={input}
                                 value={note.reason}
@@ -753,8 +825,9 @@ export default function CuratorialWorkspace({
                               </select>
                             </label>
                             <label className="block text-sm mt-3">
-                              Committee review note
+                              {tr("Committee review note")}
                               <textarea
+                                dir="auto"
                                 className={input}
                                 value={note.note}
                                 onChange={(e) =>
@@ -777,7 +850,7 @@ export default function CuratorialWorkspace({
                                 })
                               }
                             >
-                              Return this slot for revision
+                              {tr("Return this slot for revision")}
                             </button>
                           </details>
                         )}

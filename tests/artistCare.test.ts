@@ -143,9 +143,10 @@ function roster() {
   });
   act("General_Exhibition_Coordinator", { action: "CURATE_LOCK", id: "board" });
   act("Committee", {
-    action: "CURATE_COMMITTEE_APPROVE",
+    action: "CURATE_COMMITTEE_RECOMMEND",
     id: "proposal",
     revision: 1,
+    note: "Committee minute: recommend endorsement.",
   });
   act("Director", { action: "CURATE_ENDORSE" });
   return s;
@@ -326,9 +327,10 @@ test("benchmark seeds are projected out of research responses, histories and all
     1,
   );
   act("Committee", {
-    action: "CURATE_COMMITTEE_APPROVE",
+    action: "CURATE_COMMITTEE_RECOMMEND",
     id: "secret-seed",
     revision: 1,
+    note: "Committee minute: recommend endorsement.",
   });
   act("Director", { action: "CURATE_ENDORSE" });
   act("Director", {

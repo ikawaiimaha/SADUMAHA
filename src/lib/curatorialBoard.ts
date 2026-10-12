@@ -37,6 +37,7 @@ export type Nomination = {
     | "SUBMITTED"
     | "RETURNED"
     | "SHORTLISTED"
+    /** Legacy value kept so saved records stay readable; never written by new actions. */
     | "COMMITTEE_APPROVED"
     | "ENDORSED";
   revisions: ProposalRevision[];
@@ -54,7 +55,24 @@ export type DefenseSnapshot = {
   state: "LOCKED" | "ENDORSED" | "SUPERSEDED";
   rows: { slot: BriefSlot; proposalId: string; revision: ProposalRevision }[];
 };
+/**
+ * Curatorial assessment only. A recommendation never changes a nomination,
+ * a slot or an artwork; executive endorsement stays a separate Director action.
+ * Bound to the exact proposal revision and the locked board snapshot reviewed.
+ */
+export type CommitteeRecommendation = {
+  id: string;
+  proposalId: string;
+  revision: number;
+  snapshotId: string;
+  outcome: "RECOMMEND_ENDORSEMENT";
+  minute: string;
+  actorId: string;
+  role: "Committee";
+  at: string;
+};
 export type Curation = {
+  recommendations?: CommitteeRecommendation[];
   benchmarks?: {
     id: string;
     name: string;
@@ -74,7 +92,7 @@ export type CurationCommand = {
     | "CURATE_SHORTLIST"
     | "CURATE_RETURN"
     | "CURATE_LOCK"
-    | "CURATE_COMMITTEE_APPROVE"
+    | "CURATE_COMMITTEE_RECOMMEND"
     | "CURATE_ENDORSE"
     | "CURATE_MOVE_SLOT"
     | "CURATE_SEED"
@@ -181,6 +199,24 @@ function checkPlan(s: Ledger) {
   )
     fail("Brief reservations exceed the edition budget.");
 }
+/** The recommendation that covers this proposal's current revision on the current locked board, if any. */
+export function currentRecommendation(
+  b: Curation,
+  proposalId: string,
+): CommitteeRecommendation | undefined {
+  const snapshot = b.snapshots.at(-1);
+  const number = b.nominations
+    .find((n) => n.id === proposalId)
+    ?.revisions.at(-1)?.number;
+  if (!snapshot || snapshot.state === "SUPERSEDED" || number === undefined)
+    return undefined;
+  return (b.recommendations ?? []).find(
+    (r) =>
+      r.proposalId === proposalId &&
+      r.revision === number &&
+      r.snapshotId === snapshot.id,
+  );
+}
 function reopen(b: Curation) {
   b.phase = "DRAFT";
   const current = b.snapshots.at(-1);
@@ -234,6 +270,11 @@ export function applyCuration(
   c: CurationCommand,
   at: string,
   themeProof?: string | null,
+  /**
+   * Only for re-reading a saved session journal written before recommendation
+   * minutes existed. Live callers (server, browser actions) never set this.
+   */
+  legacyReplay = false,
 ) {
   const b = (s.curation ??= emptyCuration());
   const requireRole = (role: string) => {
@@ -274,6 +315,30 @@ export function applyCuration(
     if (b.phase !== "DRAFT")
       fail("The Defense Board is in review. Draft changes are locked.");
   };
+  if ((c.action as string) === "CURATE_COMMITTEE_APPROVE") {
+    // Historic action: replayed exactly as it was recorded, so saved journals
+    // stay readable. It writes the old status only and fabricates no minute.
+    if (!legacyReplay) fail("Unknown curatorial action.", 422);
+    requireRole("Committee");
+    if (
+      b.phase !== "COMMITTEE_REVIEW" ||
+      !nomination ||
+      nomination.status !== "SHORTLISTED" ||
+      c.revision !== revision?.number
+    )
+      fail("Review the current locked proposal.");
+    checkPlan(s);
+    nomination.status = "COMMITTEE_APPROVED";
+    if (
+      b.slots.every((x) =>
+        ["COMMITTEE_APPROVED", "ENDORSED"].includes(
+          b.nominations.find((n) => n.id === x.selectedId)!.status,
+        ),
+      )
+    )
+      b.phase = "DIRECTOR_REVIEW";
+    return;
+  }
   switch (c.action) {
     case "CURATE_ASSIGN_SEED": {
       requireRole("General_Exhibition_Coordinator");
@@ -512,8 +577,14 @@ export function applyCuration(
           fail("This proposal is not awaiting Coordinator review.");
       } else {
         requireRole("Committee");
+        // In Director review the Committee may still object, but only to a
+        // proposal that has no current minute (recovery of legacy boards).
+        const reviewable =
+          b.phase === "COMMITTEE_REVIEW" ||
+          (b.phase === "DIRECTOR_REVIEW" &&
+            !currentRecommendation(b, nomination.id));
         if (
-          b.phase !== "COMMITTEE_REVIEW" ||
+          !reviewable ||
           !["SHORTLISTED", "COMMITTEE_APPROVED"].includes(nomination.status)
         )
           fail("This proposal is not on the Committee board.");
@@ -561,39 +632,70 @@ export function applyCuration(
       b.phase = "COMMITTEE_REVIEW";
       break;
     }
-    case "CURATE_COMMITTEE_APPROVE": {
+    case "CURATE_COMMITTEE_RECOMMEND": {
       requireRole("Committee");
+      const snapshot = b.snapshots.at(-1);
       if (
-        b.phase !== "COMMITTEE_REVIEW" ||
+        !["COMMITTEE_REVIEW", "DIRECTOR_REVIEW"].includes(b.phase) ||
+        snapshot?.state !== "LOCKED" ||
         !nomination ||
-        nomination.status !== "SHORTLISTED" ||
-        c.revision !== revision?.number
-      )
-        fail("Review the current locked proposal.");
-      checkPlan(s);
-      nomination.status = "COMMITTEE_APPROVED";
-      if (
-        b.slots.every((x) =>
-          ["COMMITTEE_APPROVED", "ENDORSED"].includes(
-            b.nominations.find((n) => n.id === x.selectedId)!.status,
-          ),
+        !["SHORTLISTED", "COMMITTEE_APPROVED"].includes(nomination.status) ||
+        c.revision !== revision?.number ||
+        !snapshot.rows.some(
+          (r) =>
+            r.proposalId === nomination.id &&
+            r.revision.number === revision?.number,
         )
       )
+        fail("Review the current locked proposal.");
+      if (currentRecommendation(b, nomination!.id))
+        fail("This revision already has a recommendation on the current board.");
+      if (!text(c.note, 10))
+        fail(
+          "Record the recommendation minute (at least 10 characters).",
+          422,
+        );
+      checkPlan(s);
+      (b.recommendations ??= []).push({
+        id: `${snapshot!.id}:${nomination!.id}:${revision!.number}`,
+        proposalId: nomination!.id,
+        revision: revision!.number,
+        snapshotId: snapshot!.id,
+        outcome: "RECOMMEND_ENDORSEMENT",
+        minute: c.note!.trim(),
+        actorId: actor.id,
+        role: "Committee",
+        at,
+      });
+      // Nomination status is deliberately untouched: only the Director decides.
+      if (b.slots.every((x) => currentRecommendation(b, x.selectedId ?? "")))
         b.phase = "DIRECTOR_REVIEW";
       break;
     }
     case "CURATE_ENDORSE": {
       requireRole("Director");
       if (b.phase !== "DIRECTOR_REVIEW")
-        fail("Committee approval is required for every selected proposal.");
+        fail(
+          "A Committee recommendation minute is required for every selected proposal.",
+        );
       checkPlan(s);
       for (const row of b.snapshots.at(-1)!.rows) {
         const n = b.nominations.find((x) => x.id === row.proposalId)!;
         if (
-          !["COMMITTEE_APPROVED", "ENDORSED"].includes(n.status) ||
+          !["SHORTLISTED", "COMMITTEE_APPROVED", "ENDORSED"].includes(
+            n.status,
+          ) ||
           n.revisions.at(-1)!.number !== row.revision.number
         )
           fail("The board revision changed.");
+        if (
+          n.status !== "ENDORSED" &&
+          !currentRecommendation(b, n.id) &&
+          !(legacyReplay && n.status === "COMMITTEE_APPROVED")
+        )
+          fail(
+            "A Committee recommendation for this exact revision and board is required.",
+          );
         const a = s.artworks.find((x) => x.id === row.revision.artistId)!;
         if (n.status === "ENDORSED") continue;
         if (a.state === "APPROVED" || a.state === "WITHDRAWN")

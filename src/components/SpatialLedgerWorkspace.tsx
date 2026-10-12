@@ -4,12 +4,14 @@ import { projectCuratorialLedger } from "../lib/curatorialAccess";
 import CuratorialWorkspace from "./CuratorialWorkspace";
 import { useRef, useState } from "react";
 import { useSandbox } from "./SandboxProvider";
+import { useMockupText } from "../i18n/useMockupText";
 import {
   alternatives,
   applyLedger,
   capacity,
   downstreamBlock,
   ledgerSeed,
+  restoreLedger,
   spaceActive,
   type Ledger,
   type LedgerCommand,
@@ -36,6 +38,7 @@ export default function SpatialLedgerWorkspace({
   theme?: ThemeState;
 }) {
   const { role } = useSandbox();
+  const tr = useMockupText();
   const [view, setView] = useState<"allocations" | "brief" | "board" | "care">(
     "allocations",
   );
@@ -50,9 +53,8 @@ export default function SpatialLedgerWorkspace({
         saved.events.length > 1000
       )
         throw new Error();
-      let state = ledgerSeed();
-      for (const e of saved.events)
-        state = applyLedger(state, e.actor, e.command, e.themeApprovalId, e.at);
+      // The saved events are kept exactly as written; legacy approvals replay as recorded.
+      const state = restoreLedger(saved.events);
       return { state, events: saved.events, error: "" };
     } catch {
       return {
@@ -172,8 +174,8 @@ export default function SpatialLedgerWorkspace({
         CURATE_SHORTLIST: "Proposal selected for the shortlist.",
         CURATE_RETURN: "Proposal returned with the recorded reason and notes.",
         CURATE_LOCK: "Shortlist locked for Committee review.",
-        CURATE_COMMITTEE_APPROVE:
-          "Committee approval recorded for this revision.",
+        CURATE_COMMITTEE_RECOMMEND:
+          "Recommendation minute recorded. The Director decides separately.",
         CURATE_ENDORSE:
           "Roster endorsed. Continue to Technical review and contracting.",
         CURATE_MOVE_SLOT:
@@ -229,12 +231,12 @@ export default function SpatialLedgerWorkspace({
         />
         {error && (
           <p role="alert" className="mt-4 text-sm text-[#8B261E]">
-            {error}
+            {tr(error)}
           </p>
         )}
         {message && (
           <p role="status" className="mt-4 text-sm">
-            {message}
+            {tr(message)}
           </p>
         )}
       </div>
@@ -645,12 +647,12 @@ export default function SpatialLedgerWorkspace({
         </div>
         {error && (
           <p role="alert" className="text-sm text-[#8B261E]">
-            {error}
+            {tr(error)}
           </p>
         )}
         {message && (
           <p role="status" className="text-sm">
-            {message}
+            {tr(message)}
           </p>
         )}
         {manage && (

@@ -9,6 +9,23 @@
 
 These rules supersede conflicting historical notes below. This file is a version-controlled architecture anchor, not a technically immutable or signed record. Legacy HIP references in code still require a scoped migration; this configuration update does not claim that migration is complete. Existing enums are in src/types.ts; additional workflow models must be mapped explicitly rather than silently renamed.
 
+## 2026-10-10 — Committee recommendation minute (replaces Committee approval)
+
+**Rule.** The Committee records an attributed recommendation minute; it never approves. `CURATE_COMMITTEE_RECOMMEND` (Committee only) needs a minute of at least 10 characters and is bound to the exact proposal revision and the current locked Defense Board snapshot. It leaves the nomination status, slot and artwork untouched. A second recommendation for the same revision and board is refused. `CURATE_ENDORSE` (Director only) refuses unless every selected, not-yet-endorsed proposal has a current minute. A new revision or a re-lock makes an older minute stale, so it authorizes nothing.
+
+**Actual persistence path (what exists today).** `POST /api/review/spatial-ledger/command` → `service.mutate` (`server/spatial-ledger.mjs`) → `repository.transaction` → `applyLedger` → `applyCuration` (`src/lib/curatorialBoard.ts`). The actor comes from the signed-in session, never the request body. The transaction works on a copy of the store and writes only if the command succeeds, so a stale, duplicate or unauthorized submission changes nothing on disk. The result is saved in `state.json` under `spatialLedger.curation.recommendations` and survives restart. `GET /api/review/spatial-ledger` returns it to the roles the service admits; benchmark-slot recommendations are projected away from roles that cannot see the slot (`src/lib/curatorialAccess.ts`). Covered by `tests/committeeRecommendation.test.mjs` (HTTP, restart, forged identity, unauthorized roles, byte-identical state after failures) and `tests/curatorialBoard.test.ts`.
+
+**Not deployed enforcement.** `committee_recommendation` in `server/curatorial-board-schema.sql` is a reference design only. Nothing loads that file, and no server code reads or writes that table. The local JSON store is single-process and is not a production database, identity system or backup guarantee. Moving to SQL would need its own migration and verification.
+
+**Browser scope.** The Curatorial workspace in the browser (`SpatialLedgerWorkspace.tsx`) is a sandbox that applies the same shared engine to a per-tab `sessionStorage` journal. It does not call the server ledger endpoint yet, so the sandbox and the connected pilot are separate stores.
+
+**Legacy recovery.** Older records may hold `CURATE_COMMITTEE_APPROVE` in a saved session journal, or a board already in `DIRECTOR_REVIEW` with nominations marked `COMMITTEE_APPROVED` and no minutes. Nothing is rewritten, deleted or reinterpreted:
+- `restoreLedger` replays saved journals as recorded (including the old approval and any old Director endorsement that followed). Only this replay path accepts the retired action; live commands answer 422 "Unknown curatorial action".
+- No minute is ever fabricated. In Director review the Director's endorsement stays disabled with a visible reason until the Committee records a real minute for each proposal lacking one. The Committee may also object (return) to such a proposal, which reopens the brief with the reason retained. Once a minute exists the Committee can no longer retract it in Director review.
+- Executive permissions are unchanged: only the Director endorses, and only the Committee records minutes.
+
+Limitation: journals recorded by the old version can be read, but a legacy board's original approval is shown as "no minute on file" rather than being treated as a recommendation. Arabic strings for the touched controls use the existing `useMockupText` map; other text in the Curatorial workspace remains English-only. No ThemeStatus/ArtistStatus enum, institutional delegation or integration changed.
+
 ## 2026-10-05 — Shared local evidence and operational release
 
 ### 2026-10-06 — Private operational draft recovery
@@ -551,6 +568,17 @@ Gallery intake now requires an explicit packing-list/contents field in addition 
 The authenticated owning artist marks a complete gallery consignment Ready for Shipping, creating a single immutable ticket against an accepted agreement. Administrative routing must identify actual provisioned Logistics and department-head accounts; there is no name-based or first-user fallback. Missing routing blocks ticket creation with an explicit error. Huda or any other named person is not provisioned automatically.
 The assigned Logistics officer can acknowledge opening and record a meaningful action reference separately. Server timestamps replace browser values. Opening never satisfies the 48-elapsed-hour SLA. A local 15-minute cron escalates unactioned overdue tickets to the configured head; a late opening/action immediately stamps the breach so acting between cron runs cannot hide it. Later action preserves escalation history. The receipt certifies a recorded staff action, not independently verified transport execution.
 Technical receives no freight negotiation ticket access. Artist, officer, configured head and trusted Admin can read their scoped tickets. No emails or freight bookings are sent. Local logistics-sla.sql follows freight-closure.sql. Production schema rollout, routing/account provisioning and controlled correction/reassignment remain separate.
+# 29 September 2026 — Invitation letter archive rehearsal
+
+The shared session archive separates invitation letters from portal invitations. Assigned Coordinators prepare bilingual versioned drafts from currently approved dossiers. Chairman and Director views can search by artist name, stable artist ID or artwork and download a watermarked rehearsal PDF without requesting a resend. All versions are retained; a new version never inherits approval evidence. The assigned Coordinator records fictional approver, delegation scope/reference and version-specific evidence with an explicit review acknowledgement; this records an assertion, not a new signing delegation. Historical or no-longer-eligible copies are labelled accordingly. PDF format does not establish tamper protection.
+
+Design inference grounded in the 13 September Contract Responsibilities/Missing Controls review and refreshed Contract of Personal Exhibition source (DOCX, source modified 1 July 2026). Neither source establishes named invitation-signing authority. The original one-line email discussed by the owner was not supplied, so it is not treated as proof that no archive exists. Session state is lost on refresh. No hosted storage, external dispatch, real signatures or production access permissions are implemented.
+
+## Focused fictional release candidate — 29 September 2026
+
+The default local presentation now uses RehearsalJourney and the guarded rehearsalJourney model: one fictional artist, fourteen linked tasks, explicit source recording, confirmation/disagreement and separate task completion. Verbal/email source references are optional; provenance and scope remain explicit. The shared Outstanding view and simulated Finance ledger derive from the same state. State is session-only; export the review JSON before refresh.
+
+`npm run build:rehearsal` builds a separate static candidate with no pilot/workbench entry or business integration imports. `npm run preview:rehearsal` serves it locally. Real application and external integrations remain paused. See reviews/SADU_Fictional_Release_2026-09-29.md for verification, source limits and release scope. These fictional desk assignments and payment terms do not establish institutional authority.
 
 ## 2026-10-10 — Conditional treatment (synthetic Laura / Mounir scenario)
 
