@@ -31,7 +31,7 @@ export interface GeneralCoordinatorWorkspaceProps {
   guidelinesEnglish?: string;
   guidelinesArabic?: string;
   translationStatus?: TranslationStatus;
-  hipSubmissionTime?: string | null;
+  guidelinesSubmittedAt?: string | null;
   onRequestRevision?: () => void;
   onSubmitToEditorial?: (arabicText: string) => void;
   curatorialBrief?: string;
@@ -59,7 +59,7 @@ export const GeneralCoordinatorWorkspace: React.FC<GeneralCoordinatorWorkspacePr
   themeEssayEnglish,
   guidelinesEnglish,
   translationStatus,
-  hipSubmissionTime,
+  guidelinesSubmittedAt,
   onRequestRevision,
   onSubmitToEditorial,
   curatorialBrief,
@@ -206,7 +206,7 @@ export const GeneralCoordinatorWorkspace: React.FC<GeneralCoordinatorWorkspacePr
 
           {translationStatus === 'PENDING_TRANSLATION' && <div role="status" className="rounded-lg border border-emerald-300 bg-emerald-50 ps-4 pe-4 py-3 text-start text-emerald-900">
             <p className="font-semibold">{isAr ? 'تم الإرسال إلى قسم التحرير بنجاح' : 'Successfully Sent to Editorial'}</p>
-            <span>{hipSubmissionTime}</span>
+            <span>{guidelinesSubmittedAt}</span>
           </div>}
           <form onSubmit={handleSubmitToEditorial} className="space-y-3">
             <label htmlFor="exhibition-guidelines-arabic" className="block text-xs font-semibold text-sadu-charcoal">

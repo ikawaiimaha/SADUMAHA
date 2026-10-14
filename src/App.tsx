@@ -111,6 +111,7 @@ import TechnicalWorkspace from './components/TechnicalWorkspace';
 import { CommissionSummary } from './components/CommissionSummary';
 import { COMMISSION, createCommission, commissionReducer } from './data/commissionScenario';
 import { PresenterDrawer } from './components/PresenterDrawer';
+import { useThemePipeline } from './hooks/useThemePipeline';
 import { I18nProvider, useI18n } from './context/I18nContext';
 import { BilateralContract, DisbursementRecord, NegotiationRound } from './types/contractStage6';
 import {
@@ -223,39 +224,8 @@ function SADUApp() {
     workspaceScrollRef.current?.focus({ preventScroll: true });
   }, [activeRole]);
 
-  const [submittedThemes, setSubmittedThemes] = useState<CommitteeThemeDraft[] | undefined>(undefined);
-  const [directorThemes, setDirectorThemes] = useState<CommitteeThemeDraft[]>([]);
-  const [chairmanDocketRevision, setChairmanDocketRevision] = useState(0);
   const [executiveEscalations, setExecutiveEscalations] = useState<EscalationRecord[]>([]);
-  const [assignedBudget, setAssignedBudget] = useState<number | null>(null);
-  const [ratifiedTheme, setRatifiedTheme] = useState<ThemeItem | null>(null);
-
-  // Stage 1 & 2: Theme Ratification & Editorial Polish State
-  const [themePolishStatus, setThemePolishStatus] = useState<ThemePolishStatus>('PENDING_CHAIRMAN_APPROVAL');
-  const [arabicLocked, setArabicLocked] = useState(false);
-  const [themeEssayArabic, setThemeEssayArabic] = useState<string>('');
-  const [themeEssayEnglish, setThemeEssayEnglish] = useState<string>('');
-
-  // Stage 2: General Coordinator & Translation Directives State
-  const [guidelinesArabic, setGuidelinesArabic] = useState<string>(
-    'دليل المعرض التوجيهي لبينالي الشارقة للخط: التأكيد على الحوار الجمالي الرصين بين النسب الفاضلة للخط العربي الأصيل والتجليات المعمارية المعاصرة. يتوجب على كافة الفنانين المرشحين تقديم أعمال تستند إلى أصالة السطر الكوفي والثلث مع استكشاف أبعاد الوسائط الحديثة والفراغية.'
-  );
-  const [guidelinesEnglish, setGuidelinesEnglish] = useState<string>(
-    'Exhibition Curatorial Guidelines: Emphasize the aesthetic dialogue between the sacred proportions of classical calligraphy and contemporary architectural manifestations. All nominated artists must ground their proposals in classical scripts while exploring modern spatial media.'
-  );
-  const [translationStatus, setTranslationStatus] = useState<TranslationStatus>('DRAFT');
-  const [hipSubmissionTime, setHipSubmissionTime] = useState<string | null>(null);
-  const [curatorialBrief, setCuratorialBrief] = useState<string>(
-    'Sharjah Calligraphy Biennial Curatorial Directive: Emphasize the dialogue between classical proportion and avant-garde architectural manifestation. All nominated artists must balance aesthetic script lineage with rigorous spatial experimentation.'
-  );
-  const [publishedBoundaries,setPublishedBoundaries]=useState<Boundaries|null>(null);
-  const [restrictionProposal, setRestrictionProposal] = useState<{tags: string[]; reason: string} | null>(null);
-  const [restrictionAudit, setRestrictionAudit] = useState<string[]>([]);
   const [activeCoordinatorId, setActiveCoordinatorId] = useState<string>(ASSIGNED_COORDINATOR);
-  const [blocklist, setBlocklist] = useState<string[]>([
-    'Restricted Nationality: Country X',
-    'Hazardous Medium: Open Flame',
-  ]);
 
   // Stage 3 & 4: Nominated Artists Pool
   const [dossierNotice,setDossierNotice] = useState('');
@@ -269,77 +239,17 @@ function SADUApp() {
   const [artists, setArtists] = useState<VettedArtist[]>(INITIAL_VETTED_ARTISTS);
   const [isNominationFormOpen, setIsNominationFormOpen] = useState<boolean>(false);
 
-  const handleSubmitCommitteeThemes = (themes: CommitteeThemeDraft[]) => {
-    if (activeRole !== 'PREP_COMMITTEE' || ratifiedTheme || directorThemes.length || submittedThemes || !isThemeBatchComplete(themes)) return false;
-    setDirectorThemes(themes.map(theme => ({ ...theme })));
-    setSubmittedThemes(undefined);
-    return true;
-  };
-
-  const handleReturnToCommittee = () => {
-    if (activeRole !== 'BIENNIAL_DIRECTOR' || ratifiedTheme) return;
-    setDirectorThemes([]);
-    setSubmittedThemes(undefined);
-    setIsNominationFormOpen(false);
-    setActiveRole('PREP_COMMITTEE');
-  };
-
-  const handlePresentToChairman = (themes: CommitteeThemeDraft[]) => {
-    if (activeRole !== 'BIENNIAL_DIRECTOR' || ratifiedTheme || submittedThemes || !isThemeBatchComplete(themes)) return;
-    // Director may append advice, but cannot replace the Committee's proposal text.
-    if (!isThemeBatchComplete(directorThemes) || themes.some((theme, index) => {
-      const source = directorThemes[index];
-      return theme.arabicName !== source.arabicName || theme.englishName !== source.englishName ||
-        theme.aestheticFramework !== source.aestheticFramework || theme.contemporaryRelevance !== source.contemporaryRelevance ||
-        theme.curatorialJustification !== source.curatorialJustification;
-    })) return;
-    setChairmanDocketRevision(revision => revision + 1);
-    setSubmittedThemes(directorThemes.map((theme, index) => ({ ...theme, directorNotes: themes[index].directorNotes })));
-  };
-
-  const handleBudgetAssigned = (amount: number, theme: ThemeItem) => {
-    if (activeRole !== 'CHAIRMAN' || ratifiedTheme || !submittedThemes || !isThemeBatchComplete(submittedThemes) || !submittedThemes.some(candidate => candidate.arabicName === theme.arabicName && candidate.curatorialJustification === theme.curatorialJustification) || !Number.isFinite(amount) || amount <= 0) return;
-    setAssignedBudget(amount);
-    // Preserve the complete executive record, including both sets of notes.
-    const selected = submittedThemes.find(candidate => candidate.arabicName === theme.arabicName)!;
-    setRatifiedTheme({ ...selected, chairmanNotes: theme.chairmanNotes });
-    setArabicLocked(false);
-    setThemeEssayArabic('');
-    setThemeEssayEnglish('');
-    setThemePolishStatus('PENDING_EDITORIAL_POLISH');
-  };
-
-  const handlePublishOfficialTheme = ({
-    themeEssayArabic: essayAr,
-    themeEssayEnglish: essayEn,
-  }: {
-    themeEssayArabic: string;
-    themeEssayEnglish: string;
-  }) => {
-    if (activeRole !== 'EDITORIAL' || !ratifiedTheme || !arabicLocked || themePolishStatus !== 'PENDING_EDITORIAL_POLISH' || essayAr !== themeEssayArabic || essayAr.trim().length <= 10 || essayEn.trim().length <= 10) return false;
-    setThemeEssayArabic(essayAr);
-    setThemeEssayEnglish(essayEn);
-    setThemePolishStatus('PUBLISHED_OFFICIAL');
-    return true;
-  };
-
-  const handleSubmitToEditorial = (arabicText: string) => {
-    if (publishedBoundaries || activeRole !== 'GENERAL_COORDINATOR' || themePolishStatus !== 'PUBLISHED_OFFICIAL' || !['DRAFT', 'REQUEST_REVISION'].includes(translationStatus) || !arabicText.trim()) return;
-    setGuidelinesArabic(arabicText.trim());
-    setGuidelinesEnglish('');
-    setTranslationStatus('PENDING_TRANSLATION');
-    setHipSubmissionTime(new Date().toLocaleTimeString('ar-AE'));
-  };
-
-  const handlePublishBrief = (englishText: string, arabicSource: string) => {
-    if (activeRole !== 'EDITORIAL' || themePolishStatus !== 'PUBLISHED_OFFICIAL'
-      || translationStatus !== 'PENDING_TRANSLATION' || arabicSource !== guidelinesArabic || !englishText.trim()) return;
-    setGuidelinesEnglish(englishText.trim());
-    setTranslationStatus('PUBLISHED');
-    setCuratorialBrief(
-      `${englishText}\n\n[Arabic Original]: ${guidelinesArabic}`
-    );
-  };
+  // Stages 1–3 (themes, Editorial polish, curatorial guidelines) live in one hook.
+  const {
+    submittedThemes, setSubmittedThemes, directorThemes, chairmanDocketRevision, assignedBudget, ratifiedTheme,
+    themePolishStatus, setThemePolishStatus, arabicLocked, setArabicLocked,
+    themeEssayArabic, setThemeEssayArabic, themeEssayEnglish, setThemeEssayEnglish,
+    guidelinesArabic, guidelinesEnglish, setGuidelinesEnglish, translationStatus, setTranslationStatus, guidelinesSubmittedAt,
+    curatorialBrief, publishedBoundaries, setPublishedBoundaries, restrictionProposal, setRestrictionProposal,
+    restrictionAudit, setRestrictionAudit, blocklist, setBlocklist,
+    handleSubmitCommitteeThemes, handleReturnToCommittee, handlePresentToChairman, handleBudgetAssigned,
+    handlePublishOfficialTheme, handleSubmitToEditorial, handlePublishBrief,
+  } = useThemePipeline({ activeRole, setActiveRole, onReturnedToCommittee: () => setIsNominationFormOpen(false) });
 
   const handleNominateArtist = (dossier: NominatedArtistDossier) => {
     if (!nominationOpen(publishedBoundaries)||!['PREP_COMMITTEE', 'COORDINATOR'].includes(activeRole)) return;
@@ -831,7 +741,7 @@ function SADUApp() {
             themeStatus={themePolishStatus}
             guidelinesArabic={guidelinesArabic}
             translationStatus={translationStatus}
-            hipSubmissionTime={hipSubmissionTime}
+            guidelinesSubmittedAt={guidelinesSubmittedAt}
             onRequestRevision={() => {
               if (!publishedBoundaries && activeRole === 'GENERAL_COORDINATOR' && translationStatus === 'PUBLISHED') setTranslationStatus('REQUEST_REVISION');
             }}
