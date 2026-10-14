@@ -5,592 +5,120 @@
 - "Head of International Programs" (HIP) is permanently removed; master coordination belongs exclusively to General Exhibition Coordinator (Fatima Al Zarooni / Um Suhail).
 - Decouple curatorial assessment from executive decisions: Committee outputs a recommendation minute, not a database approval.
 
-## Authority and implementation status — 2026-10-01
-
-These rules supersede conflicting historical notes below. This file is a version-controlled architecture anchor, not a technically immutable or signed record. Legacy HIP references in code still require a scoped migration; this configuration update does not claim that migration is complete. Existing enums are in src/types.ts; additional workflow models must be mapped explicitly rather than silently renamed.
-
-## 2026-10-10 — Committee recommendation minute (replaces Committee approval)
-
-**Rule.** The Committee records an attributed recommendation minute; it never approves. `CURATE_COMMITTEE_RECOMMEND` (Committee only) needs a minute of at least 10 characters and is bound to the exact proposal revision and the current locked Defense Board snapshot. It leaves the nomination status, slot and artwork untouched. A second recommendation for the same revision and board is refused. `CURATE_ENDORSE` (Director only) refuses unless every selected, not-yet-endorsed proposal has a current minute. A new revision or a re-lock makes an older minute stale, so it authorizes nothing.
-
-**Actual persistence path (what exists today).** `POST /api/review/spatial-ledger/command` → `service.mutate` (`server/spatial-ledger.mjs`) → `repository.transaction` → `applyLedger` → `applyCuration` (`src/lib/curatorialBoard.ts`). The actor comes from the signed-in session, never the request body. The transaction works on a copy of the store and writes only if the command succeeds, so a stale, duplicate or unauthorized submission changes nothing on disk. The result is saved in `state.json` under `spatialLedger.curation.recommendations` and survives restart. `GET /api/review/spatial-ledger` returns it to the roles the service admits; benchmark-slot recommendations are projected away from roles that cannot see the slot (`src/lib/curatorialAccess.ts`). Covered by `tests/committeeRecommendation.test.mjs` (HTTP, restart, forged identity, unauthorized roles, byte-identical state after failures) and `tests/curatorialBoard.test.ts`.
-
-**Not deployed enforcement.** `committee_recommendation` in `server/curatorial-board-schema.sql` is a reference design only. Nothing loads that file, and no server code reads or writes that table. The local JSON store is single-process and is not a production database, identity system or backup guarantee. Moving to SQL would need its own migration and verification.
-
-**Browser scope.** The Curatorial workspace in the browser (`SpatialLedgerWorkspace.tsx`) is a sandbox that applies the same shared engine to a per-tab `sessionStorage` journal. It does not call the server ledger endpoint yet, so the sandbox and the connected pilot are separate stores.
-
-**Legacy recovery.** Older records may hold `CURATE_COMMITTEE_APPROVE` in a saved session journal, or a board already in `DIRECTOR_REVIEW` with nominations marked `COMMITTEE_APPROVED` and no minutes. Nothing is rewritten, deleted or reinterpreted:
-- `restoreLedger` replays saved journals as recorded (including the old approval and any old Director endorsement that followed). Only this replay path accepts the retired action; live commands answer 422 "Unknown curatorial action".
-- No minute is ever fabricated. In Director review the Director's endorsement stays disabled with a visible reason until the Committee records a real minute for each proposal lacking one. The Committee may also object (return) to such a proposal, which reopens the brief with the reason retained. Once a minute exists the Committee can no longer retract it in Director review.
-- Executive permissions are unchanged: only the Director endorses, and only the Committee records minutes.
-
-Limitation: journals recorded by the old version can be read, but a legacy board's original approval is shown as "no minute on file" rather than being treated as a recommendation. Arabic strings for the touched controls use the existing `useMockupText` map; other text in the Curatorial workspace remains English-only. No ThemeStatus/ArtistStatus enum, institutional delegation or integration changed.
-
-## 2026-10-05 — Shared local evidence and operational release
-
-### 2026-10-06 — Private operational draft recovery
-
-Recovery comparisons use a server-derived reference captured at the first save against the matching shared version. Later autosaves preserve that reference. Late first saves and older drafts without a reference are explicitly marked unavailable; client-supplied baselines are ignored. Comparisons contain only the account's collection or print read scope. Changed fields distinguish the original shared value, current shared value and unsubmitted input; pending reviews and their current owners come from the existing task queue. This is explanatory context, not merge authority: stale drafts remain reference-only and approvals never carry forward.
-
-The selected collection/print workspace autosaves one private working draft per authenticated account, role, exhibition and artwork, carrying the exact task, editing mode and business version. `private-drafts.json` is a separate single-process local store: autosave cannot increment the shared dossier version, write a decision, assign authority or clear a hold. Draft writes serialize with a per-entry optimistic revision, retaining a revision tombstone after clearing so a delayed tab cannot recreate the draft. Session identity, exhibition access and sovereign restrictions are checked on every draft request; the expected account header detects browser-session switches but never supplies authority.
-
-Recovery requires an explicit choice. Changed records, missing task authority and drafts with an attempted submission are reference-only. No command is replayed or silently rebased. Inspection results, approval checkboxes and file bytes are excluded; files must be reattached and review assertions made again. A durable attempted-submission marker precedes sending a working form, so an unknown network outcome is not automatically retried after restart. The live command endpoints remain the authority for permissions and transitions. Local role simulation, host storage and single-process recovery are not production identity or backup guarantees. Integrations remain paused.
-
-The connected pilot now creates a revision-specific renewal cycle after a confirmed amendment. Collection and print cycles are independent; replacing one supersedes only that workflow's older task IDs. The General Exhibition Coordinator assigns an eligible named owner, a future due time and a reason. Owners explicitly accept or return with a reason; reassignments never inherit acceptance. A backup change clears outstanding assignments held by the former Logistics owner. Assigning responsibility grants no new approval power.
-
-Required renewal actions enforce accepted ownership in the same transaction as the actual workflow change. Tasks close from those changes, with actor/time/revision/evidence references; there is no manual completion switch. A recorded technical exemption is distinct from approval. Current departure, correction, supplier-stop, evidence-integrity and financial gates still apply even when a renewal cycle is complete. Read-only views derive overdue status from the server clock. No reminder is sent. Earlier cycles and assignment/return/completion events are retained through restart. Existing unamended records do not acquire fabricated historical tasks; the isolated collection-only demo keeps its original scope.
-
-Amendments now require a server-derived impact review before replacing collection details, an existing pickup date, a packing plan or a print package. Preview applies the same transition to a private copy; saving recomputes its actor/command/version binding inside the transaction. Cancelled previews never mutate records. Completed checks needing renewal are distinguished from pending work and preserved historical production/deliveries. Existing role, supplier-stop and departure gates remain authoritative. Identical collection details/date resubmission preserves approvals; no new institutional authority or external notification is introduced.
-
-The connected pilot adds immutable evidence objects and print packages to its existing local repository. Collection preparation, current-file packing verification, condition/agreement clearance and elapsed pickup dates remain separate derived checks. Draft manifest release requires all current prerequisites; nothing books transport, records physical custody or authorizes payment automatically. Existing condition reports remain the authority for that sub-workflow.
-
-Print packages bind a PDF and specification to the existing demonstration review route. A new package preserves old files/decisions and resets dependent approvals. Supplier acknowledgment is specific to the file/package. Production completion, partial delivery and General Coordinator acceptance are separate. Correction holds still require recorded supplier stop/stock disposition before replacing a dispatched package. Session actors and server timestamps are retained with revision/file references; hashes are not signatures.
-
-Named task assignments can set explicit due times for Technical, Finance and Editorial. Assigned staff must accept before the associated review; unaccepted assignments and expired pickup dates remain visible. These are local simulated accounts, not institutional identity verification. The browser-only pitch and collection-only isolated runtime retain their separate boundaries. See `docs/shared-evidence-workflow.md`. No ArtistStatus/ThemeStatus enum, institutional delegation or live integration changes.
-
-## 2026-10-03 — Curatorial comparison demonstration
-
-Both synthetic candidates are submitted and reviewed as one comparison revision. Committee recommendation explicitly selects A, B or neither; neither cannot reach executive approval or an invitation. Invitations use the selected candidate, and amendments clear the selection and dependent reviews while retaining decision history. This bounded comparison is not a replacement for item-level production permissions.
-
-## 2026-10-03 — Holds and recoverable synthetic demonstrations
-
-Collection readiness is a derived sub-workflow, not an ArtistStatus or ThemeStatus transition. The shared `src/logistics/collectionRules.mjs` governs packing and readiness in the local service and presentation. A nominated Logistics owner must explicitly accept. Packing requires a plan and named owner, technical clearance when required (or a recorded reason for non-applicability), separate Finance cost approval including zero-cost arrangements, and Logistics completion evidence. Collection-detail/date changes clear dependent checks; assignment changes clear acceptance. Earlier local records without these facts remain blocked rather than receiving fabricated approvals. No booking, receipt or payment follows from readiness.
-
-Print defects immediately hold internal progression. A dispatched job cannot be replaced until the Publishing Manager records supplier stop acknowledgment or completed-stock disposition. That fact has its own actor/time/reference; an internal hold does not claim a physical press has stopped. Replacement creates a new proof revision and requires new approvals.
-
-Presentation examples use isolated, versioned synthetic tab checkpoints. Saved steps survive refresh/authentication remount when storage is available; unsaved form input is not guaranteed. These checkpoints are not authentication, server authorization, or a connected institutional dossier. The local backend remains single-process, transactional and file-backed; transient file-lock replacement retries are bounded and never publish success before replacement. Persistent failures retain the previous state. Live integrations remain paused.
-
----
-
-## 2026-10-01 — Isolated collection handoff demonstration
-
-The collection-only runtime uses a fresh synthetic `.local/collection-demo-runs/run-*` repository, separate from the existing connected pilot. Its server allowlist exposes only simulated account selection, collection views and SAVE/CONFIRM/PLAN/ASSIGN commands. No external adapter, live database, booking, email or payment operation is configured. The launcher excludes application credentials and does not load project environment files. This is a loopback-only demonstration, not institutional authentication.
-
-Collection readiness is derived independently from ArtistStatus and ThemeStatus. Only the active Logistics owner may record, confirm or plan collection; the General Exhibition Coordinator assigns primary/backup responsibility with an attributed reason. Changes invalidate current confirmation and planning, preserve history, and reject stale versions. Queue refresh is polling/focus-based, not instantaneous push delivery. Runs are retained; restart restores records but requires selecting a simulated account again. One process owns each local repository.
-
-# 29 September 2026 — Unified guest identity, finalization and arrival-based reminders
-
-The supplied visa and identification Excel templates were inspected as parallel English/Arabic forms; the guest-list Word table was inspected for headers only. No personal source records were seeded. Shared identity/contact fields now live once in a private JSONB intake, with the legal name taken from the accepted agreement. Additional family/identification fields are optional because a blank template label does not establish a mandatory disclosure. PR-managed hotel, visa, transport and ticket outcomes remain separate from guest preferences; nothing is inferred as booked.
-
-Guests may save travel dates before collecting files. A centrally configured 30-day lead determines the document deadline relative to arrival, at 23:59:59 Asia/Dubai. No arrival means no calculable deadline. Duplicate unchanged plans are ignored; changed plans retain history. Local pg_cron runs every 15 minutes and queues the currently applicable 14-day, 7-day or deadline/final reminder, deduplicated by plan/deadline/stage. Completed matching packets, changed plans and revoked agreements cancel pending reminders. Missed earlier levels are not delivered as a burst. Queue rows have no passport content and cannot be marked sent by client roles. No email sender is configured; these are pending-delivery/in-app notices, not sent emails.
-
-Final submission creates a separate immutable, server-timestamped receipt only after owner/accepted-contract checks, required identity fields, both airports and stored primary passport/portrait/declared companion documents pass the database gate. PR sees finalized packets only; incomplete registration is a draft. Repeated finalization retains the original timestamp. Storage format metadata is evidence of file presence, not scan quality or malware clearance. Existing incomplete legacy records need a new complete intake; no historic approval is fabricated.
-
-Local-only scripts: guest-finalization.sql (after guest-travel.sql), guest-reminder-schedule.sql. Hosted rollout, Stage 5/VIP provisioning and authenticated email delivery still require separate integration. The accepted-contract boundary remains unchanged. Local scheduling continues while the local database runs; it does not install a hosted job.
-
----
-# 29 September 2026 — Private guest travel intake and PR control room
-
-Authenticated owners of accepted database contracts submit arrival/departure dates, airport preferences, passport PDF, personal portrait and optional self-funded companion details/PDF. They never inherit privileges from the rehearsal role selector. File header/MIME/size and portrait dimensions are checked in the browser; these checks do not certify clarity, immigration acceptance or the absence of malware. Stored-object readiness is independently derived from private Storage metadata. PR must inspect the content. No automatic financial, visa or travel clearance results.
-
-The PR guest roster is a minimal server-authorized projection (contract ID/name only) and includes guests awaiting submission. It does not expose full contracts. Intake names and creation timestamps are server-derived. Submissions and objects are immutable; a new submission replaces the current queue view without deleting history. An incomplete newer submission cannot inherit older readiness. Partial uploads can retry in the open form without overwriting successful files. Refresh after interruption requires a new submission; durable cross-session resume is not claimed for these small documents. PR sees search/sort controls and a 15-second authenticated refresh, with one-minute private document links. This is polling, not a Realtime subscription or a confirmed booking.
-
-Local implementation: `supabase/local/guest-travel.sql`, tested against local PostgreSQL policies and private Storage APIs. Hosted schema rollout is pending. Stage 5 nominees/VIPs still lack a verified authentication mapping and automated invitation sender; neither accounts nor emails are created by this UI. Accepted-contract self-service is available through `/pilot` and the existing workspace entry points. No imaginary entitlement, government-hosting claim or production security certification is introduced.
-
----
-# 29 September 2026 — Stage 4 technical safety rider
-
-Sculpture and 3D Installation medium tags, plus explicit English/Arabic sculpture labels in the medium field, require a Technical & Safety Rider PDF before nomination submission, Committee endorsement or Director eligibility. The rehearsal checks PDF header/extension/type and a 20 MiB limit. Changing the medium/tag clears the draft attachment. Existing approved sample dossiers without a required rider are not fabricated as compliant; their dispatch is blocked. Scope amendments cannot silently change to a new sculptural medium and reuse the old rider.
-
-The same dossier File is read by Committee/Director and the Technical matrix. The rehearsal Venue Host panel automatically displays riders only for approved dossiers with an active room claim matching the selected venue, providing the museum operations/assigned-curator view. No manual forwarding or per-file sharing action is required. This is explicitly browser-session routing, not backend ACL provisioning; files disappear on refresh. Production museum supervisor/curator identities and authenticated assignment mapping remain unimplemented. Upload is evidence, never structural or installation approval.
-
----
-# 29 September 2026 — Required blueprint and private execution evidence
-
-Authenticated scenario zones may declare requires_spatial_planning=true. Each such zone requires a private BLUEPRINT PDF (maximum 20 MiB) alongside its declared print/video media. Header checking is an intake check, not malware scanning or engineering approval. Final submission and live escrow readiness enforce the PDF requirement at the database layer. A blueprint cannot substitute for artwork/catalog media. The submitted requirement and media registry remain immutable.
-
-The local blueprint-escrow.sql adds an additional prerequisite for entering CONTRACT_EXECUTED: a visible submitted escrow receipt with all declared files present. It never grants execution authority or bypasses other contract guards, nor does acceptance alone indicate execution. Stage 4 session nominations are not automatically mapped to authenticated database scenarios; the requirement is explicitly recorded in this authenticated Stage 6 checklist. A production intake must map approved dossier requirements before enabling external artist self-service.
-
-Existing trusted TECHNICAL app_metadata authorization allows another authorized technician to read submitted artwork assets through the same ledger and short-lived private links. This does not grant anonymous or role-agnostic public access, and does not implement production delegation provisioning. No claim of government-owned hosting is made. Schema changes are applied/tested locally only; hosted rollout remains pending.
-
----
-# 29 September 2026 — Edition-bounded pickup calendar
-
-The 2026 freight scheduler uses the existing CATALOG_SCHEDULE delivery deadline, 10 September 2026, as the latest permissible pickup date. New bookings and artist date-change requests must be today or later (Asia/Dubai), on/before that cutoff, and outside the inclusive travel blackout. After the cutoff the intake is visibly closed; an approved schedule update is required rather than inventing an extension. September 3 is a historical example, not a newly bookable date after the deadline.
-
-The local-only pickup-calendar.sql adds a database trigger after the existing booking guard to check resolved date-change approvals and block out-of-window dispatch of legacy pending bookings. Existing history and in-transit/received tracking remain available. No hosted SQL was applied. Publication continues through revision-bound Editorial approval; files are never destructively overwritten after approval.
-
----
-# 29 September 2026 — Publication revision lock and pickup blackout visibility
-
-The session Artwork Roster requires bilingual exhibition titles, artwork titles/descriptions and an attached PNG/TIFF before submission. Draft replacement remains possible; submitted revisions require the assigned Coordinator's amendment permission. Editorial alone records a revision-specific publication approval after inspecting text and files. Approval generates a bilingual raster PDF proof; it is not a press-ready vector master or a live document. Current approved snapshots appear in Coordinator (assigned artists only) and PR design views. Requesting an amendment withdraws the current export immediately; historical revisions and approval timestamps remain intact. Reapproval of the new revision is required. These publication records/files remain session-only and reset on refresh; they do not replace the separate authenticated checklist/translation tables or establish production designer authorization.
-
-The authenticated freight scheduler displays inclusive unavailable dates and disables conflicting artist change requests and Logistics approvals. Existing PostgreSQL checks/triggers independently reject blackout dates, including boundary days. No translation status blocks physical dimensions. Local rollback tests verify the database guard; no hosted schema changes or transport bookings were made. Downloaded proofs must be checked against the current approval before printing; software cannot recall copies already downloaded.
-
----
-# 29 September 2026 — Inter-agency resources and evidence-based workload metrics
-
-Technical records an SAF/SMA resource request against an active approved dossier and accepted agreement, with resource type and required timestamp. A bilingual watermarked request PDF is generated from the tracked record. No external message is sent. The response window is 48 elapsed hours from recording, including weekends; expiry is calculated from timestamps, not a fabricated agency denial.
-
-Technical may record a received agency confirmation/denial with a source reference; confirmation also requires a delivery timestamp. The assigned Coordinator can request a third-party rental only after denial or timeout. Finance alone records a referenced approval/rejection, not disbursement. A late agency confirmation pauses pending funding to prevent double booking; once funding is approved the original request cannot be silently reconfirmed. Agreement/scope revision changes and operational holds freeze stale tickets. History remains visible. Timers work in the open/reopened session; no backend scheduler or agency response integration exists.
-
-The institutional dashboard derives distinct-person executed-artist and PR-cleared-primary-guest counts from recorded states. Agreement acceptance is never promoted to execution to inflate a KPI. Companions are not inferred to be cleared. Approved dossier and artwork workloads recalculate from active assignments, excluding vetoed/archived/disputed or amendment-pending dossiers; unknown artwork counts are displayed as unreported. Director reassignment records a reason and history, but dispatched agreements/invitations remain locked pending a coordinated operational transfer. These are session metrics, not live institutional attendance or budget commitments.
-
----
-# 29 September 2026 — Exact-text verification and execution evidence
-
-The latest directive restores a narrow HIP Stage 4 textual verification duty, superseding the earlier blanket Stage 3-only restriction only for this purpose. Coordinators declare the exact original text/references and full translation/context. HIP records verification against that immutable content snapshot; Committee alone endorses or rejects nominations. A nomination containing declared text cannot be endorsed or shown in the Director decision queue without matching verification. No text is inferred from artist identity, medium or nationality. Dossiers declaring no such text still require Committee review. This is a session rehearsal gate; it does not grant HIP dossier mutation permission in PostgreSQL or create a cryptographic signature.
-
-Agreement acceptance routes to LOGISTICS_PENDING_PR, not CONTRACT_EXECUTED. Removing an executive hold also cannot assert execution. Accepted terms remain locked and advance payment rules remain separate so production funding does not depend on final media delivery.
-
-The authenticated Digital Asset Escrow ledger reads a security-invoker view of locked submitted scenarios, declared media and current private Storage objects. Missing/empty/wrong-type objects fail readiness. Technical may read submitted scenario assets through trusted app_metadata authorization, but gains no passport or mutation permission. Downloads use one-minute signed links. The view reports asset evidence, not legal execution, financial approval or cultural review. Local rehearsal files never satisfy it. SQL is retained at supabase/local/asset-escrow.sql and tested locally only; hosted rollout and authenticated end-to-end uploads remain separate.
-
-Iterative prototype tickets retain exact photos, request/decision times and agreement revision. Only Artist may approve/reject a pending current revision. Only Technical may record completion after that approval, once, without overwriting timestamps. Old-revision tests stay visible but cannot authorize current work. Operational holds disable actions. These tests and photos remain session-only rehearsal state; they do not replace engineering or venue clearance.
-
----
-# 29 September 2026 — Dossier-to-venue technical matrix
-
-Stage 4 dossiers can record a structured technicalRequirements array (hardware, specifications, mounting). Declared entries require complete specifications; Committee and Director read the same data during review. The assigned Coordinator's Stage 6 room claim registers exact-scope venue clearance tickets from those requirements. Claiming a room is not approval. The designated Venue Host records clearance using the existing rehearsal authority/delegation gate.
-
-Stage 7 Technical reads a Greenlighted Technical Matrix from the same dossier, claim and approval records. CLEARED_BY_CURATOR appears only after venue approval for that precise scope, with authority and timestamp. No repeat request is needed for unchanged requirements. Specification, mounting, room-allocation or approved-scope revision changes require their own clearance. Pending amendments, damage and executive holds prevent a green state. Equipment inventory, technical evidence, and Finance approvals remain separate.
-
-This does not establish named officials' delegation, ingest undocumented conversations, or create production authorization. All claims and approvals remain session-only rehearsal records. No permission is inferred from artwork approval alone.
-
-# 29 September 2026 — Role-based arrival dispatch rehearsal
-
-Director approval records GUEST_ARTIST or JURY_MEMBER as a recipient designation; this is separate from artist category and workflow status. Coordinators cannot edit that designation or the generated arrival text. Existing fictional commission seed is explicitly GUEST_ARTIST; unknown designations fail closed.
-
-PR owns itinerary and identity review. Assigned Coordinators can record a simulated arrival dispatch only for approved dossiers after theme and guideline publication and completed PR package checks. DXB maps only to Marhaba, SHJ only to Hala; other airports require manual review. Identity review binds to the exact recipient name. Itinerary edits invalidate itinerary review. Receipts preserve recipient, designation, approved revision, itinerary, provider and attachment-manifest snapshots; repeats are idempotent and old snapshots remain historical.
-
-Only JURY_MEMBER manifests include JUDGING_MECHANISM_PDF. This is a rehearsal descriptor, not an actual confidential attachment, public URL, or production access-control implementation. The approved PDF and live mail transport are not supplied. No email is sent, booking promised, or PR/Finance evidence cleared. A production sender must recheck authenticated assignment and recipient designation server-side and retrieve the approved private document; the client tag is never authorization.
-
-# 29 September 2026 — Database Committee decision gate
-
-`migration.sql` is a manual deployment script, tested locally only. It creates/extends artist_status while retaining the inspected legacy TEXT status column, replaces dossier mutation policies, and enforces Coordinator submission → Committee decision → Director decision. Rejections require consensus minutes, and the server records reviewer/time. HIP has no dossier write/delete policy; an invoker trigger also rejects HIP mutations if a broad policy is introduced. Existing rows are not reclassified and historic approvals are not fabricated.
-
-Automated restriction matches now enter HIP_BLOCKED in the session workflow. Clean dossiers enter PENDING_COMMITTEE_REVIEW. HIP_BLOCKED is a hold, not a manual HIP veto or mandatory intermediate state for clean dossiers. Database hold release remains a trusted compliance-service operation; no database blocklist engine or frontend persistence is introduced by this migration.
-
----
-# 28 September 2026 — Stage 6 configuration and secure intake
-
-Director-approved candidates and disputed agreements have separate Coordinator queues. Dispatch puts the artist in CONTRACT_PENDING_SIGNATURE while the invitation record separately retains the identity-confirmation prerequisite. The legal name remains required before generating the localized, watermarked rehearsal PDF. Amendments preserve Director approval, name and history and return through CONTRACT_DISPUTED; accepted terms are not silently editable.
-
-Shipping presets and 30/70, 30/40/30 and 50/30/20 schedules are available. Zero-value milestones cannot be disbursed. The accepted Artist view reveals private passport/imagery intake using owned, accepted database contracts and Supabase RLS. Rehearsal acceptance does not create or authorize a database agreement. Local schema: supabase/local/contract-intake.sql. No hosted deployment, email dispatch or legally binding signature is implemented. See docs/audits/stage6-contract-intake-2026-09-28.md.
-
----
-# 28 September 2026 — Stage 3 master-boundaries gate
-
-HIP publishes an immutable CURATORIAL_DIRECTIVES_PUBLISHED snapshot only after theme and bilingual guideline publication, review of medium/style/nationality categories and resolution of Director restriction sign-off. No restrictions is a valid explicit category declaration. Coordinator dashboards and nomination entry remain closed until publication. Committee scouting submissions also require publication. Coordinators see the exact active snapshot; Committee retains nomination decision authority. This gate is session-only and does not claim backend authorization.
-
----
-# 28 September 2026 — Heavy-media transfer upgrade
-
-Scenario uploads now support 2 GiB through TUS with 6 MiB chunks, progress, automatic retries and same-page resume. Storage size verification precedes final-deliverables eligibility. Local limits and SQL validation are upgraded; remote deployment remains separate. The shared vault-only email envelope is prepared for future transport integration. No live mail sender or inbound attachment rejection exists. See docs/audits/heavy-media-2026-09-28.md.
-
----
-# 28 September 2026 — Authenticated exhibition scenarios
-
-The Artist declares spatial zones and print/video requirements against an accepted, owned database contract. The artwork_checklist JSON is submitted only when private logistics-secure objects exist for every declared zone/category. Submitted records are immutable. Assigned Coordinators and Logistics read structured checklists under RLS. Demo role selection never supplies database authority. Local SQL and rollback tests are retained under supabase/local/exhibition-scenarios.sql and supabase/tests/exhibition-scenarios.sql; no hosted migration was applied. The 50 MB/file pilot limit, authentication requirement and incomplete HTTP upload verification are documented in the audit.
-
----
-# 28 September 2026 — Committee nomination authority (executive correction)
-
-This correction supersedes earlier HIP nomination/cultural clearance gates. HIP is limited to Stage 3 guidelines and confidential dynamic restriction proposals; activation still requires Director sign-off. Complete Coordinator proposals and Committee scouting submissions enter PENDING_COMMITTEE_REVIEW automatically. The Committee records collective endorsement to PENDING_DIRECTOR_REVIEW or COMMITTEE_REJECTED with mandatory rejection minutes. Recorded decisions are immutable within the session, and assigned Coordinators can read the outcome and minutes.
-
-Automated compliance remains separate from curatorial judgment. Pending dossiers display a current active-rule match badge without exposing confidential parameters. Matches block Committee endorsement; the Director rechecks active restrictions at approval. No nationality/medium quotas or new automatic restrictions are introduced. Portfolio links allow HTTP(S) only; uploaded portfolio images are retained as local session Files for actual inspection rather than filename-only placeholders.
-
-HIP's downstream nomination, catalog, spatial and dispatch modules are removed from its screen. The existing catalog aggregator is available in Editorial, and simulated dossier dispatch is assigned-Coordinator-only. Historical records are retained; session UI decisions are not authenticated multi-member voting or database authorization.
-
----
-# 28 September 2026 — Invitation and legal identity rehearsal
-
-The assigned Coordinator prepares validated terms, then records INVITATION_DISPATCHED. No contract exists until the Artist confirms their full passport name. Original committee spelling, confirmed name and timestamps remain in shared session state. A full-name field supports international names without guessing first/family-name boundaries. Confirmation locks the name, creates the agreement from the frozen terms and generates a watermarked, non-binding PDF summary. Published theme/guidelines remain required unless the explicit isolated rehearsal toggle is enabled. Existing amendments retain the confirmed name and return through the Coordinator.
-
-Dispatch is a simulated notification with an Open Artist Portal Preview action, not an emailed encrypted link or authenticated identity check. Records survive desk changes, not refresh. No production database persistence, authentication, external dispatch or legal signature is implemented by this feature.
-
----
-# 28 September 2026 — Editorial identity-asset lifecycle
-
-The Arabic text lock enables the identity-asset log. Theme text publication no longer freezes asset intake: late design files and replacement versions can be recorded without editing the published bilingual statement. Approved versions remain read-only historical records. Replacement versions require their own inspection confirmation and separate Editorial session approval; later approval supersedes earlier versions without deleting them. Draft removal is reversible.
-
-The log validates filename extension/MIME, nonempty files and a 10 MB per-file limit, with a maximum of 20 stored versions (including history and removed drafts). SHA-256 content digests reject duplicate files even when renamed. Image previews use object URLs in image elements; PDFs have a sandboxed preview and an inspection download fallback. This is local UI validation, not a production malware-scanning or file-storage service.
-
-Records, files and approval timestamps survive desk changes through shared session memory and are explicitly lost on refresh. Sample filenames remain in a separate collapsed examples section with no fictitious verification badges. Before Chairman ratification, Editorial shows a waiting state instead of sample approved prose.
-
----
-# 28 September 2026 — Executive summaries and operational evidence
-
-The Director can open an automatically generated agreement summary from the shared Stage 4 dossier and any recorded Stage 6 terms. Missing financial terms remain unreported; opening the summary does not sign or approve an agreement.
-
-The existing Kufic Horizon Logistics rehearsal now records CRATE or PLASTIC_CYLINDER packaging, carrier/inspection reference and up to ten local JPEG/PNG/WebP unboxing images (10 MB each). The record survives desk switching in App memory; images are not uploaded to a server, and do not automatically certify receipt or condition. Saved evidence is read-only for the session.
-
-Technical records an external supplier delivery against an approved, assigned dossier, requiring a Central Finance Vendor ID, invoice reference, delivered-work description and evidence reference. Only the assigned Coordinator can sign off. Finance sees only signed-off entries and can record receipt once. Neither this receipt nor supplier sign-off releases artist payments or clears technical evidence. IDs/references are unverified session entries, not integrations with Central Finance.
-
-Existing executive mandate panels, pending-budget Chairman labels, global HIP submission timestamp, separate Editorial sample/live logs and role-change nested/window scroll reset remain in place.
-
----
-# 28 September 2026 — Shared dossier and dispatch ledger
-
-App owns one session dossier list across nomination, Coordinator vetting submission, Director decisions and HIP dispatch tracking. Coordinator queues use assignedCoordinatorId; the source guest roster remains separate from approved dossiers. Approval no longer creates placeholder financial contracts.
-
-Approved nationality, medium, scope and artwork count remain unchanged while a Coordinator amendment awaits Director review. Approval rechecks compliance, increments the revision and retains before/after history. Active agreements block scope approval through this ledger. HIP records simulated dispatch only after theme and bilingual guideline publication, with an immutable scope snapshot per revision. Contract dispatch checks the approved count and pending amendments and preserves approval history.
-
-These are session records that survive role changes, not refresh or cross-user database synchronization. No external dispatch, authentication or database integration is implied.
-
----
-# 28 September 2026 — Chairman audit remediation
-
-Chairman selection and budget drafts now use session storage keyed by event and docket revision; returning to a desk retains the draft, while a newly forwarded docket starts fresh. Ratification remains in App state and requires the Chairman role, a complete presented batch, a matching proposal and a positive finite budget. The oversight view selection also survives desk switching.
-
-Coordination, Technical, PR and Finance can record a session escalation with reason, evidence reference and requested decision. Intake derives the department from the active role, requires all fields, and rejects duplicate pending submissions. References are user-entered session references, not authenticated document uploads. Submitted records and responses survive role switches, but not refresh.
-
-Deferral remains PENDING_EXECUTIVE_ACTION and retains a decision history; later approval/rejection resolves the record. Repeated deferral and terminal re-decisions are blocked. Neither intake nor executive disposition changes specialist clearance, venue authorization, contract terms or payment gates.
-
-The portfolio displays the current session theme and ratified budget separately from source program titles. Evidence counts use localized words rather than bidi-sensitive fractions. No database, authentication or external actions are added.
-
----
-
-# 28 September 2026 — Evidence-backed Chairman oversight
-
-The Chairman opens a portfolio view of existing program references, then a separate Biennial decisions view retaining Stage 1 ratification and downstream handoffs. Operational evidence is derived from the existing commission state: PR and Technical require their gate and valid recorded timestamp; Logistics requires its receipt status and timestamp; Finance requires an actual session ledger entry, not authorization alone. Missing evidence has no invented reference or health percentage.
-
-Calendar overlap uses the intersection of known date ranges. Shared program coordinator/venue names alone do not establish exclusive booking conflicts. Explicit shared exclusive-resource bookings are required for that classification. Missing assignment schedules remain unknown, not a zero-conflict assurance. Existing program references are not live delivery reports.
-
-Executive escalation records are owned by App and start empty; the provided engineering-waiver fixture and invented report identifiers are intentionally not seeded. Disposition callbacks are Chairman-only and idempotent, and never modify specialist clearance or payment state. No production backend, external waiver or resource allocation is implied. An originating-department escalation submission workflow is not yet connected.
-
----
-
-# 28 September 2026 — Honored guest roster and participation tracks
-
-The locally inspected `قائمة فناني التكريم (2).docx` contains 53 distinct guest rows assigned to nine coordinators (24/10/4/4/3/2/2/2/2), confirmed by the owner. Source spellings are retained, including Paco Feenandez. The heading specifies House of Wisdom, Saturday 10 October 2026. Hospitality dates 6–11 October come from the separate invitation source. Shurooq clearance is an owner-specified operational dependency; the roster supplies no authorization evidence.
-
-Participation tracks are HONORED_GUEST, SOLO_EXHIBITION and GENERAL_COMPETITION. They are distinct from single-work versus solo contract scope. Only solo proposals require 15–20 whole artworks. Honored guests require identity for vetting, not invented artworks or career classifications, and are excluded from artwork balance ratios. The source roster is a read-only reference, not a set of approved dossiers or attendance confirmations.
-
-Coordinator demo selection filters source guests and draft queues; only the assigned coordinator may submit a dossier. `assignedCoordinatorId` and `participationTrack` are frontend fields intended to map to assigned_coordinator_id and participation_category when a reviewed database migration is implemented. No Supabase seed, authenticated coordinator accounts or RLS changes are included. Kufic Horizon contracting remains assigned to the fictional demo coordinator. Real source guests are never automatically given grants or contracts. All source event cards explicitly show external venue clearance as not recorded.
-
----
-
-# 28 September 2026 — Connected rehearsal UX
-
-The gateway is a short operational introduction; the institutional story remains optional. Presenter handoffs default to manual Continue. Optional 3.5-second forwarding has a visible countdown and Pause; changing desks or resetting a proposal set cancels pending navigation. All existing approval prerequisites remain in force.
-
-Kufic Horizon remains a single 84 kg work in the active contracting rehearsal. The 2026 solo-exhibition letter is a separate source reference, never a generated current-deal document. Solo validation remains available in the schema for future separate fixtures. Current agreements record the published theme at drafting; an unpublished theme is explicitly identified rather than replaced by the source letter's theme.
-
-Operational form drafts and local identity assets survive role changes within this app session. Refresh clears these session drafts and approvals; existing browser text-draft recovery remains separate. The artist arrival package uses an artist welcome guide, not a juror-only requirement. No Auth, banking, booking or production database integration is implied. The operational handoff summary reads existing evidence and does not change gates.
-
----
-
-# 28 September 2026 — Solo invitation source scope
-
-The owner supplied an Arabic transcription identified as source 6 (letter ش.ث/خ.س/001, dated 24 February 2026). The scan was not independently inspected in this implementation. Stage 6 now distinguishes single-work agreements from solo exhibitions; only solo exhibitions require 15–20 whole artworks. The source-scoped rehearsal preview records the 12th Biennial theme ميزان, event dates 7 October–15 November 2026, hosting 6–11 October, round-trip artwork transport and insurance, hospitality/accommodation, the three exact attachment labels, and the source coordinator contact and dual signatory titles. Form 100 is an owner-proposed mapping, not a literal source identifier. Generated previews adapt the recipient to the current fictional record, allocate no official outgoing reference, and remain session-bound and watermarked. This does not change payment prerequisites or create external actions.
-
-# 28 September 2026 — Owner clarification: split payments and accountable handoffs
-
-This update supersedes earlier conflicting payment and stage wording. All records remain fictional and session-bound. Browser-persisted text drafts do not restore approvals.
-
-- Stage 3: HIP proposes dynamic restriction changes with a reason; Director approves or rejects before activation. Changes are logged within the session.
-- Stage 4: scouts prepare dossiers; the assigned demo Coordinator alone submits for vetting. Commissioned works require mockups; existing works require images and provenance. Matching active restrictions excludes dossiers from the Director queue.
-- Stage 5: Emerging/Established ratio is informational, excludes vetoed dossiers, and imposes no numeric quota. A veto requires an explicit institutional reason and returns feedback to Coordinator.
-- Stage 6: external venues require a fictional clearance reference before agreement generation. Artist amendment returns to Coordinator without repeated Stage 5 approval. No live legal signatures.
-- Stage 7: Advance requires accepted agreement and PR/Technical evidence, never physical arrival. Delivery requires Logistics PHYSICAL_ASSET_RECEIVED. SAF technician requests are separate from structural evidence and do not imply external allocation.
-- Stage 8: Completion requires exhibition closure, safe return reference and condition reconciliation reference. Finance records each tranche separately in a session ledger. No banking actions occur.
-- Session demo uses one assigned Coordinator and the Kufic Horizon commission for contracting/logistics/finance. Production identity, external integrations and multi-commission execution remain outside this prototype.
-
-# 26 September 2026 — Fictional commission remediation (supersedes conflicting rules below)
-
-The owner explicitly revised the Stage 6–7 design. Earlier statements calling this file immutable do not prevent this authorized change. This document is a prototype specification, not an institutional delegation instrument.
-
-- One default commission: Noura Al Mazrouei, **Kufic Horizon: Architectural Bronze & Black Oxide**, 84 kg. All seeded artist/contract views use this identity. Stage 6 begins without a contract; the Coordinator drafts its amount and three percentages (existing illustrative defaults: AED 45,000 and 40/30/30).
-- App owns the local commission reducer. Coordinator, Artist and Finance consume the same agreement. The three milestones are Advance, Delivery and Post-Opening; there is no combined final 70% action.
-- PR records passport/visa evidence only. No imagery, technical review or finance permission follows from PR completion.
-- Technical records the fictional floor-load and mounting-spec checks. Weight alone cannot certify structural safety. These controls simulate a specialist review, not an engineering calculation.
-- Finance alone records advance authorization, guarded in both the UI and reducer. Agreement acceptance plus both recorded evidence gates are required. This prerequisite is an owner-specified demo rule, not a confirmed institutional payment policy.
-- Authorization is not settlement. No money transfer occurs. Delivery and Post-Opening remain individually pending; their evidence workflows are outside this change.
-- Evidence and approval persist across role switches, reset on refresh, and are invalidated when agreement terms change. There is no backend, identity upload or real signing.
-- Technical is a tenth prototype workspace. Local role checks illustrate separation of responsibilities and do not constitute production access control.
-
-Source basis refreshed 26 September: shipping/insurance form (Drive ID `1Uu2DAkNJ476HEFYEipRHA7ZHehnqOr96`, 2026, modified 1 July 2026) supports requested weight, dimensions, handling and installation evidence; Technical Requirements From (ID `155k3SGvlv_9ycW8z1OCCIAE8yUZXoYvA`, 24th Islamic Art Festival, modified 1 July 2021) supports technical item/quantity/description fields. Neither establishes floor capacity, a named reviewer or payment authority. Use the artops source register and Edition 2 role reconciliation for claim limits. The owner's supplied scenario is a design assumption, not evidence derived from the earlier audit screenshots.
-
-The historical specification below remains a record of the earlier design; its conflicting PR/Finance rules are superseded by this section.
-
----
-
-# SADU Institutional Architecture & AI Governance Ruleset
-
-> **CRITICAL SYSTEM PROMPT INSTRUCTION FOR AI AGENTS:**  
-> This document is the absolute, immutable ruleset and single source of truth for the SADU (Sharjah Calligraphy Biennial / Multaqa) institutional governance portal. Any AI coding agent, system prompt, or automated refactoring workflow MUST treat this exact chronological workflow, role division, operational gate, and state machine as immutable law for all code generation. No role titles, authorities, or gate sequences may be altered, merged, or diluted.
-
----
-
-## 1. Chronological Operational Workflow (The Multaqa Stages)
-
-### Stage 1: Theme Proposal & Executive Ratification
-* **Preparatory Committee (اللجنة التحضيرية):** Formulates 3 theme proposals, writing the initial explanation and curatorial intent for each across three mandatory artistic criteria:
-  1. *Aesthetic Framework:* Define the visual and stylistic parameters.
-  2. *Contemporary & Historical Relevance:* Justify the theme's position within international art standards.
-  3. *Curatorial Justification:* The rigorous defense of why this theme is necessary.
-* **Chairman (H.E. Abdullah Al Owais / رئيس الدائرة):** Reviews the 3 proposals and officially selects/approves one theme and assigns the budget. Once locked, the theme does not go directly to the HIP; instead, the system updates the status to **Pending Editorial Polish** and routes the theme to the Editorial Department.
-
-### Stage 2: Editorial Polish & Final Phrasing
-* **Editorial Department (قسم التحرير):**
-  * Receives the Chairman-approved theme in the Approved Theme Queue.
-  * Takes the Preparatory Committee's raw explanation, aesthetic framework, and curatorial intent.
-  * Rewrites it into the final, polished bilingual (Arabic/English) institutional text:
-    - *Official Theme Essay (Arabic)*
-    - *Official Theme Essay (English)*
-  * **Publishing Gate:** Holds exclusive authority to click **"Publish Official Theme"**. Once Editorial publishes the final text, it updates global state to **Published**, becoming the immutable official theme visible to the HIP and Coordinators.
-
-### Stage 3: Curatorial Guidelines & Dynamic Blocklists
-* **HIP (Head of International Programs / منسق معرض عام):**
-  * Receives the polished official theme published by Editorial.
-  * Drafts the operational curatorial brief and exhibition guidelines based on the approved, phrased theme.
-  * Manages the **"Dynamic Blocklist"** (an active array of restricted tags, e.g., temporarily restricting certain nationalities or mediums due to real-time political/security directives).
-  * **System Invariant:** If a Coordinator or Committee member attempts to submit an artist matching an active blocked tag, the system immediately rejects the submission with an alert:  
-    `"Submission blocked by current HIP security/administrative directives."`
-
-### Stage 4: Artist Nomination (The Multaqa Protocol)
-* **Preparatory Committee & Coordinators (اللجنة التحضيرية والمنسقون):** Collaboratively nominate artists.
-* **Strict Dossier Schema (Hard Validation):** The system blocks submission unless the dossier contains all mandatory components:
-  1. `artistName` (String, Required)
-  2. `artistCategory` (Enum: `'Emerging'` or `'Established'`, Required)
-  3. `cvUpload` (CV in PDF format / boolean flag, Required)
-  4. `previousWorks` (Images of Previous Work / boolean flag, Required)
-  5. `newWorkMockup` (Mockups/Sketches of the proposed new work / boolean flag, Required)
-* **Strategic Tagging:** Each nominated artist must be tagged as either **Emerging Artist** or **Established Artist** to maintain exhibition balance.
-
-### Stage 5: Director's Veto & Balance Review
-* **Biennial Director (Mohammed Al Qaseer):**
-  * Reviews the submitted dossiers in the candidate pool.
-  * **Balance Review:** The UI provides a visual ratio and progress bar of Emerging vs. Established artists currently in the proposed pool to ensure institutional goals are met.
-  * **Absolute Veto Power:** Holds absolute veto power over any artist. Clicking "Veto/Reject" requires selecting a reason from a dropdown (e.g., Budget, Security, Curatorial Mismatch, Administrative Directive) and automatically routes the status and rejection feedback back to the Coordinators.
-
-### Stage 6: Contracting & Logistics
-* **Coordinator (المنسق العام):** Drafts customized bilateral artist contracts specifying production values and shipping terms based on Director-approved artists.
-* **Artist (الفنان):** External access portal to approve contract terms and upload passports and print-quality high-resolution artwork files.
-* **PR (التشريفات):** Verifies passports and print-quality images for catalog publishing, delegation logistics, and exhibition wall text.
-* **Finance (المالية):** Executes payment tranches based on the locked contract and Chairman budget allocation.
-
----
-
-## 2. Institutional Roles Mapping (9 Distinct Roles)
-
-1. **Chairman** (H.E. Abdullah Al Owais - Executive Gate & Budget Allocation)
-2. **Biennial Director** (Mohammed Al Qaseer - Executive Veto, Balance Review & Artist Selection)
-3. **Preparatory Committee** (Theme Formulation & Initial Curatorial Intent)
-4. **Editorial** (قسم التحرير - Theme Rewriting & Bilingual Polishing)
-5. **HIP** (Head of International Programs / منسق معرض عام - Curatorial Guidelines & Dynamic Blocklists)
-6. **Coordinator** (Program Operations & Dossier Assembly)
-7. **Artist** (External Access - Portfolio & Dossier Intake)
-8. **Finance** (المالية - Contracts & Tranche Disbursements)
-9. **PR** (التشريفات - Passports & Print Verification)
-
----
-
-## 3. System Invariants & Enforcement Gates
-
-1. **Editorial Polish Gate:** When Chairman Al Owais approves a theme and locks the budget, it is not sent immediately to the HIP. The theme enters **Pending Editorial Polish** status. Only the Editorial Department can craft the official Arabic and English theme essays and execute the **"Publish Official Theme"** action to unlock Stage 3 for the HIP and Coordinators.
-2. **Zero Fluff Theme Gate:** Chairman cannot approve until 3 distinct themes have Aesthetic Framework, Contemporary Relevance, and Curatorial Justification.
-3. **Dynamic Blocklist Gate:** Any nomination matching an active HIP blocked tag triggers an immediate system rejection: `"Submission blocked by current HIP security/administrative directives."`
-4. **Dossier Schema Gate:** Submissions missing `artistName`, `artistCategory` ('Emerging'/'Established'), `cvUpload`, `previousWorks`, or `newWorkMockup` are strictly blocked.
-5. **Director Balance & Veto Gate:** The Director's dashboard renders a visual ratio bar of Emerging vs. Established artists. Vetoes require selecting a reason from a dropdown (Budget, Security, Curatorial Mismatch, Administrative Directive) and routes the status back to Coordinators.
-6. **Financial Lock Gate:** Finance cannot execute payment tranches until contracts are locked post-Chairman budget authorization.
-
-## Spatial request rehearsal and venue calendar
-
-The Technical execution ledger includes an isolated Mounir Fatmi spatial-request rehearsal. Its session draft survives role changes, but not a page refresh. The sequential path is PENDING_CURATOR_REVIEW (Vinyl), REJECTED_ASSET_RISK, then APPROVED_ALTERNATIVE (Carpet). Reviewed requests lock their modification type; repeated actions preserve decision timestamps. The generated work-order badge is simulated and does not dispatch externally or satisfy the commission technical/finance gates.
-
-Below Chairman theme decisions, the Geographic Portfolio displays the supplied EVT-KALBA-13 sample booking for 25 September–1 October 2026. This read-only, unverified reference is distinct from the existing Kalba Cultural Festival reference. It does not establish live reservation enforcement or infer resource conflicts.
-
-## Travel and technical request bridges
-
-PR's recorded evidence gate enables a session-only travel packet keyed by artist ID. Primary visa and itinerary PDFs are required; an escort visa is optional. Dispatch freezes the packet and exposes its actual sample files to the matching Artist portal. These browser-memory downloads are a rehearsal bridge, not authenticated storage, real document dispatch, or a production security boundary. Refresh discards the packet.
-
-The Technical request ledger stores equipment and mounting choices per artist in session state. Each submission produces an inventory task for Technical & AV and a separate pending venue review for the scenario's Sharjah Art Museum curator. Requests do not clear engineering, venue, or financial gates; duplicate equipment/mounting pairs are blocked. The scenario authority must be replaced by verified venue jurisdiction before production use.
-
-## Cultural declaration and production evidence bridges
-
-The initial nomination form requires an explicit Yes/No textual-cultural declaration and a nonblank full translation/context for Yes. HIP reviews the exact stored declaration for every dossier; only HIP can record clearance while it is a draft. Assigned-Coordinator Stage 4 submission and Director approval both guard this clearance. New nominations cannot inherit a caller-supplied clearance. The pre-approved demonstration dossier carries an explicitly seeded sample review. No new global lifecycle status is introduced.
-
-Artist digital masters (.mov/.mp4/.m2v, up to 2 GB each and five records) bridge by artist ID to Technical Digital Deliverables. They are local File references, not remote uploads or malware-scanned storage. There is no external-sharing-link input. Technical can request a titled prototype review with up to five PNG/JPEG sample photos (10 MB each). The Artist records an immutable approve/reject timestamp; this decision does not satisfy venue, engineering or Finance clearance. All production files and tickets are session-only and discarded on refresh.
-
-## Fleet dispatch, deployment phases, and executive installation holds
-
-Stage 6 captures crate reference, external dimensions (cm), and gross packed weight (kg). Fleet tickets require an accepted agreement and valid crate data; missing measurements cannot fall back to artwork weight. Each ticket snapshots the crate specifications, records PENDING_FLEET_ASSIGNMENT, and permits a Logistics-only simulated IN_TRANSIT transition. Fleet state is not physical receipt evidence or a real booking.
-
-Technical equipment requests carry PROTOTYPING or FINAL_INSTALLATION. Duplicate detection includes the phase. Prototyping cards explicitly instruct return to inventory before opening; the badge is not evidence of actual return.
-
-Director installation monitoring includes only accepted, physically received, non-closed commissions. A nonblank executive mandate sets EXECUTIVE_IMPOUND and resets technical evidence. The Technical ledger is disabled and the reducer blocks technical actions, new disbursements, closure, fleet dispatch, and agreement mutation during the hold. Only the assigned Coordinator UI can record explicit alteration acknowledgement; Technical must re-record its checks afterward. Mandate text and decision timestamps remain in the session audit history. None of these controls establishes production authentication or external dispatch.
-
-## Shared venue claims
-
-The 2026 session venue ledger defines Sharjah Art Museum Hall 1, Calligraphy Square Main Atrium, and House of Wisdom Lobby. The Coordinator desk can claim an available space only for an approved artwork dossier assigned to that coordinator, with recorded medium and no pending scope amendment. The atomic functional state update rechecks availability and ownership; existing claims cannot be replaced. Claims snapshot artist, medium, coordinator, and timestamp. HIP and Curatorial Canvas read the same session ledger. This prevents conflicting claims within one demo session, not across browser sessions or concurrent production users; server-side uniqueness and authenticated permissions remain required for production. A claim is not external venue authorization.
-
-## Revision and spatial handoff guards
-
-Stage 6 uses a shared publication eligibility predicate in the Coordinator form and App dispatch handler. Both official theme and HIP guidelines must be published. The explicit isolated rehearsal toggle defaults off and bypasses only these publication checks, leaving dossier and agreement validation intact.
-
-Agreement amendments preserve fleet tickets with their originating agreement revision and a superseded marker. Physical receipts are moved immutably into visible receipt history, also revision-marked and superseded; only newly recorded current evidence qualifies for milestones. Superseded fleet tickets cannot depart or block a replacement request.
-
-Shared space claims snapshot venue jurisdiction and responsible curator role from the session venue registry. Each artist has one claimed room. Venue-modifying technical requests (including Lighting Rig, Ceiling Mount and Wall Anchor) require the matching artist claim and snapshot that routing evidence. Freestanding equipment supply does not invent a structural approval task. Clearance references now derive from claims and remain pending venue review; claiming never implies external authorization.
-
-## Living profile and curatorial directory
-
-Rehearsal artists have a master profile independent of contracts, keyed by dossier artist ID. Biography (Arabic/English), affiliations and up to ten sample PDF publications (20 MB each) are saved explicitly to IndexedDB. HIP and Committee read the same profiles with combined text/medium/nationality/edition filters. Registration retains previously saved profiles and never overwrites artist text; contract biography fields remain separate. PDF File objects survive page reloads on the same browser origin. Clearing browser data removes these prototype records. This is not authenticated departmental storage or cross-device synchronization; server-backed artist identity and private press storage remain necessary for production. Participation metadata reflects registered rehearsal dossiers, not verified historical attendance.
-
-## Geographic delegation rehearsal
-
-The Coordinator desk offers an explicitly labelled General Coordinator rehearsal selection. Only this selection can bulk-delegate a region to a known coordinator. Region tags use exact country/nationality aliases; unknown or ambiguous origins remain unclassified rather than inferred from names. The shared dossier assignment drives coordinator queues and the commission's contracting ownership. Each changed dossier retains an append-only handoff record. Regional transfers are atomic: any affected contract, spatial claim or pending scope amendment blocks the entire batch. Country grouping is operational routing, never a compliance decision. These demo permissions and histories remain session-bound and are separate from authenticated Supabase pilot roles. The reference honored-guest roster is not silently reassigned because its source contains no verified country fields.
-
-## Condition reporting and emergency contingency
-
-Stage 6 explicitly records transit insurance liability (ARTIST or DEPARTMENT), independently of free-text shipping method. Existing agreements without liability cannot infer it from courier descriptions. Logistics records immutable condition reports only after PHYSICAL_ASSET_RECEIVED (the existing delivered-equivalent gate), with a contract revision and receipt reference. Damaged reports require 1–5 sample JPEG/PNG files, each at most 10 MB. Department liability automatically creates an INSURANCE_CLAIM_PENDING queue entry; artist liability allows explicit dispatch of the sample evidence to the matching Artist Portal. No external claim is filed.
-
-Any reported damage locks fleet movement, installation, new tranche recording, closure and contract mutation; changing agreement state cannot erase the hold. Plan B records a priority request with a positive secondary grant, emergency flight details and justification. Director and Finance see the same request immediately; Finance may decide only after Director approval. Decisions are idempotent, timestamped, and do not pay money, book flights, revise the contract or clear the damage hold. A future separately authorized recovery/condition reconciliation workflow is required to release damaged work. Files and emergency records remain session-bound rehearsal data.
-
-## Exhibition metadata and catalog deadlines
-
-After ARTIST_APPROVED/LOCKED, the Artist submits bilingual exhibition titles and a curatorial statement directly to HIP's Live Catalog Aggregator through the commission reducer. Submissions retain contract/revision/timestamp history and survive role switches within the session; they are not emailed or published automatically. Invalid, duplicate and unauthorized submissions are blocked. Prior-revision submissions are labelled historical until resubmitted after current agreement acceptance.
-
-The master catalog schedule holds the supplied photography deadline (15 August 2026) and physical delivery deadline (10 September 2026). The Artist sees these read-only dates and a photography status derived from the existing intake record. Publication clearance requires a verified status, filename, upload timestamp, current verification timestamp and at least 300 DPI; replacement uploads clear old verification evidence. Metadata submission is not cultural clearance or publication approval. No new PR approval authority is introduced by the read-only indicator.
-
-## Missing deliverables and fabrication routing
-
-HIP can create per-dossier urgent checklist requests for video masters, technical specs and layout/fabrication approval. Requests are keyed by artist ID; the assigned Coordinator queue and matching Artist Portal read the same session records. Deadlines are interpreted at 23:59:59 Asia/Dubai, and countdowns show overdue time after expiry. Past/invalid dates, empty lists and duplicate requests are blocked. Requests are reminder records, not automatic evidence clearance, external messages or durable notifications.
-
-Coordinator fabrication orders are a third execution track. Approved dossiers collect item, vendor/technician and requested original-asset disposition. Only Technical records readiness, without changing venue approval, installation clearance or Finance. Damage/impound holds disable the commission's fabrication workflow. Discard is a requested instruction only and never executes or authorizes destruction. Fabrication records and nudges survive role switches within the current session, not refreshes; production authentication and server persistence remain outside this prototype module.
-
-## Artwork roster and controlled catalog amendments
-
-Accepted artists build bilingual artwork labels with production year, medium, positive centimetre dimensions and sample PNG/TIFF images (50 MB each, up to 100 items). Submission atomically snapshots an immutable numbered revision and locks editing. HIP and Editorial read the same session records and image files. Artists can request amendment but only the currently assigned Coordinator queue can authorize reopening; requests and permissions retain actor/time events and previous submissions remain visible. These controls are session rehearsal permissions, not server authorization. Files are held in memory, lost on refresh, and resolution/content must be inspected by Editorial; accepted format does not certify print quality. Removing an item removes it only from the editable draft, never a submitted revision.
-
-## Bank, collection address and advance-dependent metadata
-
-Accepted artists submit fictional bank-holder/IBAN details and an explicit collection country, city and exact address. IBAN input permits letters and digits, normalizes spacing/case, and checks MOD-97; this is not bank/account ownership verification. Finance reads bank details, while Logistics receives only the submitted collection location and never derives it from nationality. These records remain session memory only.
-
-Finance can record an Art Loan Fee payment with a positive AED amount and reference after agreement acceptance and PR/Technical clearance. Holds block recording and repeat actions cannot overwrite payment evidence. The Artist sees Payment Transferred explicitly qualified as a simulation. This separate fee never substitutes for the production advance. Metadata submission and the artwork-label entry point require an accepted agreement plus a DISBURSED advance and matching-revision ledger evidence. The reducer independently enforces the metadata gate. Bank/address edits lock after the loan payment record; subsequent corrections need a future controlled amendment workflow.
-
-## Acquisition and return close-out rehearsal
-
-The existing intake did not contain a sale price, return postal address or packing instructions. A dedicated artist-submitted Acquisition & Return Intake now captures these explicitly for the single commissioned artwork; the production grant and collection address are never substituted. Director acquisition requires an accepted agreement, physical receipt and those terms. It snapshots the price in USD, records ACQUIRED_BY_INSTITUTION, creates a pending Finance payout entry, and cancels (without deleting) the pending return manifest. Acquisition is blocked after a return AWB is recorded.
-
-Logistics generates a manifest from the submitted return address and packing instructions, and attaches a sample PDF AWB. Archive requires that evidence and sets global ARCHIVED_CLOSED. The commission reducer rejects every subsequent action; operational views become historical and adjacent per-artist fabrication/scope/contract controls are blocked. Shared theme governance and other artists remain independent. Acquired works cannot fabricate return evidence: their archive stays locked pending a separately designed accession workflow. Records and PDF files are session-only; this is not a legal purchase, executed payout, durable archive or real freight booking.
-
-## Artist layout and domestic first-mile collection
-
-Accepted artists upload sample PDF/PNG/JPEG layouts directly to the commission state (20 MB/file). Technical shows the latest current-agreement layout pinned to the artist/contract installation record, retaining earlier files as historical. A layout is visual guidance, not structural approval. Domestic pickup eligibility comes from the explicitly submitted UAE collection country, never nationality. Artist requests require Emirate, area, street, building, future pickup date and onsite contact/phone. Logistics receives PENDING_COLLECTION with a snapshot of the approved Stage 6 crate, while repeat current-revision tickets, post-receipt pickups and archived/held modifications are blocked.
-
-The existing commission model has one approved crate, so the queue reports one crate explicitly. No verified fleet capacity catalogue exists; truck allocation remains pending Logistics review, rather than pretending to dispatch a 3-ton vehicle automatically. Requests/files are session-only and do not book vehicles or notify external carriers.
-
-## Production and AV specifications
-
-Each artwork label can opt into Production & Display Specs, recording printing/framing (paper, frame profile and dimensions), AV requirements, and an optional PDF technical sheet up to 10 MB. Enabled sections require at least one specification; attached PDFs must pass extension/MIME/size and file-signature checks before roster submission. Asynchronous file checks ignore stale selections. Specifications and PDFs snapshot with the submitted roster revision and inherit its locks and Coordinator-approved amendment flow.
-
-Technical opens individual artwork entries from the active artist installation record and sees only the latest submitted instructions, never draft edits. Pending amendments display a reconfirmation warning. These remain session-only instructions, not engineering approval, private server storage or verified document safety.
-
-## Venue-host clearance and absence routing rehearsal
-
-Structural and fabrication ticket cards register a venue clearance record from the artist's claimed venue, with proposed floor-protection and visitor-perimeter conditions. Fabrication readiness is separate from permission to install. The read-only Venue Host perspective permits only its designated rehearsal identity (or its configured same-role backup during ON_LEAVE) to record APPROVED_FOR_INSTALLATION. Unclaimed venues, fabrication still in production, impounds, damage and archives block clearance. Approval is idempotent and records Coordinator/vendor recipient notifications within the session; no Outlook or external messages are sent.
-
-Active Delegate is available for each role and venue authority. ON_LEAVE requires a named backup, reassigns the pending queue to that same-role backup identity, and makes the original role workspace inert until the acting reviewer matches the assignment. Returning from leave restores the primary queue. Director vetting, HIP cultural-review and PR review queues show routing indicators; other existing role work remains in its workspace with the same delegate gate. These are explicit rehearsal selectors, not authenticated staff identities. Production-secure delegation, persistent staff memberships, server-enforced authorization and external vendor delivery remain unimplemented and must not be inferred from this UI.
-
-## 2026-09-29 — SMA venue protocol and personnel manifest rehearsal
-
-Source inspected: `IMG-20260824-WA0002 (1).jpg` (Sharjah Art Museum installation/dismantling instructions). Rule 5 prohibits carpentry, welding and similar work inside exhibition halls. The technical and vendor request forms now record an explicit activity and inside/outside location. Declared welding/carpentry inside SMA halls is blocked in both UI and session reducers. Technical uses the active spatial claim; fabrication validates its venue against that claim. Outside work is not venue/safety approval. Rule 1 concerns floor damage, drilling and damaging/permanent-mark adhesives; Rule 2 requires prior museum approval for ceiling/lighting alterations. These must not be generalized into invented blanket restrictions for other venues.
-
-Named individuals are required on new technical/vendor assignments. A per-artwork, per-venue worker list is derived from those assignments, visible to the matching rehearsal Museum Operations perspective and downloadable as a timestamped, explicitly unsent PDF. Missing personnel/venue information blocks export. This is not an exhibition-wide certification, badge issuance, external submission, museum acknowledgement or durable access-controlled staff database. Legacy session records can lack these new fields and require reconciliation. Free-text descriptions are not automatically interpreted as work activity; staff must declare the correct category. Other rules in the image remain source guidance, not a claim of a comprehensive automated safety audit.
-
-
-### 2026-09-29 — Operational visibility
-- HIP/Director asset readiness derives from the current Editorial publication receipt. `LABELS_READY_FOR_PRINT` is a display projection, not a new ArtistStatus. Amendments withdraw readiness; uploaded files alone do not approve printing. This roster remains session rehearsal state.
-- Authenticated PR can record an immutable reviewed itinerary receipt for a finalized, current guest packet. The server stamps the reviewer/time and rejects duplicate receipts.
-- Technical and authorized leadership receive only guest name, agreement identifier, approved arrival/departure dates, airports and approval timestamp. Identity, companion and ticket-reference data are excluded. Current contract eligibility, latest travel dates and replacement finalized packets are rechecked on every calendar read.
-- Calendar refresh is 15-second polling, not guaranteed instantaneous push. Changed dates require a new finalized packet and PR review. Presence dates are planning information, not consent to an installation appointment.
-- `supabase/local/operational-visibility.sql` is local-only and follows guest-finalization.sql. Hosted installation and production publication persistence remain outstanding. No bookings or external notifications are issued.
-
-
-### 2026-09-29 — Field-level Editorial policy
-The authenticated artwork checklist owns immutable source title, materials, concept and optional supplied biography. These public fields require Arabic and English; dimensions, weights and internal flight documents do not. Arabic sources request English, English sources request Arabic, and French sources request both. Source-language values are retained verbatim. Editorial alone can record completed translations; database timestamps, actor and source/translation snapshots bind approval to the immutable artwork row. Existing Arabic-only approvals with missing English remain excluded from bilingual exports until supplemented; earlier approval evidence is preserved.
-Approved text is shared through the existing dossier checklist for HIP, PR, assigned Coordinator and artist owner. Logistics can read rational measurements before translation; public label export requires complete bilingual text. A supplied biography remains tied to this artwork submission and does not overwrite the separate master directory. The local-only `editorial-policy.sql` extends `catalog-freight.sql`; hosted rollout remains separate. No translation email is sent and no automatic translation quality claim is made.
-
-
-### 2026-09-29 — Bundled assets, pending scope and hosting exceptions
-New authenticated PRINT/AV registry rows require immutable title, materials, production year and positive dimensions before Storage upload. Catalog completion must match those fields. The registry and checklist remain linked by a foreign key; staged uploads are not finalized catalog entries. PDFs remain blueprint-only. Historical unbundled records are not silently certified.
-A separate immutable Director receipt records expected Stage 5 artwork count and decision reference against a scenario; artist-entered zone counts are not executive approval. Missing receipts show unknown scope. Pending assets compare completed catalog records to approved count. Local cron checks every 15 minutes and queues one reminder after 48 hours from the scope receipt. Completion or agreement revocation cancels pending delivery. No mail transport exists, so no email is claimed sent. This is a bridge receipt, not automatic historical Stage 5 synchronization.
-For the supplied 6–11 October hosting window, the rehearsal calculates five nights. Extensions capture extra nights, quoted nightly AED cost and justification. Assigned Coordinator requests require Director then Finance decisions; PR sees approved dates only after both. This is session state, not a universal entitlement, durable financial authorization or booking change.
-The venue technology enquiry menu explicitly shows availability unconfirmed for SMA/SAF/1971. Reference equipment categories collect minimum specifications and acceptable alternatives for Technical; no stock, allocations or reservations are fabricated. Verified venue inventory and real hotel rates remain external inputs.
-Local scripts: asset-bundling.sql then pending-assets.sql, following editorial-policy.sql and the existing local cron setup. No hosted migration or outbound communication occurred.
-
-
-### 2026-09-29 — Private governance schema and validation blueprint
-The additional requested relational design lives in the private `sadu_governance` namespace, isolated from existing prototype records. RLS is enabled throughout and browser roles have no schema grants. It models program memberships, profiles/participations, restricted identity-document references, versioned artwork evidence, Editorial receipts, sealed contracts, signature receipts, crates, shipping tickets, condition reports, effective immigration policy, visa decisions, approved message templates and a deduplicated outbox.
-Framework-neutral server middleware defines assigned-role gates, current evidence completeness, six-calendar-month passport checks, policy-driven National ID requirements, allowlisted vendor projections and approved-template prerequisites. Server adapter, KMS, provider-signature verification, shipping-SLA worker, label-rendering endpoint, CMS webhook and email delivery are not connected. Schema generation must not be represented as production implementation of those integrations. No hypothetical country rules or legal templates are activated. See server/governance/README.md for the contract and authoritative passport guidance.
-
-
-### 2026-09-29 — Structured declared values and complete-delivery guard
-The authenticated artist records an immutable value per checklist artwork in `sadu_artwork_values`: integer minor units, explicit AED/USD/EUR currency and declared-sale/insurance purpose. Titles, actor and time are server-derived. A zero declaration is permitted; no amount is inferred from correspondence or production grants. Finance reads these value records only when the associated scenario is submitted, through a minimal role-checked eligibility helper; no identity documents are added to its access. Totals never combine currencies or purposes.
-Final scenario submission now independently requires the Director-recorded expected count to equal the full checklist count and a declared value for every artwork. Existing zone/media guards remain. Draft collection is permitted; partial delivery cannot become SUBMITTED. Complete bilingual CSV export is restricted to scenarios matching the recorded approved count, and is explicitly metadata export rather than image-quality/print certification. Existing historical submitted rows are not silently rewritten.
-Agreement acceptance remains simulation and is labelled accordingly. A provider-verified e-signature, production contract binding and image-quality certification are not implemented by these controls. Values currently lock on recording; a future controlled correction/revision path is required instead of overwrite. Local SQL: structured-delivery.sql after pending-assets.sql. Hosted rollout is separate.
-
-
-### 2026-09-29 — Automated label proofs and management inventory
-Authenticated checklist intake requires an explicit religious-title declaration; the declaration is immutable after submission and is visible to Editorial. Historical null flags remain unknown and exclude their exhibition from exports. Export requires the full Director-recorded artwork count, bilingual Editorial completion and explicit flags. Tagged titles normalize surrounding parentheses in CSV/PDF; this is formatting, not cultural approval.
-PDF proofs use current approved title/materials/dimensions/year and identify artwork and approval time. They are inspired by the supplied label Word template, but museum trim/font approval, image inspection and absent venue/artist attribution remain separate before production. Browser PDFs are raster proofs, not a certified print master. Approval changes during generation cancel the download.
-Management, including HIP, can download a timestamped session inventory with names, nationalities, counts, medium, status and coordinator. Unknown counts remain explicit and currencies/private documents are not included. This export is session-derived, not a persistent production register. Local SQL label-formatting.sql follows structured-delivery.sql; hosted rollout remains separate.
-
-
-### 2026-09-29 — Visual installation manifest and matching references
-The authenticated label export now has a companion installation PDF. It pairs each current approved bilingual label with its exact checklist-linked private PNG image, recorded artist-declared scenario zone, full immutable artwork ID and approval timestamp. The same full ID appears on label proofs; no collision-prone sequential aliases or existing physical backing tags are invented. Staff transfer that ID to backing/packing tags. Artist-declared zones are not venue approval.
-Manifest generation requires a submitted scenario and a complete approved set, rechecks current checklist evidence, aborts on authentication change/unmount, limits download duration and image bytes, and never exports missing thumbnails as successful evidence. Private one-minute URLs are fetched without cache and are not included in PDFs. Up to 100 artworks and PNG files up to 20 MiB are supported; TIFF/video thumbnail conversion is pending and such sets fail explicitly. Downloaded documents are dated snapshots, not automatically revoked paper.
-Local installation-manifest.sql adds trusted Technical SELECT access to submitted checklist rows only, relying on existing submitted-scenario/media Storage policies. No mutation powers or passport access are added. Hosted rollout remains separate. The PDF remains an internal raster proof pending museum production specifications.
-
-
-### 2026-09-29 — Conditional guest identity documents and passport validity
-Primary guest intake uses ISO nationality selection and six calendar months of passport validity from the recorded arrival date, inclusive at the exact boundary and clamped at month end. Browser validation blocks submission; the database independently rejects invalid intake creation before Storage upload. Travel-date drafts remain possible. Changed travel windows require a new complete packet under existing itinerary rules.
-A read-only server policy defines the user-supplied PR National ID requirement for IQ, PK and AF. It is explicitly an institutional intake configuration, not a verified complete immigration-law matrix. The server snapshots its version and required-ID decision on intake; client-supplied flags are overwritten. Required national-id.pdf must exist as a nonempty PDF of at most 10 MiB before finalization. PR itinerary approval additionally rejects legacy packets without policy evidence. Historical receipts are retained rather than retroactively certified.
-The new file uses the existing private guest namespace. Owner can upload/read; PR reads finalized packets; Coordinator, Technical, HIP, Director and Finance do not gain document access. Restrictive namespace boundaries and immutable objects remain. No application-level encryption, malware clearance, scan-quality verification or visa approval is claimed. Policy changes are trusted database administration, not client role-switch permissions.
-Local-only guest-document-gates.sql follows guest-finalization.sql and operational-visibility.sql. Hosted rollout is pending. Companion identity/expiry expansion is outside this primary-guest change.
-
-
-### 2026-09-29 — PR-only external visa refusal and approved notices
-PR may record REJECTED_BY_AUTHORITY for a current finalized guest packet under an active accepted agreement, with an authority decision reference and explicit UI confirmation. There is no free-text security explanation. The database derives actor, recipient, contract and timestamp, locks the agreement, and preserves the first receipt on repeated requests. Refusal is contract-bound, so replacing an intake cannot erase it. A future authority-reversal process requires its own reviewed evidence and is not implemented here.
-A single minimal artist/PR notification is created atomically. Internal authority references remain PR-only. The supplied bilingual text is seeded as DRAFT with no legal approval. Notifications hold as TEMPLATE_APPROVAL_REQUIRED until trusted institutional template approval; then approved wording is snapshotted and queued as PENDING_DELIVERY. Approved template versions cannot be edited. Client roles cannot approve wording, edit receipts or mark notices sent. No email transport or legal certification is configured.
-New itinerary approval is blocked after refusal, and the operational calendar excludes refused contracts while retaining historical approvals. Coordinators neither record refusal nor read refusal details. The artist sees a generic recorded decision and honest delivery status; approved wording appears only once approved.
-Local-only visa-authority-refusal.sql follows guest-document-gates.sql. Hosted rollout, institutional approval of the proposed wording, recipient-language preferences beyond the bilingual text, authority reversal and production mail delivery remain separate.
-
-### 2026-09-29 — Exhibition title lock and shared physical-arrival receipts
-Authenticated artists submit bilingual exhibition titles against their accepted-agreement scenario. HIP curatorial review locks the submitted title with a server timestamp and actor; this is publication review, not nomination veto. Materials CSV/PDF exports require that locked title plus the existing complete, Editorial-approved artwork set. PDF export rechecks the title immediately before generation. Missing historical title approvals are not inferred. Title amendment/correction requires a future versioned workflow; no overwrite is granted here.
-Logistics records the actual receiving facility and explicitly confirms all crates for a dispatched artwork arrived. The server derives artist/artwork/assigned coordinator from the booking and creates one immutable receipt. Technical, Logistics, the owning artist and assigned coordinator can see minimal receipt data through Realtime with a 15-second refresh fallback. Technical gains no freight-address or passport access. This in-app feed is not an operating-system push notification or email delivery service.
-Physical arrival does not change condition, contract, Finance or publication status. No calendar-time assumption establishes arrival. The authenticated controls supplement the existing rehearsal publication gates; they do not redefine global Stage 3 or certify the hosted deployment. Local-only materials-receiving.sql follows installation-manifest.sql and catalog-freight.sql. Hosted application remains separate.
-
-### 2026-09-29 — Shared exhibition identity, asset review and headless publication
-Locked bilingual exhibition titles appear in shared authenticated identity headers and checklist records. Submitted scenarios are readable by Editorial/PR/HIP for publication work; this does not expose travel documents. Asset inventory distinguishes stored-object receipt from Editorial approval of the exact immutable object ID. A replacement object cannot inherit approval. Artists can read their own receipts; institutional staff retain role/assignment boundaries.
-Editorial queues an immutable public snapshot only after submitted scope/count, locked title, complete bilingual text and every checklist media review. The payload allowlists titles, materials, concepts, approved bilingual biography when supplied, dimensions, year and references; it excludes financial/travel/operational fields. Blueprints are never publication media. No external recipient is fabricated.
-The server-only cms-publication-worker polls the outbox every 15 seconds while running. SDC_CMS_WEBHOOK_URL and SDC_CMS_WEBHOOK_TOKEN remain empty until IT supplies an approved HTTPS endpoint under sdc.gov.ae. Credentials have no VITE prefix. Delivery uses a two-minute lease, deterministic idempotency key, timeout, redirect rejection and backoff. Five-minute private media URLs replace internal object paths. The CMS must ingest permitted media and return an exact accepted/event_id acknowledgment; only then is sync_status Synced. Missing configuration leaves Pending_Sync; unsuccessful delivery becomes Failed_Sync. No browser role can claim delivery. Administrator can read sync receipts; no new admin authentication provision is implied.
-The worker is an independently hosted Node process, not a Vercel cron or deployed daemon. Local migrations publication-handoff.sql and publication-worker.sql are applied/tested locally only. IT must agree on payload mapping, asset ingestion, acknowledgment, withdrawal/revision protocol and hosting before production activation. Synced means acknowledged delivery, not independently verified public website rendering. Existing approved snapshots require controlled versioning to amend; no destructive overwrite is introduced.
-
-### 2026-09-29 — Assigned freight vendor and facility-closure escalation
-Logistics records a gallery-consignment assignment to an existing trusted EXTERNAL_VENDOR account and an existing HIP/VENUE_AUTHORITY curator account. Account provisioning/approval remains administration work. The server derives the artist and timestamp; clients cannot overwrite assignments. The vendor reads only assigned consignment records, including gallery-declared dimensions, weight, insurance value/currency and pickup instructions. No dossier, passport, Storage or contract-finance access is added. The existing one-time gallery form submits directly into this shared record; no Coordinator forwarding is needed.
-Closure start, reopening date and explicit IANA facility timezone determine a data deadline five calendar days before closure. Reopening is the first available day. Local pg_cron evaluates every 15 minutes and creates one HIGH-priority in-app alert when a gallery response is still missing at the deadline. Artist, assigned curator/vendor and Logistics see that same record. Complete gallery submission resolves the alert on the next evaluation without deleting history. The July 25/July 20 dates are an example, not seeded operational records.
-This is missing-data escalation, not a booked pickup, proof of dispatch or email delivery. The existing consolidated consignment model does not model differently sized individual crates or carrier booking slots. Declared insurance value remains unverified and never becomes a coverage certificate. Actual closure corrections or assignment revocation need a controlled administrative migration; no self-service overwrite is granted. Local-only freight-closure.sql follows gallery-consignment.sql. Hosted rollout and vendor/curator provisioning remain separate.
-
-### 2026-09-29 — Accountable ready-for-shipping SLA
-Gallery intake now requires an explicit packing-list/contents field in addition to dimensions, weight, value/currency and structured pickup data. The form and assigned-vendor ledger display the same completeness groups. Draft checkmarks indicate entered fields, not server receipt or approval. Old locked records without packing lists remain incomplete and require reviewed data correction; no historical packing list is invented.
-The authenticated owning artist marks a complete gallery consignment Ready for Shipping, creating a single immutable ticket against an accepted agreement. Administrative routing must identify actual provisioned Logistics and department-head accounts; there is no name-based or first-user fallback. Missing routing blocks ticket creation with an explicit error. Huda or any other named person is not provisioned automatically.
-The assigned Logistics officer can acknowledge opening and record a meaningful action reference separately. Server timestamps replace browser values. Opening never satisfies the 48-elapsed-hour SLA. A local 15-minute cron escalates unactioned overdue tickets to the configured head; a late opening/action immediately stamps the breach so acting between cron runs cannot hide it. Later action preserves escalation history. The receipt certifies a recorded staff action, not independently verified transport execution.
-Technical receives no freight negotiation ticket access. Artist, officer, configured head and trusted Admin can read their scoped tickets. No emails or freight bookings are sent. Local logistics-sla.sql follows freight-closure.sql. Production schema rollout, routing/account provisioning and controlled correction/reassignment remain separate.
-
-### 2026-10-13 — Packing declaration, return destination and freight change control
-Gallery intake now requires an explicit packing type (MUSEUM_CRATE, SOFT_PACK or NO_PACKAGING) and an exact return country, city and address. NO_PACKAGING measurements are the artwork's own; the form and ledger relabel them accordingly. The server refuses a Ready for Shipping ticket unless the record declares completed protective packing, has a return address and has no pending change request (`packing_ready_guard`). Tickets created earlier are not revoked; the queue labels a later hold, and historical readiness is not dispatch clearance.
-Submitted packing, return and closure terms change only through `sadu_freight_changes`. The owning artist, the assigned vendor or Logistics may request one pending change per consignment, with an estimated cost, payer and reason. Logistics and Finance approve independently and by different accounts against the recorded revision; either may reject. Approval merges the whitelisted proposal and increments `freight_revision`, which also versions the closure alert. These decisions authorize a recorded freight variance; they do not amend a signed contract or certify insurance.
-Local-only freight-changes.sql follows logistics-sla.sql; it is not in `supabase/migrations/` because the freight tables it alters are created by the local scripts, not by migrations. The gallery-consignment, freight-closure and logistics-sla SQL tests send the new fields and exercise them only once it is applied; supabase/tests/freight-changes.sql covers the change workflow.
-# 29 September 2026 — Invitation letter archive rehearsal
-
-The shared session archive separates invitation letters from portal invitations. Assigned Coordinators prepare bilingual versioned drafts from currently approved dossiers. Chairman and Director views can search by artist name, stable artist ID or artwork and download a watermarked rehearsal PDF without requesting a resend. All versions are retained; a new version never inherits approval evidence. The assigned Coordinator records fictional approver, delegation scope/reference and version-specific evidence with an explicit review acknowledgement; this records an assertion, not a new signing delegation. Historical or no-longer-eligible copies are labelled accordingly. PDF format does not establish tamper protection.
-
-Design inference grounded in the 13 September Contract Responsibilities/Missing Controls review and refreshed Contract of Personal Exhibition source (DOCX, source modified 1 July 2026). Neither source establishes named invitation-signing authority. The original one-line email discussed by the owner was not supplied, so it is not treated as proof that no archive exists. Session state is lost on refresh. No hosted storage, external dispatch, real signatures or production access permissions are implemented.
-
-## Focused fictional release candidate — 29 September 2026
-
-The default local presentation now uses RehearsalJourney and the guarded rehearsalJourney model: one fictional artist, fourteen linked tasks, explicit source recording, confirmation/disagreement and separate task completion. Verbal/email source references are optional; provenance and scope remain explicit. The shared Outstanding view and simulated Finance ledger derive from the same state. State is session-only; export the review JSON before refresh.
-
-`npm run build:rehearsal` builds a separate static candidate with no pilot/workbench entry or business integration imports. `npm run preview:rehearsal` serves it locally. Real application and external integrations remain paused. See reviews/SADU_Fictional_Release_2026-09-29.md for verification, source limits and release scope. These fictional desk assignments and payment terms do not establish institutional authority.
-
-## 2026-10-10 — Conditional treatment (synthetic Laura / Mounir scenario)
-
-The connected pilot's shared operations record now carries one **synthetic** conditional-treatment case (`server/pilot-treatment.mjs`, `s.treatments[artworkId]`), reached through the existing operations route, evidence storage and task workbench. It changes no `ArtistStatus`, `ThemeStatus`, payment, shipment, collection or print record, and contacts nobody.
-
-Sequence, all enforced on the server: (1) the General Exhibition Coordinator records the work, the exact treatment (revision-numbered, hashed), a source reference, the named decision-maker and at least one condition; (2) authorization for the one-letter trial is recorded either as **external permission** (a PDF permission record plus reference, `performedInSadu:false`, made elsewhere) or as an **approval performed in SADU** by the decision-maker's own named account (`performedInSadu:true`; the recorder cannot approve); (3) the Coordinator assigns a named Technical owner and deadline through the existing `ASSIGN_TASK` (key `treatment-trial`, available only after authorization) and that owner explicitly accepts; (4) the owner uploads a PNG/JPEG photograph for the current revision (a PDF is refused) and submits it; (5) the artist of the work approves, or requests changes to, that exact photograph and revision; (6) after approval and the independent requirements, the owner records completion with a completion photograph and the number of letters treated. Every earlier revision, authorization, trial, decision and completion is retained.
-
-Invalidation is derived from revision numbers, not deleted. A new treatment revision makes the authorization, trial photograph and artist approval stale; a replaced photograph makes only that approval stale. Venue, engineering, financial (and "other") requirements are independent clearances by Museum Operations, Technical, Finance and the Coordinator respectively; they and the technician assignment survive a revision. A completed treatment is closed.
-
-Limits: the server verifies file signatures and hashes for PNG/JPEG uploads and binds the artist's decision to the selected file; it cannot verify what the photograph depicts. The mapping of requirement domains to existing roles is a pilot assumption, not an institutional policy. No institutional approval authority was created or changed. Treatment forms use the existing private working-draft layer (text only; approvals and files are never recovered). The synthetic scenario does not establish original Laura/Mounir consent or institutional cultural or conservation clearance.
+This file states the rules that apply now. Dated history, rationale, source notes and verification notes are in `docs/ARCHITECTURE_CHANGELOG.md`; where changelog entries conflict, the later entry supersedes the earlier one. This file is a version-controlled architecture anchor and prototype specification, not a technically immutable or signed record, and not an institutional delegation instrument. Existing enums are in `src/types.ts`; additional workflow models must be mapped explicitly, not silently renamed.
+
+## Roles and authority
+
+- `GENERAL_COORDINATOR` = General Exhibition Coordinator / المنسقة (server `General_Exhibition_Coordinator`): master coordination, including the supervisory identity and regional delegation inside the Coordinator desk. Alone publishes curatorial boundaries (Stage 3), drafts the curatorial brief, sends deliverable reminders, verifies declared artwork text, locks exhibition titles, assigns collection/renewal owners.
+- `COORDINATOR` = Exhibition Coordinator / منسق المعرض (server `Exhibition_Coordinator`): the assigned coordinator. Declares artwork text, submits dossiers for assigned artists only (`assignedCoordinatorId`), prepares terms, invitations, room claims and fabrication orders, authorizes reopening of submitted rosters. المنسق العام is no longer used.
+- HIP is retired. The role key `HIP` is now `GENERAL_COORDINATOR`; HIP is not provisionable and cannot record new verifications or lock titles. Verifications recorded with `actor: 'HIP'` remain valid history. `HIP_BLOCKED` remains a stored dossier status; user-facing text calls it a compliance hold.
+- Committee (اللجنة التحضيرية): drafts themes; records attributed recommendation minutes on curatorial proposals and Stage 4 nominations; never approves or rejects.
+- Biennial Director (مدير الملتقى): endorses curatorial proposals (`CURATE_ENDORSE`, Director only), vetoes with an explicit institutional reason (feedback returns to the Coordinator), approves restriction changes before activation, records expected Stage 5 artwork count receipts.
+- Chairman (رئيس الدائرة): moves themes from `PENDING_CHAIRMAN_APPROVAL` to `PENDING_EDITORIAL_POLISH`; cannot change text. Escalation dispositions are Chairman-only, idempotent, and never change specialist clearance or payment state.
+- Editorial (قسم التحرير): polishes and publishes themes; alone records translations and revision-specific publication approvals. Both `EDITORIAL` and `EDITORIAL_DEPARTMENT` keys remain because existing policies use both.
+- PR (التشريفات): passport/visa/itinerary evidence only; no imagery, technical or Finance permission follows from PR completion.
+- Technical, Logistics, Finance (المالية), Artist, `VENUE_AUTHORITY`, `EXTERNAL_VENDOR`: as scoped in the stage rules below.
+- Assigning responsibility grants no approval power. Local role selection, rehearsal selectors and demo accounts are not authenticated staff identities or institutional delegation.
+
+## Runtimes and data stores
+
+- Browser sandbox / rehearsal: session state in App memory survives role switches, not refresh (unless stated). The Curatorial workspace (`SpatialLedgerWorkspace.tsx`) applies the shared engine to a per-tab `sessionStorage` journal and does not call the server ledger; sandbox and connected pilot are separate stores. Artist master profiles use IndexedDB (same origin only). Presentation checkpoints are not authentication or server authorization.
+- Focused fictional release: `RehearsalJourney` / `rehearsalJourney` model, session-only; built separately with `npm run build:rehearsal`, served with `npm run preview:rehearsal`, no pilot/workbench entry or integration imports.
+- Connected pilot: single-process, transactional, file-backed JSON store (`state.json`; private drafts in `private-drafts.json`). Not a production database, identity system or backup guarantee. One process owns each repository; failed commands leave state byte-identical.
+- Collection-only demo: fresh synthetic `.local/collection-demo-runs/run-*` repository, loopback only, allowlisted SAVE/CONFIRM/PLAN/ASSIGN commands, no credentials or env files loaded.
+- Curatorial persistence path: `POST /api/review/spatial-ledger/command` → `service.mutate` (`server/spatial-ledger.mjs`) → `repository.transaction` → `applyLedger` → `applyCuration` (`src/lib/curatorialBoard.ts`). Actor comes from the signed-in session, never the request body.
+- Not deployed: `server/curatorial-board-schema.sql` (`committee_recommendation`) is a reference design nothing loads; `sadu_governance` schema and `server/governance` middleware have no connected adapter, KMS, signature verification, SLA worker, CMS webhook or email delivery.
+- Supabase: schema is applied and tested locally only. No hosted database was changed; hosted rollout is pending for every local script.
+
+## Permissions and database
+
+- `public.sadu_user_roles` is the only source of `institutional_role`. The access-token hook `public.sadu_custom_access_token` (enabled in `supabase/config.toml`) writes the role to the top-level and `app_metadata` claims and strips both for users without a row. A role written directly into `app_metadata` grants nothing.
+- Rows are provisioned by trusted server code (service role) with a reason; browsers cannot read or write them. `VENUE_AUTHORITY` and `GENERAL_COORDINATOR` are provisionable; HIP is not.
+- Cross-user account checks (freight vendor/curator, Logistics officer/department head) read `sadu_user_roles`, not `auth.users` metadata. No name-based or first-user fallback for routing.
+- Demo role selection never supplies database authority. RLS policies, security-invoker views and minimal role-checked helpers govern reads; submitted records and Storage objects are immutable; replacements never inherit approval.
+- Themes: Committee drafts/revises `DRAFT`/`PROPOSED` and submits to the Chairman; no role deletes a theme; published themes are immutable; other authenticated roles read only published themes.
+- `sadu_asset_escrow`: owning artist/coordinator, Logistics, Biennial Director and Technical only. PR, Editorial and General Exhibition Coordinator keep publication reads of submitted scenarios but no escrow data.
+- Migrations rebuild the whole local schema from scratch (`supabase db reset`; CI does this on every PR):
+  - `20261014090000` role table, token hook, theme policies, storage tightening;
+  - `20261014100000` baseline of the schema previously hand-applied from `supabase/local/*.sql` and `migration.sql` (schema only);
+  - `20261014110000` escrow view audience;
+  - `20261014120000` HIP grants moved to `GENERAL_COORDINATOR`;
+  - `20261014130000` configuration rows the baseline could not capture (guest deadline and document policies, draft visa notice template).
+- Do not re-apply `supabase/local/*.sql` to a migrated database; they are authored history.
+- Exception: `supabase/local/freight-changes.sql` (after `logistics-sla.sql`) is local-only, not in `supabase/migrations/`, because the freight tables it alters come from local scripts.
+
+## Workflow gates by stage
+
+### Themes (Stages 1–3)
+- Chain (workbench, `src/hooks/useThemePipeline.ts`): Committee drafts three proposals (one at a time; Compare all three before Submit) → Biennial Director reviews, may append notes but not change proposal text, and presents to the Chairman or returns the batch → Chairman (`PENDING_CHAIRMAN_APPROVAL` → `PENDING_EDITORIAL_POLISH`) selects one proposal and ratifies a budget → Editorial locks the Arabic text, translates and alone publishes → General Exhibition Coordinator drafts Arabic guidelines, Editorial publishes them bilingually, and the General Exhibition Coordinator publishes the immutable `CURATORIAL_DIRECTIVES_PUBLISHED` boundaries.
+- The Committee cannot replace a submitted batch. Only a Director return reopens it (text retained) and clears the Chairman's docket until a new batch is presented.
+- Chairman ratification (session) requires the Chairman role, a complete presented batch, a matching proposal and a positive finite budget. The Chairman desk opens on Biennial Program Decisions when a ratification or escalation is waiting and shows the count on the tab.
+- Editing the English translation withdraws the reviewer's confirmation; publishing needs it re-confirmed.
+- Auto-forward (opt-in) moves the presenter to the next owner's desk 3.5 s after a handoff; a Director return cancels a pending move.
+- Boundaries publish only after theme and bilingual guideline publication, category review and Director restriction sign-off. "No restrictions" is a valid explicit declaration. Coordinator dashboards, nomination entry and Committee scouting stay closed until publication.
+- Restriction changes are proposed with a reason and activated only after Director approval. No nationality/medium quotas.
+
+### Nominations, vetting and textual verification (Stages 4–5)
+- Complete proposals enter `PENDING_COMMITTEE_REVIEW`; automated restriction matches enter `HIP_BLOCKED` (a hold, not a veto); release is a trusted compliance-service operation.
+- Commissioned works require mockups; existing works require images and provenance; honored guests require identity only. Only solo proposals require 15–20 whole artworks. Tracks: `HONORED_GUEST`, `SOLO_EXHIBITION`, `GENERAL_COMPETITION`.
+- Sculpture / 3D Installation requires a Technical & Safety Rider PDF (≤ 20 MiB) before submission, endorsement or Director eligibility; changing medium clears it.
+- Declared text: the Coordinator declares exact original text and full translation; the General Exhibition Coordinator verifies against the immutable snapshot. Without matching verification the nomination cannot be recommended or decided by the Director. No text is inferred from identity, medium or nationality. Not a cryptographic signature.
+- Stage 4 Committee minute (`reviewByCommittee` in `src/data/vetting.ts`; database: `committee_recommendation`, migration `20261014140000`): the Committee records `RECOMMENDED` or `NOT_RECOMMENDED` with a minute of 10–4000 characters, once. Both outcomes move the dossier to `PENDING_DIRECTOR_REVIEW`; the Biennial Director decides (approve, or veto with a reason). The Committee cannot recommend a dossier that fails compliance (incomplete, unverified text, restriction match), but may forward it unrecommended. The Committee can no longer set `COMMITTEE_REJECTED`; existing `COMMITTEE_REJECTED` dossiers and `ENDORSED`/`REJECTED` minutes are kept as recorded history and are not reopened.
+- Committee recommendation minute: `CURATE_COMMITTEE_RECOMMEND` (Committee only), minute ≥ 10 characters, bound to the exact proposal revision and current locked Defense Board snapshot; changes no status, slot or artwork; duplicates refused; a new revision or re-lock makes it stale. `CURATE_ENDORSE` refuses unless every selected, not-yet-endorsed proposal has a current minute.
+- Legacy: `CURATE_COMMITTEE_APPROVE` is accepted only by `restoreLedger` replay; live commands return 422. No minute is fabricated; Director endorsement stays disabled with a reason until a real minute exists.
+- Emerging/Established ratio is informational and excludes vetoed dossiers.
+
+### Contracts and payment tranches (Stages 6–8)
+- Invitation: no contract exists until the Artist confirms full passport name; external venues need a clearance reference; theme and guidelines must be published (isolated rehearsal toggle, default off, bypasses only publication checks).
+- Agreement acceptance routes to `LOGISTICS_PENDING_PR`, never `CONTRACT_EXECUTED`; removing a hold cannot assert execution. `CONTRACT_EXECUTED` additionally requires a submitted escrow receipt with all declared files. Acceptance is a simulation, not a legal or provider-verified signature.
+- Amendments return through `CONTRACT_DISPUTED` / the Coordinator without repeated Stage 5 approval; accepted terms are not silently editable; term changes invalidate evidence.
+- Advance: Finance alone authorizes; requires accepted agreement plus PR and Technical evidence, never physical arrival or final media delivery. Delivery requires Logistics `PHYSICAL_ASSET_RECEIVED`. Completion requires closure, safe-return and condition-reconciliation references.
+- Payment schedule: the Coordinator chooses 30/70/0, 30/40/30 or 50/30/20 (`CoordinatorContractWorkspace`); every agreement keeps three milestone records (advance, delivery, completion). "30% advance / 70% post-delivery" sets completion to zero rather than merging milestones, so there is never a combined final 70% action.
+- Authorization is not disbursement: no money moves; each tranche is recorded separately; zero-value milestones cannot be disbursed. Art Loan Fee never substitutes for the advance.
+- Holds (`EXECUTIVE_IMPOUND`, damage, refusal, archive) block disbursement, closure, dispatch and contract mutation.
+- Escalation intake and executive disposition never change specialist clearance, venue authorization, contract terms or payment gates.
+
+### Logistics, freight and collection
+- Collection readiness is a derived sub-workflow (`src/logistics/collectionRules.mjs`), not an ArtistStatus/ThemeStatus transition. Only the accepted active Logistics owner records, confirms or plans; the General Exhibition Coordinator assigns primary/backup owners with reason and due time; reassignment never inherits acceptance.
+- Packing requires a plan, named owner, technical clearance or recorded non-applicability, separate Finance cost approval (including zero cost) and completion evidence. Changes clear dependent checks; legacy records stay blocked rather than receiving fabricated approvals.
+- Amendments require a server-derived impact review; renewal tasks close only from the actual workflow change; no manual completion switch.
+- Pickup calendar: latest pickup is the `CATALOG_SCHEDULE` delivery deadline, 10 September 2026; dates must be today or later (Asia/Dubai) and outside the inclusive blackout; after the cutoff intake is closed until an approved schedule update.
+- Gallery intake requires packing type (`MUSEUM_CRATE`, `SOFT_PACK`, `NO_PACKAGING`), packing list, return address; `packing_ready_guard` refuses Ready for Shipping otherwise. Changes go only through `sadu_freight_changes`, approved independently by Logistics and Finance (different accounts).
+- 48-elapsed-hour SLA; opening is not action. Physical arrival does not change condition, contract, Finance or publication status.
+- Nothing books transport, records custody, notifies carriers or authorizes payment automatically.
+
+### Guests and visa
+- Only owners of accepted database contracts submit travel intake; finalization creates an immutable server-timestamped receipt; PR sees finalized packets only.
+- Document deadline: arrival minus 30 days at 23:59:59 Asia/Dubai; passport valid six calendar months from arrival; National ID required for IQ, PK, AF (institutional configuration, server-snapshotted).
+- PR alone records `REJECTED_BY_AUTHORITY`; it locks the agreement; notices hold as `TEMPLATE_APPROVAL_REQUIRED` until trusted template approval.
+- Reminders are queued in-app notices, not sent emails. No booking, visa or financial clearance is inferred.
+
+### Publication, catalog and editorial
+- Public fields require Arabic and English; Editorial alone records translations bound to the immutable row; source values kept verbatim.
+- The live catalog aggregator (`LiveCatalogAggregator`) belongs to Editorial; artists submit catalog metadata into it.
+- Export requires the locked title, full Director-recorded artwork count, bilingual completion and explicit religious-title flags. PDFs are raster proofs, not print masters; hashes are not signatures.
+- Approved snapshots change only through controlled versioning; amendments withdraw readiness; replacements require new approvals.
+- Print defects hold progression; replacing a dispatched job requires recorded supplier stop or stock disposition.
+
+### Condition and treatment
+- Logistics records immutable condition reports only after `PHYSICAL_ASSET_RECEIVED`; damage locks movement, installation, tranches, closure and contract mutation.
+- Conditional treatment (`server/pilot-treatment.mjs`, `s.treatments[artworkId]`) is a synthetic pilot case run by the General Exhibition Coordinator (the server admits only `General_Exhibition_Coordinator` to record the case and external permission): record → authorization (external permission `performedInSadu:false` or decision-maker approval `performedInSadu:true`; recorder cannot approve) → `ASSIGN_TASK` key `treatment-trial` with explicit acceptance → PNG/JPEG trial photo → artist decision on that exact photo/revision → completion. A new revision stales authorization, photo and approval; requirements and assignment survive. It changes no status, payment or shipment record and creates no institutional authority or consent.
+
+## Bilingual and UI rules
+- Arabic RTL parity everywhere, logical CSS only. Stored values and exports stay unchanged; translation happens at display time (`src/i18n/journey.ts` for the journey at `/`). Shared `sadu_lang` preference, default Arabic. The invitation PDF remains English.
+- Avoid bidi-sensitive fractions in counts; unknown values display as unreported/unknown, never zero.
+
+## Integrations
+- All live integrations are paused. Nothing sends email, files claims, books transport/hotels/flights or moves money. `SDC_CMS_WEBHOOK_URL`/`SDC_CMS_WEBHOOK_TOKEN` stay empty; `Synced` means acknowledged delivery only.
+
+## Verification and CI
+- Local: `npm run lint` (type-check of `src`), `npm run test:guards`, `test:workflows`, `test:review`, `test:demo` (node suites); `npm run test:sql` (every `supabase/tests/*.sql`, needs `supabase start`); `npm run test:e2e` (Playwright desktop + mobile; unlocks the prelaunch gate with a per-run password through the real endpoint); `npm run test:committee:browser` and `npm run test:treatment:browser` (own builds and servers).
+- CI (`.github/workflows/ci.yml`, pinned `ubuntu-24.04` and action versions) runs on pull requests and `main`: `check` (lint, node suites, build), `browser` (Playwright), `database` (fresh `supabase start` from migrations, SQL tests, security advisors).
+- `scripts/find-dead-code.mjs` reports modules unreachable from every runtime root; keep it at 0.
+- Committee minutes: `tests/committeeRecommendation.test.mjs`, `tests/curatorialBoard.test.ts`.
+
+## Resolved conflicts — 2026-10-14
+The changelog contained three conflicting entries. They were resolved by the source-of-truth rules above, or by what the code already does:
+- Stage 4 Committee decision: the source-of-truth rule wins. The Committee records a recommendation minute and the Director decides; the earlier "Committee alone endorses or rejects nominations" gate is retired in the app and the database (see Nominations above).
+- Payment schedules: both entries hold. Three presets are offered and every agreement keeps three milestone records; a 70% post-delivery preset zeroes completion instead of merging milestones (see Contracts above).
+- Catalog aggregator: Editorial owns it, as the code already implements; the HIP reference predates the HIP retirement.

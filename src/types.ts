@@ -12,7 +12,6 @@ export type UserRole =
   | 'FINANCE'
   | 'LOGISTICS'
   | 'ARTIST'
-  | 'HEAD_OF_PROGRAMS'
   // Arts Square Triad Explicit Roles
   | 'SDC_COORDINATOR'
   | 'SAF_TECHNICIAN'
@@ -178,7 +177,7 @@ export interface DynamicBlocklistRule {
   parameterType: 'NATIONALITY' | 'MEDIUM' | 'ETHICAL_CRITERIA';
   value: string;
   addedBy: string;
-  // Hardening #5: Executive oversight flag for HIP modifications
+  // Hardening #5: Executive oversight flag for General Coordinator modifications
   isDirectorApproved: boolean; 
 }
 

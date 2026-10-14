@@ -30,13 +30,32 @@ test('hosted availability screen explains the boundary and provides a working ro
   assert.doesNotMatch(html, /<select|<form|npm run/);
 });
 
-test('journey resumes pending work, numbers tasks uniquely and has no dead completion button', () => {
-  let journal = emptyJournal();
+function withJourneyGlobals(lang: string | null, getJournal: () => ReturnType<typeof emptyJournal>, run: () => void) {
   const originalWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
   const originalStorage = Object.getOwnPropertyDescriptor(globalThis, 'sessionStorage');
-  Object.defineProperty(globalThis, 'window', { configurable: true, value: { location: { hostname: 'sadumaha.vercel.app' } } });
-  Object.defineProperty(globalThis, 'sessionStorage', { configurable: true, value: { getItem: () => serializeJournal(journal) } });
-  try {
+  Object.defineProperty(globalThis, 'window', { configurable: true, value: { location: { hostname: 'sadumaha.vercel.app' }, localStorage: { getItem: (key: string) => key === 'sadu_lang' ? lang : null, setItem() {} } } });
+  Object.defineProperty(globalThis, 'sessionStorage', { configurable: true, value: { getItem: () => serializeJournal(getJournal()) } });
+  try { run(); } finally {
+    if (originalWindow) Object.defineProperty(globalThis, 'window', originalWindow); else delete (globalThis as { window?: unknown }).window;
+    if (originalStorage) Object.defineProperty(globalThis, 'sessionStorage', originalStorage); else delete (globalThis as { sessionStorage?: unknown }).sessionStorage;
+  }
+}
+
+test('journey defaults to Arabic RTL like the workbench and translates tasks, desks and progress', () => {
+  for (const lang of [null, 'ar']) withJourneyGlobals(lang, emptyJournal, () => {
+    const html = renderToStaticMarkup(<RehearsalJourney />);
+    assert.match(html, /dir="rtl" lang="ar"/);
+    assert.match(html, /تسجيل موجز المعرض/);
+    assert.match(html, /اكتملت 0 من 14 مهمة/);
+    assert.match(html, /اللجنة التحضيرية/);
+    assert.match(html, />English</);
+    assert.doesNotMatch(html, /Record the exhibition brief|Your current action/);
+  });
+});
+
+test('journey resumes pending work, numbers tasks uniquely and has no dead completion button', () => {
+  let journal = emptyJournal();
+  withJourneyGlobals('en', () => journal, () => {
     const complete = task => { journal = journalReducer(journal, { type: 'portal_complete', taskId: task.id, actor: task.owner, at: '2026-09-29T12:00:00Z', id: `navigation-${task.id}`, checks: task.checks.map(() => true) }); };
     complete(JOURNEY_TASKS[0]);
     let html = renderToStaticMarkup(<RehearsalJourney />);
@@ -48,8 +67,6 @@ test('journey resumes pending work, numbers tasks uniquely and has no dead compl
     assert.match(html, /Journey complete/);
     assert.match(html, /Export your review record/);
     assert.doesNotMatch(html, />All tasks complete<|>Open next available task<|>Continue:/);
-  } finally {
-    if (originalWindow) Object.defineProperty(globalThis, 'window', originalWindow); else delete globalThis.window;
-    if (originalStorage) Object.defineProperty(globalThis, 'sessionStorage', originalStorage); else delete globalThis.sessionStorage;
-  }
+    assert.match(html, /dir="ltr" lang="en"/);
+  });
 });

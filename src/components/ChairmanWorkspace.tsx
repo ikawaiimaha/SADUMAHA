@@ -443,7 +443,7 @@ const ChairmanDecisions: React.FC<ChairmanWorkspaceProps> = ({
 
                 <div className="rounded-md border border-emerald-200 bg-white/80 p-3 text-xs text-emerald-900 leading-relaxed space-y-1">
                   <p className="font-bold"> {tr("Theme Approved and Budget Locked. Theme routed to Editorial Department for final bilingual phrasing.")} </p>
-                  <p className="text-[11px] text-emerald-800"> {tr("The theme is not sent directly to the HIP. The Editorial Department will now review the Preparatory Committee's raw curatorial explanation and compose the official bilingual theme essay before Stage 3 unlocks for the HIP and Coordinators.")} </p>
+                  <p className="text-[11px] text-emerald-800"> {tr("The theme is not sent directly to the General Exhibition Coordinator. The Editorial Department will now review the Preparatory Committee's raw curatorial explanation and compose the official bilingual theme essay before Stage 3 unlocks for the General Exhibition Coordinator and Exhibition Coordinators.")} </p>
                 </div>
               </div>
             ) : (
@@ -546,9 +546,13 @@ const ChairmanDecisions: React.FC<ChairmanWorkspaceProps> = ({
   );
 };
 
-export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = (props) => props.oversight
-  ? <ChairmanOversight {...props.oversight}><ChairmanDecisions {...props} /><ConcurrentVenuePortfolio /></ChairmanOversight>
-  : <><ChairmanDecisions {...props} /><ConcurrentVenuePortfolio /></>;
+export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = (props) => {
+  const ratified = Boolean(props.initialApprovedTheme && props.initialBudget !== null && props.initialBudget !== undefined && Number.isFinite(props.initialBudget) && props.initialBudget > 0);
+  const themeDecisionPending = Boolean(props.themes?.length) && !ratified;
+  return props.oversight
+    ? <ChairmanOversight {...props.oversight} themeDecisionPending={themeDecisionPending}><ChairmanDecisions {...props} /><ConcurrentVenuePortfolio /></ChairmanOversight>
+    : <><ChairmanDecisions {...props} /><ConcurrentVenuePortfolio /></>;
+};
 
 export default ChairmanWorkspace;
 

@@ -40,7 +40,7 @@ do $$begin
  if exists(select 1 from storage.objects where name like '%22222222-2222-4222-8222-222222222222%') then raise exception 'Coordinator sees private ID';end if;
 end $$;
 do $$declare role_name text;begin
- foreach role_name in array array['FINANCE','TECHNICAL','BIENNIAL_DIRECTOR','HIP'] loop
+ foreach role_name in array array['FINANCE','TECHNICAL','BIENNIAL_DIRECTOR','GENERAL_COORDINATOR'] loop
  perform set_config('request.jwt.claims',jsonb_build_object('sub','55555555-5555-4555-8555-555555555555','role','authenticated','app_metadata',jsonb_build_object('institutional_role',role_name))::text,true);
  if exists(select 1 from storage.objects where name like '%22222222-2222-4222-8222-222222222222%') then raise exception 'Non-PR sees private document';end if;
  end loop;

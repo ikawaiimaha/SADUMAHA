@@ -1,4 +1,5 @@
 -- Requires installation-manifest.sql. Rollback-only fixtures.
+-- Gallery payload matches supabase/local/freight-changes.sql (packing_type, return_*); apply it to exercise those checks.
 begin;
 insert into auth.users(id) values('11111111-1111-4111-8111-111111111111');
 insert into public.bilateral_contracts(id,artist_id,artist_name,status) values('catalog-test','11111111-1111-4111-8111-111111111111','Fictional metadata test','ARTIST_APPROVED');
@@ -13,7 +14,8 @@ insert into public.sadu_artwork_checklist(id,scenario_id,zone_id,media_object_na
 
 do $$begin perform set_config('test.freight.token',public.sadu_issue_consignment('44444444-4444-4444-8444-444444444444','THIRD_PARTY_GALLERY','Test Gallery','gallery@example.invalid'),true);end $$;
 reset role;
-insert into auth.users(id,raw_app_meta_data) values('88888888-8888-4888-8888-888888888888','{"institutional_role":"EXTERNAL_VENDOR"}'),('99999999-9999-4999-8999-999999999999','{"institutional_role":"HIP"}');
+insert into auth.users(id) values('88888888-8888-4888-8888-888888888888'),('99999999-9999-4999-8999-999999999999');
+insert into public.sadu_user_roles(user_id,institutional_role,granted_reason) values('88888888-8888-4888-8888-888888888888','EXTERNAL_VENDOR','Synthetic test grant'),('99999999-9999-4999-8999-999999999999','GENERAL_COORDINATOR','Synthetic test grant');
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"55555555-5555-4555-8555-555555555555","role":"authenticated","app_metadata":{"institutional_role":"LOGISTICS"}}',true);
 insert into public.sadu_freight_assignments(consignment_id,vendor_id,curator_id,closure_start,reopens_on,facility_timezone) select id,'88888888-8888-4888-8888-888888888888','99999999-9999-4999-8999-999999999999','2026-07-25','2026-09-02','Europe/Paris' from public.sadu_consignments;
@@ -31,12 +33,12 @@ do $$begin
 end $$;
 select set_config('request.jwt.claims','{"sub":"77777777-7777-4777-8777-777777777777","role":"authenticated","app_metadata":{"institutional_role":"EXTERNAL_VENDOR"}}',true);
 do $$begin if exists(select 1 from public.sadu_consignments) or exists(select 1 from public.sadu_freight_alerts) then raise exception 'Unassigned vendor data leak';end if;end $$;
-select set_config('request.jwt.claims','{"sub":"99999999-9999-4999-8999-999999999999","role":"authenticated","app_metadata":{"institutional_role":"HIP"}}',true);
+select set_config('request.jwt.claims','{"sub":"99999999-9999-4999-8999-999999999999","role":"authenticated","app_metadata":{"institutional_role":"GENERAL_COORDINATOR"}}',true);
 do $$begin if not exists(select 1 from public.sadu_freight_alerts) then raise exception 'Curator missing alert';end if;end $$;
 select set_config('request.jwt.claims','{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","app_metadata":{"institutional_role":"ARTIST"}}',true);
 do $$begin if not exists(select 1 from public.sadu_freight_alerts) then raise exception 'Artist missing alert';end if;end $$;
 reset role;set local role anon;
-select public.sadu_receive_consignment(current_setting('test.freight.token'),'{"packing_list":"Crate 1: artwork A","length_cm":100,"width_cm":80,"height_cm":40,"weight_kg":84,"insurance_value":5000,"currency":"EUR","country":"France","city":"Paris","district":"Test","street":"Test","building":"Gallery","map_url":"https://maps.google.com/?q=test","hours":"8 AM - noon, call one hour prior","phone":"+33123456789"}');
+select public.sadu_receive_consignment(current_setting('test.freight.token'),'{"packing_type":"MUSEUM_CRATE","return_country":"France","return_city":"Paris","return_address":"Gallery address","packing_list":"Crate 1: artwork A","length_cm":100,"width_cm":80,"height_cm":40,"weight_kg":84,"insurance_value":5000,"currency":"EUR","country":"France","city":"Paris","district":"Test","street":"Test","building":"Gallery","map_url":"https://maps.google.com/?q=test","hours":"8 AM - noon, call one hour prior","phone":"+33123456789"}');
 reset role;select sadu_private.escalate_freight_closures();
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"88888888-8888-4888-8888-888888888888","role":"authenticated","app_metadata":{"institutional_role":"EXTERNAL_VENDOR"}}',true);

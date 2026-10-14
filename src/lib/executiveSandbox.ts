@@ -14,12 +14,13 @@ export const sandboxRoles = {
   Artist_Portal: 'Artist Portal',
 } as const;
 export type SandboxRole = keyof typeof sandboxRoles;
-export type SandboxAction = 'SUBMIT' | 'REQUEST_REVISION' | 'READY' | 'VERIFY_PR' | 'COLLECTION' | 'PUBLISH';
+export type SandboxAction = 'SUBMIT' | 'REQUEST_REVISION' | 'READY' | 'VERIFY_PR' | 'COLLECTION' | 'PUBLISH' | 'DIRECTOR_RETURN';
 export type SandboxDossier = {
   revision: number;
-  status: 'Awaiting submission' | 'Under coordinator review' | 'Revision requested' | 'Executive review' | 'Published in sandbox';
+  status: 'Awaiting submission' | 'Under coordinator review' | 'Revision requested' | 'Returned by Director' | 'Executive review' | 'Published in sandbox';
   submission: string;
   critique: string;
+  directorReason: string;
   prRevision: number;
   collectionRevision: number;
   collection: { address: string; date: string; packing: string } | null;
@@ -33,11 +34,11 @@ export type SandboxState = { dossiers: Record<string, SandboxDossier>; decisions
 const owners: Record<SandboxAction, SandboxRole> = {
   SUBMIT: 'Artist_Portal', REQUEST_REVISION: 'General_Exhibition_Coordinator',
   READY: 'General_Exhibition_Coordinator', VERIFY_PR: 'PR_Officer',
-  COLLECTION: 'Logistics_Officer', PUBLISH: 'Director',
+  COLLECTION: 'Logistics_Officer', PUBLISH: 'Director', DIRECTOR_RETURN: 'Director',
 };
 export function emptySandbox(): SandboxState {
   return { dossiers: Object.fromEntries(executiveCases.map(c => [c.id, {
-    revision: 0, status: 'Awaiting submission', submission: '', critique: '',
+    revision: 0, status: 'Awaiting submission', submission: '', critique: '', directorReason: '',
     prRevision: 0, collectionRevision: 0, collection: null,
   }])), decisions: [] };
 }
@@ -46,15 +47,16 @@ export function sandboxBlock(d: SandboxDossier, role: SandboxRole, action: Sandb
   if (d.status === 'Published in sandbox') return 'This revision is published in the sandbox and locked.';
   if (action === 'SUBMIT') return ['Awaiting submission', 'Revision requested'].includes(d.status) ? '' : 'The submission is locked. The Coordinator must request a revision first.';
   if (d.revision === 0) return 'Waiting for the Artist to submit the artwork information.';
-  if (action === 'REQUEST_REVISION') return ['Under coordinator review', 'Executive review'].includes(d.status) ? '' : 'A submitted, unpublished revision is required.';
-  if (action === 'READY') return d.status === 'Under coordinator review' ? '' : 'Waiting for an artist submission or revision.';
+  if (action === 'DIRECTOR_RETURN') return d.status === 'Executive review' ? '' : 'The Director can return a dossier only while it is in Executive review.';
+  if (action === 'REQUEST_REVISION') return ['Under coordinator review', 'Executive review', 'Returned by Director'].includes(d.status) ? '' : 'A submitted, unpublished revision is required.';
+  if (action === 'READY') return ['Under coordinator review', 'Returned by Director'].includes(d.status) ? '' : 'Waiting for an artist submission or revision.';
   if (action === 'PUBLISH') {
     if (d.status !== 'Executive review') return 'Waiting for Coordinator approval.';
     if (d.prRevision !== d.revision) return 'Waiting for PR evidence on this revision.';
     if (d.collectionRevision !== d.revision) return 'Waiting for Logistics collection details on this revision.';
     return '';
   }
-  if (!['Under coordinator review', 'Executive review'].includes(d.status)) return 'Evidence can be recorded while a submitted revision is under review.';
+  if (!['Under coordinator review', 'Executive review', 'Returned by Director'].includes(d.status)) return 'Evidence can be recorded while a submitted revision is under review.';
   if (action === 'VERIFY_PR' && d.prRevision === d.revision) return 'PR evidence is recorded for this revision.';
   return '';
 }
@@ -77,7 +79,8 @@ export function applySandboxEvent(state: SandboxState, event: SandboxEvent): San
       next.submission = field('submission', 10); next.revision++; next.status = 'Under coordinator review';
       next.prRevision = 0; next.collectionRevision = 0; break;
     case 'REQUEST_REVISION': next.critique = field('critique', 5); next.status = 'Revision requested'; break;
-    case 'READY': next.status = 'Executive review'; break;
+    case 'READY': next.status = 'Executive review'; next.directorReason = ''; break;
+    case 'DIRECTOR_RETURN': next.directorReason = field('reason', 5); next.status = 'Returned by Director'; break;
     case 'VERIFY_PR':
       if (field('identity') !== 'confirmed' || field('travel') !== 'confirmed') throw new Error('Confirm both simulated evidence checks.');
       next.prRevision = next.revision; break;

@@ -32,4 +32,11 @@ Thumbs.db
 storybook-static
 sadu-app/
 
-repomix-output.md
+repomix-output.*
+
+# Local tooling and scratch files
+.claude/settings.local.json
+__pycache__/
+*.pyc
+supabase/local/.*.tmp
+.next/

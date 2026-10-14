@@ -1,6 +1,7 @@
 /* One viewport frame for every chapter; only its content changes. */
 .story-experience {
-  height: 100dvh;
+  /* The prelaunch preview bar sits above the frame; GlobalPasswordGate publishes its height. */
+  height: calc(100dvh - var(--sadu-preview-bar, 0px));
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -12,7 +13,8 @@
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  /* note bar, toolbar, authored band, main (flexible), footer */
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
 }
 
 .story-main {
@@ -79,7 +81,8 @@
 .story-card--portrait {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr);
-  grid-template-rows: auto minmax(min-content, 1fr) auto;
+  /* max-content: inside the fixed frame, auto rows could shrink below the heading and overlap the quote. */
+  grid-template-rows: max-content minmax(min-content, 1fr) max-content;
   gap: 16px 28px;
 }
 .story-card--portrait .story-heading {
@@ -149,6 +152,8 @@
 .story-progress span { line-height:18px; }
 .story-footer { min-height:30px; display:flex; align-items:center; justify-content:center; flex-wrap:wrap; }
 .story-footer span { line-height:1.6; }
+/* Phones: keep centered footer text clear of the 44px floating lock control in the end corner. */
+@media (max-width:639px) { .story-footer { padding-inline:56px; } }
 .story-controls button { height:40px; }
 .story-controls button span { line-height:1.5; }
 

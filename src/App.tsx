@@ -1,3 +1,6 @@
+import { InvitationArchive } from './components/InvitationArchive';
+import { invitationArchiveTransition, type InvitationVersion } from './data/invitationArchive';
+import {FreightChangeControl} from './components/FreightChangeControl';
 import {LogisticsActionQueue} from './components/LogisticsActionQueue';
 import {FreightClosureLedger} from './components/FreightClosureLedger';
 import {PublicationHandoff,ExhibitionTitleHeader} from './components/PublicationHandoff';
@@ -14,10 +17,9 @@ import {InstitutionalDashboard} from './components/InstitutionalDashboard';
 import {reassignDossier} from './data/institutionalMetrics';
 import {TextualVerificationLedger} from './components/CulturalVerificationCard';
 import {verifyTextualContent, textualCleared} from './data/culturalDeclaration';
-import {physicalAssetCleared, type CommissionAction} from './data/commissionScenario';
 import {IdleWorkspaceLock} from './components/IdleWorkspaceLock';
 import {CuratorialBoundaries} from './components/CuratorialBoundaries';
-import {publishBoundaries,nominationOpen,type Boundaries} from './data/curatorialBoundaries';
+import {publishBoundaries,nominationOpen} from './data/curatorialBoundaries';
 import {ArtistMetadataQueue} from './components/ArtworkMetadataLedger';
 import {ExhibitionChecklistQueue} from './components/LazyExhibitionScenario';
 import { GovernanceDesk, DelegatedRoleGate } from './components/VenueGovernance';
@@ -33,7 +35,6 @@ import { MasterDirectory } from './components/MasterDirectory';
 import { agreementPipelineReady } from './data/workflowEligibility';
 import { CommitteeNominationLedger } from './components/PrepCommitteeWorkspace';
 import {LocalProductionLedger} from './components/LocalProductionLedger';
-import {productionReady} from './data/logisticsExpansion';
 import { CommitteeNominationOutcome } from './components/CoordinatorWorkspace';
 import { LiveCatalogAggregator } from './components/CatalogMetadata';
 import { validCrate } from './data/installationOperations';
@@ -83,33 +84,32 @@ import { useMockupText } from './i18n/useMockupText';
  * ============================================================================
  */
 
-import { validParticipationScope, SOLO_INVITATION_2026 } from './data/soloInvitation2026';
-import React, { useState, useEffect, useReducer, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import RoleSelection, { AppRole } from './components/RoleSelection';
-import CommitteeThemeWorkspace, { CommitteeThemeDraft, isThemeBatchComplete } from './components/CommitteeThemeWorkspace';
+import CommitteeThemeWorkspace from './components/CommitteeThemeWorkspace';
 import { ArrivalDispatchPanel } from './components/ArrivalDispatchPanel';
 import {GreenlightedTechnicalMatrix} from './components/TechnicalRequirements';
 import { ArrivalPackagePreview } from './components/ArrivalPackagePreview';
 import { recordArrivalDispatch, type ArrivalDispatch, type ArrivalRecipientTag } from './data/arrivalPackage';
-import ChairmanWorkspace, { ThemeItem } from './components/ChairmanWorkspace';
-import HIPWorkspace, { TranslationStatus } from './components/HIPWorkspace';
-import EditorialWorkspace, { ThemePolishStatus } from './components/EditorialWorkspace';
+import ChairmanWorkspace from './components/ChairmanWorkspace';
+import GeneralCoordinatorWorkspace from './components/GeneralCoordinatorWorkspace';
+import EditorialWorkspace from './components/EditorialWorkspace';
 import DirectorWorkspace, { VETO_REASONS } from './components/DirectorWorkspace';
 import ArtistNominationForm, { NominatedArtistDossier } from './components/ArtistNominationForm';
 import { 
   CoordinatorContractWorkspace, 
-  VettedArtist, 
-  ContractFormState 
+  VettedArtist,
 } from './components/CoordinatorContractWorkspace';
 import ArtistPortalWorkspace from './components/ArtistPortalWorkspace';
 import PRWorkspace from './components/PRWorkspace';
 import FinanceWorkspace from './components/FinanceWorkspace';
 import TechnicalWorkspace from './components/TechnicalWorkspace';
 import { CommissionSummary } from './components/CommissionSummary';
-import { COMMISSION, createCommission, commissionReducer } from './data/commissionScenario';
+import { COMMISSION } from './data/commissionScenario';
 import { PresenterDrawer } from './components/PresenterDrawer';
+import { useThemePipeline } from './hooks/useThemePipeline';
+import { useCommissionContracts } from './hooks/useCommissionContracts';
 import { I18nProvider, useI18n } from './context/I18nContext';
-import { BilateralContract, DisbursementRecord, NegotiationRound } from './types/contractStage6';
 import {
   RotateCcw,
   ShieldCheck,
@@ -142,7 +142,7 @@ export type InstitutionalRole =
   | 'BIENNIAL_DIRECTOR' 
   | 'PREP_COMMITTEE' 
   | 'EDITORIAL' 
-  | 'HIP' 
+  | 'GENERAL_COORDINATOR' 
   | 'COORDINATOR' 
   | 'ARTIST' 
   | 'PR_PROTOCOL' 
@@ -155,7 +155,7 @@ const ROLE_NAME_MAP: Record<AppRole, InstitutionalRole> = {
   'Biennial Director': 'BIENNIAL_DIRECTOR',
   'Preparatory Committee': 'PREP_COMMITTEE',
   'Editorial': 'EDITORIAL',
-  'HIP': 'HIP',
+  'General Coordinator': 'GENERAL_COORDINATOR',
   'Coordinator': 'COORDINATOR',
   'Artist': 'ARTIST',
   'PR': 'PR_PROTOCOL',
@@ -220,39 +220,8 @@ function SADUApp() {
     workspaceScrollRef.current?.focus({ preventScroll: true });
   }, [activeRole]);
 
-  const [submittedThemes, setSubmittedThemes] = useState<CommitteeThemeDraft[] | undefined>(undefined);
-  const [directorThemes, setDirectorThemes] = useState<CommitteeThemeDraft[]>([]);
-  const [chairmanDocketRevision, setChairmanDocketRevision] = useState(0);
   const [executiveEscalations, setExecutiveEscalations] = useState<EscalationRecord[]>([]);
-  const [assignedBudget, setAssignedBudget] = useState<number | null>(null);
-  const [ratifiedTheme, setRatifiedTheme] = useState<ThemeItem | null>(null);
-
-  // Stage 1 & 2: Theme Ratification & Editorial Polish State
-  const [themePolishStatus, setThemePolishStatus] = useState<ThemePolishStatus>('PENDING_CHAIRMAN_APPROVAL');
-  const [arabicLocked, setArabicLocked] = useState(false);
-  const [themeEssayArabic, setThemeEssayArabic] = useState<string>('');
-  const [themeEssayEnglish, setThemeEssayEnglish] = useState<string>('');
-
-  // Stage 2: HIP & Translation Directives State
-  const [guidelinesArabic, setGuidelinesArabic] = useState<string>(
-    'دليل المعرض التوجيهي لبينالي الشارقة للخط: التأكيد على الحوار الجمالي الرصين بين النسب الفاضلة للخط العربي الأصيل والتجليات المعمارية المعاصرة. يتوجب على كافة الفنانين المرشحين تقديم أعمال تستند إلى أصالة السطر الكوفي والثلث مع استكشاف أبعاد الوسائط الحديثة والفراغية.'
-  );
-  const [guidelinesEnglish, setGuidelinesEnglish] = useState<string>(
-    'Exhibition Curatorial Guidelines: Emphasize the aesthetic dialogue between the sacred proportions of classical calligraphy and contemporary architectural manifestations. All nominated artists must ground their proposals in classical scripts while exploring modern spatial media.'
-  );
-  const [translationStatus, setTranslationStatus] = useState<TranslationStatus>('DRAFT');
-  const [hipSubmissionTime, setHipSubmissionTime] = useState<string | null>(null);
-  const [curatorialBrief, setCuratorialBrief] = useState<string>(
-    'Sharjah Calligraphy Biennial Curatorial Directive: Emphasize the dialogue between classical proportion and avant-garde architectural manifestation. All nominated artists must balance aesthetic script lineage with rigorous spatial experimentation.'
-  );
-  const [publishedBoundaries,setPublishedBoundaries]=useState<Boundaries|null>(null);
-  const [restrictionProposal, setRestrictionProposal] = useState<{tags: string[]; reason: string} | null>(null);
-  const [restrictionAudit, setRestrictionAudit] = useState<string[]>([]);
   const [activeCoordinatorId, setActiveCoordinatorId] = useState<string>(ASSIGNED_COORDINATOR);
-  const [blocklist, setBlocklist] = useState<string[]>([
-    'Restricted Nationality: Country X',
-    'Hazardous Medium: Open Flame',
-  ]);
 
   // Stage 3 & 4: Nominated Artists Pool
   const [dossierNotice,setDossierNotice] = useState('');
@@ -260,82 +229,22 @@ function SADUApp() {
   const [packingEvidence,setPackingEvidence] = useState<PackingEvidence>();
   const [nominatedArtists, setNominatedArtists] = useState<NominatedArtistDossier[]>(INITIAL_NOMINATIONS);
   const [arrivalDispatches,setArrivalDispatches]=useState<ArrivalDispatch[]>([]);
+  const [invitationLetters, setInvitationLetters] = useState<InvitationVersion[]>([]);
   const [resourceTickets,setResourceTickets]=useState<ResourceTicket[]>([]);
-  const commissionCoordinatorId = nominatedArtists.find(d=>d.id===COMMISSION.id)?.assignedCoordinatorId;
   const [artists, setArtists] = useState<VettedArtist[]>(INITIAL_VETTED_ARTISTS);
   const [isNominationFormOpen, setIsNominationFormOpen] = useState<boolean>(false);
 
-  const handleSubmitCommitteeThemes = (themes: CommitteeThemeDraft[]) => {
-    if (activeRole !== 'PREP_COMMITTEE' || ratifiedTheme || directorThemes.length || submittedThemes || !isThemeBatchComplete(themes)) return false;
-    setDirectorThemes(themes.map(theme => ({ ...theme })));
-    setSubmittedThemes(undefined);
-    return true;
-  };
-
-  const handleReturnToCommittee = () => {
-    if (activeRole !== 'BIENNIAL_DIRECTOR' || ratifiedTheme) return;
-    setDirectorThemes([]);
-    setSubmittedThemes(undefined);
-    setIsNominationFormOpen(false);
-    setActiveRole('PREP_COMMITTEE');
-  };
-
-  const handlePresentToChairman = (themes: CommitteeThemeDraft[]) => {
-    if (activeRole !== 'BIENNIAL_DIRECTOR' || ratifiedTheme || submittedThemes || !isThemeBatchComplete(themes)) return;
-    // Director may append advice, but cannot replace the Committee's proposal text.
-    if (!isThemeBatchComplete(directorThemes) || themes.some((theme, index) => {
-      const source = directorThemes[index];
-      return theme.arabicName !== source.arabicName || theme.englishName !== source.englishName ||
-        theme.aestheticFramework !== source.aestheticFramework || theme.contemporaryRelevance !== source.contemporaryRelevance ||
-        theme.curatorialJustification !== source.curatorialJustification;
-    })) return;
-    setChairmanDocketRevision(revision => revision + 1);
-    setSubmittedThemes(directorThemes.map((theme, index) => ({ ...theme, directorNotes: themes[index].directorNotes })));
-  };
-
-  const handleBudgetAssigned = (amount: number, theme: ThemeItem) => {
-    if (activeRole !== 'CHAIRMAN' || ratifiedTheme || !submittedThemes || !isThemeBatchComplete(submittedThemes) || !submittedThemes.some(candidate => candidate.arabicName === theme.arabicName && candidate.curatorialJustification === theme.curatorialJustification) || !Number.isFinite(amount) || amount <= 0) return;
-    setAssignedBudget(amount);
-    // Preserve the complete executive record, including both sets of notes.
-    const selected = submittedThemes.find(candidate => candidate.arabicName === theme.arabicName)!;
-    setRatifiedTheme({ ...selected, chairmanNotes: theme.chairmanNotes });
-    setArabicLocked(false);
-    setThemeEssayArabic('');
-    setThemeEssayEnglish('');
-    setThemePolishStatus('PENDING_EDITORIAL_POLISH');
-  };
-
-  const handlePublishOfficialTheme = ({
-    themeEssayArabic: essayAr,
-    themeEssayEnglish: essayEn,
-  }: {
-    themeEssayArabic: string;
-    themeEssayEnglish: string;
-  }) => {
-    if (activeRole !== 'EDITORIAL' || !ratifiedTheme || !arabicLocked || themePolishStatus !== 'PENDING_EDITORIAL_POLISH' || essayAr !== themeEssayArabic || essayAr.trim().length <= 10 || essayEn.trim().length <= 10) return false;
-    setThemeEssayArabic(essayAr);
-    setThemeEssayEnglish(essayEn);
-    setThemePolishStatus('PUBLISHED_OFFICIAL');
-    return true;
-  };
-
-  const handleSubmitToEditorial = (arabicText: string) => {
-    if (publishedBoundaries || activeRole !== 'HIP' || themePolishStatus !== 'PUBLISHED_OFFICIAL' || !['DRAFT', 'REQUEST_REVISION'].includes(translationStatus) || !arabicText.trim()) return;
-    setGuidelinesArabic(arabicText.trim());
-    setGuidelinesEnglish('');
-    setTranslationStatus('PENDING_TRANSLATION');
-    setHipSubmissionTime(new Date().toLocaleTimeString('ar-AE'));
-  };
-
-  const handlePublishBrief = (englishText: string, arabicSource: string) => {
-    if (activeRole !== 'EDITORIAL' || themePolishStatus !== 'PUBLISHED_OFFICIAL'
-      || translationStatus !== 'PENDING_TRANSLATION' || arabicSource !== guidelinesArabic || !englishText.trim()) return;
-    setGuidelinesEnglish(englishText.trim());
-    setTranslationStatus('PUBLISHED');
-    setCuratorialBrief(
-      `${englishText}\n\n[Arabic Original]: ${guidelinesArabic}`
-    );
-  };
+  // Stages 1–3 (themes, Editorial polish, curatorial guidelines) live in one hook.
+  const {
+    submittedThemes, setSubmittedThemes, directorThemes, chairmanDocketRevision, assignedBudget, ratifiedTheme,
+    themePolishStatus, setThemePolishStatus, arabicLocked, setArabicLocked,
+    themeEssayArabic, setThemeEssayArabic, themeEssayEnglish, setThemeEssayEnglish,
+    guidelinesArabic, guidelinesEnglish, setGuidelinesEnglish, translationStatus, setTranslationStatus, guidelinesSubmittedAt,
+    curatorialBrief, publishedBoundaries, setPublishedBoundaries, restrictionProposal, setRestrictionProposal,
+    restrictionAudit, setRestrictionAudit, blocklist, setBlocklist,
+    handleSubmitCommitteeThemes, handleReturnToCommittee, handlePresentToChairman, handleBudgetAssigned,
+    handlePublishOfficialTheme, handleSubmitToEditorial, handlePublishBrief,
+  } = useThemePipeline({ activeRole, setActiveRole, onReturnedToCommittee: () => setIsNominationFormOpen(false) });
 
   const handleNominateArtist = (dossier: NominatedArtistDossier) => {
     if (!nominationOpen(publishedBoundaries)||!['PREP_COMMITTEE', 'COORDINATOR'].includes(activeRole)) return;
@@ -403,276 +312,20 @@ function SADUApp() {
 
   };
 
-  // Stage 6: Bilateral Contracts & Disbursements State
-  const [commission, dispatchCommission] = useReducer(commissionReducer, undefined, createCommission);
-  const contracts = commission.contracts;
-  const resourceEligibleIds = nominatedArtists.filter(d=>d.status==='APPROVED'&&!d.amendments?.some(a=>a.status==='PENDING')&&contracts.some(c=>c.artistId===d.id&&['ARTIST_APPROVED','LOCKED'].includes(c.status))&&!(d.id===COMMISSION.id&&(damageHold(commission)||['EXECUTIVE_IMPOUND','ARCHIVED_CLOSED'].includes(commission.installationStatus??'')))).map(d=>d.id);
-  const resourceScopeKeys = Object.fromEntries(contracts.map(c=>[c.artistId,`${c.id}:${commission.agreementRevision}:${nominatedArtists.find(d=>d.id===c.artistId)?.approvalRevision??1}`]));
-  useEffect(() => {
-    if (commission.installationStatus) setArtists(rows => rows.map(a => a.id === COMMISSION.id ? {...a, status: commission.installationStatus!} : a));
-  }, [commission.installationStatus]);
-  const setContracts = (update: (previous: BilateralContract[]) => BilateralContract[]) =>
-    dispatchCommission({ type: 'contracts', update });
-
-  // Clearance mirrors the reducer's recorded evidence, including revocation on revised terms.
-  useEffect(() => {
-    setArtists(current => current.map(artist => artist.id === COMMISSION.id
-      ? { ...artist, prCleared: commission.evidence.prEvidenceGate, technicalCleared: commission.evidence.technicalEvidenceGate, physicalAssetCleared: physicalAssetCleared(commission) }
-      : artist));
-  }, [commission.evidence.prEvidenceGate, commission.evidence.technicalEvidenceGate, commission.logistics, commission.conditionReports, commission.agreementRevision]);
-
-  const handleClearPhysicalAsset = (artistId:string, action:CommissionAction) => {
-    if(activeRole!=='LOGISTICS'||artistId!==commission.contracts[0]?.artistId||!['receive-crate','verify-arrival'].includes(action.type))return;
-    const next=commissionReducer(commission,action);
-    if(next===commission)return;
-    dispatchCommission(action);
-    setArtists(rows=>rows.map(a=>a.id===artistId?{...a,physicalAssetCleared:physicalAssetCleared(next)}:a));
-  };
-
-  const handleClearPR = (artistId: string) => {
-    if (artistId !== COMMISSION.id || activeRole !== 'PR_PROTOCOL') return;
-    const action = { type: 'record-pr', actor: activeRole, at: new Date().toISOString() } as const;
-    if (!commissionReducer(commission, action).evidence.prEvidenceGate) return;
-    dispatchCommission(action);
-    setArtists(current => current.map(artist => artist.id === artistId ? { ...artist, prCleared: true } : artist));
-  };
-
-  const handleClearTechnical = (artistId: string) => {
-    if (artistId !== COMMISSION.id || activeRole !== 'TECHNICAL') return;
-    const action = { type: 'record-technical', actor: activeRole, at: new Date().toISOString() } as const;
-    if (!commissionReducer(commission, action).evidence.technicalEvidenceGate) return;
-    dispatchCommission(action);
-    setArtists(current => current.map(artist => artist.id === artistId ? { ...artist, technicalCleared: true } : artist));
-  };
-
-  const handleDispatchContract = (
-    artistId: string,
-    contractTerms: any,
-    shippingTermsArg?: string,
-    resolutionNotes?: string
-  ) => {
-    if (damageHold(commission) || ['ARCHIVED_CLOSED','EXECUTIVE_IMPOUND'].includes(commission.installationStatus ?? '') || !agreementPipelineReady(themePolishStatus, translationStatus, isIsolatedRehearsalMode)) return;
-    const terms = contractTerms as ContractFormState;
-    if (!['ARTIST','DEPARTMENT'].includes(terms.shippingLiability ?? '') || (!terms.productionOrigin || !productionReady(terms)) || commission.installationStatus === 'EXECUTIVE_IMPOUND') return;
-    const approvedDossier = nominatedArtists.find(d => d.id === artistId);
-    if (!approvedDossier || approvedDossier.status !== 'APPROVED' || approvedDossier.assignedCoordinatorId !== activeCoordinatorId || approvedDossier.amendments?.some(a => a.status === 'PENDING') || approvedDossier.artworkCount !== terms.artworkCount) return;
-    if (artistId !== COMMISSION.id || activeRole !== 'COORDINATOR' || activeCoordinatorId !== commissionCoordinatorId) return;
-    if (!validParticipationScope(terms) || terms.participationCategory !== 'SINGLE_WORK') return;
-    if (!['DEPARTMENT', 'HOUSE_OF_WISDOM', 'SHARJAH_ART_MUSEUM'].includes(terms.venue) || (terms.venue !== 'DEPARTMENT' && !terms.venueClearanceReference?.trim()) || commission.ledger?.length) return;
-    const percentages = [terms.advancePercentage, terms.interimPercentage, terms.finalPercentage];
-    if (!Number.isFinite(terms.productionGrant) || terms.productionGrant <= 0
-      || percentages.some(value => !Number.isFinite(value) || value < 0 || value > 100)
-      || Math.abs(percentages.reduce((a, b) => a + b, 0) - 100) > 0.000001) return;
-    if (commission.invitation?.status === 'INVITATION_DISPATCHED' || (contracts[0] && !['CONTRACT_DISPUTED','AMENDMENT_UNDER_REVIEW'].includes(contracts[0].status))) return;
-    const cleanArtistId = artistId.startsWith('contract-') ? artistId.replace('contract-', '') : artistId;
-    const targetArtist =
-      artists.find(a => a.id === cleanArtistId || a.id === artistId) ||
-      nominatedArtists.find(a => a.id === cleanArtistId || a.id === artistId);
-
-    const isObjectTerms = typeof contractTerms === 'object' && contractTerms !== null;
-    const productionCost = isObjectTerms
-      ? (contractTerms.productionGrant ?? contractTerms.productionCost ?? 45000)
-      : (typeof contractTerms === 'number' ? contractTerms : 45000);
-    const advancePct = isObjectTerms ? (contractTerms.advancePercentage ?? 40) : 30;
-    const interimPct = isObjectTerms ? (contractTerms.interimPercentage ?? 30) : 40;
-    const finalPct = isObjectTerms ? (contractTerms.finalPercentage ?? 30) : 30;
-    const shippingMethod = isObjectTerms
-      ? (contractTerms.shippingMethod || 'Fine Art Dedicated Freight (Climate Controlled)')
-      : (shippingTermsArg || 'Fine Art Dedicated Freight (Climate Controlled)');
-
-    const advanceAmount = Math.round(productionCost * advancePct) / 100;
-    const deliveryAmount = Math.round(productionCost * interimPct) / 100;
-    const installationAmount = Math.round((productionCost - advanceAmount - deliveryAmount) * 100) / 100;
-
-    {
-      const existing = contracts.find(
-        c => c.artistId === cleanArtistId || c.id === artistId || c.id === `contract-${cleanArtistId}`
-      );
-
-      const contractId = existing?.id || (artistId.startsWith('contract-') ? artistId : `contract-${artistId}`);
-
-      const newContractRecord: any = {
-        id: contractId,
-        artistId: cleanArtistId,
-        artistName: commission.invitation?.legalName || (targetArtist as any)?.name_en || (targetArtist as any)?.artistName || 'Artist',
-        artistCategory:
-          ((targetArtist as any)?.category === 'ESTABLISHED' || (targetArtist as any)?.artistCategory === 'Established')
-            ? 'Established'
-            : 'Emerging',
-        nationality: approvedDossier.nationality,
-        medium: approvedDossier.medium,
-        proposedWorkTitle: approvedDossier.proposedWorkTitle,
-        themeArabic: themePolishStatus === 'PUBLISHED_OFFICIAL' ? ratifiedTheme?.arabicName : undefined,
-        productionCost,
-        productionOrigin: terms.productionOrigin,
-        localVendorId: terms.localVendorId,
-        shippingLiability: terms.shippingLiability,
-        shippingTerms: shippingMethod,
-        specialConditions: terms.specialConditions,
-        crate: terms.crate,
-        participationCategory: terms.participationCategory,
-        artworkCount: terms.artworkCount,
-        invitationSourceId: undefined,
-        venue: terms.venue,
-        venueClearanceReference: terms.venueClearanceReference,
-        cancellationClauseMandatory: true,
-        status: 'SENT_TO_ARTIST',
-        draftedAt: existing?.draftedAt || new Date().toISOString(),
-        sentAt: new Date().toISOString(),
-        tranches: {
-          advancePercentage: advancePct,
-          advanceAmount,
-          advanceStatus: existing?.tranches?.advanceStatus || 'PENDING',
-          advanceDisbursedAt: existing?.tranches?.advanceDisbursedAt,
-          advanceVoucherRef: existing?.tranches?.advanceVoucherRef,
-          deliveryPercentage: interimPct,
-          deliveryAmount,
-          deliveryStatus: existing?.tranches?.deliveryStatus || 'PENDING',
-          deliveryDisbursedAt: existing?.tranches?.deliveryDisbursedAt,
-          deliveryVoucherRef: existing?.tranches?.deliveryVoucherRef,
-          installationPercentage: finalPct,
-          installationAmount,
-          installationStatus: existing?.tranches?.installationStatus || 'PENDING',
-          installationDisbursedAt: existing?.tranches?.installationDisbursedAt,
-          installationVoucherRef: existing?.tranches?.installationVoucherRef,
-        },
-        documents: existing?.documents || {
-          passportStatus: 'NOT_UPLOADED',
-          artworkDpi: 300,
-          highResStatus: 'NOT_UPLOADED',
-          catalogBioStatus: 'DRAFT',
-        },
-        auditTrail: existing?.auditTrail || [],
-        terms: contractTerms,
-        createdAt: new Date().toISOString(),
-      };
-
-      if (existing) {
-        setContracts(previous => previous.map(c => c.id === existing.id ? newContractRecord : c));
-        setArtists(previous => previous.map(a => a.id === artistId ? {...a,status:'CONTRACT_PENDING_SIGNATURE'} : a));
-      } else {
-        dispatchCommission({type:'dispatch-invitation',actor:activeRole,pipelineReady:true,id:crypto.randomUUID(),at:new Date().toISOString(),contract:newContractRecord});
-      }
-    }
-    return true;
-  };
-  useEffect(() => {
-    const invitation = commission.invitation;
-    if (!invitation) return;
-    setArtists(previous => previous.map(a => a.id === invitation.artistId ? {...a,
-      name_en:invitation.legalName ?? a.name_en,
-      status:'CONTRACT_PENDING_SIGNATURE'} : a));
-    if (invitation.legalName) setNominatedArtists(previous => previous.map(d => d.id === invitation.artistId ? {...d,artistName:invitation.legalName!} : d));
-  }, [commission.invitation]);
-  const handleConfirmIdentity = (legalName:string) => {
-    const dossier = nominatedArtists.find(d => d.id === COMMISSION.id);
-    if (activeRole !== 'ARTIST' || !commission.invitation || dossier?.status !== 'APPROVED' || dossier.amendments?.some(a=>a.status==='PENDING')) return;
-    dispatchCommission({type:'confirm-identity',actor:activeRole,invitationId:commission.invitation.id,legalName,at:new Date().toISOString(),
-      pipelineReady:agreementPipelineReady(themePolishStatus,translationStatus,isIsolatedRehearsalMode)});
-  };
-  const handleSignContract = (contractId?: string, signerName?: string) => {
-    const target = contracts.find(c => c.id === contractId);
-    if (damageHold(commission) || ['ARCHIVED_CLOSED','EXECUTIVE_IMPOUND'].includes(commission.installationStatus ?? '') || activeRole !== 'ARTIST' || !target || target.status !== 'SENT_TO_ARTIST' || signerName !== target.artistName) return;
-    setArtists(previous => previous.map(artist => artist.id === target.artistId ? { ...artist, status: 'LOGISTICS_PENDING_PR' } : artist));
-    setContracts(prev =>
-      prev.map(c =>
-        c.id === contractId
-          ? {
-              ...c,
-              status: 'ARTIST_APPROVED',
-              signedAt: new Date().toISOString().split('T')[0],
-              signatureReference: `REF-SCB-EXEC-${Math.floor(1000 + Math.random() * 9000)}`,
-            }
-          : c
-      )
-    );
-  };
-
-  const handleRequestAmendment = (
-    contractId: string,
-    category: NegotiationRound['disputedCategory'],
-    justification: string,
-    proposedGrant?: number
-  ) => {
-    const target = contracts.find(c => c.id === contractId);
-    if (damageHold(commission) || ['ARCHIVED_CLOSED','EXECUTIVE_IMPOUND'].includes(commission.installationStatus ?? '') || activeRole !== 'ARTIST' || !target || target.status !== 'SENT_TO_ARTIST' || !justification.trim() || commission.ledger?.length) return;
-    setArtists(rows => rows.map(row => row.id === target.artistId ? {...row, status: 'CONTRACT_DISPUTED'} : row));
-    dispatchCommission({ type: 'CONTRACT_DISPUTED', actor: activeRole, contractId,
-      round: { id: `neg-${Date.now()}`, contractId, requestedAt: new Date().toISOString(),
-        disputedCategory: category, artistJustification: justification, justification,
-        proposedValue: proposedGrant, proposedGrant, status: 'PENDING_COORDINATOR_REVIEW' } });
-  };
-
-  const handleStartReviewAmendment = (contractId: string) => {
-    setContracts(prev =>
-      prev.map(c =>
-        c.id === contractId && c.status === 'CONTRACT_DISPUTED'
-          ? { ...c, status: 'AMENDMENT_UNDER_REVIEW' }
-          : c
-      )
-    );
-  };
-
-  const handleUploadPassport = (contractId: string, fileName: string) => {
-    setContracts(prev =>
-      prev.map(c =>
-        c.id === contractId
-          ? {
-              ...c,
-              documents: {
-                ...c.documents,
-                passportFileName: fileName,
-                passportStatus: 'SUBMITTED',
-                passportUploadedAt: new Date().toISOString(),
-              },
-            }
-          : c
-      )
-    );
-  };
-
-  const handleUploadHighResArtwork = (contractId: string, fileName: string, dpi: number) => {
-    setContracts(prev =>
-      prev.map(c =>
-        c.id === contractId
-          ? {
-              ...c,
-              documents: {
-                ...c.documents,
-                highResArtworkFileName: fileName,
-                artworkDpi: dpi,
-                highResStatus: 'SUBMITTED',
-                highResUploadedAt: new Date().toISOString(),
-                highResVerifiedAt: undefined,
-                highResNotes: undefined,
-              },
-            }
-          : c
-      )
-    );
-  };
-
-  const handleSaveBio = (contractId: string, bioAr: string, bioEn: string) => {
-    setContracts(prev =>
-      prev.map(c =>
-        c.id === contractId
-          ? {
-              ...c,
-              documents: {
-                ...c.documents,
-                catalogBioArabic: bioAr,
-                catalogBioEnglish: bioEn,
-                catalogBioStatus: 'SUBMITTED',
-              },
-            }
-          : c
-      )
-    );
-  };
+  // Stages 6–8 (agreement, signature, amendments, documents, evidence gates) live in one hook.
+  const {
+    commission, dispatchCommission, contracts, setContracts, commissionCoordinatorId, resourceEligibleIds, resourceScopeKeys,
+    handleClearPhysicalAsset, handleClearPR, handleClearTechnical, handleDispatchContract, handleConfirmIdentity,
+    handleSignContract, handleRequestAmendment, handleStartReviewAmendment, handleUploadPassport,
+    handleUploadHighResArtwork, handleSaveBio,
+  } = useCommissionContracts({
+    activeRole, activeCoordinatorId, nominatedArtists, setNominatedArtists, artists, setArtists,
+    themePolishStatus, translationStatus, ratifiedTheme, isIsolatedRehearsalMode,
+  });
 
   const handleAutoNavigate = (role: string) => {
     const target: InstitutionalRole | null = role === 'DIRECTOR' ? 'BIENNIAL_DIRECTOR'
-      : role === 'CHAIRMAN' || role === 'EDITORIAL' || role === 'HIP' ? role : null;
+      : role === 'CHAIRMAN' || role === 'EDITORIAL' || role === 'GENERAL_COORDINATOR' ? role : null;
     if (target) setPendingNavigation({ role: target, id: Date.now() });
     scrollWorkspaceToTop();
   };
@@ -815,9 +468,9 @@ function SADUApp() {
           />
         );
 
-      case 'HIP':
+      case 'GENERAL_COORDINATOR':
         return (
-          <><TextualVerificationLedger dossiers={nominatedArtists} isAr={isAr} onVerify={id=>setNominatedArtists(rows=>rows.map(d=>d.id===id?verifyTextualContent(d,activeRole,new Date().toISOString()):d))}/><HIPWorkspace
+          <><TextualVerificationLedger dossiers={nominatedArtists} isAr={isAr} onVerify={id=>setNominatedArtists(rows=>rows.map(d=>d.id===id?verifyTextualContent(d,activeRole,new Date().toISOString()):d))}/><GeneralCoordinatorWorkspace
             arabicLocked={arabicLocked}
             publishedBoundaries={publishedBoundaries}
             onPublishBoundaries={confirmed=>setPublishedBoundaries(current=>publishBoundaries(current,activeRole,themePolishStatus,translationStatus,guidelinesArabic,guidelinesEnglish,blocklist,Boolean(restrictionProposal),confirmed,new Date().toISOString()))}
@@ -827,9 +480,9 @@ function SADUApp() {
             themeStatus={themePolishStatus}
             guidelinesArabic={guidelinesArabic}
             translationStatus={translationStatus}
-            hipSubmissionTime={hipSubmissionTime}
+            guidelinesSubmittedAt={guidelinesSubmittedAt}
             onRequestRevision={() => {
-              if (!publishedBoundaries && activeRole === 'HIP' && translationStatus === 'PUBLISHED') setTranslationStatus('REQUEST_REVISION');
+              if (!publishedBoundaries && activeRole === 'GENERAL_COORDINATOR' && translationStatus === 'PUBLISHED') setTranslationStatus('REQUEST_REVISION');
             }}
             onSubmitToEditorial={handleSubmitToEditorial}
             curatorialBrief={curatorialBrief}
@@ -838,7 +491,7 @@ function SADUApp() {
             restrictionPending={Boolean(restrictionProposal)}
             restrictionAudit={restrictionAudit}
             onUpdateBlocklist={(tags, reason) => {
-              if (publishedBoundaries || activeRole !== 'HIP' || themePolishStatus !== 'PUBLISHED_OFFICIAL' || !reason.trim() || restrictionProposal) return;
+              if (publishedBoundaries || activeRole !== 'GENERAL_COORDINATOR' || themePolishStatus !== 'PUBLISHED_OFFICIAL' || !reason.trim() || restrictionProposal) return;
               setRestrictionProposal({ tags, reason: reason.trim() });
             }}
             ratifiedTheme={ratifiedTheme}
@@ -852,7 +505,7 @@ function SADUApp() {
             <section className="rounded border border-[#D9CEBA] bg-[#F7F1E6] ps-5 pe-5 py-5 space-y-3 text-start">
               <h2 className="text-xl font-semibold">{isAr ? 'المرحلة 4 · مكتب المنسق المكلّف' : 'Stage 4 · Assigned Coordinator desk'}</h2>
               <label className="block">{isAr ? 'اختيار المنسقة للمحاكاة — ليس تسجيل دخول' : 'Demo coordinator selection — not authentication'}
-                <select className="mt-2 block rounded border ps-3 pe-3 py-2" value={activeCoordinatorId} onChange={e => {setActiveCoordinatorId(e.target.value);setDelegationNotice('');}}><option value={GENERAL_COORDINATOR_ID}>{isAr ? 'المنسق العام — محاكاة' : 'General Coordinator — rehearsal'}</option>{COORDINATORS.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
+                <select className="mt-2 block rounded border ps-3 pe-3 py-2" value={activeCoordinatorId} onChange={e => {setActiveCoordinatorId(e.target.value);setDelegationNotice('');}}><option value={GENERAL_COORDINATOR_ID}>{isAr ? 'المنسقة — محاكاة' : 'General Exhibition Coordinator — rehearsal'}</option>{COORDINATORS.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
               </label>
               {assignedTo(nominatedArtists,activeCoordinatorId).map(d=><section key={`deliverables:${d.id}`}><MissingDeliverables artistId={d.id} artistName={d.artistName} isAr={isAr}/>{d.status==='APPROVED'&&<details><summary className="cursor-pointer">{d.artistName} · {isAr?'أوامر التصنيع':'Fabrication orders'}</summary><FabricationLedger artistId={d.id} artistName={d.artistName} isAr={isAr} actor="COORDINATOR" blocked={d.id===COMMISSION.id&&(damageHold(commission)||commission.installationStatus==='EXECUTIVE_IMPOUND'||commission.installationStatus==='ARCHIVED_CLOSED')}/></details>}</section>)}
               <RegionalDelegation isAr={isAr} dossiers={activeCoordinatorId === GENERAL_COORDINATOR_ID ? nominatedArtists : assignedTo(nominatedArtists, activeCoordinatorId)} canDelegate={activeCoordinatorId === GENERAL_COORDINATOR_ID} notice={delegationNotice} lockedIds={[...contracts.map(c=>c.artistId),...regionalClaims.map(c=>c.artistId)]} onDelegate={(region,target)=>{
@@ -967,7 +620,7 @@ function SADUApp() {
 
   // Presentation-only summary derived from the existing approval state.
   // Department switching never mutates or skips an approval gate.
-  const executiveRoles: InstitutionalRole[] = ['PREP_COMMITTEE', 'BIENNIAL_DIRECTOR', 'CHAIRMAN', 'EDITORIAL', 'HIP'];
+  const executiveRoles: InstitutionalRole[] = ['PREP_COMMITTEE', 'BIENNIAL_DIRECTOR', 'CHAIRMAN', 'EDITORIAL', 'GENERAL_COORDINATOR'];
   let handoff: WorkspaceHandoff | undefined;
   if (executiveRoles.includes(activeRole)) {
     if (themePolishStatus === 'PUBLISHED_OFFICIAL') {
@@ -975,7 +628,7 @@ function SADUApp() {
         ? { title: isAr ? 'ترجمة الدليل قيد الانتظار' : 'Guidelines awaiting translation', description: isAr ? 'المسؤول: قسم التحرير' : 'Owner: Editorial', owner: 'EDITORIAL' }
         : translationStatus === 'PUBLISHED'
           ? { title: isAr ? 'نُشرت الثيمة والدليل باللغتين' : 'Theme and bilingual guidelines published', description: isAr ? 'اكتملت مراحل الاعتماد والتحرير والتوجيهات' : 'Approval, editorial and guidelines complete' }
-          : { title: isAr ? 'الثيمة منشورة · إعداد الدليل' : 'Theme published · draft guidelines', description: isAr ? 'المسؤول: منسق معرض عام' : 'Owner: HIP', owner: 'HIP' };
+          : { title: isAr ? 'الثيمة منشورة · إعداد الدليل' : 'Theme published · draft guidelines', description: isAr ? 'المسؤول: المنسقة' : 'Owner: General Exhibition Coordinator', owner: 'GENERAL_COORDINATOR' };
     } else if (ratifiedTheme) {
       handoff = { title: isAr ? 'الثيمة والميزانية معتمدتان' : 'Theme and budget ratified', description: isAr ? 'المسؤول: قسم التحرير · الصياغة والترجمة' : 'Owner: Editorial · refinement and translation', owner: 'EDITORIAL' };
     } else if (submittedThemes?.length === 3) {
@@ -989,7 +642,7 @@ function SADUApp() {
 
   if (['COORDINATOR', 'ARTIST', 'PR_PROTOCOL', 'TECHNICAL', 'FINANCE', 'LOGISTICS'].includes(activeRole)) handoff = operationalHandoff(commission, isAr);
 
-  if ((activeRole==='COORDINATOR'||translationStatus==='PUBLISHED'&&activeRole==='HIP')&&!nominationOpen(publishedBoundaries)) handoff={title:isAr?'نشر محددات المعرض قيد الانتظار':'Curatorial boundaries publication pending',description:isAr?'المسؤول: منسق البرامج الدولية':'Owner: HIP',owner:'HIP'};
+  if ((activeRole==='COORDINATOR'||translationStatus==='PUBLISHED'&&activeRole==='GENERAL_COORDINATOR')&&!nominationOpen(publishedBoundaries)) handoff={title:isAr?'نشر محددات المعرض قيد الانتظار':'Curatorial boundaries publication pending',description:isAr?'المسؤول: المنسقة':'Owner: General Exhibition Coordinator',owner:'GENERAL_COORDINATOR'};
 
   if (activeRole === 'LANDING' && !showStory) return <Gateway isAr={isAr} onEnter={() => setActiveRole('PREP_COMMITTEE')} onStory={() => setShowStory(true)} onLanguage={toggleLang} />;
   if (activeRole === 'LANDING') {
@@ -1011,23 +664,24 @@ function SADUApp() {
       <DirectoryRegistration artists={nominatedArtists} />
       <WorkspaceNavigation role={activeRole} onNavigate={setActiveRole} isAr={isAr}
         onToggleLanguage={toggleLang} onOpenPresenter={() => setIsPresenterDrawerOpen(prev => !prev)} handoff={pendingNavigation && handoff ? { ...handoff, owner: undefined } : handoff} />
-      <PresentationHandoff isAr={isAr} automatic={autoForward} onAutomaticChange={setAutoForward} pending={pendingNavigation ? { id: pendingNavigation.id, label: ({ BIENNIAL_DIRECTOR: isAr ? 'مدير الملتقى' : 'Biennial Director', CHAIRMAN: isAr ? 'رئيس الدائرة' : 'Chairman', EDITORIAL: isAr ? 'قسم التحرير' : 'Editorial', HIP: isAr ? 'منسق معرض عام' : 'HIP' } as Partial<Record<InstitutionalRole, string>>)[pendingNavigation.role] ?? pendingNavigation.role } : null} onContinue={continueNavigation} />
+      <PresentationHandoff isAr={isAr} automatic={autoForward} onAutomaticChange={setAutoForward} pending={pendingNavigation ? { id: pendingNavigation.id, label: ({ BIENNIAL_DIRECTOR: isAr ? 'مدير الملتقى' : 'Biennial Director', CHAIRMAN: isAr ? 'رئيس الدائرة' : 'Chairman', EDITORIAL: isAr ? 'قسم التحرير' : 'Editorial', GENERAL_COORDINATOR: isAr ? 'المنسقة' : 'General Exhibition Coordinator' } as Partial<Record<InstitutionalRole, string>>)[pendingNavigation.role] ?? pendingNavigation.role } : null} onContinue={continueNavigation} />
 
       {/* 
         WORKSPACE MOUNT POINT
         The actual Archival Heritage Pop UI renders inside this container.
       */}
       <main id="workspace-scroll" tabIndex={-1} ref={workspaceScrollRef} className="flex-1 overflow-y-auto relative bg-[#F7F1E6]">
-        {!['CHAIRMAN', 'BIENNIAL_DIRECTOR', 'EDITORIAL', 'HIP', 'ROLES', 'PR_PROTOCOL', 'TECHNICAL', 'FINANCE'].includes(activeRole) && (activeRole !== 'PREP_COMMITTEE' || isNominationFormOpen) && (activeRole !== 'COORDINATOR' || nominationOpen(publishedBoundaries)&&activeCoordinatorId === commissionCoordinatorId) && <aside className="border-b border-[#D9CEBA] ps-4 pe-4 py-3 text-start" dir={isAr ? 'rtl' : 'ltr'}>
+        {!['CHAIRMAN', 'BIENNIAL_DIRECTOR', 'EDITORIAL', 'GENERAL_COORDINATOR', 'ROLES', 'PR_PROTOCOL', 'TECHNICAL', 'FINANCE'].includes(activeRole) && (activeRole !== 'PREP_COMMITTEE' || isNominationFormOpen) && (activeRole !== 'COORDINATOR' || nominationOpen(publishedBoundaries)&&activeCoordinatorId === commissionCoordinatorId) && <aside className="border-b border-[#D9CEBA] ps-4 pe-4 py-3 text-start" dir={isAr ? 'rtl' : 'ltr'}>
           <CommissionSummary isAr={isAr} legalName={commission.invitation?.legalName} showTechnical={activeRole !== 'PR_PROTOCOL'} />
         </aside>}
 
         <DelegatedRoleGate role={activeRole}>
+        {['COORDINATOR', 'BIENNIAL_DIRECTOR', 'CHAIRMAN'].includes(activeRole) && <InvitationArchive rows={invitationLetters} dossiers={nominatedArtists} actor={activeRole} coordinatorId={activeCoordinatorId} isAr={isAr} onAction={action => setInvitationLetters(rows => invitationArchiveTransition(rows, action, nominatedArtists, activeRole, activeCoordinatorId, new Date().toISOString()))} />}
         {activeRole==='COORDINATOR'&&!nominationOpen(publishedBoundaries)?<CuratorialBoundaries isAr={isAr}/>:<>
-        {['BIENNIAL_DIRECTOR','CHAIRMAN','PR_PROTOCOL','FINANCE','HIP'].includes(activeRole)&&<InstitutionalDashboard dossiers={nominatedArtists} evidence={artists.map(a=>a.id===COMMISSION.id?{...a,status:commission.installationStatus??a.status,prCleared:commission.evidence.prEvidenceGate}:a)} isAr={isAr} canReassign={activeRole==='BIENNIAL_DIRECTOR'} lockedIds={[...contracts.filter(c=>c.status!=='NOT_DRAFTED').map(c=>c.artistId),...(commission.invitation?[commission.invitation.artistId]:[])]} onReassign={(id,target,reason)=>setNominatedArtists(rows=>reassignDossier(rows,id,target,reason,activeRole,new Date().toISOString(),[...contracts.filter(c=>c.status!=='NOT_DRAFTED').map(c=>c.artistId),...(commission.invitation?[commission.invitation.artistId]:[])]))}/>}
-        {['HIP','BIENNIAL_DIRECTOR'].includes(activeRole)&&<AssetStateDashboard artists={nominatedArtists}/>}
+        {['BIENNIAL_DIRECTOR','CHAIRMAN','PR_PROTOCOL','FINANCE','GENERAL_COORDINATOR'].includes(activeRole)&&<InstitutionalDashboard dossiers={nominatedArtists} evidence={artists.map(a=>a.id===COMMISSION.id?{...a,status:commission.installationStatus??a.status,prCleared:commission.evidence.prEvidenceGate}:a)} isAr={isAr} canReassign={activeRole==='BIENNIAL_DIRECTOR'} lockedIds={[...contracts.filter(c=>c.status!=='NOT_DRAFTED').map(c=>c.artistId),...(commission.invitation?[commission.invitation.artistId]:[])]} onReassign={(id,target,reason)=>setNominatedArtists(rows=>reassignDossier(rows,id,target,reason,activeRole,new Date().toISOString(),[...contracts.filter(c=>c.status!=='NOT_DRAFTED').map(c=>c.artistId),...(commission.invitation?[commission.invitation.artistId]:[])]))}/>}
+        {['GENERAL_COORDINATOR','BIENNIAL_DIRECTOR'].includes(activeRole)&&<AssetStateDashboard artists={nominatedArtists}/>}
         {['COORDINATOR','BIENNIAL_DIRECTOR','FINANCE','PR_PROTOCOL'].includes(activeRole)&&<HospitalityExceptions actor={activeRole} artists={(activeRole==='COORDINATOR'?assignedTo(nominatedArtists,activeCoordinatorId):nominatedArtists).filter(a=>a.status==='APPROVED')}/>}
-        {['COORDINATOR','BIENNIAL_DIRECTOR'].includes(activeRole)&&<PendingAssetTracker/>}{activeRole==='FINANCE'&&<ArtworkValues/>}{['COORDINATOR','HIP','BIENNIAL_DIRECTOR','CHAIRMAN','PR_PROTOCOL','TECHNICAL'].includes(activeRole)&&<ExhibitionTitleHeader/>}{renderWorkspace()}{['ARTIST','LOGISTICS','BIENNIAL_DIRECTOR','CHAIRMAN'].includes(activeRole)&&<LogisticsActionQueue artist={activeRole==='ARTIST'} officer={activeRole==='LOGISTICS'}/>}{['ARTIST','HIP','LOGISTICS'].includes(activeRole)&&<FreightClosureLedger logistics={activeRole==='LOGISTICS'}/>}{activeRole==='EDITORIAL'&&<PublicationHandoff editorial/>}{activeRole==='HIP'&&<ExhibitionTitleGate curator/>}{['TECHNICAL','COORDINATOR','LOGISTICS','ARTIST'].includes(activeRole)&&<ArrivalFeed/>}{['COORDINATOR','PR_PROTOCOL'].includes(activeRole)&&<PublicationEscrow assignedArtistIds={activeRole==='COORDINATOR'?assignedTo(nominatedArtists,activeCoordinatorId).map(d=>d.id):undefined}/>}{['COORDINATOR','PR_PROTOCOL','LOGISTICS','HIP','TECHNICAL'].includes(activeRole)&&<ArtistMetadataQueue exportLabels={['COORDINATOR','PR_PROTOCOL','TECHNICAL','LOGISTICS'].includes(activeRole)}/>}{['COORDINATOR','LOGISTICS'].includes(activeRole)&&<ExhibitionChecklistQueue/>}
+        {['COORDINATOR','BIENNIAL_DIRECTOR'].includes(activeRole)&&<PendingAssetTracker/>}{activeRole==='FINANCE'&&<ArtworkValues/>}{['COORDINATOR','GENERAL_COORDINATOR','BIENNIAL_DIRECTOR','CHAIRMAN','PR_PROTOCOL','TECHNICAL'].includes(activeRole)&&<ExhibitionTitleHeader/>}{renderWorkspace()}{['ARTIST','LOGISTICS','FINANCE'].includes(activeRole)&&<FreightChangeControl actor={activeRole}/>}{['ARTIST','LOGISTICS','BIENNIAL_DIRECTOR','CHAIRMAN'].includes(activeRole)&&<LogisticsActionQueue artist={activeRole==='ARTIST'} officer={activeRole==='LOGISTICS'}/>}{['ARTIST','GENERAL_COORDINATOR','LOGISTICS'].includes(activeRole)&&<FreightClosureLedger logistics={activeRole==='LOGISTICS'}/>}{activeRole==='EDITORIAL'&&<PublicationHandoff editorial/>}{activeRole==='GENERAL_COORDINATOR'&&<ExhibitionTitleGate curator/>}{['TECHNICAL','COORDINATOR','LOGISTICS','ARTIST'].includes(activeRole)&&<ArrivalFeed/>}{['COORDINATOR','PR_PROTOCOL'].includes(activeRole)&&<PublicationEscrow assignedArtistIds={activeRole==='COORDINATOR'?assignedTo(nominatedArtists,activeCoordinatorId).map(d=>d.id):undefined}/>}{['COORDINATOR','PR_PROTOCOL','LOGISTICS','GENERAL_COORDINATOR','TECHNICAL'].includes(activeRole)&&<ArtistMetadataQueue exportLabels={['COORDINATOR','PR_PROTOCOL','TECHNICAL','LOGISTICS'].includes(activeRole)}/>}{['COORDINATOR','LOGISTICS'].includes(activeRole)&&<ExhibitionChecklistQueue/>}
         {['TECHNICAL','COORDINATOR','FINANCE','BIENNIAL_DIRECTOR'].includes(activeRole)&&<InterAgencyResources rows={resourceTickets} dossiers={nominatedArtists} eligibleIds={resourceEligibleIds} scopeKeys={resourceScopeKeys} actor={activeRole} coordinatorId={activeCoordinatorId} isAr={isAr} onAction={action=>{const at=new Date().toISOString();setResourceTickets(rows=>resourceTransition(rows,action.type==='request'?{...action,ticket:{...action.ticket,requestedAt:at}}:action,activeRole,at,resourceEligibleIds,nominatedArtists.filter(d=>d.assignedCoordinatorId===activeCoordinatorId).map(d=>d.id),activeCoordinatorId,resourceScopeKeys));}}/>}
         {activeRole==='EDITORIAL'&&<LiveCatalogAggregator state={commission} isAr={isAr}/>}
         {commission.installationStatus==='ARCHIVED_CLOSED'&&['COORDINATOR','BIENNIAL_DIRECTOR'].includes(activeRole)&&<CollectionCloseout state={commission} actor={activeRole}/>}
@@ -1054,7 +708,7 @@ function SADUApp() {
             onDispatch={id=>setNominatedArtists(rows=>rows.map(d=>d.id===id&&!(id===COMMISSION.id&&commission.installationStatus==='ARCHIVED_CLOSED')?recordDossierDispatch(d,activeRole,themePolishStatus==='PUBLISHED_OFFICIAL'&&translationStatus==='PUBLISHED',new Date().toISOString(),activeCoordinatorId):d))}/>
         </>}
         {activeRole==='PR_PROTOCOL'&&nominatedArtists.filter(d=>d.status==='APPROVED'&&d.id!==(commission.contracts[0]?.artistId??COMMISSION.id)).map(d=><ArrivalPackagePreview key={d.id} artistId={d.id} artistName={d.artistName} isAr={isAr}/>)}
-        {activeRole!=='HIP' && Object.hasOwn(ESCALATION_DEPARTMENTS, activeRole) && <EscalationSubmission key={activeRole} actor={activeRole} isAr={isAr} records={executiveEscalations} onSubmit={input => setExecutiveEscalations(rows => submitEscalation(rows, input, activeRole, new Date().toISOString()))} />}
+        {activeRole!=='GENERAL_COORDINATOR' && Object.hasOwn(ESCALATION_DEPARTMENTS, activeRole) && <EscalationSubmission key={activeRole} actor={activeRole} isAr={isAr} records={executiveEscalations} onSubmit={input => setExecutiveEscalations(rows => submitEscalation(rows, input, activeRole, new Date().toISOString()))} />}
         </>}
         </DelegatedRoleGate>
         {(activeRole!=='COORDINATOR'||nominationOpen(publishedBoundaries))&&<GovernanceDesk dossiers={nominatedArtists} role={activeRole} pending={activeRole==='PR_PROTOCOL'&&!commission.evidence.prEvidenceGate?['Identity & Travel approval']:activeRole==='BIENNIAL_DIRECTOR'?nominatedArtists.filter(d=>d.status==='PENDING_DIRECTOR_REVIEW').map(d=>`Director decision: ${d.artistName}`):[]} blockedArtistIds={damageHold(commission)||['ARCHIVED_CLOSED','EXECUTIVE_IMPOUND'].includes(commission.installationStatus??'')?[COMMISSION.id]:[]}/>}

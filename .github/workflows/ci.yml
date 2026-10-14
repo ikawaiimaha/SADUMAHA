@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+# Runner image and action versions are pinned so upstream image or runtime changes
+# (for example ubuntu-latest moving to a new release) never change CI silently.
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Type-check
+        run: npm run lint
+      - name: Guard tests
+        run: npm run test:guards
+      - name: Workflow tests
+        run: npm run test:workflows
+      - name: Review tests
+        run: npm run test:review
+      - name: Demo tests
+        run: npm run test:demo
+      - name: Build
+        run: npx vite build
+
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      # Desktop and mobile projects; the per-run prelaunch password and Vite warm-up live in
+      # playwright.config.ts and tests/e2e/global-setup.ts.
+      - name: Browser tests
+        run: npx playwright test --reporter=line
+      - name: Upload report on failure
+        if: failure()
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
+  database:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: supabase/setup-cli@v3.0.1
+        with:
+          version: 2.120.0
+      # Applies every migration to a fresh local database; only the services the SQL tests need.
+      - run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector,mailpit,realtime,postgres-meta,supavisor
+      - name: SQL policy tests
+        run: node scripts/run-sql-tests.mjs
+      - name: Security advisors
+        run: supabase db advisors --local --type security --level warn

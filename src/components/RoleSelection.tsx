@@ -19,7 +19,7 @@ export type AppRole =
   | 'Biennial Director'
   | 'Preparatory Committee'
   | 'Editorial'
-  | 'HIP'
+  | 'General Coordinator'
   | 'Coordinator'
   | 'Artist'
   | 'Finance'
@@ -52,9 +52,9 @@ const ROLE_OPTIONS: RoleOption[] = [
     key: 'Chairman',
     titleEn: 'Chairman',
     titleAr: 'رئيس الدائرة',
-    phaseBadge: 'H.E. Abdullah Al Owais - Executive Gate',
+    phaseBadge: 'H.E. Abdullah Al Owais - Theme & Budget Simulation',
     description:
-      'Macro oversight of the Sharjah Department of Culture. Evaluates candidate themes, confers official sign-off, and assigns the biennial budget.',
+      'Simulates theme selection and budget allocation for this session. Actual signing and spending powers require a confirmed delegation.',
     icon: Award,
     accentColor: 'text-sadu-brick',
   },
@@ -62,9 +62,9 @@ const ROLE_OPTIONS: RoleOption[] = [
     key: 'Biennial Director',
     titleEn: 'Biennial Director',
     titleAr: 'مدير البينالي',
-    phaseBadge: 'Mohammed Al Qaseer - Executive Veto & Balance Review',
+    phaseBadge: 'Mohammed Al Qaseer - Nomination & Balance Review',
     description:
-      'Reviews nominated dossiers, monitors Emerging vs. Established balance ratio, and holds absolute executive veto before contracting.',
+      'Reviews fictional nominations and cohort balance, and records a demo selection or return. The role label does not establish real veto, contracting or payment authority.',
     icon: ShieldCheck,
     accentColor: 'text-sadu-brick',
   },
@@ -84,24 +84,24 @@ const ROLE_OPTIONS: RoleOption[] = [
     titleAr: 'قسم التحرير',
     phaseBadge: 'Theme Rewriting & Bilingual Polishing',
     description:
-      'Receives the Chairman-approved theme and raw curatorial intent, crafting the official polished bilingual institutional essays before unlocking Stage 3.',
+      'Prepares and reviews bilingual demo text before the next workflow step. Translation approval does not establish rights clearance or authority to publish externally.',
     icon: BookOpen,
     accentColor: 'text-sadu-brick',
   },
   {
-    key: 'HIP',
-    titleEn: 'HIP (Head of Programs)',
-    titleAr: 'منسق معرض عام',
-    phaseBadge: 'Curatorial Guidelines & Blocklists',
+    key: 'General Coordinator',
+    titleEn: 'General Exhibition Coordinator',
+    titleAr: 'المنسقة',
+    phaseBadge: 'Master Coordination & Curatorial Guidelines',
     description:
-      'Receives the published theme essay from Editorial and drafts the operational curatorial brief and dynamic blocklists.',
+      'Holds master coordination. Receives the published theme essay from Editorial, drafts the operational curatorial brief and verifies declared artwork text against the submitted snapshot.',
     icon: Globe,
     accentColor: 'text-sadu-brick',
   },
   {
     key: 'Coordinator',
-    titleEn: 'Coordinator',
-    titleAr: 'المنسق العام',
+    titleEn: 'Exhibition Coordinator',
+    titleAr: 'منسق المعرض',
     phaseBadge: 'Program Operations & Dossiers',
     description:
       'Assembles strict schema artist dossiers (CV, previous works, mockups) and drafts customized contracts post-Director approval.',
@@ -114,7 +114,7 @@ const ROLE_OPTIONS: RoleOption[] = [
     titleAr: 'الفنان',
     phaseBadge: 'External Access & Dossier Intake',
     description:
-      'Secure portal for invited artists to review contract terms, confirm participation, and upload passports and high-res files.',
+      'Fictional artist workspace for reviewing terms and demonstrating participation and document receipt. This role selector does not grant access to private records.',
     icon: User,
     accentColor: 'text-sadu-ink',
   },
@@ -154,6 +154,12 @@ export const RoleSelection: React.FC<RoleSelectionProps> = ({ onSelectRole, sele
         <h1 className="mt-3 font-editorial text-3xl font-bold text-sadu-charcoal sm:text-4xl"> {tr("SADU Biennial Operations")} </h1>
         <p className="mx-auto mt-2 max-w-2xl text-sm text-sadu-muted leading-relaxed"> {tr("Please select your institutional role to enter the dedicated governance workspace. Each role has specific responsibilities across theme selection, nomination, and dispatch.")} </p>
       </div>
+
+      <p className="rounded-lg border border-sadu-gold bg-sadu-paper p-4 text-sm text-start">
+        {isAr
+          ? 'الأدوار التالية تمثل مسار محاكاة مقترحاً. المسميات الوظيفية لا تمنح بذاتها صلاحيات توقيع أو إنفاق أو قبول فني أو نشر. يلزم تأكيد التفويض ونطاقه ومرجعه لكل قرار فعلي.'
+          : 'These roles describe a proposed rehearsal workflow. Job titles alone grant no signing, spending, technical acceptance or publication power. Each real decision needs a confirmed delegation, scope and evidence reference.'}
+      </p>
 
       {/* Role Selection Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

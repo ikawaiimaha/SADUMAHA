@@ -4,13 +4,19 @@ insert into public.bilateral_contracts(id,artist_id,artist_name,status) values('
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","institutional_role":"ARTIST"}',true);
 insert into public.sadu_exhibition_scenarios(id,contract_id,artist_id,artwork_checklist) values('22222222-2222-4222-8222-222222222222','scenario-test','11111111-1111-4111-8111-111111111111','[{"id":"33333333-3333-4333-8333-333333333333","name":"Wall 1","artworkCount":1,"medium":"Print","displaySpecifications":"Matte glass","printRequired":true,"avRequired":false,"darkRoom":false,"requires_spatial_planning":true}]');
+-- Structured delivery requires a Director-approved scope before submission.
+select set_config('request.jwt.claims','{"sub":"66666666-6666-4666-8666-666666666666","role":"authenticated","app_metadata":{"institutional_role":"BIENNIAL_DIRECTOR"}}',true);
+insert into public.sadu_asset_scope(scenario_id,expected_count,approval_reference) values('22222222-2222-4222-8222-222222222222',1,'Test approved scope');
+select set_config('request.jwt.claims','{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","institutional_role":"ARTIST"}',true);
+-- complete_delivery fires first; artwork rows cannot exist without media, so missing media surfaces as a count mismatch.
 do $$begin
- begin update public.sadu_exhibition_scenarios set status='SUBMITTED' where contract_id='scenario-test'; raise exception 'TEST failed: missing media accepted'; exception when others then if SQLERRM not like 'Uploaded media missing%' and SQLERRM not like 'Every artwork requires%' then raise;end if;end;
+ begin update public.sadu_exhibition_scenarios set status='SUBMITTED' where contract_id='scenario-test'; raise exception 'TEST failed: missing media accepted'; exception when others then if SQLERRM not like 'Uploaded media missing%' and SQLERRM not like 'Every artwork requires%' and SQLERRM not like 'Approved artwork count%' then raise;end if;end;
 end$$;
-insert into public.sadu_scenario_media values('11111111-1111-4111-8111-111111111111/scenarios/22222222-2222-4222-8222-222222222222/33333333-3333-4333-8333-333333333333/PRINT/test.png','22222222-2222-4222-8222-222222222222','33333333-3333-4333-8333-333333333333','PRINT','test.png');
+insert into public.sadu_scenario_media values('11111111-1111-4111-8111-111111111111/scenarios/22222222-2222-4222-8222-222222222222/33333333-3333-4333-8333-333333333333/PRINT/test.png','22222222-2222-4222-8222-222222222222','33333333-3333-4333-8333-333333333333','PRINT','test.png','{"title":"Test","medium":"Ink","year":"2026","height":"100","width":"80","depth":"2"}');
 -- SQL fixture represents an object already committed by Storage, not an actual upload.
 insert into storage.objects(bucket_id,name,metadata) values('logistics-secure','11111111-1111-4111-8111-111111111111/scenarios/22222222-2222-4222-8222-222222222222/33333333-3333-4333-8333-333333333333/PRINT/test.png','{"size":100,"mimetype":"image/png"}');
-insert into public.sadu_artwork_checklist(scenario_id,zone_id,media_object_name,source,production_year,height_cm,width_cm,weight_kg,crate_count) values('22222222-2222-4222-8222-222222222222','33333333-3333-4333-8333-333333333333','11111111-1111-4111-8111-111111111111/scenarios/22222222-2222-4222-8222-222222222222/33333333-3333-4333-8333-333333333333/PRINT/test.png','{"title":"Test","language":"en","medium":"Ink","concept":"Test concept"}',2026,100,80,20,1);
+insert into public.sadu_artwork_checklist(scenario_id,zone_id,media_object_name,source,production_year,height_cm,width_cm,weight_kg,crate_count,religious_text) values('22222222-2222-4222-8222-222222222222','33333333-3333-4333-8333-333333333333','11111111-1111-4111-8111-111111111111/scenarios/22222222-2222-4222-8222-222222222222/33333333-3333-4333-8333-333333333333/PRINT/test.png','{"title":"Test","language":"en","medium":"Ink","concept":"Test concept"}',2026,100,80,20,1,false);
+insert into public.sadu_artwork_values(artwork_id,amount_minor,currency,purpose) select id,0,'USD','DECLARED_SALE_VALUE' from public.sadu_artwork_checklist where scenario_id='22222222-2222-4222-8222-222222222222';
 do $$begin
  begin update public.sadu_exhibition_scenarios set status='SUBMITTED' where contract_id='scenario-test';raise exception 'TEST: required blueprint missing but submitted';exception when others then if SQLERRM not like 'Uploaded media missing%' then raise;end if;end;
 end $$;

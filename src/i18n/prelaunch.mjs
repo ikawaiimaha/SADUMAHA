@@ -10,6 +10,10 @@ export const prelaunchCopy = {
     verifyError: 'تعذّر التحقق من الدخول. تحققي من الاتصال ثم حاولي مجدداً.',
     lockError: 'تعذّر قفل العرض. تحققي من الاتصال ثم حاولي مجدداً.',
     lockConfirm: 'قفل العرض؟ يمكنك متابعة الخطوات التجريبية المحفوظة في هذا التبويب. قد تُفقد الحقول التي لم تُحفظ والأعمال الأخرى المؤقتة.',
+    sessionLabel: 'جلسة العرض', banner: 'عرض سدو الخاص · بيانات تجريبية', lock: 'قفل العرض', locking: 'جارٍ القفل…',
+    presenterTools: 'أدوات مقدّم العرض', recording: 'التسجيل المحلي يعمل', stopped: 'التسجيل متوقف',
+    limitReached: 'بلغ التسجيل الحد المحلي', unavailable: 'التسجيل غير متاح', exportReplay: 'إيقاف التسجيل وتنزيله',
+    replayNote: 'يبقى التسجيل محلياً. نزّله قبل إغلاق التبويب أو تحديثه. التنقل داخل العرض لا يحتاج إلى إيقافه.',
   },
   en: {
     title: 'SADU — Private demonstration', institution: 'Sharjah Department of Culture',
@@ -21,5 +25,9 @@ export const prelaunchCopy = {
     verifyError: 'Unable to verify access. Check your connection and retry.',
     lockError: 'Unable to lock the preview. Check your connection and retry.',
     lockConfirm: 'Lock this preview? Saved synthetic presentation steps can resume in this tab. Unsaved form entries and other session-only work may be lost.',
+    sessionLabel: 'Preview session', banner: 'SADU private preview · Synthetic data', lock: 'Lock preview', locking: 'Locking…',
+    presenterTools: 'Presenter tools', recording: 'Local recording is on', stopped: 'Recording stopped',
+    limitReached: 'Recording reached its local limit', unavailable: 'Recording unavailable', exportReplay: 'Stop recording and download',
+    replayNote: 'The recording stays on this device. Download it before closing or refreshing the tab. Moving around the demo does not stop it.',
   },
 };

@@ -282,7 +282,7 @@ test('executive disposition is role guarded, idempotent and retained in parent r
 test('department escalation intake validates evidence, roles and duplicate submissions', () => {
   const empty: EscalationRecord[] = [];
   const input = {id:'new-escalation',reason:'Venue scope review',supportingEvidenceRef:'SESSION-REF-1',requestedDecision:'Review inter-entity dependency'};
-  for (const actor of ['ARTIST','CHAIRMAN','HIP','toString']) assert.equal(submitEscalation(empty,input,actor,at),empty);
+  for (const actor of ['ARTIST','CHAIRMAN','GENERAL_COORDINATOR','toString']) assert.equal(submitEscalation(empty,input,actor,at),empty);
   assert.equal(submitEscalation(empty,{...input,supportingEvidenceRef:'  '},'TECHNICAL',at),empty);
   assert.equal(submitEscalation(empty,input,'TECHNICAL','invalid'),empty);
   for (const actor of ['COORDINATOR','PR_PROTOCOL','TECHNICAL','FINANCE']) assert.equal(submitEscalation(empty,input,actor,at).length,1);
@@ -305,11 +305,11 @@ test('scope amendments retain approval, enforce ownership and prevent duplicate 
   assert.equal(pending.artworkCount,1);
   assert.equal(pending.amendments?.[0].proposed.artworkCount,2);
   assert.equal(requestScopeChange(pending,ASSIGNED_COORDINATOR,proposedScope,'Reason',at,'b'),pending);
-  assert.equal(recordDossierDispatch(pending,'HIP',true,at),pending);
+  assert.equal(recordDossierDispatch(pending,'GENERAL_COORDINATOR',true,at),pending);
 });
 test('amendment decisions enforce authority, compliance and contract locks with revision history',()=>{
   const pending=requestScopeChange(approvedDossier,ASSIGNED_COORDINATOR,proposedScope,'Reason',at,'a');
-  assert.equal(reviewScopeChange(pending,'a',true,'HIP',[],false,at),pending);
+  assert.equal(reviewScopeChange(pending,'a',true,'GENERAL_COORDINATOR',[],false,at),pending);
   assert.equal(reviewScopeChange(pending,'a',true,'BIENNIAL_DIRECTOR',[],true,at),pending);
   assert.equal(reviewScopeChange(pending,'a',true,'BIENNIAL_DIRECTOR',['Bronze'],false,at),pending);
   const approved=reviewScopeChange(pending,'a',true,'BIENNIAL_DIRECTOR',[],false,at);
@@ -323,7 +323,7 @@ test('amendment decisions enforce authority, compliance and contract locks with 
 });
 test('dispatch requires publication and assigned Coordinator authority; snapshots survive later amendments',()=>{
   assert.equal(recordDossierDispatch(approvedDossier,'COORDINATOR',false,at,ASSIGNED_COORDINATOR),approvedDossier);
-  assert.equal(recordDossierDispatch(approvedDossier,'HIP',true,at),approvedDossier);
+  assert.equal(recordDossierDispatch(approvedDossier,'GENERAL_COORDINATOR',true,at),approvedDossier);
   const sent=recordDossierDispatch(approvedDossier,'COORDINATOR',true,at,ASSIGNED_COORDINATOR);
   assert.equal(recordDossierDispatch(sent,'COORDINATOR',true,at,ASSIGNED_COORDINATOR),sent);
   const pending=requestScopeChange(sent,ASSIGNED_COORDINATOR,proposedScope,'Reason',at,'a');
@@ -438,29 +438,41 @@ test('technical requests validate routing choices and prevent duplicate submissi
 
 import { culturalCleared } from '../src/data/culturalDeclaration';
 import { ingestMaster, requestPrototype, decidePrototype, type PrototypeTicket } from '../src/data/productionBridge';
-test('Committee alone endorses complete declarations; rejection requires immutable consensus minutes',()=>{
+test('Committee records a recommendation minute either way; the Director decides',()=>{
  const draft={...dossier,culturalDeclaration:undefined,culturalClearedAt:undefined};
  assert.equal(queueNomination(draft,'COORDINATOR',ASSIGNED_COORDINATOR,[]),null);
- assert.equal(queueNomination(dossier,'HIP',ASSIGNED_COORDINATOR,[]),null);
+ assert.equal(queueNomination(dossier,'GENERAL_COORDINATOR',ASSIGNED_COORDINATOR,[]),null);
  assert.equal(queueNomination(dossier,'COORDINATOR','other',[]),null);
  const pending=queueNomination({...dossier,culturalClearedAt:undefined},'COORDINATOR',ASSIGNED_COORDINATOR,[])!;
  assert.equal(pending.status,'PENDING_COMMITTEE_REVIEW');
  assert.equal(directorEligible(pending,[]),false);
  assert.equal(queueNomination(dossier,'PREP_COMMITTEE','unused',[])?.status,'PENDING_COMMITTEE_REVIEW');
- for(const actor of ['HIP','COORDINATOR','BIENNIAL_DIRECTOR','ARTIST'])assert.equal(reviewByCommittee(pending,actor,true,'',[],at),pending);
- assert.equal(reviewByCommittee(pending,'PREP_COMMITTEE',false,'   ',[],at),pending);
- assert.equal(reviewByCommittee(pending,'PREP_COMMITTEE',true,'',['Hazardous Medium: Bronze'],at),pending);
- const rejected=reviewByCommittee(pending,'PREP_COMMITTEE',false,'Consensus minute 07: scope mismatch',[],at);
- assert.equal(rejected.status,'COMMITTEE_REJECTED');
- assert.equal(rejected.committeeReview?.minutes,'Consensus minute 07: scope mismatch');
- assert.equal(reviewByCommittee(rejected,'PREP_COMMITTEE',true,'',[],at),rejected);
- assert.equal(directorEligible(rejected,[]),false);
- const endorsed=reviewByCommittee(pending,'PREP_COMMITTEE',true,'Recorded collective endorsement',[],at);
- assert.equal(endorsed.status,'PENDING_DIRECTOR_REVIEW');
- assert.equal(culturalCleared(endorsed),true);
- assert.equal(directorEligible(endorsed,[]),true);
- assert.equal(directorEligible(endorsed,['Hazardous Medium: Bronze']),false);
- assert.equal(reviewByCommittee(endorsed,'PREP_COMMITTEE',false,'Override',[],at),endorsed);
+ const minute='Collective minute 07: strong fit with the brief';
+ for(const actor of ['GENERAL_COORDINATOR','COORDINATOR','BIENNIAL_DIRECTOR','ARTIST'])assert.equal(reviewByCommittee(pending,actor,true,minute,[],at),pending);
+ // A minute is required for either outcome, with the same 10-character floor as curatorial minutes.
+ for(const recommend of [true,false]){assert.equal(reviewByCommittee(pending,'PREP_COMMITTEE',recommend,'   ',[],at),pending);assert.equal(reviewByCommittee(pending,'PREP_COMMITTEE',recommend,'Too short',[],at),pending);}
+ // The Committee cannot recommend a dossier that fails compliance, but may forward it unrecommended.
+ assert.equal(reviewByCommittee(pending,'PREP_COMMITTEE',true,minute,['Hazardous Medium: Bronze'],at),pending);
+ const notRecommended=reviewByCommittee(pending,'PREP_COMMITTEE',false,'Collective minute 07: scope mismatch',[],at);
+ assert.equal(notRecommended.status,'PENDING_DIRECTOR_REVIEW','not recommending is a minute, not a rejection');
+ assert.deepEqual([notRecommended.committeeReview?.decision,notRecommended.committeeReview?.minutes],['NOT_RECOMMENDED','Collective minute 07: scope mismatch']);
+ assert.equal(culturalCleared(notRecommended),false);
+ assert.equal(directorEligible(notRecommended,[]),true,'the Director still decides');
+ assert.equal(reviewByCommittee(notRecommended,'PREP_COMMITTEE',true,minute,[],at),notRecommended,'a minute is recorded once');
+ const recommended=reviewByCommittee(pending,'PREP_COMMITTEE',true,minute,[],at);
+ assert.equal(recommended.status,'PENDING_DIRECTOR_REVIEW');
+ assert.equal(recommended.committeeReview?.decision,'RECOMMENDED');
+ assert.equal(culturalCleared(recommended),true);
+ assert.equal(directorEligible(recommended,[]),true);
+ assert.equal(directorEligible(recommended,['Hazardous Medium: Bronze']),false);
+ assert.equal(reviewByCommittee(recommended,'PREP_COMMITTEE',false,'Override after the fact',[],at),recommended);
+ // Records from the retired approval model stay as recorded: a rejected dossier is not reopened.
+ const legacyRejected={...pending,status:'COMMITTEE_REJECTED' as const,committeeReview:{decision:'REJECTED' as const,minutes:'Old consensus rejection',at,actor:'PREP_COMMITTEE' as const}};
+ assert.equal(directorEligible(legacyRejected,[]),false);
+ assert.equal(reviewByCommittee(legacyRejected,'PREP_COMMITTEE',true,minute,[],at),legacyRejected);
+ const legacyEndorsed={...recommended,committeeReview:{...recommended.committeeReview!,decision:'ENDORSED' as const}};
+ assert.equal(directorEligible(legacyEndorsed,[]),true);
+ assert.equal(culturalCleared(legacyEndorsed),true);
  assert.equal(safePortfolioUrl('javascript:alert(1)'),undefined);
  assert.equal(safePortfolioUrl('https://example.com/portfolio'),'https://example.com/portfolio');
 });
@@ -539,7 +551,7 @@ test('spatial claims enforce approved ownership and lock the space against compe
  const input={spaceId:'sam-hall-1',artistId:approved.id,coordinatorId:ASSIGNED_COORDINATOR,actor:'COORDINATOR',at};
  const empty: import('../src/data/spatialClaims').SpatialClaim[]=[];
  assert.equal(claimSpace(empty,input,[dossier]),empty);
- assert.equal(claimSpace(empty,{...input,actor:'HIP'},[approved]),empty);
+ assert.equal(claimSpace(empty,{...input,actor:'GENERAL_COORDINATOR'},[approved]),empty);
  assert.equal(claimSpace(empty,{...input,coordinatorId:'coordinator-3'},[approved]),empty);
  assert.equal(claimSpace(empty,{...input,spaceId:'invented-space'},[approved]),empty);
  const claimed=claimSpace(empty,input,[approved]);
@@ -630,7 +642,7 @@ test('regional delegation requires general coordinator, transfers whole group an
  const c={id:'regional-c',nationality:'Morocco',assignedCoordinatorId:'coordinator-3'} as NominatedArtistDossier;
  const rows=[a,b,c];const input={actor:'COORDINATOR',coordinatorId:GENERAL_COORDINATOR_ID,region:'TURKEY_EASTERN_EUROPE' as const,target:'coordinator-6',at};
  assert.equal(delegateRegion(rows,{...input,coordinatorId:'coordinator-1'},[]),rows);
- assert.equal(delegateRegion(rows,{...input,actor:'HIP'},[]),rows);
+ assert.equal(delegateRegion(rows,{...input,actor:'GENERAL_COORDINATOR'},[]),rows);
  assert.equal(delegateRegion(rows,{...input,target:'invalid'},[]),rows);
  assert.equal(delegateRegion(rows,input,['regional-b']),rows);
  const next=delegateRegion(rows,input,[]);
@@ -711,16 +723,16 @@ test('photography clearance requires current reviewed evidence and deadlines mat
 });
 
 import { addNudge, deadlineTime, addFabrication, readyFabrication, type FabricationTicket } from '../src/data/deliverableRouting';
-test('HIP nudges validate deadline, items, actor and duplicate requests',()=>{
+test('General Coordinator nudges validate deadline, items, actor and duplicate requests',()=>{
  const n={id:'n1',artistId:'artist-1',items:['VIDEO','SPECS'] as ('VIDEO'|'SPECS')[],deadline:'2026-10-01',createdAt:at};
  assert.equal(Number.isNaN(deadlineTime('2026-02-30')),true);
  assert.equal(deadlineTime('2026-10-01'),Date.parse('2026-10-01T19:59:59Z'));
  assert.equal(addNudge([],n,'COORDINATOR').length,0);
- assert.equal(addNudge([],{...n,items:[]},'HIP').length,0);
- assert.equal(addNudge([],{...n,deadline:'2026-01-01'},'HIP').length,0);
- const rows=addNudge([],n,'HIP');assert.equal(rows.length,1);
- assert.equal(addNudge(rows,{...n,id:'n2',items:['SPECS','VIDEO']},'HIP'),rows);
- assert.equal(addNudge(rows,{...n,id:'n2',artistId:'artist-2'},'HIP').length,2);
+ assert.equal(addNudge([],{...n,items:[]},'GENERAL_COORDINATOR').length,0);
+ assert.equal(addNudge([],{...n,deadline:'2026-01-01'},'GENERAL_COORDINATOR').length,0);
+ const rows=addNudge([],n,'GENERAL_COORDINATOR');assert.equal(rows.length,1);
+ assert.equal(addNudge(rows,{...n,id:'n2',items:['SPECS','VIDEO']},'GENERAL_COORDINATOR'),rows);
+ assert.equal(addNudge(rows,{...n,id:'n2',artistId:'artist-2'},'GENERAL_COORDINATOR').length,2);
 });
 test('fabrication requests remain separate from disposal, installation and Finance authority',()=>{
  const ticket:FabricationTicket={id:'f1',artistId:'artist-1',item:'Custom plinth',vendor:'Sample vendor',disposition:'DISCARD',status:'PENDING_FABRICATION',createdAt:at};
@@ -873,11 +885,11 @@ test('submitted production instructions remain immutable during authorized amend
 });
 import { assignee, clearVenue, emptyGovernance, setDelegation, type Governance } from '../src/data/venueGovernance';
 test('leave routing requires a backup and preserves same-role authority',()=>{
- assert.equal(setDelegation(emptyGovernance,'HIP',true,''),emptyGovernance);
- const delegated=setDelegation(emptyGovernance,'HIP',true,'Sample backup');
- assert.equal(assignee('HIP',delegated.delegations),'HIP:backup');
+ assert.equal(setDelegation(emptyGovernance,'GENERAL_COORDINATOR',true,''),emptyGovernance);
+ const delegated=setDelegation(emptyGovernance,'GENERAL_COORDINATOR',true,'Sample backup');
+ assert.equal(assignee('GENERAL_COORDINATOR',delegated.delegations),'GENERAL_COORDINATOR:backup');
  assert.equal(assignee('PR_PROTOCOL',delegated.delegations),'PR_PROTOCOL:primary');
- assert.equal(assignee('HIP',setDelegation(delegated,'HIP',false,'Sample backup').delegations),'HIP:primary');
+ assert.equal(assignee('GENERAL_COORDINATOR',setDelegation(delegated,'GENERAL_COORDINATOR',false,'Sample backup').delegations),'GENERAL_COORDINATOR:primary');
 });
 test('venue clearance enforces designated host, readiness, delegated reviewer and idempotent notifications',()=>{
  const s:Governance={delegations:{},tickets:{one:{id:'one',artistId:'a1',title:'Plinth',venueId:'SHARJAH_ART_MUSEUM',authority:'Museum Curator',coordinator:'Coordinator',vendor:'Sample Vendor',constraints:['Floor protection'],blocked:false,status:'PENDING_VENUE_APPROVAL'}}};
@@ -1009,17 +1021,17 @@ test('heavy media validation accepts a declared 2 GiB header without buffering t
 });
 
 import {publishBoundaries,nominationOpen,categoryTags} from '../src/data/curatorialBoundaries';
-test('curatorial publication requires HIP, bilingual guidelines, category review and completed Director decisions',()=>{
- const publish=(actor='HIP',theme='PUBLISHED_OFFICIAL',status='PUBLISHED',pending=false,checks=[true,true,true])=>publishBoundaries(null,actor,theme,status,'دليل','Guidelines',['Restricted Medium: Abstract Ink','Restricted Style: Non-Classical Script'],pending,checks,at);
- assert.equal(nominationOpen(null),false);assert.equal(publish('COORDINATOR'),null);assert.equal(publish('HIP','DRAFT'),null);assert.equal(publish('HIP','PUBLISHED_OFFICIAL','PENDING_TRANSLATION'),null);assert.equal(publish('HIP','PUBLISHED_OFFICIAL','PUBLISHED',true),null);assert.equal(publish('HIP','PUBLISHED_OFFICIAL','PUBLISHED',false,[true,false,true]),null);
+test('curatorial publication requires the General Coordinator, bilingual guidelines, category review and completed Director decisions',()=>{
+ const publish=(actor='GENERAL_COORDINATOR',theme='PUBLISHED_OFFICIAL',status='PUBLISHED',pending=false,checks=[true,true,true])=>publishBoundaries(null,actor,theme,status,'دليل','Guidelines',['Restricted Medium: Abstract Ink','Restricted Style: Non-Classical Script'],pending,checks,at);
+ assert.equal(nominationOpen(null),false);assert.equal(publish('COORDINATOR'),null);assert.equal(publish('GENERAL_COORDINATOR','DRAFT'),null);assert.equal(publish('GENERAL_COORDINATOR','PUBLISHED_OFFICIAL','PENDING_TRANSLATION'),null);assert.equal(publish('GENERAL_COORDINATOR','PUBLISHED_OFFICIAL','PUBLISHED',true),null);assert.equal(publish('GENERAL_COORDINATOR','PUBLISHED_OFFICIAL','PUBLISHED',false,[true,false,true]),null);
  const locked=publish()!;assert.equal(nominationOpen(locked),true);assert.equal(locked.status,'CURATORIAL_DIRECTIVES_PUBLISHED');assert.deepEqual(categoryTags(locked.tags,'Style'),['Restricted Style: Non-Classical Script']);assert.deepEqual(categoryTags(locked.tags,'Nationality'),[]);
- assert.equal(publishBoundaries(locked,'HIP','PUBLISHED_OFFICIAL','PUBLISHED','Changed','Changed',[],false,[true,true,true],at),locked);
- const tags=['Restricted Medium: Abstract Ink'];const snapshot=publishBoundaries(null,'HIP','PUBLISHED_OFFICIAL','PUBLISHED','دليل','Guide',tags,false,[true,true,true],at)!;tags.push('Other');assert.equal(snapshot.tags.length,1);
+ assert.equal(publishBoundaries(locked,'GENERAL_COORDINATOR','PUBLISHED_OFFICIAL','PUBLISHED','Changed','Changed',[],false,[true,true,true],at),locked);
+ const tags=['Restricted Medium: Abstract Ink'];const snapshot=publishBoundaries(null,'GENERAL_COORDINATOR','PUBLISHED_OFFICIAL','PUBLISHED','دليل','Guide',tags,false,[true,true,true],at)!;tags.push('Other');assert.equal(snapshot.tags.length,1);
 });
 import {CuratorialBoundaries} from '../src/components/CuratorialBoundaries';
 test('Coordinator boundaries gate renders a waiting state, then the exact published master list',()=>{
- assert.match(renderToStaticMarkup(createElement(CuratorialBoundaries,{isAr:false})),/Waiting for Head of International Programs/);
- const published=publishBoundaries(null,'HIP','PUBLISHED_OFFICIAL','PUBLISHED','دليل','Guide',['Restricted Medium: Abstract Ink'],false,[true,true,true],at);
+ assert.match(renderToStaticMarkup(createElement(CuratorialBoundaries,{isAr:false})),/Waiting for the General Exhibition Coordinator/);
+ const published=publishBoundaries(null,'GENERAL_COORDINATOR','PUBLISHED_OFFICIAL','PUBLISHED','دليل','Guide',['Restricted Medium: Abstract Ink'],false,[true,true,true],at);
  const html=renderToStaticMarkup(createElement(CuratorialBoundaries,{isAr:false,published}));assert.match(html,/Active Curatorial Boundaries/);assert.match(html,/Restricted Medium: Abstract Ink/);assert.match(html,/None declared/);
 });
 
@@ -1054,11 +1066,11 @@ test('secure intake never offers unauthenticated uploads',()=>{
 });
 
 
-test('automated compliance holds cannot be manually endorsed by Committee or HIP',()=>{
+test('automated compliance holds cannot be manually endorsed by Committee or General Coordinator',()=>{
  const held=queueNomination(dossier,'COORDINATOR',ASSIGNED_COORDINATOR,['Restricted Nationality: Country X'])!;
  assert.equal(held.status,'HIP_BLOCKED');
  assert.equal(reviewByCommittee(held,'PREP_COMMITTEE',true,'Override',[],at),held);
- assert.equal(reviewByCommittee(held,'HIP',false,'Reject',[],at),held);
+ assert.equal(reviewByCommittee(held,'GENERAL_COORDINATOR',false,'Reject',[],at),held);
  assert.equal(directorEligible(held,[]),false);
 });
 
@@ -1158,9 +1170,14 @@ test('wall-label CSV exports only translated records and neutralizes spreadsheet
 
 test('gallery freight data requires positive measurements, currency and trusted map host', async () => {
  const {validConsignment}=await import('../src/data/consignment');
- const data={packing_list:'Crate 1: artwork A',length_cm:100,width_cm:80,height_cm:40,weight_kg:84,insurance_value:8000,currency:'EUR',country:'France',city:'Paris',district:'Test',street:'Test',building:'Test Gallery',map_url:'https://maps.google.com/?q=test',hours:'8 AM - noon',phone:'+33123456789'};
+ const data={packing_type:'MUSEUM_CRATE',return_country:'France',return_city:'Paris',return_address:'Gallery address',packing_list:'Crate 1: artwork A',length_cm:100,width_cm:80,height_cm:40,weight_kg:84,insurance_value:8000,currency:'EUR',country:'France',city:'Paris',district:'Test',street:'Test',building:'Test Gallery',map_url:'https://maps.google.com/?q=test',hours:'8 AM - noon',phone:'+33123456789'};
  assert.equal(validConsignment(data),true);
- for(const patch of [{packing_list:''},{weight_kg:0},{length_cm:-1},{insurance_value:Infinity},{currency:'XYZ'},{phone:''},{map_url:'https://maps.google.com.evil.invalid/'}])assert.equal(validConsignment({...data,...patch}),false);
+ for(const patch of [{packing_type:''},{return_address:''},{packing_list:''},{weight_kg:0},{length_cm:-1},{insurance_value:Infinity},{currency:'XYZ'},{phone:''},{map_url:'https://maps.google.com.evil.invalid/'}])assert.equal(validConsignment({...data,...patch}),false);
+ const {consignmentLabel}=await import('../src/data/consignment');
+ assert.match(consignmentLabel('length_cm','MUSEUM_CRATE'),/^Crate length/);
+ assert.match(consignmentLabel('length_cm','NO_PACKAGING'),/^Unpacked length/);
+ assert.match(consignmentLabel('weight_kg','NO_PACKAGING'),/^Unpacked weight/);
+ assert.equal(consignmentLabel('country','NO_PACKAGING'),consignmentLabel('country'));
 });
 
 
@@ -1210,21 +1227,26 @@ test('theme batches require three distinct Arabic proposals without mandatory En
 
 import {verifyTextualContent,textualCleared,validDeclaration} from '../src/data/culturalDeclaration';
 import {completePrototype} from '../src/data/productionBridge';
-test('exact textual verification is HIP-only and precedes Committee to Director handoff',()=>{
+test('exact textual verification is General Coordinator-only and precedes Committee to Director handoff',()=>{
  const text={containsText:true,exactText:'Fictional source text with reference',explanation:'Translation and context'};
  assert.equal(validDeclaration({...text,exactText:''}),false);
  const pending=queueNomination({...dossier,culturalDeclaration:text},'COORDINATOR',ASSIGNED_COORDINATOR,[])!;
- assert.equal(reviewByCommittee(pending,'PREP_COMMITTEE',true,'',[],at),pending);
+ assert.equal(reviewByCommittee(pending,'PREP_COMMITTEE',true,'Collective recommendation minute',[],at),pending,'no recommendation before textual verification');
  for(const actor of ['TECHNICAL','ARTIST','COORDINATOR','BIENNIAL_DIRECTOR','PREP_COMMITTEE'])assert.equal(verifyTextualContent(pending,actor,at),pending);
- const verified=verifyTextualContent(pending,'HIP',at);
+ const verified=verifyTextualContent(pending,'GENERAL_COORDINATOR',at);
  assert.equal(textualCleared(verified),true);
- assert.equal(verifyTextualContent(verified,'HIP','2026-10-02T10:00:00Z'),verified);
+ assert.equal(verifyTextualContent(verified,'GENERAL_COORDINATOR','2026-10-02T10:00:00Z'),verified);
  assert.equal(verified.status,'PENDING_COMMITTEE_REVIEW');
- const endorsed=reviewByCommittee(verified,'PREP_COMMITTEE',true,'Verified',[],at);
+ const endorsed=reviewByCommittee(verified,'PREP_COMMITTEE',true,'Verified text; recommended',[],at);
  assert.equal(directorEligible(endorsed,[]),true);
  assert.equal(directorEligible({...endorsed,culturalDeclaration:{...text,exactText:'Replacement text'}},[]),false);
  assert.equal(directorEligible({...endorsed,proposedWorkTitle:'Different work'},[]),false);
- assert.equal(verifyTextualContent(pending,'HIP','invalid'),pending);
+ assert.equal(verifyTextualContent(pending,'GENERAL_COORDINATOR','invalid'),pending);
+ // HIP is retired: it cannot record new verifications, but a verification it recorded earlier stays valid history.
+ assert.equal(verifyTextualContent(pending,'HIP',at),pending);
+ const legacy={...verified,textualVerification:{...verified.textualVerification!,actor:'HIP' as const}};
+ assert.equal(textualCleared(legacy),true);
+ assert.equal(textualCleared({...legacy,culturalDeclaration:{...text,exactText:'Replacement text'}}),false);
 });
 test('test-work completion requires current-revision artist approval and preserves decisions',()=>{
  const ticket:PrototypeTicket={id:'coating',title:'Coating test',photos:[{name:'test.png',type:'image/png',size:100} as File],status:'PENDING_ARTIST_APPROVAL',requestedAt:at,revision:1};
@@ -1273,7 +1295,7 @@ test('institutional totals deduplicate people, distinguish accepted/executed and
  assert.equal(metrics.workloads[0].artworks,4);assert.equal(metrics.workloads[0].unknownCounts,1);
  const held=institutionalMetrics([approved],[{id:'a',status:'EXECUTIVE_IMPOUND',prCleared:true}]);assert.equal(held.approvedDossiers,0);assert.equal(held.clearedGuests,1);
  const cancelled=institutionalMetrics([approved,other],[{id:'a',status:'DIRECTOR_VETOED',prCleared:true},{id:'b',status:'ARCHIVED_CLOSED'}]);assert.equal(cancelled.approvedDossiers,0);assert.equal(cancelled.clearedGuests,0);
- const rows=[approved];assert.equal(reassignDossier(rows,'a','coordinator-2','Workload','HIP',at,[]),rows);assert.equal(reassignDossier(rows,'a','coordinator-2','Workload','BIENNIAL_DIRECTOR',at,['a']),rows);
+ const rows=[approved];assert.equal(reassignDossier(rows,'a','coordinator-2','Workload','GENERAL_COORDINATOR',at,[]),rows);assert.equal(reassignDossier(rows,'a','coordinator-2','Workload','BIENNIAL_DIRECTOR',at,['a']),rows);
  const moved=reassignDossier(rows,'a','coordinator-2','Workload','BIENNIAL_DIRECTOR',at,[]);assert.equal(moved[0].assignedCoordinatorId,'coordinator-2');assert.equal(moved[0].delegationHistory?.[0].from,ASSIGNED_COORDINATOR);
 });
 

@@ -35,7 +35,8 @@ export interface NominatedArtistDossier {
   culturalDeclaration?: CulturalDeclaration;
   textualVerification?: import('../data/culturalDeclaration').TextualVerification;
   culturalClearedAt?: string; // Historical legacy record; no longer an approval gate.
-  committeeReview?: {decision:'ENDORSED'|'REJECTED';minutes:string;at:string;actor:'PREP_COMMITTEE'};
+  /** RECOMMENDED / NOT_RECOMMENDED are minutes; ENDORSED / REJECTED are retired approval records kept as history. */
+  committeeReview?: {decision:'RECOMMENDED'|'NOT_RECOMMENDED'|'ENDORSED'|'REJECTED';minutes:string;at:string;actor:'PREP_COMMITTEE'};
   portfolioUrl?: string;
   portfolioFiles?: File[];
   id: string;
@@ -233,7 +234,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
 
         {curatorialBrief && (
           <div className="mt-4 rounded-lg border border-sadu-gold/50 bg-white p-3 text-xs">
-            <span className="font-bold text-sadu-charcoal block mb-0.5"> {tr("Active HIP Curatorial Brief Reference:")} </span>
+            <span className="font-bold text-sadu-charcoal block mb-0.5"> {tr("Active Curatorial Brief Reference:")} </span>
             <p className="text-sadu-muted leading-relaxed line-clamp-2 italic">
               "{tr(curatorialBrief)}"
             </p>
@@ -282,7 +283,7 @@ export const ArtistNominationForm: React.FC<ArtistNominationFormProps> = ({
           </label>
           {textAnswer === 'YES' && <label className="block">{isAr ? 'النص الأصلي كاملاً مع مراجع الآيات والأحاديث' : 'Exact original text, including verse/Hadith references'}<textarea required maxLength={8000} value={exactText} onChange={e=>setExactText(e.target.value)} className="mt-2 block w-full border ps-3 pe-3 py-2" /></label>}
           {textAnswer === 'YES' && <label className="block">{isAr ? 'الترجمة الكاملة والشرح السياقي' : 'Full translation and contextual explanation'}<textarea required maxLength={8000} value={textExplanation} onChange={e=>setTextExplanation(e.target.value)} className="mt-2 block w-full border ps-3 pe-3 py-2" /></label>}
-          <p>{isAr ? 'تراجع اللجنة التحضيرية الإقرارات ضمن مداولات الترشيح.' : 'HIP verifies declared text before Committee endorsement to the Director.'}</p>
+          <p>{isAr ? 'تتحقق المنسقة من النص المعلن قبل توصية اللجنة التحضيرية إلى مدير الملتقى.' : 'The General Exhibition Coordinator verifies declared text before the Committee recommendation to the Director.'}</p>
         </fieldset>
 
         {!honored&&<><label className="block">Artwork medium tag<select className="block w-full rounded border ps-3 pe-3 py-2" value={mediumTag} onChange={e=>{setMediumTag(e.target.value as MediumTag);setTechnicalRider(undefined);}}><option value="OTHER">Other medium</option><option value="SCULPTURE">Sculpture / نحت</option><option value="3D_INSTALLATION">3D Installation / تركيب ثلاثي الأبعاد</option></select></label>{requiresTechnicalRider(medium,mediumTag)&&<TechnicalRiderUpload key={`${mediumTag}:${medium}`} value={technicalRider} onChange={setTechnicalRider}/>}</>}

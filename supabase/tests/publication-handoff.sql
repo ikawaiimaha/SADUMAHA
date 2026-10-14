@@ -41,7 +41,7 @@ insert into public.sadu_exhibition_titles(scenario_id,title_ar,title_en) values(
 do $$begin begin insert into public.sadu_publication_queue(scenario_id) values('22222222-2222-4222-8222-222222222222');raise exception 'Artist publication';exception when insufficient_privilege then null;end;end $$;
 select set_config('request.jwt.claims','{"sub":"55555555-5555-4555-8555-555555555555","role":"authenticated","app_metadata":{"institutional_role":"EDITORIAL"}}',true);
 do $$begin begin insert into public.sadu_publication_queue(scenario_id) values('22222222-2222-4222-8222-222222222222');raise exception 'Unlocked title published';exception when others then if SQLERRM not like 'Locked bilingual%' then raise;end if;end;end $$;
-select set_config('request.jwt.claims','{"sub":"55555555-5555-4555-8555-555555555555","role":"authenticated","app_metadata":{"institutional_role":"HIP"}}',true);
+select set_config('request.jwt.claims','{"sub":"55555555-5555-4555-8555-555555555555","role":"authenticated","app_metadata":{"institutional_role":"GENERAL_COORDINATOR"}}',true);
 update public.sadu_exhibition_titles set status='LOCKED';
 select set_config('request.jwt.claims','{"sub":"55555555-5555-4555-8555-555555555555","role":"authenticated","app_metadata":{"institutional_role":"EDITORIAL"}}',true);
 update public.sadu_artwork_checklist set translation_en='{"title":"Balance","medium":"Ink","concept":"Balance study","bio":"Fictional biography"}',translation_status='TRANSLATION_COMPLETED' where id='44444444-4444-4444-8444-444444444444';

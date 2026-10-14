@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { createServer } from 'node:http';
 import { existsSync, readFileSync } from 'node:fs';
+import { execSync } from 'node:child_process';
 import { retiredPortraitMiddleware, retiredPortraitPaths } from '../config/retiredPortraits';
 import { isFinanceScenario } from '../src/data/legacyScenario';
 import { ARTWORKS, ROLE_PROFILES } from '../src/data/mockData';
@@ -92,26 +93,23 @@ test('unfiltered baseline always uses its labelled HTML print view, without chan
   assert.equal(requiresBrowserPrint({ programmeName: 'برنامج تجريبي' }), true);
 });
 
-test('legacy Operations cannot reintroduce withdrawn policy and certification claims', () => {
-  const source = readFileSync(new URL('../src/components/workspaces/OperationsView.tsx', import.meta.url), 'utf8');
-  for (const claim of ['Certified Safe', '100% Certified', 'legally authorized', 'Central Finance Department directives', 'Institutional governance forbids', 'Institutional License Granted', 'مستوفٍ قانونياً', 'مرخصة قانونياً']) {
-    assert.equal(source.includes(claim), false, claim);
-  }
-});
+// These claims once appeared in legacy workspaces (since deleted as unreachable). Guard the whole
+// source tree so they cannot return anywhere. SHA-256 is omitted: live evidence hashing uses it.
+const WITHDRAWN_CLAIMS = [
+  'Certified Safe', '100% Certified', 'legally authorized', 'Central Finance Department directives', 'Institutional governance forbids', 'Institutional License Granted', 'مستوفٍ قانونياً', 'مرخصة قانونياً',
+  'Sign as Mohammed', 'DIR-MIAQ-AUTH', 'توقيع رسمي معتمد', 'Under Sharjah Calligraphy Biennial governance',
+  'legally issued', 'SAM-PERMIT-', 'اعتماد وإصدار تصريح', 'Checksum Verified',
+  'Security Check Passed', 'Identity Verified', 'Under Biennale governance policy',
+  'authenticated against original', 'دار المخطوطات بالشارقة', 'رَمَى الدَّهْرُ', 'شروحات الدليل (2).docx',
+  'Authenticated Government Procurement Record', 'وثيقة شراء موثقة رقمياً', 'Standard Museum Spec', 'الخطوط المعتمد لدائرة الثقافة',
+  'Authorized for Invoicing', 'أمر الشراء نافذ ومسجل رسمياً', '100% Registered Suppliers',
+];
 
-test('withdrawn institutional attestations cannot return in legacy actions or exported copy', () => {
-  const checks: Record<string, string[]> = {
-    'workspaces/CommitteeView.tsx': ['Sign as Mohammed', 'DIR-MIAQ-AUTH', 'توقيع رسمي معتمد', 'Under Sharjah Calligraphy Biennial governance'],
-    'workspaces/TechnicalMuseumDashboard.tsx': ['legally issued', 'SAM-PERMIT-', 'اعتماد وإصدار تصريح'],
-    'workspaces/CommunicationView.tsx': ['Checksum Verified', 'SHA-256'],
-    'workspaces/PrProtocolDashboard.tsx': ['Security Check Passed', 'Identity Verified', 'Under Biennale governance policy'],
-    'workspaces/EditorialPipeline.tsx': ['authenticated against original', 'دار المخطوطات بالشارقة', 'رَمَى الدَّهْرُ', 'شروحات الدليل (2).docx'],
-    'common/RfqGeneratorModal.tsx': ['Authenticated Government Procurement Record', 'وثيقة شراء موثقة رقمياً'],
-    'common/GalleryLabelPrintView.tsx': ['Standard Museum Spec', 'الخطوط المعتمد لدائرة الثقافة'],
-    'workspaces/OperationsView.tsx': ['Authorized for Invoicing', 'أمر الشراء نافذ ومسجل رسمياً', '100% Registered Suppliers'],
-  };
-  for (const [file, claims] of Object.entries(checks)) {
-    const text = readFileSync(new URL(`../src/components/${file}`, import.meta.url), 'utf8');
-    for (const claim of claims) assert(!text.includes(claim), `${file}: ${claim}`);
+test('withdrawn policy, certification and attestation claims cannot return anywhere in the source', () => {
+  const files = execSync('git ls-files src', { encoding: 'utf8' }).split('\n').filter(f => /\.(tsx?|mjs|json)$/.test(f));
+  assert(files.length > 100);
+  for (const file of files) {
+    const text = readFileSync(file, 'utf8');
+    for (const claim of WITHDRAWN_CLAIMS) assert(!text.includes(claim), `${file}: ${claim}`);
   }
 });

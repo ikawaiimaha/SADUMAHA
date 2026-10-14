@@ -178,7 +178,7 @@ export function CoordinatorContractWorkspace({
         </div>
       </div>
 
-      {!pipelineReady && <p role="status" className="rounded border border-amber-400 bg-amber-50 ps-4 pe-4 py-4 text-start">Institutional Pipeline Locked: Awaiting Theme Publication and HIP Curatorial Guidelines.</p>}
+      {!pipelineReady && <p role="status" className="rounded border border-amber-400 bg-amber-50 ps-4 pe-4 py-4 text-start">Institutional Pipeline Locked: Awaiting Theme Publication and the General Exhibition Coordinator's Curatorial Guidelines.</p>}
       {dispatchedSuccess && (
         <div className="bg-[#EBF3ED] border border-[#9DC4A7] text-[#1E4A28] px-4 py-3 rounded-lg flex items-center gap-3 text-sm mb-6">
           <CheckCircle2 className="w-5 h-5 shrink-0 text-[#2D6A3E]" />

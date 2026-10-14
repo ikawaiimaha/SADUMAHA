@@ -19,11 +19,12 @@ export default function SandboxRoleActions({ dossierId }: { dossierId: string })
     return () => window.removeEventListener('beforeunload', warn);
   }, [dirty]);
   const set = (key: string, value: string) => setDrafts(all => ({ ...all, [dossierId]: { ...all[dossierId], [key]: value } }));
+  const latest = state.decisions.filter(x => x.dossierId === dossierId).at(-1);
   const block = (action: SandboxAction) => error || sandboxBlock(d, role, action);
   const act = (action: SandboxAction, fields = draft) => {
     try {
       run(dossierId, action, fields);
-      const used: Partial<Record<SandboxAction, string[]>> = { SUBMIT: ['submission'], REQUEST_REVISION: ['critique'], COLLECTION: ['address', 'date', 'packing'], VERIFY_PR: ['identity', 'travel'] };
+      const used: Partial<Record<SandboxAction, string[]>> = { SUBMIT: ['submission'], REQUEST_REVISION: ['critique'], DIRECTOR_RETURN: ['reason'], COLLECTION: ['address', 'date', 'packing'], VERIFY_PR: ['identity', 'travel'] };
       setDrafts(all => ({ ...all, [dossierId]: Object.fromEntries(Object.entries(all[dossierId] ?? {}).filter(([k]) => !used[action]?.includes(k))) }));
       setNotices(all => ({ ...all, [dossierId]: 'Sandbox action saved. Switch roles to continue the handoff.' }));
     } catch (e) { setNotices(all => ({ ...all, [dossierId]: e instanceof Error ? e.message : 'Unable to record this action.' })); }
@@ -39,6 +40,7 @@ export default function SandboxRoleActions({ dossierId }: { dossierId: string })
       {submit('SUBMIT', d.revision ? 'Submit revised information' : 'Submit artwork information')}
     </form>}
     {role === 'General_Exhibition_Coordinator' && <div className="mt-4 space-y-4">
+      {d.status === 'Returned by Director' && <p className="text-sm"><strong>Director’s reason for returning this dossier:</strong> {d.directorReason} Address it, then resubmit for Executive Review or request an artist revision.</p>}
       <div><button type="button" disabled={!!block('READY')} className={button} onClick={() => act('READY')}>Ready for Executive Review</button>{block('READY') && <p className="mt-2 text-sm text-[#655D50]">{block('READY')}</p>}</div>
       <details><summary className="cursor-pointer text-sm">Request an artist revision</summary><form className="mt-3 space-y-3" onSubmit={e => { e.preventDefault(); act('REQUEST_REVISION'); }}><label className="block text-sm">Critique notes<textarea required minLength={5} maxLength={2000} value={draft.critique ?? ''} onChange={e => set('critique', e.target.value)} className={input} rows={2}/></label>{submit('REQUEST_REVISION', 'Request Revision')}</form></details>
     </div>}
@@ -51,11 +53,17 @@ export default function SandboxRoleActions({ dossierId }: { dossierId: string })
       {(['identity', 'travel'] as const).map(key => <label key={key} className="flex items-start gap-2 text-sm"><input type="checkbox" required checked={draft[key] === 'confirmed'} onChange={e => set(key, e.target.checked ? 'confirmed' : '')} className="mt-1 accent-[#8B261E]"/>{key === 'identity' ? 'Simulated identity evidence checked' : 'Simulated travel status checked'}</label>)}
       {submit('VERIFY_PR', 'Verify Identity & Travel Documents')}
     </form>}
-    {role === 'Director' && <div className="mt-4"><button type="button" className={button} disabled={!!block('PUBLISH')} onClick={() => act('PUBLISH')}>Approve & Publish (sandbox)</button>{block('PUBLISH') && <p className="mt-2 text-sm text-[#655D50]">{block('PUBLISH')}</p>}</div>}
+    {role === 'Director' && <div className="mt-4 space-y-4">
+      <div><button type="button" className={button} disabled={!!block('PUBLISH')} onClick={() => act('PUBLISH')}>Approve & Publish (sandbox)</button>{block('PUBLISH') && <p className="mt-2 text-sm text-[#655D50]">{block('PUBLISH')}</p>}</div>
+      <details><summary className="cursor-pointer text-sm">Return to Coordinator with a reason</summary><form className="mt-3 space-y-3" onSubmit={e => { e.preventDefault(); act('DIRECTOR_RETURN'); }}><label className="block text-sm">Reason for returning (required)<textarea required minLength={5} maxLength={2000} value={draft.reason ?? ''} onChange={e => set('reason', e.target.value)} className={input} rows={2}/></label>{submit('DIRECTOR_RETURN', 'Return to Coordinator')}</form></details>
+    </div>}
     {notices[dossierId] && <p role="status" className="mt-3 text-sm">{notices[dossierId]}</p>}
     {error && <p role="alert" className="mt-3 text-sm">{error}</p>}
     <div className="mt-4 border-t border-[#DED5C4] pt-3 text-xs text-[#655D50]" aria-label="Shared evidence status">
       <p>PR evidence: {d.prRevision && d.prRevision === d.revision ? 'Current' : 'Pending'} · Collection details: {d.collectionRevision && d.collectionRevision === d.revision ? 'Current' : 'Pending'}</p>
+      <p className="mt-2" aria-label="Latest recorded action">{latest
+        ? <><strong className="text-[#111817]">Latest recorded action:</strong> {latest.action.replaceAll('_', ' ')} by the {sandboxRoles[latest.role]} desk · Revision {latest.revision} · <time dateTime={latest.at}>{new Date(latest.at).toLocaleString('en-GB')}</time>. Recorded for this browser tab only; the sandbox does not verify a signed-in person.</>
+        : 'No action has been recorded for this dossier yet.'}</p>
       {d.submission && <details className="mt-3"><summary className="cursor-pointer">Submitted artwork information</summary><p className="mt-2 whitespace-pre-wrap break-words text-sm">{d.submission}</p></details>}
       {d.collection && <details className="mt-3"><summary className="cursor-pointer">Saved collection details{d.collectionRevision !== d.revision ? ' · Requires review' : ''}</summary><p className="mt-2 whitespace-pre-wrap break-words text-sm">{d.collection.address}<br/>{d.collection.date}<br/>{d.collection.packing}</p></details>}
       <details className="mt-3"><summary className="cursor-pointer">Sandbox decision history</summary><ol className="mt-2 space-y-2">{state.decisions.filter(x => x.dossierId === dossierId).map(x => <li key={x.id}>{sandboxRoles[x.role]} · {x.action.replaceAll('_', ' ')} · Revision {x.revision} · {new Date(x.at).toLocaleString('en-GB')}</li>)}</ol>{!state.decisions.some(x => x.dossierId === dossierId) && <p className="mt-2">No actions recorded.</p>}</details>

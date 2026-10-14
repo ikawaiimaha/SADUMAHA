@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('sadu_lang', 'en'));
-  await page.goto('/');
+  await page.goto('/workbench');
   await page.getByRole('button', { name: 'Enter Institutional System', exact: true }).click();
 });
 const desk = (page: Page, name: string) => page.getByRole('combobox', {name: 'Workspace', exact: true}).selectOption({label: name === 'Committee' ? 'Preparatory Committee' : name === 'Director' ? 'Biennial Director' : name});
@@ -10,7 +10,7 @@ const desk = (page: Page, name: string) => page.getByRole('combobox', {name: 'Wo
 test('authority handoffs preserve mandates and Arabic lock across desk changes', async ({page}) => {
   const errors: string[] = [];
   page.on('pageerror', e => errors.push(e.message));
-  await desk(page, 'HIP');
+  await desk(page, 'General Exhibition Coordinator');
   await expect(page.locator('#exhibition-guidelines-arabic')).toBeDisabled();
   await expect(page.getByRole('button', {name: 'Add Tag', exact: true})).toBeDisabled();
   await desk(page, 'Editorial');
@@ -19,7 +19,7 @@ test('authority handoffs preserve mandates and Arabic lock across desk changes',
   await page.getByRole('button', {name:'Auto-fill for Demo',exact:true}).click();
   await page.getByRole('button', {name:'Compare all three',exact:true}).click();
   await page.getByRole('button', {name:'Submit to Biennial Director',exact:true}).click();
-  await desk(page, 'HIP');
+  await desk(page, 'General Exhibition Coordinator');
   await desk(page, 'Committee');
   await expect(page.getByRole('button', {name:'Start New Proposal Set',exact:true})).toBeDisabled();
   await expect(page.getByRole('button', {name:'Auto-fill for Demo',exact:true})).toHaveCount(0);
@@ -28,7 +28,8 @@ test('authority handoffs preserve mandates and Arabic lock across desk changes',
   const advice = await page.locator('#director-note-0').inputValue();
   await page.getByRole('button', {name:'Present 3 Themes to Chairman',exact:true}).click();
   await desk(page, 'Chairman');
-  await page.getByRole('button', {name:'Biennial Program Decisions',exact:true}).click();
+  // The waiting theme decision opens the decisions view by itself.
+  await expect(page.getByRole('button', {name:/^Biennial Program Decisions/})).toHaveAttribute('aria-pressed', 'true');
   await page.getByRole('button', {name:'Auto-fill Executive Directives',exact:true}).click();
   const mandate = await page.locator('#chairman-directives-0').inputValue();
   await page.getByRole('button', {name:'Select proposal',exact:true}).first().click();
@@ -43,7 +44,7 @@ test('authority handoffs preserve mandates and Arabic lock across desk changes',
   const arabic = 'بيان مؤسسي لاختبار انتقال الصياغة العربية المعتمدة بين الأقسام';
   await page.locator('#editorial-arabic').fill(arabic);
   await page.getByRole('button',{name:'Ratify Arabic Text & Route to Translation',exact:true}).click();
-  await desk(page,'HIP');
+  await desk(page,'General Exhibition Coordinator');
   await expect(page.getByText('Status: Pending Editorial Translation',{exact:true}).first()).toBeVisible();
   await expect(page.locator('#exhibition-guidelines-arabic')).toBeDisabled();
   await desk(page,'Editorial');
@@ -54,7 +55,7 @@ test('authority handoffs preserve mandates and Arabic lock across desk changes',
   await expect(publish).toBeDisabled();
   await page.getByRole('checkbox',{name:/I reviewed the English translation/}).check();
   await publish.click();
-  await desk(page,'HIP');
+  await desk(page,'General Exhibition Coordinator');
   await expect(page.locator('#exhibition-guidelines-arabic')).toBeEnabled();
   await expect(page.getByText(mandate,{exact:true})).toBeVisible();
   await expect(page.getByText(advice,{exact:true})).toBeVisible();

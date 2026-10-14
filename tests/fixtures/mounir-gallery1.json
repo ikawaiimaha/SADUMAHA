@@ -1,0 +1,520 @@
+{
+  "caseId": "mounir-gallery1-evidence-map-v3",
+  "mode": "LOCAL_REHEARSAL_ONLY",
+  "sourceStatus": "PARTIAL_SOURCE_INSPECTION_UNRESOLVED_EMAILS_AND_APPROVALS",
+  "artist": "Mounir Fatmi",
+  "venue": "Sharjah Art Museum",
+  "gallery": "Gallery 1",
+  "sources": [
+    {
+      "id": "E1",
+      "description": "Reported SMD-003-DL-SAM drawings A/B/C",
+      "originalAvailable": false,
+      "sha256": null
+    },
+    {
+      "id": "E2",
+      "description": "Reported studio email and red-text layout image",
+      "originalAvailable": false,
+      "sha256": null
+    },
+    {
+      "id": "E3",
+      "description": "Reported suspended installation photograph; object attribution unresolved",
+      "originalAvailable": false,
+      "sha256": null
+    },
+    {
+      "id": "E4",
+      "description": "Reported equipment and truck request correspondence with SAF",
+      "originalAvailable": false,
+      "sha256": null
+    },
+    {
+      "id": "E5",
+      "description": "Reported rust, coating, securing and plinth correspondence; exact object and authority unresolved",
+      "originalAvailable": false,
+      "sha256": null
+    },
+    {
+      "id": "E6",
+      "description": "User follow-up summary reporting studio layout and one-letter coating test instructions; original emails/images not attached",
+      "originalAvailable": false,
+      "sha256": null
+    },
+    {
+      "id": "E7",
+      "description": "Sculpture, September/October 2026: In Ruins: A Conversation with Mounir Fatmi, by Robert Preece",
+      "originalAvailable": true,
+      "sha256": "45533ff5128cb815568d4d0fbc56a6c4a3e4d574daa9243417e77e38f4a8a62c",
+      "localPath": "C:\\Users\\squir\\Downloads\\MFatmi_Sculpture Magazine_SeptOct26 (2).pdf",
+      "pageCount": 13,
+      "inspectionScope": "Rendered page overview; detailed visual inspection of PDF pages 6, 9 and 10. Page 9 (printed page 47) caption and image confirm balance-and-steel-calligraphy version of Heavier than words. No institutional authorization established.",
+      "authenticityIndependentlyEstablished": false
+    },
+    {
+      "id": "E8",
+      "description": "Heavier Than Words technical sheet, six pages; supplied file inspected, especially page 2 installation instructions",
+      "originalAvailable": true,
+      "sha256": "cd760c894055b71ab51a7bb2a3857cad0553da3b4d2ed113827b495802ba455e",
+      "localPath": "C:\\Users\\squir\\Downloads\\Re__[EXTERNAL]_Clarification_regarding_the_steel_letters\\Fiche-technique-Heavier than words-EN.pdf",
+      "pageCount": 6,
+      "inspectedPages": [
+        1,
+        2
+      ],
+      "authenticityIndependentlyEstablished": false
+    },
+    {
+      "id": "E9",
+      "description": "Latest user summary attributing changes and clearance to studio emails dated September 2026; those email bodies were not located",
+      "originalAvailable": false,
+      "sha256": null
+    }
+  ],
+  "walls": [
+    {
+      "id": "A",
+      "width_mm": 7000,
+      "height_mm": 2700,
+      "sourceId": "E1"
+    },
+    {
+      "id": "B",
+      "width_mm": 7000,
+      "height_mm": 2700,
+      "sourceId": "E1"
+    },
+    {
+      "id": "C",
+      "width_mm": 6300,
+      "height_mm": 2700,
+      "sourceId": "E1"
+    }
+  ],
+  "wallOrientationMap": null,
+  "floorPolygon": null,
+  "ceilingLoadRating": null,
+  "reportedObstructions": {
+    "floorOffset_mm": 250,
+    "features": [
+      "power sockets",
+      "fire-break glass",
+      "sensors"
+    ],
+    "sourceId": "E1",
+    "verifiedUsableBoundary": null
+  },
+  "works": [
+    {
+      "id": "101bb523-c68b-4db8-b605-e4841d715c2f",
+      "title": "Technologia",
+      "variant": "projection",
+      "placementIntent": "Direct-to-wall projection flanking the central sculpture; exact wall ID unresolved",
+      "sourceId": "E2",
+      "dimensions_cm": null,
+      "placementSourceIds": [
+        "E2",
+        "E6"
+      ],
+      "placementVerified": false
+    },
+    {
+      "id": "201bb523-c68b-4db8-b605-e4841d715c2f",
+      "title": "Heavier Than Words",
+      "variant": "steel sculpture",
+      "placementIntent": "Wall-mounted shelf between the Technologia projection and Technologia photographs; reported arrangement of letters intentionally random",
+      "sourceId": "E2",
+      "dimensions_cm": null,
+      "placementSourceIds": [
+        "E2",
+        "E6"
+      ],
+      "placementVerified": false,
+      "sourceDocumentFacts": {
+        "sourceId": "E8",
+        "page": 2,
+        "support": "White pedestal",
+        "pedestal_cm": {
+          "length": 120,
+          "width": 45,
+          "height": 80
+        },
+        "components": [
+          "Cast-iron balance with two trays",
+          "Five weights",
+          "Steel calligraphic elements"
+        ],
+        "assembly": "Arrange letters randomly on the upper tray; leave the lower tray empty; place five weights in front of the balance base.",
+        "applicabilityToCurrentLayoutConfirmed": false
+      },
+      "layoutConflict": {
+        "sourceIds": [
+          "E6",
+          "E8",
+          "E9"
+        ],
+        "resolved": false,
+        "reason": "Reported later wall-shelf instruction differs from the inspected pedestal-and-balance technical sheet. Obtain the studio amendment and identify the exact configuration."
+      }
+    },
+    {
+      "id": "301bb523-c68b-4db8-b605-e4841d715c2f",
+      "title": "Technologia",
+      "variant": "photographic series",
+      "reportedComponentCount": 5,
+      "componentInventoryConfirmed": false,
+      "placementIntent": "back wall",
+      "sourceId": "E2",
+      "dimensions_cm": null,
+      "placementSourceIds": [
+        "E2",
+        "E6"
+      ],
+      "placementVerified": false
+    },
+    {
+      "id": "401bb523-c68b-4db8-b605-e4841d715c2f",
+      "title": "Ghosting",
+      "variant": "projection",
+      "placementIntent": "Direct-to-wall projection flanking the central sculpture; exact wall ID unresolved",
+      "sourceId": "E2",
+      "dimensions_cm": null,
+      "placementSourceIds": [
+        "E2",
+        "E6"
+      ],
+      "placementVerified": false
+    },
+    {
+      "id": "501bb523-c68b-4db8-b605-e4841d715c2f",
+      "title": "Between the Lines",
+      "variant": "installation",
+      "placementIntent": "Centre floor, reported freestanding sculpture; reconciliation with suspended-work photograph still required",
+      "sourceId": "E2",
+      "dimensions_cm": null,
+      "placementSourceIds": [
+        "E2",
+        "E6"
+      ],
+      "placementVerified": false
+    }
+  ],
+  "equipmentClaims": [
+    {
+      "item": "AV Projector",
+      "quantity": 2,
+      "sourceId": "E4",
+      "supplierConfirmed": false
+    },
+    {
+      "item": "Directional Audio Speaker",
+      "quantity": 2,
+      "sourceId": "E4",
+      "supplierConfirmed": false
+    },
+    {
+      "item": "3-ton pickup truck",
+      "quantity": 1,
+      "sourceId": "E4",
+      "supplierConfirmed": false
+    }
+  ],
+  "intervention": {
+    "sourceId": "E6",
+    "artworkId": "201bb523-c68b-4db8-b605-e4841d715c2f",
+    "attributionStatus": "REPORTED_NOT_VERIFIED",
+    "status": "PENDING_ARTIST_APPROVAL",
+    "owner": "Technical",
+    "reportedIntentionalRust": true,
+    "reportedProposal": "Transparent, non-visible protective coating; one-letter test photograph for artist approval before batch treatment. Shelf letter arrangement reported intentionally random.",
+    "artistConsentVerified": false,
+    "technicalClearanceVerified": false,
+    "authorizedToExecute": false,
+    "sampleTreatmentAuthorized": false,
+    "samplePhoto": null,
+    "sampleApproval": null,
+    "batchTreatmentAuthorized": false,
+    "requirements": [
+      "Verify source and representative authority",
+      "Agree precise material, method and acceptable appearance with technical/conservation reviewer",
+      "Obtain scoped authorization before treating even the sample letter",
+      "Upload the actual treated sample photograph linked to this ticket revision",
+      "Obtain attributed artist approval of that sample before any batch treatment"
+    ],
+    "verifiedAssemblyScope": {
+      "sourceId": "E8",
+      "page": 2,
+      "fact": "Random arrangement on the upper balance tray; not a verified shelf instruction."
+    },
+    "pendingFixingClaim": {
+      "sourceId": "E9",
+      "claim": "Technicians may secure letters without changing visible appearance",
+      "consentVerified": false
+    }
+  },
+  "openQuestions": [
+    {
+      "id": "Q1",
+      "sourceIds": [
+        "E1",
+        "E2"
+      ],
+      "owner": "General Exhibition Coordinator",
+      "question": "Obtain originals and verify drawing revision, scale and A/B/C orientation.",
+      "blocks": "Approved layout"
+    },
+    {
+      "id": "Q2",
+      "sourceIds": [
+        "E1",
+        "E3"
+      ],
+      "owner": "Technical",
+      "question": "Confirm usable wall envelopes, exits, floor geometry, anchors, load calculations and suspension identity.",
+      "blocks": "Installation clearance"
+    },
+    {
+      "id": "Q3",
+      "sourceIds": [
+        "E2"
+      ],
+      "owner": "Artist",
+      "question": "Confirm work dimensions, component inventory and installation instructions.",
+      "blocks": "Definitive artwork inventory and fit approval"
+    },
+    {
+      "id": "Q4",
+      "sourceIds": [
+        "E4"
+      ],
+      "owner": "Technical",
+      "question": "Specify projector lenses, throw ratios, desired image sizes and audio requirements.",
+      "blocks": "Projection feasibility"
+    },
+    {
+      "id": "Q5",
+      "sourceIds": [
+        "E4"
+      ],
+      "owner": "Logistics",
+      "question": "Confirm equipment availability, required dates, truck suitability and an alternative supplier.",
+      "blocks": "Equipment booking and freight execution"
+    },
+    {
+      "id": "Q6",
+      "sourceIds": [
+        "E5"
+      ],
+      "owner": "General Exhibition Coordinator",
+      "question": "Resolve artist/object attribution, consent scope and studio representative authority; obtain the treatment method and technical/conservation review.",
+      "blocks": "Any physical alteration"
+    },
+    {
+      "id": "Q7",
+      "sourceIds": [
+        "E6",
+        "E7"
+      ],
+      "owner": "Designated institutional compliance reviewer",
+      "question": "Verify exact text and translation per artwork and document a scoped institutional decision. Prior exhibition history is not clearance.",
+      "blocks": "Cultural clearance"
+    },
+    {
+      "id": "Q8",
+      "sourceIds": [
+        "E3",
+        "E6"
+      ],
+      "owner": "Technical",
+      "question": "Reconcile the reported freestanding layout and shelf placement with the original drawings and any suspended-work image; confirm exact wall IDs.",
+      "blocks": "Final installation layout"
+    },
+    {
+      "id": "Q9",
+      "sourceIds": [
+        "E6",
+        "E8",
+        "E9"
+      ],
+      "owner": "General Exhibition Coordinator",
+      "question": "Obtain the dated shelf-layout amendment and reconcile it with the technical sheet before installation approval.",
+      "blocks": "Approval of Heavier Than Words support configuration"
+    }
+  ],
+  "claimHistory": [
+    {
+      "revision": "v1",
+      "placementIntents": [
+        {
+          "artworkId": "101bb523-c68b-4db8-b605-e4841d715c2f",
+          "placementIntent": "left wall"
+        },
+        {
+          "artworkId": "201bb523-c68b-4db8-b605-e4841d715c2f",
+          "placementIntent": "left wall area; mounting method unresolved"
+        },
+        {
+          "artworkId": "301bb523-c68b-4db8-b605-e4841d715c2f",
+          "placementIntent": "back wall"
+        },
+        {
+          "artworkId": "401bb523-c68b-4db8-b605-e4841d715c2f",
+          "placementIntent": "right wall"
+        },
+        {
+          "artworkId": "501bb523-c68b-4db8-b605-e4841d715c2f",
+          "placementIntent": "centre floor; suspension attribution unresolved"
+        }
+      ],
+      "intervention": {
+        "sourceId": "E5",
+        "artworkId": null,
+        "reportedProposal": "Transparent protective coating and structural letter securing; precise treatment method unresolved",
+        "artistConsentVerified": false,
+        "technicalClearanceVerified": false,
+        "authorizedToExecute": false
+      }
+    },
+    {
+      "revision": "v2",
+      "sourceStatus": "USER_SUMMARY_ONLY_ORIGINALS_NOT_INSPECTED",
+      "culturalReview": {
+        "sourceIds": [
+          "E6",
+          "E7"
+        ],
+        "status": "AWAITING_SOURCE_VERIFICATION",
+        "reviewOwner": "Designated institutional compliance reviewer under Director-approved policy",
+        "curatorialContextOwner": "Preparatory Committee",
+        "clearanceGranted": false,
+        "clearanceDecision": null,
+        "claims": [
+          {
+            "artworkIds": [
+              "501bb523-c68b-4db8-b605-e4841d715c2f"
+            ],
+            "reportedText": "Surah Al-Ikhlas",
+            "verified": false
+          },
+          {
+            "artworkIds": [
+              "101bb523-c68b-4db8-b605-e4841d715c2f",
+              "401bb523-c68b-4db8-b605-e4841d715c2f"
+            ],
+            "reportedText": "God is beautiful and loves beauty",
+            "verified": false
+          }
+        ],
+        "unresolvedClaims": [
+          {
+            "reportedText": "Surah Az-Zumar 39:9",
+            "artworkId": null,
+            "reason": "Follow-up gives a collective attribution without an object-specific source"
+          },
+          {
+            "reportedText": "Previously exhibited at Jameel Foundation",
+            "artworkId": null,
+            "reason": "Venue, exhibition and object attribution require verification"
+          },
+          {
+            "reportedText": "Shahada",
+            "artworkId": null,
+            "sourceId": "E9",
+            "reason": "Requires exact artwork and source passage; not an institutional clearance."
+          },
+          {
+            "reportedText": "Surah Az-Zumar 39:9 attributed to Technologia/Ghosting in latest summary",
+            "artworkIds": [
+              "101bb523-c68b-4db8-b605-e4841d715c2f",
+              "401bb523-c68b-4db8-b605-e4841d715c2f"
+            ],
+            "sourceId": "E9",
+            "reason": "Reported attribution updated; original September 21 correspondence and precise text not inspected."
+          }
+        ],
+        "reportedInterpretation": "Contemporary exploration of technology, science and faith; source text and translation await verification."
+      },
+      "intervention": {
+        "sourceId": "E6",
+        "artworkId": "201bb523-c68b-4db8-b605-e4841d715c2f",
+        "attributionStatus": "REPORTED_NOT_VERIFIED",
+        "status": "PENDING_ARTIST_APPROVAL",
+        "owner": "Technical",
+        "reportedIntentionalRust": true,
+        "reportedProposal": "Transparent, non-visible protective coating; one-letter test photograph for artist approval before batch treatment. Shelf letter arrangement reported intentionally random.",
+        "artistConsentVerified": false,
+        "technicalClearanceVerified": false,
+        "authorizedToExecute": false,
+        "sampleTreatmentAuthorized": false,
+        "samplePhoto": null,
+        "sampleApproval": null,
+        "batchTreatmentAuthorized": false,
+        "requirements": [
+          "Verify source and representative authority",
+          "Agree precise material, method and acceptable appearance with technical/conservation reviewer",
+          "Obtain scoped authorization before treating even the sample letter",
+          "Upload the actual treated sample photograph linked to this ticket revision",
+          "Obtain attributed artist approval of that sample before any batch treatment"
+        ]
+      }
+    }
+  ],
+  "culturalReview": {
+    "sourceIds": [
+      "E6",
+      "E7",
+      "E9"
+    ],
+    "status": "AWAITING_SOURCE_VERIFICATION",
+    "reviewOwner": "Designated institutional compliance reviewer under Director-approved policy",
+    "curatorialContextOwner": "Preparatory Committee",
+    "clearanceGranted": false,
+    "clearanceDecision": null,
+    "claims": [
+      {
+        "artworkIds": [
+          "501bb523-c68b-4db8-b605-e4841d715c2f"
+        ],
+        "reportedText": "Surah Al-Ikhlas",
+        "verified": false
+      },
+      {
+        "artworkIds": [
+          "101bb523-c68b-4db8-b605-e4841d715c2f",
+          "401bb523-c68b-4db8-b605-e4841d715c2f"
+        ],
+        "reportedText": "God is beautiful and loves beauty",
+        "verified": false
+      }
+    ],
+    "unresolvedClaims": [
+      {
+        "reportedText": "Surah Az-Zumar 39:9",
+        "artworkId": null,
+        "reason": "Follow-up gives a collective attribution without an object-specific source"
+      },
+      {
+        "reportedText": "Previously exhibited at Jameel Foundation",
+        "artworkId": null,
+        "reason": "Venue, exhibition and object attribution require verification"
+      },
+      {
+        "reportedText": "Shahada",
+        "artworkId": null,
+        "sourceId": "E9",
+        "reason": "Requires exact artwork and source passage; not an institutional clearance."
+      },
+      {
+        "reportedText": "Surah Az-Zumar 39:9 attributed to Technologia/Ghosting in latest summary",
+        "artworkIds": [
+          "101bb523-c68b-4db8-b605-e4841d715c2f",
+          "401bb523-c68b-4db8-b605-e4841d715c2f"
+        ],
+        "sourceId": "E9",
+        "reason": "Reported attribution updated; original September 21 correspondence and precise text not inspected."
+      }
+    ],
+    "reportedInterpretation": "Contemporary exploration of technology, science and faith; source text and translation await verification."
+  }
+}

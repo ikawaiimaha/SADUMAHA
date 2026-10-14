@@ -112,7 +112,7 @@ export default function EditorialWorkspace({
 
     // Only an accepted global transition can announce success or advance roles.
     scrollWorkspaceToTop();
-    onAutoNavigate?.('HIP');
+    onAutoNavigate?.('GENERAL_COORDINATOR');
 
 
   };
@@ -162,7 +162,7 @@ export default function EditorialWorkspace({
       </section>}
 
       {guidelinesPending && <section aria-labelledby="guidelines-queue-heading" className="mb-6 rounded-lg border border-[#D9D2C5] bg-[#F7F1E6] ps-6 pe-6 py-5 text-start">
-        <h2 id="guidelines-queue-heading" className="font-serif text-xl font-bold">{isAr ? 'قائمة الترجمة — دليل منسق المعرض' : 'Translation Queue — HIP Guidelines'}</h2>
+        <h2 id="guidelines-queue-heading" className="font-serif text-xl font-bold">{isAr ? 'قائمة الترجمة — دليل المنسقة' : 'Translation Queue — General Coordinator Guidelines'}</h2>
         <p dir="rtl" className="my-4 whitespace-pre-wrap rounded bg-[#EDE4D3] p-4 text-start">{guidelinesArabic}</p>
         <form className="space-y-3" onSubmit={event => {
           event.preventDefault();
@@ -174,7 +174,7 @@ export default function EditorialWorkspace({
           <button type="submit" disabled={!guidelinesDraftEnglish.trim() || !onPublishOfficialGuidelines} className="rounded bg-[#8B261E] ps-4 pe-4 py-2 text-white disabled:opacity-50 disabled:cursor-not-allowed">{isAr ? 'نشر الدليل الثنائي اللغة' : 'Publish Bilingual Guidelines'}</button>
         </form>
       </section>}
-      {isPublished && guidelinesTranslationStatus === 'PUBLISHED' && <p role="status" className="mb-6 rounded bg-[#EDE4D3] ps-4 pe-4 py-3 text-start">{isAr ? 'نُشر الدليل الثنائي اللغة وأُعيد إلى منسق المعرض.' : 'Bilingual guidelines published and returned to HIP.'}</p>}
+      {isPublished && guidelinesTranslationStatus === 'PUBLISHED' && <p role="status" className="mb-6 rounded bg-[#EDE4D3] ps-4 pe-4 py-3 text-start">{isAr ? 'نُشر الدليل الثنائي اللغة وأُعيد إلى المنسقة.' : 'Bilingual guidelines published and returned to the General Exhibition Coordinator.'}</p>}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         
@@ -231,7 +231,7 @@ export default function EditorialWorkspace({
                 <Lock className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
                 <div>
                   <h4 className="font-bold text-emerald-900 text-sm">{tr("Theme Locked & Dispatched")}</h4>
-                  <p className="text-xs text-emerald-800 mt-1"> {tr("The official bilingual theme is now published. The Head of International Programs (HIP) and General Coordinators have been unblocked to begin curatorial guidelines and artist scouting.")} </p>
+                  <p className="text-xs text-emerald-800 mt-1"> {tr("The official bilingual theme is now published. The General Exhibition Coordinator and Exhibition Coordinators have been unblocked to begin curatorial guidelines and artist scouting.")} </p>
                 </div>
               </div>
             )}

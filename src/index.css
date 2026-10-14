@@ -657,3 +657,9 @@ h1, h2, .font-serif, .font-editorial, [dir="rtl"] .font-editorial, [lang="ar"] .
 .sadu-action-reject:enabled:hover { background-color: var(--color-sadu-reject-hover); }
 .sadu-action-approve:disabled, .sadu-action-reject:disabled { opacity: .5; cursor: not-allowed; }
 .sadu-action-approve:focus-visible, .sadu-action-reject:focus-visible { outline: 2px solid var(--color-sadu-ink); outline-offset: 3px; }
+
+/* Phones: let the end of long workspaces scroll clear of the floating lock control
+   (IdleWorkspaceLock). Story mode uses a fixed frame and clears it in its footer instead. */
+@media (max-width: 639px) {
+  .idle-lock-content:not(:has(.story-experience)) { padding-bottom: 64px; }
+}

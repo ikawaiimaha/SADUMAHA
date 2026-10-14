@@ -11,7 +11,7 @@ export function SpatialEquipmentClearances({ clearance, isAr }: { clearance: Spa
   return <section className="space-y-4 rounded-lg border border-[#D9CEBA] border-s-4 border-s-[#8B261E] bg-[#F7F1E6] ps-5 pe-5 py-5 text-start text-[#1A1817]">
     <h2 className="text-lg font-semibold">{isAr ? 'التصاريح المكانية والمعدات' : 'Spatial & Equipment Clearances'}</h2>
     <p className="font-semibold">{clearance.artist[language]} · <bdi>{clearance.artworkCode}</bdi></p>
-    <p className="text-sm text-[#736357]">{isAr ? 'مرجع اللوحة المكانية لـ HIP • بيانات تدريبية غير متحققة؛ ليست تصريحاً نافذاً.' : 'HIP Curatorial Spatial Canvas reference • unverified rehearsal data; not an operational permit.'}</p>
+    <p className="text-sm text-[#736357]">{isAr ? 'مرجع اللوحة المكانية للمنسقة • بيانات تدريبية غير متحققة؛ ليست تصريحاً نافذاً.' : 'General Coordinator Curatorial Spatial Canvas reference • unverified rehearsal data; not an operational permit.'}</p>
     <dl className="grid gap-4 sm:grid-cols-2">
       {[
         { label: isAr ? 'الموقع / القاعة المخصصة' : 'Allocated Venue/Room', value: clearance.venue[language], Icon: MapPin },

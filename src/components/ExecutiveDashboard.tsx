@@ -8,12 +8,14 @@ import React, { useEffect, useRef, useState } from 'react';
 import '@fontsource/amiri/400.css';
 import { executiveCases, openExecutiveDatabase, type ExecutiveNote } from '../data/executiveCases';
 import { institutionalLogo } from '../lib/executiveMode';
+import { I18nProvider, useI18n } from '../context/I18nContext';
 
 export default function ExecutiveDashboard() {
-  return <SandboxProvider><ExecutiveDashboardContent /></SandboxProvider>;
+  return <I18nProvider><SandboxProvider><ExecutiveDashboardContent /></SandboxProvider></I18nProvider>;
 }
 
 function ExecutiveDashboardContent() {
+  const { lang, isAr, toggleLang } = useI18n();
   const [workspace, setWorkspace] = useState<'artists' | 'theme' | 'spaces'>('artists');
   const [theme, setTheme] = useState<ThemeState>();
   const [themeApprovalId, setThemeApprovalId] = useState<string | null>(null);
@@ -61,11 +63,11 @@ function ExecutiveDashboardContent() {
   };
   const card = 'rounded-xl border border-[#DED5C4] bg-[#FFFDF9] p-5 md:p-7';
   const focus = 'focus-visible:outline-2 focus-visible:outline-[#8B261E] focus-visible:outline-offset-4';
-  return <div className="min-h-screen bg-[#F7F1E6] text-[#111817]" lang="en">
+  return <div className="min-h-screen bg-[#F7F1E6] text-[#111817]" lang={lang} dir={isAr ? 'rtl' : 'ltr'}>
     <a href={workspace === 'theme' ? '#theme-workspace' : workspace === 'spaces' ? '#spatial-workspace' : '#dossier'} className="sr-only focus:not-sr-only">Skip to active workspace</a>
     <header className="border-b border-[#DED5C4] px-6 py-4"><div className="mx-auto max-w-6xl flex flex-wrap items-center justify-between gap-5">
       <div className="flex items-center gap-4">{institutionalLogo && !logoFailed && <img src={institutionalLogo} onError={() => setLogoFailed(true)} alt="Sharjah Department of Culture" className="h-16 max-w-48 object-contain"/>}<div><p className="text-sm">Sharjah Department of Culture</p><strong style={{ fontFamily: 'Amiri, Noto Naskh Arabic, Georgia, serif' }} className="text-4xl text-[#8B261E]">SADU</strong></div></div>
-      <RoleSwitcher />
+      <div className="flex min-w-0 flex-wrap items-center gap-4"><RoleSwitcher /><button type="button" onClick={toggleLang} lang={isAr ? 'en' : 'ar'} className={`min-h-12 rounded-lg border border-[#DED5C4] px-4 py-2 text-sm ${focus}`}>{isAr ? 'English' : 'العربية'}</button></div>
     </div></header>
     <main className="mx-auto max-w-6xl p-5 md:p-8 space-y-7">
       <nav aria-label="Workspaces" className="flex flex-wrap gap-5 border-b border-[#DED5C4] pb-4">{(['artists','theme','spaces'] as const).map(w => <button key={w} aria-pressed={workspace === w} onClick={() => setWorkspace(w)} className={`text-sm pb-2 border-b-2 focus-visible:outline-2 focus-visible:outline-[#8B261E] ${workspace === w ? 'border-[#8B261E] text-[#8B261E] font-semibold' : 'border-transparent text-[#655D50]'}`}>{w === 'artists' ? 'Artist dossiers' : w === 'theme' ? 'Theme & Editorial' : 'Spaces & allocations'}</button>)}</nav>
