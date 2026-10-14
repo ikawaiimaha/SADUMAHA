@@ -1,4 +1,5 @@
 -- Requires installation-manifest.sql. Rollback-only fixtures.
+-- Gallery payload matches supabase/local/freight-changes.sql (packing_type, return_*); apply it to exercise those checks.
 begin;
 insert into auth.users(id) values('11111111-1111-4111-8111-111111111111');
 insert into public.bilateral_contracts(id,artist_id,artist_name,status) values('catalog-test','11111111-1111-4111-8111-111111111111','Fictional metadata test','ARTIST_APPROVED');
@@ -36,7 +37,7 @@ do $$begin if not exists(select 1 from public.sadu_freight_alerts) then raise ex
 select set_config('request.jwt.claims','{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","app_metadata":{"institutional_role":"ARTIST"}}',true);
 do $$begin if not exists(select 1 from public.sadu_freight_alerts) then raise exception 'Artist missing alert';end if;end $$;
 reset role;set local role anon;
-select public.sadu_receive_consignment(current_setting('test.freight.token'),'{"packing_list":"Crate 1: artwork A","length_cm":100,"width_cm":80,"height_cm":40,"weight_kg":84,"insurance_value":5000,"currency":"EUR","country":"France","city":"Paris","district":"Test","street":"Test","building":"Gallery","map_url":"https://maps.google.com/?q=test","hours":"8 AM - noon, call one hour prior","phone":"+33123456789"}');
+select public.sadu_receive_consignment(current_setting('test.freight.token'),'{"packing_type":"MUSEUM_CRATE","return_country":"France","return_city":"Paris","return_address":"Gallery address","packing_list":"Crate 1: artwork A","length_cm":100,"width_cm":80,"height_cm":40,"weight_kg":84,"insurance_value":5000,"currency":"EUR","country":"France","city":"Paris","district":"Test","street":"Test","building":"Gallery","map_url":"https://maps.google.com/?q=test","hours":"8 AM - noon, call one hour prior","phone":"+33123456789"}');
 reset role;select sadu_private.escalate_freight_closures();
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"88888888-8888-4888-8888-888888888888","role":"authenticated","app_metadata":{"institutional_role":"EXTERNAL_VENDOR"}}',true);

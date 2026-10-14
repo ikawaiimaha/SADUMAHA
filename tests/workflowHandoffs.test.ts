@@ -1158,9 +1158,14 @@ test('wall-label CSV exports only translated records and neutralizes spreadsheet
 
 test('gallery freight data requires positive measurements, currency and trusted map host', async () => {
  const {validConsignment}=await import('../src/data/consignment');
- const data={packing_list:'Crate 1: artwork A',length_cm:100,width_cm:80,height_cm:40,weight_kg:84,insurance_value:8000,currency:'EUR',country:'France',city:'Paris',district:'Test',street:'Test',building:'Test Gallery',map_url:'https://maps.google.com/?q=test',hours:'8 AM - noon',phone:'+33123456789'};
+ const data={packing_type:'MUSEUM_CRATE',return_country:'France',return_city:'Paris',return_address:'Gallery address',packing_list:'Crate 1: artwork A',length_cm:100,width_cm:80,height_cm:40,weight_kg:84,insurance_value:8000,currency:'EUR',country:'France',city:'Paris',district:'Test',street:'Test',building:'Test Gallery',map_url:'https://maps.google.com/?q=test',hours:'8 AM - noon',phone:'+33123456789'};
  assert.equal(validConsignment(data),true);
- for(const patch of [{packing_list:''},{weight_kg:0},{length_cm:-1},{insurance_value:Infinity},{currency:'XYZ'},{phone:''},{map_url:'https://maps.google.com.evil.invalid/'}])assert.equal(validConsignment({...data,...patch}),false);
+ for(const patch of [{packing_type:''},{return_address:''},{packing_list:''},{weight_kg:0},{length_cm:-1},{insurance_value:Infinity},{currency:'XYZ'},{phone:''},{map_url:'https://maps.google.com.evil.invalid/'}])assert.equal(validConsignment({...data,...patch}),false);
+ const {consignmentLabel}=await import('../src/data/consignment');
+ assert.match(consignmentLabel('length_cm','MUSEUM_CRATE'),/^Crate length/);
+ assert.match(consignmentLabel('length_cm','NO_PACKAGING'),/^Unpacked length/);
+ assert.match(consignmentLabel('weight_kg','NO_PACKAGING'),/^Unpacked weight/);
+ assert.equal(consignmentLabel('country','NO_PACKAGING'),consignmentLabel('country'));
 });
 
 

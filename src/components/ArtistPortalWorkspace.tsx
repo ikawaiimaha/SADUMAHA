@@ -295,7 +295,7 @@ export default function ArtistPortalWorkspace({
               <p className="font-bold text-[#1A1817] font-sans uppercase tracking-wider text-[11px]">{tr("Key Terms & Conditions Summary:")}</p>
               <p> {tr("1. The artist agrees to produce and deliver the commissioned work in strict accordance with the approved curatorial scope and technical guidelines established by the Head of International Programs (HIP).")} </p>
               <p> {tr("2. The scheduled percentages and amounts are taken from the Coordinator agreement above. In this fictional scenario, advance authorization additionally requires recorded PR and Technical evidence. Delivery requires a Logistics receipt; Completion requires closure, safe return and condition reconciliation.")} </p>
-              <p className="italic text-[#8B4513]"> {tr("\"The Department reserves full administrative authority to modify exhibition terms in alignment with overarching cultural directives. All copyright permissions remain vested with the artist while granting Sharjah Department of Culture reproduction rights for catalog and archival documentation.\"")} </p>
+              <p className="italic text-[#8B4513]"> {tr("Illustrative terms only. This demo grants no reproduction rights and makes no legal amendment. Actual rights, approved terms and authorized signatories must be evidenced separately.")} </p>
             </div>}
 
             {/* Active Dispute / Negotiation Status Banner if Disputed or Under Review */}
@@ -376,7 +376,7 @@ export default function ArtistPortalWorkspace({
             <div className="bg-white p-6 rounded-lg shadow-sm border border-[#D9D2C5] space-y-3">
               <div className="flex items-center justify-between border-b border-[#EAE3D9] pb-3">
                 <h3 className="font-serif font-bold text-sm text-[#1A1817]"> {tr("Negotiation Audit Trail (")}{activeContract.auditTrail.length} {tr("Rounds)")} </h3>
-                <span className="text-[10px] font-mono text-[#8C7A6B]">{tr("Sharjah Central Finance Compliant")}</span>
+                <span className="text-[10px] font-mono text-[#8C7A6B]">{tr("Session negotiation record — not certified compliance")}</span>
               </div>
               <div className="space-y-2.5">
                 {activeContract.auditTrail.map((round, idx) => (

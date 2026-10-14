@@ -62,7 +62,7 @@ export default function ContractDisputeModal({
           <p className="leading-relaxed"> {tr("Artist:")} <strong className="text-sadu-charcoal">{tr(artistName)}</strong> {tr("· Current Production Grant:")}{' '}
             <strong className="text-sadu-charcoal">{tr("AED")} {currentGrant.toLocaleString()}</strong>
           </p>
-          <span className="text-[11px] text-amber-800 block"> {tr("Government Compliance: Amendments are logged into the institutional audit trail for the Sharjah Central Finance Department.")} </span>
+          <span className="text-[11px] text-amber-800 block"> {tr("Demo amendments are recorded in this browser session only. No Finance submission, institutional audit acceptance or compliance certification is implied.")} </span>
         </div>
 
         {/* Form Body */}
