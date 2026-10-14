@@ -12,7 +12,7 @@ This file states the rules that apply now. Dated history, rationale, source note
 - `GENERAL_COORDINATOR` = General Exhibition Coordinator / المنسقة (server `General_Exhibition_Coordinator`): master coordination, including the supervisory identity and regional delegation inside the Coordinator desk. Alone publishes curatorial boundaries (Stage 3), drafts the curatorial brief, sends deliverable reminders, verifies declared artwork text, locks exhibition titles, assigns collection/renewal owners.
 - `COORDINATOR` = Exhibition Coordinator / منسق المعرض (server `Exhibition_Coordinator`): the assigned coordinator. Declares artwork text, submits dossiers for assigned artists only (`assignedCoordinatorId`), prepares terms, invitations, room claims and fabrication orders, authorizes reopening of submitted rosters. المنسق العام is no longer used.
 - HIP is retired. The role key `HIP` is now `GENERAL_COORDINATOR`; HIP is not provisionable and cannot record new verifications or lock titles. Verifications recorded with `actor: 'HIP'` remain valid history. `HIP_BLOCKED` remains a stored dossier status; user-facing text calls it a compliance hold.
-- Committee (اللجنة التحضيرية): drafts themes; records attributed recommendation minutes; never approves.
+- Committee (اللجنة التحضيرية): drafts themes; records attributed recommendation minutes on curatorial proposals and Stage 4 nominations; never approves or rejects.
 - Biennial Director (مدير الملتقى): endorses curatorial proposals (`CURATE_ENDORSE`, Director only), vetoes with an explicit institutional reason (feedback returns to the Coordinator), approves restriction changes before activation, records expected Stage 5 artwork count receipts.
 - Chairman (رئيس الدائرة): moves themes from `PENDING_CHAIRMAN_APPROVAL` to `PENDING_EDITORIAL_POLISH`; cannot change text. Escalation dispositions are Chairman-only, idempotent, and never change specialist clearance or payment state.
 - Editorial (قسم التحرير): polishes and publishes themes; alone records translations and revision-specific publication approvals. Both `EDITORIAL` and `EDITORIAL_DEPARTMENT` keys remain because existing policies use both.
@@ -62,7 +62,8 @@ This file states the rules that apply now. Dated history, rationale, source note
 - Complete proposals enter `PENDING_COMMITTEE_REVIEW`; automated restriction matches enter `HIP_BLOCKED` (a hold, not a veto); release is a trusted compliance-service operation.
 - Commissioned works require mockups; existing works require images and provenance; honored guests require identity only. Only solo proposals require 15–20 whole artworks. Tracks: `HONORED_GUEST`, `SOLO_EXHIBITION`, `GENERAL_COMPETITION`.
 - Sculpture / 3D Installation requires a Technical & Safety Rider PDF (≤ 20 MiB) before submission, endorsement or Director eligibility; changing medium clears it.
-- Declared text: the Coordinator declares exact original text and full translation; the General Exhibition Coordinator verifies against the immutable snapshot. Without matching verification the nomination cannot be endorsed or shown in the Director queue. No text is inferred from identity, medium or nationality. Not a cryptographic signature.
+- Declared text: the Coordinator declares exact original text and full translation; the General Exhibition Coordinator verifies against the immutable snapshot. Without matching verification the nomination cannot be recommended or decided by the Director. No text is inferred from identity, medium or nationality. Not a cryptographic signature.
+- Stage 4 Committee minute (`reviewByCommittee` in `src/data/vetting.ts`; database: `committee_recommendation`, migration `20261014140000`): the Committee records `RECOMMENDED` or `NOT_RECOMMENDED` with a minute of 10–4000 characters, once. Both outcomes move the dossier to `PENDING_DIRECTOR_REVIEW`; the Biennial Director decides (approve, or veto with a reason). The Committee cannot recommend a dossier that fails compliance (incomplete, unverified text, restriction match), but may forward it unrecommended. The Committee can no longer set `COMMITTEE_REJECTED`; existing `COMMITTEE_REJECTED` dossiers and `ENDORSED`/`REJECTED` minutes are kept as recorded history and are not reopened.
 - Committee recommendation minute: `CURATE_COMMITTEE_RECOMMEND` (Committee only), minute ≥ 10 characters, bound to the exact proposal revision and current locked Defense Board snapshot; changes no status, slot or artwork; duplicates refused; a new revision or re-lock makes it stale. `CURATE_ENDORSE` refuses unless every selected, not-yet-endorsed proposal has a current minute.
 - Legacy: `CURATE_COMMITTEE_APPROVE` is accepted only by `restoreLedger` replay; live commands return 422. No minute is fabricated; Director endorsement stays disabled with a reason until a real minute exists.
 - Emerging/Established ratio is informational and excludes vetoed dossiers.
@@ -72,6 +73,7 @@ This file states the rules that apply now. Dated history, rationale, source note
 - Agreement acceptance routes to `LOGISTICS_PENDING_PR`, never `CONTRACT_EXECUTED`; removing a hold cannot assert execution. `CONTRACT_EXECUTED` additionally requires a submitted escrow receipt with all declared files. Acceptance is a simulation, not a legal or provider-verified signature.
 - Amendments return through `CONTRACT_DISPUTED` / the Coordinator without repeated Stage 5 approval; accepted terms are not silently editable; term changes invalidate evidence.
 - Advance: Finance alone authorizes; requires accepted agreement plus PR and Technical evidence, never physical arrival or final media delivery. Delivery requires Logistics `PHYSICAL_ASSET_RECEIVED`. Completion requires closure, safe-return and condition-reconciliation references.
+- Payment schedule: the Coordinator chooses 30/70/0, 30/40/30 or 50/30/20 (`CoordinatorContractWorkspace`); every agreement keeps three milestone records (advance, delivery, completion). "30% advance / 70% post-delivery" sets completion to zero rather than merging milestones, so there is never a combined final 70% action.
 - Authorization is not disbursement: no money moves; each tranche is recorded separately; zero-value milestones cannot be disbursed. Art Loan Fee never substitutes for the advance.
 - Holds (`EXECUTIVE_IMPOUND`, damage, refusal, archive) block disbursement, closure, dispatch and contract mutation.
 - Escalation intake and executive disposition never change specialist clearance, venue authorization, contract terms or payment gates.
@@ -93,6 +95,7 @@ This file states the rules that apply now. Dated history, rationale, source note
 
 ### Publication, catalog and editorial
 - Public fields require Arabic and English; Editorial alone records translations bound to the immutable row; source values kept verbatim.
+- The live catalog aggregator (`LiveCatalogAggregator`) belongs to Editorial; artists submit catalog metadata into it.
 - Export requires the locked title, full Director-recorded artwork count, bilingual completion and explicit religious-title flags. PDFs are raster proofs, not print masters; hashes are not signatures.
 - Approved snapshots change only through controlled versioning; amendments withdraw readiness; replacements require new approvals.
 - Print defects hold progression; replacing a dispatched job requires recorded supplier stop or stock disposition.
@@ -114,7 +117,8 @@ This file states the rules that apply now. Dated history, rationale, source note
 - `scripts/find-dead-code.mjs` reports modules unreachable from every runtime root; keep it at 0.
 - Committee minutes: `tests/committeeRecommendation.test.mjs`, `tests/curatorialBoard.test.ts`.
 
-## Open conflicts to confirm
-- Committee DB decision: `migration.sql` enforces Coordinator → Committee decision → Director decision, and Committee "alone endorses or rejects nominations" (29 September 2026 — Database Committee decision gate; Exact-text verification) vs Committee "never approves" (2026-10-10 — Committee recommendation minute).
-- Payment schedules: 30/70, 30/40/30, 50/30/20 available (28 September 2026 — Stage 6 configuration) vs three milestones only, no combined final 70% (26 September 2026 — Fictional commission remediation).
-- Catalog aggregator owner: Artist submits to HIP's Live Catalog Aggregator (undated "Exhibition metadata and catalog deadlines") vs aggregator moved to Editorial (28 September 2026 — Committee nomination authority).
+## Resolved conflicts — 2026-10-14
+The changelog contained three conflicting entries. They were resolved by the source-of-truth rules above, or by what the code already does:
+- Stage 4 Committee decision: the source-of-truth rule wins. The Committee records a recommendation minute and the Director decides; the earlier "Committee alone endorses or rejects nominations" gate is retired in the app and the database (see Nominations above).
+- Payment schedules: both entries hold. Three presets are offered and every agreement keeps three milestone records; a 70% post-delivery preset zeroes completion instead of merging milestones (see Contracts above).
+- Catalog aggregator: Editorial owns it, as the code already implements; the HIP reference predates the HIP retirement.

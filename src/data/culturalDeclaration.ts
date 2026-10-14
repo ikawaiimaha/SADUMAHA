@@ -10,4 +10,4 @@ export function verifyTextualContent(d: NominatedArtistDossier, actor: string, a
  if (actor !== 'GENERAL_COORDINATOR' || d.status !== 'PENDING_COMMITTEE_REVIEW' || !d.culturalDeclaration?.containsText || !validDeclaration(d.culturalDeclaration) || textualCleared(d) || !Number.isFinite(Date.parse(at)) || Date.parse(at) < Date.parse(d.submittedAt) || !Number.isFinite(Date.parse(d.submittedAt))) return d;
  return {...d,textualVerification:{snapshot:textualSnapshot(d),actor:'GENERAL_COORDINATOR',at}};
 }
-export const culturalCleared = (d: NominatedArtistDossier) => textualCleared(d) && d.committeeReview?.decision === 'ENDORSED';
+export const culturalCleared = (d: NominatedArtistDossier) => textualCleared(d) && (d.committeeReview?.decision === 'RECOMMENDED' || d.committeeReview?.decision === 'ENDORSED');

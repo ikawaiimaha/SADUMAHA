@@ -11,9 +11,13 @@ test('General Coordinator verifies exact text before Committee can endorse; chan
  return h('main',null,...['GENERAL_COORDINATOR','PREP_COMMITTEE'].map(r=>h('button',{key:r,onClick:()=>setRole(r)},r)),h('button',{onClick:()=>setD(x=>({...x,culturalDeclaration:{...x.culturalDeclaration,exactText:'Changed'}}))},'Change declared text'),h('p',null,directorEligible(d,[])?'Director visible':'Director hidden'),role==='GENERAL_COORDINATOR'?h(TextualVerificationLedger,{dossiers:[d],isAr:false,onVerify:()=>setD(x=>verifyTextualContent(x,role,new Date().toISOString()))}):h(CommitteeNominationLedger,{dossiers:[d],tags:[],isAr:false,onReview:(id,endorse,minutes)=>setD(x=>reviewByCommittee(x,role,endorse,minutes,[],new Date().toISOString()))}));}
  ReactDOM.createRoot(document.getElementById('root')).render(h(Harness));window.dispatchEvent(new Event('sadu:ready'));
  `}));
- await page.goto('/');await expect(page.getByRole('button',{name:'Endorse to Director',exact:true})).toBeDisabled();
+ await page.goto('/');await expect(page.getByRole('button',{name:'Recommend to Director',exact:true})).toBeDisabled();
  await page.getByRole('button',{name:'GENERAL_COORDINATOR',exact:true}).click();await page.getByRole('button',{name:'Record Textual Verification — rehearsal',exact:true}).click();
- await page.getByRole('button',{name:'PREP_COMMITTEE',exact:true}).click();await page.getByRole('button',{name:'Endorse to Director',exact:true}).click();
+ await page.getByRole('button',{name:'PREP_COMMITTEE',exact:true}).click();
+ // A recommendation needs a minute of at least 10 characters.
+ await expect(page.getByRole('button',{name:'Recommend to Director',exact:true})).toBeDisabled();
+ await page.getByLabel(/^Committee recommendation minute/).fill('Verified text; the Committee recommends this nomination.');
+ await page.getByRole('button',{name:'Recommend to Director',exact:true}).click();
  await expect(page.getByText('Director visible',{exact:true})).toBeVisible();await page.getByRole('button',{name:'Change declared text'}).click();await expect(page.getByText('Director hidden',{exact:true})).toBeVisible();expect(errors).toEqual([]);
 });
 test('test photo approval survives desk switch and unlocks only the approved revision',async({page})=>{

@@ -5,7 +5,9 @@ export function dossierEvents(d:NominatedArtistDossier,contracts:BilateralContra
  const events:DossierEvent[]=[];
  const add=(id:string,at:string|undefined,actor:string,en:string,ar:string,revision?:number)=>{if(at&&Number.isFinite(Date.parse(at)))events.push({id,at,actor,en,ar,revision});};
  add('submission',d.submittedAt,d.submittedBy,'Dossier submitted','تم تقديم الملف');
- if(d.committeeReview)add('committee',d.committeeReview.at,d.committeeReview.actor,d.committeeReview.decision==='ENDORSED'?'Committee endorsed nomination':'Committee rejected nomination',d.committeeReview.decision==='ENDORSED'?'اعتمدت اللجنة الترشيح':'رفضت اللجنة الترشيح');
+ const committeeLabel={RECOMMENDED:['Committee recommended the nomination','أوصت اللجنة بالترشيح'],NOT_RECOMMENDED:['Committee did not recommend the nomination','لم توصِ اللجنة بالترشيح'],
+  ENDORSED:['Committee endorsed the nomination (earlier approval record)','اعتمدت اللجنة الترشيح (سجل سابق)'],REJECTED:['Committee rejected the nomination (earlier approval record)','رفضت اللجنة الترشيح (سجل سابق)']} as const;
+ if(d.committeeReview){const [en,ar]=committeeLabel[d.committeeReview.decision];add('committee',d.committeeReview.at,d.committeeReview.actor,en,ar);}
  if(d.status==='APPROVED'||d.status==='VETOED')add('director',d.decisionAt,'BIENNIAL_DIRECTOR',d.status==='APPROVED'?'Director approved':'Director vetoed',d.status==='APPROVED'?'اعتماد المدير':'رفض المدير');
  d.delegationHistory?.forEach((r,i)=>add(`delegation:${i}`,r.at,r.by,'Coordinator assignment changed','تغيير تكليف المنسق'));
  d.amendments?.forEach(a=>{add(`${a.id}:request`,a.requestedAt,'COORDINATOR','Scope amendment requested','طلب تعديل النطاق',a.baseRevision);if(a.status!=='PENDING')add(`${a.id}:decision`,a.decidedAt,'BIENNIAL_DIRECTOR',`Scope amendment ${a.status.toLowerCase()}`,a.status==='APPROVED'?'اعتماد تعديل النطاق':'رفض تعديل النطاق',a.baseRevision);});

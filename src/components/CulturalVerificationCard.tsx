@@ -9,7 +9,7 @@ export function CulturalVerificationCard({dossier: d, isAr}: {dossier: Nominated
  {d.culturalDeclaration?.containsText && <p className="whitespace-pre-wrap break-words">{d.culturalDeclaration.exactText}</p>}
  {d.culturalDeclaration?.containsText && <p className="whitespace-pre-wrap break-words">{d.culturalDeclaration.explanation}</p>}
  <p role="status">{textualCleared(d) ? (d.culturalDeclaration?.containsText ? `${t('سجّلت المنسقة التحقق النصي','General Exhibition Coordinator textual verification recorded')} · ${d.textualVerification?.at}` : t('لا نصوص معلنة للتحقق','No declared text requiring verification')) : t('بانتظار تحقق المنسقة من النص — الإحالة إلى المدير مقفلة','Awaiting General Exhibition Coordinator textual verification — Director handoff locked')}</p>
- <p>{culturalCleared(d) ? `${t('سجلت اللجنة اعتماد الترشيح — محاكاة','Committee endorsement recorded — simulated')} · ${d.committeeReview?.at}` : t('تراجع اللجنة الإقرار ضمن قرار الترشيح.','Declaration reviewed as part of the Committee nomination decision.')}</p>
+ <p>{culturalCleared(d) ? `${t('سجلت اللجنة توصية بالترشيح — محاكاة','Committee recommendation recorded — simulated')} · ${d.committeeReview?.at}` : t('تراجع اللجنة الإقرار ضمن قرار الترشيح.','Declaration reviewed as part of the Committee nomination decision.')}</p>
 
  </section>;
 }

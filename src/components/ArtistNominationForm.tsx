@@ -35,7 +35,8 @@ export interface NominatedArtistDossier {
   culturalDeclaration?: CulturalDeclaration;
   textualVerification?: import('../data/culturalDeclaration').TextualVerification;
   culturalClearedAt?: string; // Historical legacy record; no longer an approval gate.
-  committeeReview?: {decision:'ENDORSED'|'REJECTED';minutes:string;at:string;actor:'PREP_COMMITTEE'};
+  /** RECOMMENDED / NOT_RECOMMENDED are minutes; ENDORSED / REJECTED are retired approval records kept as history. */
+  committeeReview?: {decision:'RECOMMENDED'|'NOT_RECOMMENDED'|'ENDORSED'|'REJECTED';minutes:string;at:string;actor:'PREP_COMMITTEE'};
   portfolioUrl?: string;
   portfolioFiles?: File[];
   id: string;

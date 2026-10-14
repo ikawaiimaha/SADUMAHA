@@ -3,7 +3,7 @@ import {NativeModal} from './common/NativeModal';
 import {DossierTimeline} from './DossierTimeline';
 import { CollectionCloseout } from './CollectionCloseout';
 import { ConditionReporting } from './ConditionReporting';
-import { directorEligible } from '../data/vetting';
+import { directorEligible, committeeRecommended } from '../data/vetting';
 import { InstallationIntervention } from './InstallationIntervention';
 import type { CommissionState } from '../types';
 import type { CommissionAction } from '../data/commissionScenario';
@@ -591,6 +591,12 @@ export const DirectorWorkspace: React.FC<DirectorWorkspaceProps> = ({
                   )}
                 </div>
 
+                {/* The Committee's minute informs, but never makes, the Director's decision. */}
+                {artist.committeeReview && <section aria-label={isAr ? 'توصية اللجنة التحضيرية' : 'Preparatory Committee recommendation'} className={`mt-3 rounded border ps-3 pe-3 py-2 text-sm ${committeeRecommended(artist) ? 'border-emerald-300 bg-emerald-50' : 'border-amber-400 bg-amber-50'}`}>
+                  <p className="font-semibold">{committeeRecommended(artist) ? (isAr ? 'أوصت اللجنة التحضيرية بالترشيح' : 'Recommended by the Preparatory Committee') : (isAr ? 'لم توصِ اللجنة التحضيرية بالترشيح' : 'Not recommended by the Preparatory Committee')}</p>
+                  <p className="whitespace-pre-wrap" dir="auto">{artist.committeeReview.minutes}</p>
+                  <p className="text-xs text-sadu-muted">{isAr ? 'القرار التنفيذي لمدير الملتقى.' : 'The executive decision is the Director\'s.'}</p>
+                </section>}
                 {/* Director Actions: Approve (Green) & Veto / Reject (Red) */}
                 <TechnicalRiderReference dossier={artist}/><CulturalVerificationCard dossier={artist} isAr={isAr} />
                 {!!artist.technicalRequirements?.length&&<section className="mt-3 text-sm"><h4 className="font-semibold">{isAr?'المتطلبات التقنية المسجلة':'Recorded technical requirements'}</h4><ul className="list-disc ps-5">{artist.technicalRequirements.map(r=><li key={r.id}>{r.equipment} · {r.specifications} · {r.mounting}</li>)}</ul></section>}

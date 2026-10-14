@@ -438,7 +438,7 @@ test('technical requests validate routing choices and prevent duplicate submissi
 
 import { culturalCleared } from '../src/data/culturalDeclaration';
 import { ingestMaster, requestPrototype, decidePrototype, type PrototypeTicket } from '../src/data/productionBridge';
-test('Committee alone endorses complete declarations; rejection requires immutable consensus minutes',()=>{
+test('Committee records a recommendation minute either way; the Director decides',()=>{
  const draft={...dossier,culturalDeclaration:undefined,culturalClearedAt:undefined};
  assert.equal(queueNomination(draft,'COORDINATOR',ASSIGNED_COORDINATOR,[]),null);
  assert.equal(queueNomination(dossier,'GENERAL_COORDINATOR',ASSIGNED_COORDINATOR,[]),null);
@@ -447,20 +447,32 @@ test('Committee alone endorses complete declarations; rejection requires immutab
  assert.equal(pending.status,'PENDING_COMMITTEE_REVIEW');
  assert.equal(directorEligible(pending,[]),false);
  assert.equal(queueNomination(dossier,'PREP_COMMITTEE','unused',[])?.status,'PENDING_COMMITTEE_REVIEW');
- for(const actor of ['GENERAL_COORDINATOR','COORDINATOR','BIENNIAL_DIRECTOR','ARTIST'])assert.equal(reviewByCommittee(pending,actor,true,'',[],at),pending);
- assert.equal(reviewByCommittee(pending,'PREP_COMMITTEE',false,'   ',[],at),pending);
- assert.equal(reviewByCommittee(pending,'PREP_COMMITTEE',true,'',['Hazardous Medium: Bronze'],at),pending);
- const rejected=reviewByCommittee(pending,'PREP_COMMITTEE',false,'Consensus minute 07: scope mismatch',[],at);
- assert.equal(rejected.status,'COMMITTEE_REJECTED');
- assert.equal(rejected.committeeReview?.minutes,'Consensus minute 07: scope mismatch');
- assert.equal(reviewByCommittee(rejected,'PREP_COMMITTEE',true,'',[],at),rejected);
- assert.equal(directorEligible(rejected,[]),false);
- const endorsed=reviewByCommittee(pending,'PREP_COMMITTEE',true,'Recorded collective endorsement',[],at);
- assert.equal(endorsed.status,'PENDING_DIRECTOR_REVIEW');
- assert.equal(culturalCleared(endorsed),true);
- assert.equal(directorEligible(endorsed,[]),true);
- assert.equal(directorEligible(endorsed,['Hazardous Medium: Bronze']),false);
- assert.equal(reviewByCommittee(endorsed,'PREP_COMMITTEE',false,'Override',[],at),endorsed);
+ const minute='Collective minute 07: strong fit with the brief';
+ for(const actor of ['GENERAL_COORDINATOR','COORDINATOR','BIENNIAL_DIRECTOR','ARTIST'])assert.equal(reviewByCommittee(pending,actor,true,minute,[],at),pending);
+ // A minute is required for either outcome, with the same 10-character floor as curatorial minutes.
+ for(const recommend of [true,false]){assert.equal(reviewByCommittee(pending,'PREP_COMMITTEE',recommend,'   ',[],at),pending);assert.equal(reviewByCommittee(pending,'PREP_COMMITTEE',recommend,'Too short',[],at),pending);}
+ // The Committee cannot recommend a dossier that fails compliance, but may forward it unrecommended.
+ assert.equal(reviewByCommittee(pending,'PREP_COMMITTEE',true,minute,['Hazardous Medium: Bronze'],at),pending);
+ const notRecommended=reviewByCommittee(pending,'PREP_COMMITTEE',false,'Collective minute 07: scope mismatch',[],at);
+ assert.equal(notRecommended.status,'PENDING_DIRECTOR_REVIEW','not recommending is a minute, not a rejection');
+ assert.deepEqual([notRecommended.committeeReview?.decision,notRecommended.committeeReview?.minutes],['NOT_RECOMMENDED','Collective minute 07: scope mismatch']);
+ assert.equal(culturalCleared(notRecommended),false);
+ assert.equal(directorEligible(notRecommended,[]),true,'the Director still decides');
+ assert.equal(reviewByCommittee(notRecommended,'PREP_COMMITTEE',true,minute,[],at),notRecommended,'a minute is recorded once');
+ const recommended=reviewByCommittee(pending,'PREP_COMMITTEE',true,minute,[],at);
+ assert.equal(recommended.status,'PENDING_DIRECTOR_REVIEW');
+ assert.equal(recommended.committeeReview?.decision,'RECOMMENDED');
+ assert.equal(culturalCleared(recommended),true);
+ assert.equal(directorEligible(recommended,[]),true);
+ assert.equal(directorEligible(recommended,['Hazardous Medium: Bronze']),false);
+ assert.equal(reviewByCommittee(recommended,'PREP_COMMITTEE',false,'Override after the fact',[],at),recommended);
+ // Records from the retired approval model stay as recorded: a rejected dossier is not reopened.
+ const legacyRejected={...pending,status:'COMMITTEE_REJECTED' as const,committeeReview:{decision:'REJECTED' as const,minutes:'Old consensus rejection',at,actor:'PREP_COMMITTEE' as const}};
+ assert.equal(directorEligible(legacyRejected,[]),false);
+ assert.equal(reviewByCommittee(legacyRejected,'PREP_COMMITTEE',true,minute,[],at),legacyRejected);
+ const legacyEndorsed={...recommended,committeeReview:{...recommended.committeeReview!,decision:'ENDORSED' as const}};
+ assert.equal(directorEligible(legacyEndorsed,[]),true);
+ assert.equal(culturalCleared(legacyEndorsed),true);
  assert.equal(safePortfolioUrl('javascript:alert(1)'),undefined);
  assert.equal(safePortfolioUrl('https://example.com/portfolio'),'https://example.com/portfolio');
 });
@@ -1219,13 +1231,13 @@ test('exact textual verification is General Coordinator-only and precedes Commit
  const text={containsText:true,exactText:'Fictional source text with reference',explanation:'Translation and context'};
  assert.equal(validDeclaration({...text,exactText:''}),false);
  const pending=queueNomination({...dossier,culturalDeclaration:text},'COORDINATOR',ASSIGNED_COORDINATOR,[])!;
- assert.equal(reviewByCommittee(pending,'PREP_COMMITTEE',true,'',[],at),pending);
+ assert.equal(reviewByCommittee(pending,'PREP_COMMITTEE',true,'Collective recommendation minute',[],at),pending,'no recommendation before textual verification');
  for(const actor of ['TECHNICAL','ARTIST','COORDINATOR','BIENNIAL_DIRECTOR','PREP_COMMITTEE'])assert.equal(verifyTextualContent(pending,actor,at),pending);
  const verified=verifyTextualContent(pending,'GENERAL_COORDINATOR',at);
  assert.equal(textualCleared(verified),true);
  assert.equal(verifyTextualContent(verified,'GENERAL_COORDINATOR','2026-10-02T10:00:00Z'),verified);
  assert.equal(verified.status,'PENDING_COMMITTEE_REVIEW');
- const endorsed=reviewByCommittee(verified,'PREP_COMMITTEE',true,'Verified',[],at);
+ const endorsed=reviewByCommittee(verified,'PREP_COMMITTEE',true,'Verified text; recommended',[],at);
  assert.equal(directorEligible(endorsed,[]),true);
  assert.equal(directorEligible({...endorsed,culturalDeclaration:{...text,exactText:'Replacement text'}},[]),false);
  assert.equal(directorEligible({...endorsed,proposedWorkTitle:'Different work'},[]),false);

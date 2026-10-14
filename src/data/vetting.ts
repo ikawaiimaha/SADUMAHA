@@ -31,14 +31,26 @@ export function queueNomination(d:NominatedArtistDossier,actor:string,coordinato
   return {...d,committeeReview:undefined,textualVerification:undefined,culturalClearedAt:undefined,status:matchedRestriction(d,tags)?'HIP_BLOCKED':'PENDING_COMMITTEE_REVIEW',
     complianceReason:matchedRestriction(d,tags),submittedBy:actor==='COORDINATOR'?'Coordinator':'Preparatory Committee'};
 }
-export function reviewByCommittee(d:NominatedArtistDossier,actor:string,endorse:boolean,minutes:string,tags:string[],at:string):NominatedArtistDossier {
+/** A Committee minute must say something: the same floor as the curatorial recommendation minute. */
+export const MIN_COMMITTEE_MINUTE = 10;
+/** Recommended now, or endorsed under the retired approval model. */
+export const committeeRecommended = (d: NominatedArtistDossier) => d.committeeReview?.decision === 'RECOMMENDED' || d.committeeReview?.decision === 'ENDORSED';
+/**
+ * The Committee records an attributed recommendation minute; it never approves or rejects
+ * (AGENTS.md). Either outcome goes to the Director, who makes the executive decision. The
+ * Committee cannot recommend a dossier that fails the compliance checks it reviewed. Legacy
+ * COMMITTEE_REJECTED dossiers are left as recorded and are not reopened or reinterpreted.
+ */
+export function reviewByCommittee(d:NominatedArtistDossier,actor:string,recommend:boolean,minutes:string,tags:string[],at:string):NominatedArtistDossier {
   if (actor!=='PREP_COMMITTEE' || d.status!=='PENDING_COMMITTEE_REVIEW' || d.committeeReview || !Number.isFinite(Date.parse(at))
-    || !Number.isFinite(Date.parse(d.submittedAt)) || Date.parse(at)<Date.parse(d.submittedAt) || minutes.length>4000 || (!endorse&&!minutes.trim())
-    || (endorse&&(!validDossier(d)||!textualCleared(d)||matchedRestriction(d,tags)))) return d;
-  return {...d,status:endorse?'PENDING_DIRECTOR_REVIEW':'COMMITTEE_REJECTED',committeeReview:{decision:endorse?'ENDORSED':'REJECTED',minutes:minutes.trim(),at,actor:'PREP_COMMITTEE'}};
+    || !Number.isFinite(Date.parse(d.submittedAt)) || Date.parse(at)<Date.parse(d.submittedAt) || minutes.length>4000 || minutes.trim().length<MIN_COMMITTEE_MINUTE
+    || (recommend&&(!validDossier(d)||!textualCleared(d)||matchedRestriction(d,tags)))) return d;
+  return {...d,status:'PENDING_DIRECTOR_REVIEW',committeeReview:{decision:recommend?'RECOMMENDED':'NOT_RECOMMENDED',minutes:minutes.trim(),at,actor:'PREP_COMMITTEE'}};
 }
+/** The Director decides on any dossier carrying a Committee minute; compliance checks still apply. */
 export function directorEligible(d:NominatedArtistDossier,tags:string[]):boolean {
-  return d.status==='PENDING_DIRECTOR_REVIEW' && d.committeeReview?.decision==='ENDORSED' && validDossier(d) && textualCleared(d) && !matchedRestriction(d,tags);
+  return d.status==='PENDING_DIRECTOR_REVIEW' && ['RECOMMENDED','NOT_RECOMMENDED','ENDORSED'].includes(d.committeeReview?.decision ?? '')
+    && validDossier(d) && textualCleared(d) && !matchedRestriction(d,tags);
 }
 export function safePortfolioUrl(value?:string):string|undefined {
   try { const url=new URL(value??'');return ['https:','http:'].includes(url.protocol)&&!url.username&&!url.password?url.href:undefined; } catch { return undefined; }
