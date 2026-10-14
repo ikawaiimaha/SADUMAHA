@@ -26,7 +26,7 @@ const input = 'mt-1 block w-full rounded border border-[#8C8173] bg-white ps-3 p
 const button = 'rounded bg-[#8B261E] text-white ps-4 pe-4 py-2 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2';
 async function api<T>(path: string, body?: unknown): Promise<T> {
   const response = await fetch(`/api/review/${path}`, { credentials: 'same-origin', ...(body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {}) });
-  if (!response.headers.get('content-type')?.includes('application/json')) throw new Error('The local review backend is unavailable. Run npm run start:rehearsal, then open http://127.0.0.1:3013/review.');
+  if (!response.headers.get('content-type')?.includes('application/json')) throw new Error('Submission review is not available on this server — it runs only on the local rehearsal server. To use it, start “npm run start:rehearsal” and open http://127.0.0.1:3013/review.');
   const data = await response.json();
   if (!response.ok) throw new Error(data.error ?? 'Request failed.');
   return data;
