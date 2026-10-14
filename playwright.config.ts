@@ -7,6 +7,8 @@ process.env.SADU_PRELAUNCH_PASSWORD ??= randomBytes(24).toString('hex');
 
 export default defineConfig({
   testDir: './tests/e2e', timeout: 60_000, workers: 1, fullyParallel: false,
+  // One retry in CI only; Playwright reports a test that passes on retry as flaky, not as passed.
+  retries: process.env.CI ? 1 : 0,
   // treatment-flow needs a prebuilt rehearsal bundle and runs via `npm run test:treatment:browser`.
   testIgnore: ['treatment-flow.spec.ts'],
   globalSetup: './tests/e2e/global-setup.ts',
