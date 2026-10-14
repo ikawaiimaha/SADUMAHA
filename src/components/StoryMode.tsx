@@ -5,6 +5,7 @@ import './StoryMode.css';
 import { RosterNavLink } from './RosterNavLink';
 import { storyChapters } from '../data/storyChapters';
 import { StoryCaseGraphic } from './StoryCaseGraphic';
+import { LivingRecordProvider } from '../context/LivingRecordContext';
 import { AuthoredBand } from './AuthoredBand';
 import { Language, RoleKey } from '../types';
 import { INSTITUTIONAL_INFO } from '../data/mockData';
@@ -35,7 +36,13 @@ interface StoryModeProps {
   onToggleLanguage: () => void;
 }
 
-export const StoryMode: React.FC<StoryModeProps> = ({
+/**
+ * StoryCaseGraphic reads the shared sample record; story mode must supply it or chapter 4 crashes.
+ * .story-experience is the fixed one-viewport frame that StoryMode.css lays every chapter into.
+ */
+export const StoryMode: React.FC<StoryModeProps> = props => <LivingRecordProvider><div className="story-experience"><StoryModeContent {...props} /></div></LivingRecordProvider>;
+
+const StoryModeContent: React.FC<StoryModeProps> = ({
   lang,
   showRosterLink = true,
   onSelectRoleAndExplore,

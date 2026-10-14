@@ -1,7 +1,7 @@
 import { executiveMode } from '../lib/executiveMode';
 import LocalReplayControls from './LocalReplayControls';
 import { startDemoReplay, pauseDemoReplay } from '../lib/demoReplay';
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { prelaunchCopy } from '../i18n/prelaunch.mjs';
 import { readPreference, writePreference } from '../utils/preferences';
 
@@ -43,7 +43,19 @@ export default function GlobalPasswordGate({ children }: { children: ReactNode }
   }, []);
   useEffect(() => { window.dispatchEvent(new Event('sadu:ready')); void check(); const id = setInterval(check, 60000); return () => clearInterval(id); }, [check]);
   useEffect(() => { try { if (verified) sessionStorage.setItem('sadu-prelaunch-verified', 'true'); else sessionStorage.removeItem('sadu-prelaunch-verified'); } catch { /* Storage is optional, never an auth source. */ } }, [verified]);
-  if (verified) return <><aside aria-label={copy.sessionLabel} lang={language} dir={dir} className="flex flex-wrap items-center justify-between gap-2 border-b border-[#D9CEBA] bg-[#F7F1E6] ps-5 pe-5 py-2 text-sm text-[#111817]">
+  // Full-viewport layouts (story mode) subtract the preview bar via --sadu-preview-bar.
+  const bar = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const root = document.documentElement;
+    const el = bar.current;
+    if (!el) { root.style.removeProperty('--sadu-preview-bar'); return; }
+    const update = () => root.style.setProperty('--sadu-preview-bar', `${el.getBoundingClientRect().height}px`);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => { observer.disconnect(); root.style.removeProperty('--sadu-preview-bar'); };
+  }, [verified]);
+  if (verified) return <><aside ref={bar} aria-label={copy.sessionLabel} lang={language} dir={dir} className="flex flex-wrap items-center justify-between gap-2 border-b border-[#D9CEBA] bg-[#F7F1E6] ps-5 pe-5 py-2 text-sm text-[#111817]">
     {!executiveMode && <span>{copy.banner}</span>}<LocalReplayControls copy={copy}/>
     <button className="rounded border border-[#8C8173] ps-3 pe-3 py-2 font-semibold focus-visible:outline-2 focus-visible:outline-offset-2" disabled={busy} onClick={async () => {
       if (!window.confirm(copy.lockConfirm)) return;

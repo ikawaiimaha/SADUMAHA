@@ -92,14 +92,14 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Focus input on open
+  // Focus input on open. NativeModal opens the dialog in a layout effect, which runs before this
+  // effect, so focus synchronously: a delayed focus could pull focus back after the user had moved it.
   useEffect(() => {
     if (isOpen) {
       setQuery('');
       setSelectedCategory('all');
       setSelectedIndex(0);
-      const timer = setTimeout(() => inputRef.current?.focus(), 50);
-      return () => clearTimeout(timer);
+      inputRef.current?.focus();
     }
   }, [isOpen]);
 
