@@ -9,10 +9,13 @@ export const E2E_STORAGE_STATE = '.local/e2e/prelaunch-state.json';
 export default async function globalSetup(config: FullConfig) {
   const baseURL = config.projects[0].use.baseURL!;
   const context = await request.newContext({ baseURL });
-  const unlock = await context.post('/api/prelaunch/unlock', {
+  // The first request to a cold dev server can be slow; allow one retry with a generous timeout.
+  const post = () => context.post('/api/prelaunch/unlock', {
     headers: { Origin: baseURL },
     data: { password: process.env.SADU_PRELAUNCH_PASSWORD },
+    timeout: 90_000,
   });
+  const unlock = await post().catch(() => post());
   if (!unlock.ok()) throw new Error(`Prelaunch unlock failed with ${unlock.status()}`);
   mkdirSync(dirname(E2E_STORAGE_STATE), { recursive: true });
   await context.storageState({ path: E2E_STORAGE_STATE });

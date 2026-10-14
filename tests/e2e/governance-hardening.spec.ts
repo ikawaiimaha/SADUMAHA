@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('sadu_lang', 'en'));
-  await page.goto('/');
+  await page.goto('/workbench');
   await page.getByRole('button', { name: 'Enter Institutional System', exact: true }).click();
 });
 const desk = (page: Page, name: string) => page.getByRole('combobox', {name: 'Workspace', exact: true}).selectOption({label: name === 'Committee' ? 'Preparatory Committee' : name === 'Director' ? 'Biennial Director' : name});

@@ -7,6 +7,8 @@ process.env.SADU_PRELAUNCH_PASSWORD ??= randomBytes(24).toString('hex');
 
 export default defineConfig({
   testDir: './tests/e2e', timeout: 60_000, workers: 1, fullyParallel: false,
+  // treatment-flow needs a prebuilt rehearsal bundle and runs via `npm run test:treatment:browser`.
+  testIgnore: ['treatment-flow.spec.ts'],
   globalSetup: './tests/e2e/global-setup.ts',
   reporter: [['list'], ['html', { open: 'never' }]],
   use: { baseURL: 'http://127.0.0.1:4177', storageState: '.local/e2e/prelaunch-state.json', channel: process.env.PLAYWRIGHT_CHANNEL || undefined, trace: 'retain-on-failure', screenshot: 'only-on-failure' },
