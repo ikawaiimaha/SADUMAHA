@@ -21,7 +21,7 @@ import type { ThemeStatus } from '../types';
 
 export type TranslationStatus = 'REQUEST_REVISION' | 'DRAFT' | 'PENDING_TRANSLATION' | 'PUBLISHED';
 
-export interface HIPWorkspaceProps {
+export interface GeneralCoordinatorWorkspaceProps {
   publishedBoundaries?: Boundaries|null;
   onPublishBoundaries?: (confirmed:boolean[])=>void;
   themeStatus: ThemeStatus;
@@ -50,7 +50,7 @@ const PRESET_DIRECTIVES = [
   'Unverified Chemical Casting',
 ];
 
-export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
+export const GeneralCoordinatorWorkspace: React.FC<GeneralCoordinatorWorkspaceProps> = ({
   publishedBoundaries, onPublishBoundaries,
   guidelinesArabic,
   themeStatus,
@@ -136,10 +136,10 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
             <div>
               <span role="status" className="block text-sm text-[#736357]">{saveFailed ? (isAr ? 'تعذر حفظ المسودة محلياً' : 'Local draft save failed') : (isAr ? 'المسودة محفوظة في هذا المتصفح فقط' : 'Draft saved in this browser only')}</span><span className="rounded bg-sadu-sand px-2 py-0.5 text-[10px] font-bold text-sadu-brick uppercase tracking-wider border border-sadu-gold/60"> {isAr ? 'المرحلة 3 · التوجيهات الفنية' : 'Stage 3 · Curatorial guidelines'} </span>
               <h1 className="font-editorial text-2xl font-bold text-sadu-charcoal sm:text-3xl mt-1">
-                {isAr ? 'منسق معرض عام' : 'Head of International Programs (HIP)'}
+                {isAr ? 'المنسقة' : 'General Exhibition Coordinator'}
               </h1>
               <p className="text-xs font-semibold text-sadu-brick" dir="rtl">
-                منسق معرض عام · صياغة الدليل التنسيقي والقائمة المحظورة
+                المنسقة · صياغة الدليل التنسيقي والقائمة المحظورة
               </p>
             </div>
           </div>
@@ -211,7 +211,7 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
           <form onSubmit={handleSubmitToEditorial} className="space-y-3">
             <label htmlFor="exhibition-guidelines-arabic" className="block text-xs font-semibold text-sadu-charcoal">
               <span>{tr("Exhibition Guidelines (Arabic)")}</span>
-              <span className="block font-normal text-[11px] text-sadu-muted mt-0.5"> {tr("HIP must draft the curatorial brief in Arabic before submitting to the Editorial Department.")} </span>
+              <span className="block font-normal text-[11px] text-sadu-muted mt-0.5"> {tr("The General Exhibition Coordinator must draft the curatorial brief in Arabic before submitting to the Editorial Department.")} </span>
               <textarea
                 id="exhibition-guidelines-arabic"
                 dir="rtl"
@@ -370,4 +370,4 @@ export const HIPWorkspace: React.FC<HIPWorkspaceProps> = ({
   );
 };
 
-export default HIPWorkspace;
+export default GeneralCoordinatorWorkspace;

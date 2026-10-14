@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test('Phase 1 success automatically advances through Director, Chairman, Editorial and HIP', async ({ page }) => {
+test('Phase 1 success automatically advances through Director, Chairman, Editorial and General Coordinator', async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('sadu_lang', 'en');
     localStorage.setItem('sadu_experience_mode', 'platform');

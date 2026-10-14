@@ -92,7 +92,7 @@ export default function ArtistNominationBuilder({
     if (!isDossierComplete || currentUserRole !== 'COORDINATOR' || !onSubmitNomination) return;
     if (isBlocklisted) {
       onSubmitNomination({...form,status:'HIP_BLOCKED'});
-      alert("System Action: Dossier quarantined due to active HIP Blocklist parameters.");
+      alert("System Action: Dossier quarantined due to active compliance blocklist parameters.");
       return;
     }
     onSubmitNomination({...form,status:'PENDING_COMMITTEE_REVIEW'});
@@ -315,7 +315,7 @@ export default function ArtistNominationBuilder({
             {isBlocklisted && (
               <div className="bg-red-50 border border-red-200 p-3 rounded-md flex items-start gap-2 text-red-800 text-xs">
                 <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-red-600" />
-                <p><strong>System Alert:</strong> Nationality matches active HIP dynamic blocklist constraints. Submission will route to QUARANTINE.</p>
+                <p><strong>System Alert:</strong> Nationality matches active compliance blocklist constraints. Submission will route to QUARANTINE.</p>
               </div>
             )}
 

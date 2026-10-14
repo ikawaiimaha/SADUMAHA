@@ -95,7 +95,7 @@ import {GreenlightedTechnicalMatrix} from './components/TechnicalRequirements';
 import { ArrivalPackagePreview } from './components/ArrivalPackagePreview';
 import { recordArrivalDispatch, type ArrivalDispatch, type ArrivalRecipientTag } from './data/arrivalPackage';
 import ChairmanWorkspace, { ThemeItem } from './components/ChairmanWorkspace';
-import HIPWorkspace, { TranslationStatus } from './components/HIPWorkspace';
+import GeneralCoordinatorWorkspace, { TranslationStatus } from './components/GeneralCoordinatorWorkspace';
 import EditorialWorkspace, { ThemePolishStatus } from './components/EditorialWorkspace';
 import DirectorWorkspace, { VETO_REASONS } from './components/DirectorWorkspace';
 import ArtistNominationForm, { NominatedArtistDossier } from './components/ArtistNominationForm';
@@ -145,7 +145,7 @@ export type InstitutionalRole =
   | 'BIENNIAL_DIRECTOR' 
   | 'PREP_COMMITTEE' 
   | 'EDITORIAL' 
-  | 'HIP' 
+  | 'GENERAL_COORDINATOR' 
   | 'COORDINATOR' 
   | 'ARTIST' 
   | 'PR_PROTOCOL' 
@@ -158,7 +158,7 @@ const ROLE_NAME_MAP: Record<AppRole, InstitutionalRole> = {
   'Biennial Director': 'BIENNIAL_DIRECTOR',
   'Preparatory Committee': 'PREP_COMMITTEE',
   'Editorial': 'EDITORIAL',
-  'HIP': 'HIP',
+  'General Coordinator': 'GENERAL_COORDINATOR',
   'Coordinator': 'COORDINATOR',
   'Artist': 'ARTIST',
   'PR': 'PR_PROTOCOL',
@@ -236,7 +236,7 @@ function SADUApp() {
   const [themeEssayArabic, setThemeEssayArabic] = useState<string>('');
   const [themeEssayEnglish, setThemeEssayEnglish] = useState<string>('');
 
-  // Stage 2: HIP & Translation Directives State
+  // Stage 2: General Coordinator & Translation Directives State
   const [guidelinesArabic, setGuidelinesArabic] = useState<string>(
     'دليل المعرض التوجيهي لبينالي الشارقة للخط: التأكيد على الحوار الجمالي الرصين بين النسب الفاضلة للخط العربي الأصيل والتجليات المعمارية المعاصرة. يتوجب على كافة الفنانين المرشحين تقديم أعمال تستند إلى أصالة السطر الكوفي والثلث مع استكشاف أبعاد الوسائط الحديثة والفراغية.'
   );
@@ -324,7 +324,7 @@ function SADUApp() {
   };
 
   const handleSubmitToEditorial = (arabicText: string) => {
-    if (publishedBoundaries || activeRole !== 'HIP' || themePolishStatus !== 'PUBLISHED_OFFICIAL' || !['DRAFT', 'REQUEST_REVISION'].includes(translationStatus) || !arabicText.trim()) return;
+    if (publishedBoundaries || activeRole !== 'GENERAL_COORDINATOR' || themePolishStatus !== 'PUBLISHED_OFFICIAL' || !['DRAFT', 'REQUEST_REVISION'].includes(translationStatus) || !arabicText.trim()) return;
     setGuidelinesArabic(arabicText.trim());
     setGuidelinesEnglish('');
     setTranslationStatus('PENDING_TRANSLATION');
@@ -676,7 +676,7 @@ function SADUApp() {
 
   const handleAutoNavigate = (role: string) => {
     const target: InstitutionalRole | null = role === 'DIRECTOR' ? 'BIENNIAL_DIRECTOR'
-      : role === 'CHAIRMAN' || role === 'EDITORIAL' || role === 'HIP' ? role : null;
+      : role === 'CHAIRMAN' || role === 'EDITORIAL' || role === 'GENERAL_COORDINATOR' ? role : null;
     if (target) setPendingNavigation({ role: target, id: Date.now() });
     scrollWorkspaceToTop();
   };
@@ -819,9 +819,9 @@ function SADUApp() {
           />
         );
 
-      case 'HIP':
+      case 'GENERAL_COORDINATOR':
         return (
-          <><TextualVerificationLedger dossiers={nominatedArtists} isAr={isAr} onVerify={id=>setNominatedArtists(rows=>rows.map(d=>d.id===id?verifyTextualContent(d,activeRole,new Date().toISOString()):d))}/><HIPWorkspace
+          <><TextualVerificationLedger dossiers={nominatedArtists} isAr={isAr} onVerify={id=>setNominatedArtists(rows=>rows.map(d=>d.id===id?verifyTextualContent(d,activeRole,new Date().toISOString()):d))}/><GeneralCoordinatorWorkspace
             arabicLocked={arabicLocked}
             publishedBoundaries={publishedBoundaries}
             onPublishBoundaries={confirmed=>setPublishedBoundaries(current=>publishBoundaries(current,activeRole,themePolishStatus,translationStatus,guidelinesArabic,guidelinesEnglish,blocklist,Boolean(restrictionProposal),confirmed,new Date().toISOString()))}
@@ -833,7 +833,7 @@ function SADUApp() {
             translationStatus={translationStatus}
             hipSubmissionTime={hipSubmissionTime}
             onRequestRevision={() => {
-              if (!publishedBoundaries && activeRole === 'HIP' && translationStatus === 'PUBLISHED') setTranslationStatus('REQUEST_REVISION');
+              if (!publishedBoundaries && activeRole === 'GENERAL_COORDINATOR' && translationStatus === 'PUBLISHED') setTranslationStatus('REQUEST_REVISION');
             }}
             onSubmitToEditorial={handleSubmitToEditorial}
             curatorialBrief={curatorialBrief}
@@ -842,7 +842,7 @@ function SADUApp() {
             restrictionPending={Boolean(restrictionProposal)}
             restrictionAudit={restrictionAudit}
             onUpdateBlocklist={(tags, reason) => {
-              if (publishedBoundaries || activeRole !== 'HIP' || themePolishStatus !== 'PUBLISHED_OFFICIAL' || !reason.trim() || restrictionProposal) return;
+              if (publishedBoundaries || activeRole !== 'GENERAL_COORDINATOR' || themePolishStatus !== 'PUBLISHED_OFFICIAL' || !reason.trim() || restrictionProposal) return;
               setRestrictionProposal({ tags, reason: reason.trim() });
             }}
             ratifiedTheme={ratifiedTheme}
@@ -971,7 +971,7 @@ function SADUApp() {
 
   // Presentation-only summary derived from the existing approval state.
   // Department switching never mutates or skips an approval gate.
-  const executiveRoles: InstitutionalRole[] = ['PREP_COMMITTEE', 'BIENNIAL_DIRECTOR', 'CHAIRMAN', 'EDITORIAL', 'HIP'];
+  const executiveRoles: InstitutionalRole[] = ['PREP_COMMITTEE', 'BIENNIAL_DIRECTOR', 'CHAIRMAN', 'EDITORIAL', 'GENERAL_COORDINATOR'];
   let handoff: WorkspaceHandoff | undefined;
   if (executiveRoles.includes(activeRole)) {
     if (themePolishStatus === 'PUBLISHED_OFFICIAL') {
@@ -979,7 +979,7 @@ function SADUApp() {
         ? { title: isAr ? 'ترجمة الدليل قيد الانتظار' : 'Guidelines awaiting translation', description: isAr ? 'المسؤول: قسم التحرير' : 'Owner: Editorial', owner: 'EDITORIAL' }
         : translationStatus === 'PUBLISHED'
           ? { title: isAr ? 'نُشرت الثيمة والدليل باللغتين' : 'Theme and bilingual guidelines published', description: isAr ? 'اكتملت مراحل الاعتماد والتحرير والتوجيهات' : 'Approval, editorial and guidelines complete' }
-          : { title: isAr ? 'الثيمة منشورة · إعداد الدليل' : 'Theme published · draft guidelines', description: isAr ? 'المسؤول: منسق معرض عام' : 'Owner: HIP', owner: 'HIP' };
+          : { title: isAr ? 'الثيمة منشورة · إعداد الدليل' : 'Theme published · draft guidelines', description: isAr ? 'المسؤول: المنسقة' : 'Owner: General Exhibition Coordinator', owner: 'GENERAL_COORDINATOR' };
     } else if (ratifiedTheme) {
       handoff = { title: isAr ? 'الثيمة والميزانية معتمدتان' : 'Theme and budget ratified', description: isAr ? 'المسؤول: قسم التحرير · الصياغة والترجمة' : 'Owner: Editorial · refinement and translation', owner: 'EDITORIAL' };
     } else if (submittedThemes?.length === 3) {
@@ -993,7 +993,7 @@ function SADUApp() {
 
   if (['COORDINATOR', 'ARTIST', 'PR_PROTOCOL', 'TECHNICAL', 'FINANCE', 'LOGISTICS'].includes(activeRole)) handoff = operationalHandoff(commission, isAr);
 
-  if ((activeRole==='COORDINATOR'||translationStatus==='PUBLISHED'&&activeRole==='HIP')&&!nominationOpen(publishedBoundaries)) handoff={title:isAr?'نشر محددات المعرض قيد الانتظار':'Curatorial boundaries publication pending',description:isAr?'المسؤول: منسق البرامج الدولية':'Owner: HIP',owner:'HIP'};
+  if ((activeRole==='COORDINATOR'||translationStatus==='PUBLISHED'&&activeRole==='GENERAL_COORDINATOR')&&!nominationOpen(publishedBoundaries)) handoff={title:isAr?'نشر محددات المعرض قيد الانتظار':'Curatorial boundaries publication pending',description:isAr?'المسؤول: المنسقة':'Owner: General Exhibition Coordinator',owner:'GENERAL_COORDINATOR'};
 
   if (activeRole === 'LANDING' && !showStory) return <Gateway isAr={isAr} onEnter={() => setActiveRole('PREP_COMMITTEE')} onStory={() => setShowStory(true)} onLanguage={toggleLang} />;
   if (activeRole === 'LANDING') {
@@ -1015,24 +1015,24 @@ function SADUApp() {
       <DirectoryRegistration artists={nominatedArtists} />
       <WorkspaceNavigation role={activeRole} onNavigate={setActiveRole} isAr={isAr}
         onToggleLanguage={toggleLang} onOpenPresenter={() => setIsPresenterDrawerOpen(prev => !prev)} handoff={pendingNavigation && handoff ? { ...handoff, owner: undefined } : handoff} />
-      <PresentationHandoff isAr={isAr} automatic={autoForward} onAutomaticChange={setAutoForward} pending={pendingNavigation ? { id: pendingNavigation.id, label: ({ BIENNIAL_DIRECTOR: isAr ? 'مدير الملتقى' : 'Biennial Director', CHAIRMAN: isAr ? 'رئيس الدائرة' : 'Chairman', EDITORIAL: isAr ? 'قسم التحرير' : 'Editorial', HIP: isAr ? 'منسق معرض عام' : 'HIP' } as Partial<Record<InstitutionalRole, string>>)[pendingNavigation.role] ?? pendingNavigation.role } : null} onContinue={continueNavigation} />
+      <PresentationHandoff isAr={isAr} automatic={autoForward} onAutomaticChange={setAutoForward} pending={pendingNavigation ? { id: pendingNavigation.id, label: ({ BIENNIAL_DIRECTOR: isAr ? 'مدير الملتقى' : 'Biennial Director', CHAIRMAN: isAr ? 'رئيس الدائرة' : 'Chairman', EDITORIAL: isAr ? 'قسم التحرير' : 'Editorial', GENERAL_COORDINATOR: isAr ? 'المنسقة' : 'General Exhibition Coordinator' } as Partial<Record<InstitutionalRole, string>>)[pendingNavigation.role] ?? pendingNavigation.role } : null} onContinue={continueNavigation} />
 
       {/* 
         WORKSPACE MOUNT POINT
         The actual Archival Heritage Pop UI renders inside this container.
       */}
       <main id="workspace-scroll" tabIndex={-1} ref={workspaceScrollRef} className="flex-1 overflow-y-auto relative bg-[#F7F1E6]">
-        {!['CHAIRMAN', 'BIENNIAL_DIRECTOR', 'EDITORIAL', 'HIP', 'ROLES', 'PR_PROTOCOL', 'TECHNICAL', 'FINANCE'].includes(activeRole) && (activeRole !== 'PREP_COMMITTEE' || isNominationFormOpen) && (activeRole !== 'COORDINATOR' || nominationOpen(publishedBoundaries)&&activeCoordinatorId === commissionCoordinatorId) && <aside className="border-b border-[#D9CEBA] ps-4 pe-4 py-3 text-start" dir={isAr ? 'rtl' : 'ltr'}>
+        {!['CHAIRMAN', 'BIENNIAL_DIRECTOR', 'EDITORIAL', 'GENERAL_COORDINATOR', 'ROLES', 'PR_PROTOCOL', 'TECHNICAL', 'FINANCE'].includes(activeRole) && (activeRole !== 'PREP_COMMITTEE' || isNominationFormOpen) && (activeRole !== 'COORDINATOR' || nominationOpen(publishedBoundaries)&&activeCoordinatorId === commissionCoordinatorId) && <aside className="border-b border-[#D9CEBA] ps-4 pe-4 py-3 text-start" dir={isAr ? 'rtl' : 'ltr'}>
           <CommissionSummary isAr={isAr} legalName={commission.invitation?.legalName} showTechnical={activeRole !== 'PR_PROTOCOL'} />
         </aside>}
 
         <DelegatedRoleGate role={activeRole}>
         {['COORDINATOR', 'BIENNIAL_DIRECTOR', 'CHAIRMAN'].includes(activeRole) && <InvitationArchive rows={invitationLetters} dossiers={nominatedArtists} actor={activeRole} coordinatorId={activeCoordinatorId} isAr={isAr} onAction={action => setInvitationLetters(rows => invitationArchiveTransition(rows, action, nominatedArtists, activeRole, activeCoordinatorId, new Date().toISOString()))} />}
         {activeRole==='COORDINATOR'&&!nominationOpen(publishedBoundaries)?<CuratorialBoundaries isAr={isAr}/>:<>
-        {['BIENNIAL_DIRECTOR','CHAIRMAN','PR_PROTOCOL','FINANCE','HIP'].includes(activeRole)&&<InstitutionalDashboard dossiers={nominatedArtists} evidence={artists.map(a=>a.id===COMMISSION.id?{...a,status:commission.installationStatus??a.status,prCleared:commission.evidence.prEvidenceGate}:a)} isAr={isAr} canReassign={activeRole==='BIENNIAL_DIRECTOR'} lockedIds={[...contracts.filter(c=>c.status!=='NOT_DRAFTED').map(c=>c.artistId),...(commission.invitation?[commission.invitation.artistId]:[])]} onReassign={(id,target,reason)=>setNominatedArtists(rows=>reassignDossier(rows,id,target,reason,activeRole,new Date().toISOString(),[...contracts.filter(c=>c.status!=='NOT_DRAFTED').map(c=>c.artistId),...(commission.invitation?[commission.invitation.artistId]:[])]))}/>}
-        {['HIP','BIENNIAL_DIRECTOR'].includes(activeRole)&&<AssetStateDashboard artists={nominatedArtists}/>}
+        {['BIENNIAL_DIRECTOR','CHAIRMAN','PR_PROTOCOL','FINANCE','GENERAL_COORDINATOR'].includes(activeRole)&&<InstitutionalDashboard dossiers={nominatedArtists} evidence={artists.map(a=>a.id===COMMISSION.id?{...a,status:commission.installationStatus??a.status,prCleared:commission.evidence.prEvidenceGate}:a)} isAr={isAr} canReassign={activeRole==='BIENNIAL_DIRECTOR'} lockedIds={[...contracts.filter(c=>c.status!=='NOT_DRAFTED').map(c=>c.artistId),...(commission.invitation?[commission.invitation.artistId]:[])]} onReassign={(id,target,reason)=>setNominatedArtists(rows=>reassignDossier(rows,id,target,reason,activeRole,new Date().toISOString(),[...contracts.filter(c=>c.status!=='NOT_DRAFTED').map(c=>c.artistId),...(commission.invitation?[commission.invitation.artistId]:[])]))}/>}
+        {['GENERAL_COORDINATOR','BIENNIAL_DIRECTOR'].includes(activeRole)&&<AssetStateDashboard artists={nominatedArtists}/>}
         {['COORDINATOR','BIENNIAL_DIRECTOR','FINANCE','PR_PROTOCOL'].includes(activeRole)&&<HospitalityExceptions actor={activeRole} artists={(activeRole==='COORDINATOR'?assignedTo(nominatedArtists,activeCoordinatorId):nominatedArtists).filter(a=>a.status==='APPROVED')}/>}
-        {['COORDINATOR','BIENNIAL_DIRECTOR'].includes(activeRole)&&<PendingAssetTracker/>}{activeRole==='FINANCE'&&<ArtworkValues/>}{['COORDINATOR','HIP','BIENNIAL_DIRECTOR','CHAIRMAN','PR_PROTOCOL','TECHNICAL'].includes(activeRole)&&<ExhibitionTitleHeader/>}{renderWorkspace()}{['ARTIST','LOGISTICS','FINANCE'].includes(activeRole)&&<FreightChangeControl actor={activeRole}/>}{['ARTIST','LOGISTICS','BIENNIAL_DIRECTOR','CHAIRMAN'].includes(activeRole)&&<LogisticsActionQueue artist={activeRole==='ARTIST'} officer={activeRole==='LOGISTICS'}/>}{['ARTIST','HIP','LOGISTICS'].includes(activeRole)&&<FreightClosureLedger logistics={activeRole==='LOGISTICS'}/>}{activeRole==='EDITORIAL'&&<PublicationHandoff editorial/>}{activeRole==='HIP'&&<ExhibitionTitleGate curator/>}{['TECHNICAL','COORDINATOR','LOGISTICS','ARTIST'].includes(activeRole)&&<ArrivalFeed/>}{['COORDINATOR','PR_PROTOCOL'].includes(activeRole)&&<PublicationEscrow assignedArtistIds={activeRole==='COORDINATOR'?assignedTo(nominatedArtists,activeCoordinatorId).map(d=>d.id):undefined}/>}{['COORDINATOR','PR_PROTOCOL','LOGISTICS','HIP','TECHNICAL'].includes(activeRole)&&<ArtistMetadataQueue exportLabels={['COORDINATOR','PR_PROTOCOL','TECHNICAL','LOGISTICS'].includes(activeRole)}/>}{['COORDINATOR','LOGISTICS'].includes(activeRole)&&<ExhibitionChecklistQueue/>}
+        {['COORDINATOR','BIENNIAL_DIRECTOR'].includes(activeRole)&&<PendingAssetTracker/>}{activeRole==='FINANCE'&&<ArtworkValues/>}{['COORDINATOR','GENERAL_COORDINATOR','BIENNIAL_DIRECTOR','CHAIRMAN','PR_PROTOCOL','TECHNICAL'].includes(activeRole)&&<ExhibitionTitleHeader/>}{renderWorkspace()}{['ARTIST','LOGISTICS','FINANCE'].includes(activeRole)&&<FreightChangeControl actor={activeRole}/>}{['ARTIST','LOGISTICS','BIENNIAL_DIRECTOR','CHAIRMAN'].includes(activeRole)&&<LogisticsActionQueue artist={activeRole==='ARTIST'} officer={activeRole==='LOGISTICS'}/>}{['ARTIST','GENERAL_COORDINATOR','LOGISTICS'].includes(activeRole)&&<FreightClosureLedger logistics={activeRole==='LOGISTICS'}/>}{activeRole==='EDITORIAL'&&<PublicationHandoff editorial/>}{activeRole==='GENERAL_COORDINATOR'&&<ExhibitionTitleGate curator/>}{['TECHNICAL','COORDINATOR','LOGISTICS','ARTIST'].includes(activeRole)&&<ArrivalFeed/>}{['COORDINATOR','PR_PROTOCOL'].includes(activeRole)&&<PublicationEscrow assignedArtistIds={activeRole==='COORDINATOR'?assignedTo(nominatedArtists,activeCoordinatorId).map(d=>d.id):undefined}/>}{['COORDINATOR','PR_PROTOCOL','LOGISTICS','GENERAL_COORDINATOR','TECHNICAL'].includes(activeRole)&&<ArtistMetadataQueue exportLabels={['COORDINATOR','PR_PROTOCOL','TECHNICAL','LOGISTICS'].includes(activeRole)}/>}{['COORDINATOR','LOGISTICS'].includes(activeRole)&&<ExhibitionChecklistQueue/>}
         {['TECHNICAL','COORDINATOR','FINANCE','BIENNIAL_DIRECTOR'].includes(activeRole)&&<InterAgencyResources rows={resourceTickets} dossiers={nominatedArtists} eligibleIds={resourceEligibleIds} scopeKeys={resourceScopeKeys} actor={activeRole} coordinatorId={activeCoordinatorId} isAr={isAr} onAction={action=>{const at=new Date().toISOString();setResourceTickets(rows=>resourceTransition(rows,action.type==='request'?{...action,ticket:{...action.ticket,requestedAt:at}}:action,activeRole,at,resourceEligibleIds,nominatedArtists.filter(d=>d.assignedCoordinatorId===activeCoordinatorId).map(d=>d.id),activeCoordinatorId,resourceScopeKeys));}}/>}
         {activeRole==='EDITORIAL'&&<LiveCatalogAggregator state={commission} isAr={isAr}/>}
         {commission.installationStatus==='ARCHIVED_CLOSED'&&['COORDINATOR','BIENNIAL_DIRECTOR'].includes(activeRole)&&<CollectionCloseout state={commission} actor={activeRole}/>}
@@ -1059,7 +1059,7 @@ function SADUApp() {
             onDispatch={id=>setNominatedArtists(rows=>rows.map(d=>d.id===id&&!(id===COMMISSION.id&&commission.installationStatus==='ARCHIVED_CLOSED')?recordDossierDispatch(d,activeRole,themePolishStatus==='PUBLISHED_OFFICIAL'&&translationStatus==='PUBLISHED',new Date().toISOString(),activeCoordinatorId):d))}/>
         </>}
         {activeRole==='PR_PROTOCOL'&&nominatedArtists.filter(d=>d.status==='APPROVED'&&d.id!==(commission.contracts[0]?.artistId??COMMISSION.id)).map(d=><ArrivalPackagePreview key={d.id} artistId={d.id} artistName={d.artistName} isAr={isAr}/>)}
-        {activeRole!=='HIP' && Object.hasOwn(ESCALATION_DEPARTMENTS, activeRole) && <EscalationSubmission key={activeRole} actor={activeRole} isAr={isAr} records={executiveEscalations} onSubmit={input => setExecutiveEscalations(rows => submitEscalation(rows, input, activeRole, new Date().toISOString()))} />}
+        {activeRole!=='GENERAL_COORDINATOR' && Object.hasOwn(ESCALATION_DEPARTMENTS, activeRole) && <EscalationSubmission key={activeRole} actor={activeRole} isAr={isAr} records={executiveEscalations} onSubmit={input => setExecutiveEscalations(rows => submitEscalation(rows, input, activeRole, new Date().toISOString()))} />}
         </>}
         </DelegatedRoleGate>
         {(activeRole!=='COORDINATOR'||nominationOpen(publishedBoundaries))&&<GovernanceDesk dossiers={nominatedArtists} role={activeRole} pending={activeRole==='PR_PROTOCOL'&&!commission.evidence.prEvidenceGate?['Identity & Travel approval']:activeRole==='BIENNIAL_DIRECTOR'?nominatedArtists.filter(d=>d.status==='PENDING_DIRECTOR_REVIEW').map(d=>`Director decision: ${d.artistName}`):[]} blockedArtistIds={damageHold(commission)||['ARCHIVED_CLOSED','EXECUTIVE_IMPOUND'].includes(commission.installationStatus??'')?[COMMISSION.id]:[]}/>}

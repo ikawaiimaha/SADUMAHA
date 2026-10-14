@@ -7,7 +7,7 @@ const ROLE_GROUPS: { ar: string; en: string; roles: [InstitutionalRole, string, 
     ['BIENNIAL_DIRECTOR', 'مدير الملتقى', 'Biennial Director'],
     ['CHAIRMAN', 'رئيس الدائرة', 'Chairman'],
     ['EDITORIAL', 'قسم التحرير', 'Editorial'],
-    ['HIP', 'منسق معرض عام', 'HIP'],
+    ['GENERAL_COORDINATOR', 'المنسقة', 'General Exhibition Coordinator'],
   ] },
   { ar: 'التنفيذ والتعاقد', en: 'Delivery & agreements', roles: [
     ['COORDINATOR', 'المنسق العام', 'Coordinator'], ['ARTIST', 'الفنان', 'Artist'],

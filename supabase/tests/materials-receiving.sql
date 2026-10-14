@@ -17,6 +17,11 @@ do $$begin
  if exists(select 1 from public.sadu_exhibition_titles where status='LOCKED') then raise exception 'Artist locked title';end if;
 end $$;
 select set_config('request.jwt.claims','{"sub":"55555555-5555-4555-8555-555555555555","role":"authenticated","app_metadata":{"institutional_role":"HIP"}}',true);
+do $$begin
+ update public.sadu_exhibition_titles set status='LOCKED';
+ if found then raise exception 'Retired HIP claim locked a title';end if;
+end $$;
+select set_config('request.jwt.claims','{"sub":"55555555-5555-4555-8555-555555555555","role":"authenticated","app_metadata":{"institutional_role":"GENERAL_COORDINATOR"}}',true);
 update public.sadu_exhibition_titles set status='LOCKED';
 do $$begin
  if not exists(select 1 from public.sadu_exhibition_titles where status='LOCKED' and locked_at is not null) then raise exception 'Title not locked';end if;

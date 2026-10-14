@@ -25,7 +25,7 @@ test('only assigned Coordinators record unique reviewed snapshots without overwr
   const rows=recordArrivalDispatch([],recipient,reviewed,'COORDINATOR','coordinator',true,at);
   assert.equal(rows.length,1);
   assert.equal(recordArrivalDispatch(rows,recipient,reviewed,'COORDINATOR','coordinator',true,at),rows);
-  for(const actor of ['HIP','PR_PROTOCOL','ARTIST']) assert.equal(recordArrivalDispatch([],recipient,reviewed,actor,'coordinator',true,at).length,0);
+  for(const actor of ['GENERAL_COORDINATOR','HIP','PR_PROTOCOL','ARTIST']) assert.equal(recordArrivalDispatch([],recipient,reviewed,actor,'coordinator',true,at).length,0);
   assert.equal(recordArrivalDispatch([],recipient,reviewed,'COORDINATOR','other',true,at).length,0);
   assert.equal(recordArrivalDispatch([],recipient,reviewed,'COORDINATOR','coordinator',false,at).length,0);
   assert.equal(recordArrivalDispatch([],recipient,reviewed,'COORDINATOR','coordinator',true,'invalid').length,0);

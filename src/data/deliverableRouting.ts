@@ -10,7 +10,7 @@ export function deadlineTime(date:string):number {
  return Date.parse(date+'T23:59:59+04:00');
 }
 export function addNudge(rows:CuratorialNudge[],n:CuratorialNudge,actor:string):CuratorialNudge[]{
- if(actor!=='HIP'||!n.id||!n.artistId||!n.items.length||new Set(n.items).size!==n.items.length||!n.items.every(i=>Object.hasOwn(MISSING_ITEMS,i))||!Number.isFinite(Date.parse(n.createdAt))||!Number.isFinite(deadlineTime(n.deadline))||deadlineTime(n.deadline)<=Date.parse(n.createdAt)||rows.some(r=>r.id===n.id||r.artistId===n.artistId&&r.deadline===n.deadline&&[...r.items].sort().join() === [...n.items].sort().join()))return rows;
+ if(actor!=='GENERAL_COORDINATOR'||!n.id||!n.artistId||!n.items.length||new Set(n.items).size!==n.items.length||!n.items.every(i=>Object.hasOwn(MISSING_ITEMS,i))||!Number.isFinite(Date.parse(n.createdAt))||!Number.isFinite(deadlineTime(n.deadline))||deadlineTime(n.deadline)<=Date.parse(n.createdAt)||rows.some(r=>r.id===n.id||r.artistId===n.artistId&&r.deadline===n.deadline&&[...r.items].sort().join() === [...n.items].sort().join()))return rows;
  return [...rows,{...n,items:[...n.items]}];
 }
 export interface FabricationTicket { workers?:string[];venueId?:string;activity?:WorkActivity;workLocation?:WorkLocation;id:string;artistId:string;item:string;vendor:string;disposition:'RETURN_TO_ARTIST'|'DISCARD';status:'PENDING_FABRICATION'|'READY_FOR_INSTALL';createdAt:string;readyAt?:string}

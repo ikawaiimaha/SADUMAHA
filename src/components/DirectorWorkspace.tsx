@@ -64,7 +64,7 @@ export interface DirectorWorkspaceProps {
   assignedBudget?: number | null;
   /** Ratified theme */
   ratifiedTheme?: ThemeItem | null;
-  /** Curatorial brief from HIP */
+  /** Curatorial brief from the General Exhibition Coordinator */
   curatorialBrief?: string;
   /** Optional callback to return to role selection */
   onAutoNavigate?: (role: string) => void;
@@ -73,7 +73,7 @@ export interface DirectorWorkspaceProps {
 
 export const VETO_REASONS = [
   'Budget Exceeded',
-  'Security/HIP Blocklist',
+  'Security/Compliance Blocklist',
   'Curatorial Mismatch',
   'Administrative Directive',
 ];

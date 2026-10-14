@@ -7,7 +7,7 @@ test('Arabic-first theme handoff and verified bilingual release', async ({ page 
   });
   await page.goto('/');
   const role = (name: string) => page.getByRole('navigation').getByRole('button', { name, exact: true }).click();
-  await role('HIP');
+  await role('General Exhibition Coordinator');
   await expect(page.locator('#exhibition-guidelines-arabic')).toBeDisabled();
   await role('Editorial');
   await expect(page.getByRole('button', { name: 'Ratify Arabic Text & Route to Translation' })).toBeDisabled();
@@ -84,7 +84,7 @@ test('Arabic-first theme handoff and verified bilingual release', async ({ page 
   await expect(verified).not.toBeChecked();
   await verified.check();
   await publish.click();
-  await role('HIP');
+  await role('General Exhibition Coordinator');
   await expect(page.locator('#exhibition-guidelines-arabic')).toBeEnabled();
   await expect(page.getByText('Status: Pending Editorial Translation', { exact: true })).toHaveCount(0);
   await expect(page.getByText(arabic, { exact: true })).toBeVisible();
@@ -98,17 +98,17 @@ test('Arabic-first theme handoff and verified bilingual release', async ({ page 
   await role('Editorial');
   await expect(page.locator('#editorial-english')).toBeDisabled();
   await expect(page.getByText('Theme Locked & Dispatched', { exact: true })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Translation Queue — HIP Guidelines' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Translation Queue — General Coordinator Guidelines' })).toBeVisible();
   await expect(page.getByText(guidelines, { exact: true })).toBeVisible();
   const publishGuidelines = page.getByRole('button', { name: 'Publish Bilingual Guidelines' });
   await expect(publishGuidelines).toBeDisabled();
   const guidelinesEnglish = 'New curatorial guidelines for Arabic calligraphy and exhibition artistic standards.';
   await page.locator('#guidelines-english').fill(guidelinesEnglish);
   await publishGuidelines.click();
-  await expect(page.getByText('Bilingual guidelines published and returned to HIP.')).toBeVisible();
+  await expect(page.getByText('Bilingual guidelines published and returned to the General Exhibition Coordinator.')).toBeVisible();
   await expect(page.locator('#guidelines-english')).toHaveCount(0);
   await expect(page.locator('#editorial-english')).toHaveValue('The verified institutional statement explores the aesthetics of contemporary Arabic calligraphy.');
-  await role('HIP');
+  await role('General Exhibition Coordinator');
   await expect(page.getByRole('heading', { name: 'Published Bilingual Guidelines' })).toBeVisible();
   await expect(page.getByText(guidelinesEnglish, { exact: true })).toBeVisible();
 });

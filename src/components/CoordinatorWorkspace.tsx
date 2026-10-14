@@ -741,7 +741,7 @@ export function CommitteeNominationOutcome({dossier,isAr}:{dossier:NominatedArti
   return <section role="status" className={`rounded border ps-4 pe-4 py-3 text-start ${rejected?'border-red-300 bg-red-50':'border-[#D9CEBA] bg-[#F7F1E6]'}`}>
     <h3 className="font-semibold">{dossier.artistName}</h3>
     <DossierTimeline dossier={dossier} isAr={isAr}/>
-    <p>{dossier.status==='HIP_BLOCKED'?(isAr?'معلق آلياً لمطابقة قيد إداري':'Automated compliance hold — not a HIP rejection'):rejected?(isAr?'مرفوض بقرار اللجنة التحضيرية':'Rejected by Committee Consensus'):dossier.status==='PENDING_COMMITTEE_REVIEW'?(isAr?'بانتظار مداولات اللجنة':'Pending Committee Review'):(isAr?'اعتمدت اللجنة — بانتظار المدير':'Committee endorsed — awaiting Director')}</p>
+    <p>{dossier.status==='HIP_BLOCKED'?(isAr?'معلق آلياً لمطابقة قيد إداري':'Automated compliance hold — not a curatorial rejection'):rejected?(isAr?'مرفوض بقرار اللجنة التحضيرية':'Rejected by Committee Consensus'):dossier.status==='PENDING_COMMITTEE_REVIEW'?(isAr?'بانتظار مداولات اللجنة':'Pending Committee Review'):(isAr?'اعتمدت اللجنة — بانتظار المدير':'Committee endorsed — awaiting Director')}</p>
     {dossier.committeeReview&&<><p className="whitespace-pre-wrap">{dossier.committeeReview.minutes}</p><time>{new Date(dossier.committeeReview.at).toLocaleString(isAr?'ar-AE':'en-GB')}</time></>}
   </section>;
 }

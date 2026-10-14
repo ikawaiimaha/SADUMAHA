@@ -19,7 +19,7 @@ export type AppRole =
   | 'Biennial Director'
   | 'Preparatory Committee'
   | 'Editorial'
-  | 'HIP'
+  | 'General Coordinator'
   | 'Coordinator'
   | 'Artist'
   | 'Finance'
@@ -89,12 +89,12 @@ const ROLE_OPTIONS: RoleOption[] = [
     accentColor: 'text-sadu-brick',
   },
   {
-    key: 'HIP',
-    titleEn: 'HIP (Head of Programs)',
-    titleAr: 'منسق معرض عام',
-    phaseBadge: 'Curatorial Guidelines & Blocklists',
+    key: 'General Coordinator',
+    titleEn: 'General Exhibition Coordinator',
+    titleAr: 'المنسقة',
+    phaseBadge: 'Master Coordination & Curatorial Guidelines',
     description:
-      'Receives the published theme essay from Editorial and drafts the operational curatorial brief and dynamic blocklists.',
+      'Holds master coordination. Receives the published theme essay from Editorial, drafts the operational curatorial brief and verifies declared artwork text against the submitted snapshot.',
     icon: Globe,
     accentColor: 'text-sadu-brick',
   },

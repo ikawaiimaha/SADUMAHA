@@ -293,7 +293,7 @@ export default function ArtistPortalWorkspace({
             {/* Legal Document Preview Box */}
             {activeContract?.participationCategory !== 'SOLO_EXHIBITION' && <div className="border border-[#D9D2C5] rounded-md p-5 bg-stone-50/50 mb-6 font-serif text-xs leading-relaxed space-y-3 text-[#5C554E]">
               <p className="font-bold text-[#1A1817] font-sans uppercase tracking-wider text-[11px]">{tr("Key Terms & Conditions Summary:")}</p>
-              <p> {tr("1. The artist agrees to produce and deliver the commissioned work in strict accordance with the approved curatorial scope and technical guidelines established by the Head of International Programs (HIP).")} </p>
+              <p> {tr("1. The artist agrees to produce and deliver the commissioned work in strict accordance with the approved curatorial scope and technical guidelines established by the General Exhibition Coordinator.")} </p>
               <p> {tr("2. The scheduled percentages and amounts are taken from the Coordinator agreement above. In this fictional scenario, advance authorization additionally requires recorded PR and Technical evidence. Delivery requires a Logistics receipt; Completion requires closure, safe return and condition reconciliation.")} </p>
               <p className="italic text-[#8B4513]"> {tr("Illustrative terms only. This demo grants no reproduction rights and makes no legal amendment. Actual rights, approved terms and authorized signatories must be evidenced separately.")} </p>
             </div>}

@@ -341,7 +341,7 @@ export default function DirectorReviewWorkspace({
                 >
                   <option value="Curatorial Mismatch">Curatorial Mismatch (عدم توافق تقييمي)</option>
                   <option value="Budget Exceeded">Budget Exceeded (تجاوز سقف الميزانية)</option>
-                  <option value="Security/HIP Blocklist">Security/HIP Blocklist (توجيه أمني / حظر المنصة)</option>
+                  <option value="Security/Compliance Blocklist">Security/Compliance Blocklist (توجيه أمني / حظر المنصة)</option>
                   <option value="Administrative Directive">Administrative Directive (توجيه إداري رئاسي)</option>
                 </select>
               </div>

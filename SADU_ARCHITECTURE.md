@@ -7,7 +7,15 @@
 
 ## Authority and implementation status — 2026-10-01
 
-These rules supersede conflicting historical notes below. This file is a version-controlled architecture anchor, not a technically immutable or signed record. Legacy HIP references in code still require a scoped migration; this configuration update does not claim that migration is complete. Existing enums are in src/types.ts; additional workflow models must be mapped explicitly rather than silently renamed.
+These rules supersede conflicting historical notes below. This file is a version-controlled architecture anchor, not a technically immutable or signed record. The HIP migration was completed on 2026-10-14 (see below). Existing enums are in src/types.ts; additional workflow models must be mapped explicitly rather than silently renamed.
+
+## 2026-10-14 — HIP retired; duties belong to the General Exhibition Coordinator
+
+The browser role key `HIP` is now `GENERAL_COORDINATOR` (General Exhibition Coordinator, المنسقة), matching the server's `General_Exhibition_Coordinator`. Its duties are unchanged in substance and remain separate from the assigned `COORDINATOR`, so the Coordinator still declares artwork text and the General Exhibition Coordinator verifies it against the immutable snapshot. That role alone publishes curatorial boundaries, sends deliverable reminders and drafts the curatorial brief. Verifications recorded with `actor: 'HIP'` before this change remain valid history; HIP cannot record new ones. `HIP_BLOCKED` stays as a stored dossier status value; user-facing text calls it a compliance hold.
+
+Database (`20261014120000_sadu_retire_hip_role.sql`): exhibition-title locking, label/scope/title/publication reads, the operational guest calendar, pilot dossier/request reads and curator assignment moved from HIP to `GENERAL_COORDINATOR`; `VENUE_AUTHORITY` and `GENERAL_COORDINATOR` are provisionable; HIP is not. Cross-user account checks (freight vendor/curator, Logistics officer/department head) read `sadu_user_roles` instead of `auth.users` metadata. A retired HIP claim cannot lock a title (tested).
+
+Remaining terminology overlap, not changed here: the assigned `COORDINATOR` is still labelled "Coordinator" / المنسق العام, and several English strings say "General Coordinator" without making clear which role they mean.
 
 ## 2026-10-14 — Role claims, theme policies and migration baseline
 

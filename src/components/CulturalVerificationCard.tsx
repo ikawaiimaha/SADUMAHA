@@ -8,7 +8,7 @@ export function CulturalVerificationCard({dossier: d, isAr}: {dossier: Nominated
  <p>{t('نصوص دينية أو آيات قرآنية أو أحاديث أو عبارات سياسية؟','Religious texts, Qur’anic verses, Hadiths, or political statements?')} <strong>{d.culturalDeclaration ? d.culturalDeclaration.containsText ? t('نعم','Yes') : t('لا','No') : t('لم يُقدّم الإقرار','Declaration missing')}</strong></p>
  {d.culturalDeclaration?.containsText && <p className="whitespace-pre-wrap break-words">{d.culturalDeclaration.exactText}</p>}
  {d.culturalDeclaration?.containsText && <p className="whitespace-pre-wrap break-words">{d.culturalDeclaration.explanation}</p>}
- <p role="status">{textualCleared(d) ? (d.culturalDeclaration?.containsText ? `${t('تم التحقق النصي بواسطة HIP','HIP textual verification recorded')} · ${d.textualVerification?.at}` : t('لا نصوص معلنة للتحقق','No declared text requiring verification')) : t('بانتظار التحقق النصي بواسطة HIP — الإحالة إلى المدير مقفلة','Awaiting HIP textual verification — Director handoff locked')}</p>
+ <p role="status">{textualCleared(d) ? (d.culturalDeclaration?.containsText ? `${t('سجّلت المنسقة التحقق النصي','General Exhibition Coordinator textual verification recorded')} · ${d.textualVerification?.at}` : t('لا نصوص معلنة للتحقق','No declared text requiring verification')) : t('بانتظار تحقق المنسقة من النص — الإحالة إلى المدير مقفلة','Awaiting General Exhibition Coordinator textual verification — Director handoff locked')}</p>
  <p>{culturalCleared(d) ? `${t('سجلت اللجنة اعتماد الترشيح — محاكاة','Committee endorsement recorded — simulated')} · ${d.committeeReview?.at}` : t('تراجع اللجنة الإقرار ضمن قرار الترشيح.','Declaration reviewed as part of the Committee nomination decision.')}</p>
 
  </section>;
