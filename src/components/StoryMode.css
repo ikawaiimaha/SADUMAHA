@@ -152,6 +152,8 @@
 .story-progress span { line-height:18px; }
 .story-footer { min-height:30px; display:flex; align-items:center; justify-content:center; flex-wrap:wrap; }
 .story-footer span { line-height:1.6; }
+/* Phones: keep centered footer text clear of the 44px floating lock control in the end corner. */
+@media (max-width:639px) { .story-footer { padding-inline:56px; } }
 .story-controls button { height:40px; }
 .story-controls button span { line-height:1.5; }
 

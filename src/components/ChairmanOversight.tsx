@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { useSessionDraft } from '../context/SessionDrafts';
 import type { CommissionState } from '../types';
 import type { ChairmanViewMode, EscalationRecord, PortfolioProgram } from '../types/chairman';
@@ -10,12 +10,22 @@ export interface ChairmanOversightProps {
   commission: CommissionState;
   escalations: EscalationRecord[];
   onResolveEscalation: (id: string, disposition: NonNullable<EscalationRecord['executiveDisposition']>) => void;
+  /** Theme proposals presented by the Director and not yet ratified with a budget. */
+  themeDecisionPending?: boolean;
   children: ReactNode;
 }
 
-export function ChairmanOversight({ programs, commission, escalations, onResolveEscalation, children }: ChairmanOversightProps) {
-  const { isAr } = useI18n();
+export function ChairmanOversight({ programs, commission, escalations, onResolveEscalation, themeDecisionPending = false, children }: ChairmanOversightProps) {
+  const { isAr, formatNumber } = useI18n();
   const [view, setView] = useSessionDraft<ChairmanViewMode>('chairman-view', 'PORTFOLIO');
+  // Work waiting for the Chairman opens the decisions view; a later choice of the portfolio is kept
+  // until something new arrives.
+  const pending = escalations.filter(e => e.status === 'PENDING_EXECUTIVE_ACTION').length + (themeDecisionPending ? 1 : 0);
+  const seenPending = useRef(0);
+  useEffect(() => {
+    if (pending > seenPending.current) setView('PROGRAM_DECISIONS');
+    seenPending.current = pending;
+  }, [pending, setView]);
   const evidence = commissionEvidence(commission, isAr);
   const conflicts = analyzePortfolioConflicts(programs);
   const programName = (id: string) => { const p = programs.find(p => p.id === id); return p ? (isAr ? p.nameAr : p.nameEn) : id; };
@@ -23,7 +33,7 @@ export function ChairmanOversight({ programs, commission, escalations, onResolve
     <header><h1 className="text-2xl font-bold">{isAr ? 'مكتب رئيس الدائرة · سعادة عبدالله بن محمد العويس' : 'Office of the Chairman · H.E. Abdullah bin Mohammed Al Owais'}</h1>
       <p>{isAr ? 'الإشراف على البرامج والقرارات الاستراتيجية' : 'Program oversight and strategic decisions'}</p></header>
     <nav aria-label={isAr ? 'مستويات الإشراف' : 'Oversight views'} className="flex flex-wrap gap-2">
-      {(['PORTFOLIO', 'PROGRAM_DECISIONS'] as const).map(mode => <button key={mode} type="button" aria-pressed={view === mode} onClick={() => setView(mode)} className={`rounded border ps-4 pe-4 py-3 ${view === mode ? 'bg-[#8B261E] text-white' : 'bg-white text-[#736357]'}`}>{mode === 'PORTFOLIO' ? (isAr ? 'خريطة الانتشار الجغرافي للبرامج' : 'Geographic Program Portfolio') : (isAr ? 'قرارات برنامج الملتقى' : 'Biennial Program Decisions')}</button>)}
+      {(['PORTFOLIO', 'PROGRAM_DECISIONS'] as const).map(mode => <button key={mode} type="button" aria-pressed={view === mode} onClick={() => setView(mode)} className={`rounded border ps-4 pe-4 py-3 ${view === mode ? 'bg-[#8B261E] text-white' : 'bg-white text-[#736357]'}`}>{mode === 'PORTFOLIO' ? (isAr ? 'خريطة الانتشار الجغرافي للبرامج' : 'Geographic Program Portfolio') : <>{isAr ? 'قرارات برنامج الملتقى' : 'Biennial Program Decisions'}{pending > 0 && <span className="ms-2 rounded-full bg-white/90 ps-2 pe-2 text-sm font-semibold text-[#8B261E] ring-1 ring-[#8B261E]">{formatNumber(pending)} {isAr ? 'بانتظار القرار' : 'awaiting decision'}</span>}</>}</button>)}
     </nav>
     {view === 'PORTFOLIO' && <div className="space-y-5">
       <p className="rounded border ps-4 pe-4 py-3">{isAr ? 'مراجع البرامج القائمة؛ تقارير التشغيل والتكليفات غير متاحة. أدلة الملتقى أدناه محاكاة للجلسة فقط.' : 'Existing program references; operational reports and assignments unavailable. Biennial evidence below is session simulation only.'}</p>

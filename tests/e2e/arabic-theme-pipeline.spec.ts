@@ -4,7 +4,7 @@ const labels: Record<string, string> = { Committee: 'Preparatory Committee', Dir
 async function desk(page: Page, name: string) {
   await page.getByRole('combobox', { name: 'Workspace', exact: true }).selectOption({ label: labels[name] ?? name });
   // Theme decisions live on the Chairman's second tab.
-  if (name === 'Chairman') await page.getByRole('button', { name: 'Biennial Program Decisions', exact: true }).click();
+  if (name === 'Chairman') await page.getByRole('button', { name: /^Biennial Program Decisions/ }).click();
 }
 
 /** The Committee edits one proposal at a time and must open the comparison before submitting. */

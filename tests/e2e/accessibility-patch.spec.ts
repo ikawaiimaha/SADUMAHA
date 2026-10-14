@@ -78,6 +78,24 @@ test('every visible form control on each desk has an accessible name in both lan
   expect(unnamed, unnamed.join('\n')).toEqual([]);
 });
 
+test('on phones the floating lock control is icon-sized and never covers story footer text', async ({ page }) => {
+  for (const width of [320, 390]) for (const [lang, story] of [['en', 'Institutional story — optional'], ['ar', 'السياق المؤسسي — اختياري']] as const) {
+    await page.setViewportSize({ width, height: 700 });
+    await page.addInitScript(value => localStorage.setItem('sadu_lang', value), lang);
+    await page.goto('/workbench');
+    await page.getByRole('button', { name: story, exact: true }).click();
+    const lock = page.getByRole('button', { name: lang === 'en' ? 'Lock now' : 'قفل الآن', exact: true });
+    const box = (await lock.boundingBox())!;
+    expect(box.width).toBeLessThanOrEqual(48);
+    expect(box.height).toBeGreaterThanOrEqual(44);
+    const overlaps = await page.locator('.story-footer span').evaluateAll((spans, b) => spans.filter(span => {
+      for (const r of span.getClientRects()) if (r.left < b.x + b.width && r.right > b.x && r.top < b.y + b.height && r.bottom > b.y) return true;
+      return false;
+    }).map(span => span.textContent), box);
+    expect(overlaps, `${width}px ${lang}`).toEqual([]);
+  }
+});
+
 test('manual story navigation has concise bilingual announcements without autoplay chatter', async ({ page }) => {
   await page.clock.install();
   await page.goto('/workbench');

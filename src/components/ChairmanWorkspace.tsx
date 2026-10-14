@@ -546,9 +546,13 @@ const ChairmanDecisions: React.FC<ChairmanWorkspaceProps> = ({
   );
 };
 
-export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = (props) => props.oversight
-  ? <ChairmanOversight {...props.oversight}><ChairmanDecisions {...props} /><ConcurrentVenuePortfolio /></ChairmanOversight>
-  : <><ChairmanDecisions {...props} /><ConcurrentVenuePortfolio /></>;
+export const ChairmanWorkspace: React.FC<ChairmanWorkspaceProps> = (props) => {
+  const ratified = Boolean(props.initialApprovedTheme && props.initialBudget !== null && props.initialBudget !== undefined && Number.isFinite(props.initialBudget) && props.initialBudget > 0);
+  const themeDecisionPending = Boolean(props.themes?.length) && !ratified;
+  return props.oversight
+    ? <ChairmanOversight {...props.oversight} themeDecisionPending={themeDecisionPending}><ChairmanDecisions {...props} /><ConcurrentVenuePortfolio /></ChairmanOversight>
+    : <><ChairmanDecisions {...props} /><ConcurrentVenuePortfolio /></>;
+};
 
 export default ChairmanWorkspace;
 

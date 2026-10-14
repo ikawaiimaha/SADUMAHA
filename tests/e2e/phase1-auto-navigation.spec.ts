@@ -34,7 +34,13 @@ test('Phase 1 success automatically advances through Director, Chairman, Editori
   await advance(page);
   await expect(workspace(page)).toHaveValue('CHAIRMAN');
 
-  await page.getByRole('button', { name: 'Biennial Program Decisions', exact: true }).click();
+  // A waiting theme decision opens the decisions view and is counted on its tab.
+  const decisions = page.getByRole('button', { name: /^Biennial Program Decisions/ });
+  await expect(decisions).toHaveAttribute('aria-pressed', 'true');
+  await expect(decisions).toContainText('1 awaiting decision');
+  await page.getByRole('button', { name: 'Geographic Program Portfolio', exact: true }).click();
+  await expect(decisions).toHaveAttribute('aria-pressed', 'false');
+  await decisions.click();
   await page.getByRole('button', { name: 'Auto-fill Executive Directives' }).click();
   const directive = 'توجيه تنفيذي خاص بدعم الأعمال التركيبية الكبرى';
   await page.locator('#chairman-directives-0').fill(directive);
@@ -57,7 +63,8 @@ test('Phase 1 success automatically advances through Director, Chairman, Editori
 
   // The Chairman's ratified record stays locked and keeps the directive.
   await workspace(page).selectOption('CHAIRMAN');
-  await page.getByRole('button', { name: 'Biennial Program Decisions', exact: true }).click();
+  await page.getByRole('button', { name: /^Biennial Program Decisions/ }).click();
+  await expect(page.getByRole('button', { name: /^Biennial Program Decisions/ })).not.toContainText('awaiting decision');
   await expect(page.getByText(directive, { exact: true })).toBeVisible();
   await expect(page.locator('#approved-budget-amount')).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Auto-fill Executive Directives' })).toHaveCount(0);
@@ -76,7 +83,7 @@ test('Director return clears queues and cancels pending Chairman navigation', as
   await workspace(page).selectOption('PREP_COMMITTEE');
   await expect(page.getByRole('button', { name: 'Submit to Biennial Director' })).toBeVisible();
   await workspace(page).selectOption('CHAIRMAN');
-  await page.getByRole('button', { name: 'Biennial Program Decisions', exact: true }).click();
+  await page.getByRole('button', { name: /^Biennial Program Decisions/ }).click();
   await expect(page.getByRole('button', { name: 'Select proposal' })).toHaveCount(0);
   await workspace(page).selectOption('BIENNIAL_DIRECTOR');
   await expect(page.getByRole('button', { name: 'Present 3 Themes to Chairman' })).toBeDisabled();

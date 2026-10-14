@@ -28,7 +28,8 @@ test('authority handoffs preserve mandates and Arabic lock across desk changes',
   const advice = await page.locator('#director-note-0').inputValue();
   await page.getByRole('button', {name:'Present 3 Themes to Chairman',exact:true}).click();
   await desk(page, 'Chairman');
-  await page.getByRole('button', {name:'Biennial Program Decisions',exact:true}).click();
+  // The waiting theme decision opens the decisions view by itself.
+  await expect(page.getByRole('button', {name:/^Biennial Program Decisions/})).toHaveAttribute('aria-pressed', 'true');
   await page.getByRole('button', {name:'Auto-fill Executive Directives',exact:true}).click();
   const mandate = await page.locator('#chairman-directives-0').inputValue();
   await page.getByRole('button', {name:'Select proposal',exact:true}).first().click();
