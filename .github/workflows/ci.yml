@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Type-check
+        run: npm run lint
+      - name: Guard tests
+        run: npm run test:guards
+      - name: Workflow tests
+        run: npm run test:workflows
+      - name: Review tests
+        run: npm run test:review
+      - name: Demo tests
+        run: npm run test:demo
+      - name: Build
+        run: npx vite build
+
+  database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.120.0
+      # Applies every migration to a fresh local database; only the services the SQL tests need.
+      - run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector,mailpit,realtime,postgres-meta,supavisor
+      - name: SQL policy tests
+        run: node scripts/run-sql-tests.mjs
+      - name: Security advisors
+        run: supabase db advisors --local --type security --level warn

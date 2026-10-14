@@ -9,6 +9,16 @@
 
 These rules supersede conflicting historical notes below. This file is a version-controlled architecture anchor, not a technically immutable or signed record. Legacy HIP references in code still require a scoped migration; this configuration update does not claim that migration is complete. Existing enums are in src/types.ts; additional workflow models must be mapped explicitly rather than silently renamed.
 
+## 2026-10-14 — Role claims, theme policies and migration baseline
+
+**Roles.** `public.sadu_user_roles` is the only source of `institutional_role`. The custom access token hook `public.sadu_custom_access_token` (enabled in `supabase/config.toml`) writes the role to both the top-level and `app_metadata` claim, and strips both for users without a row; a role written directly into `app_metadata` no longer grants anything. Rows are provisioned by trusted server code (service role) with a reason; browsers cannot read or write them. HIP is not provisionable. EDITORIAL and EDITORIAL_DEPARTMENT both remain because existing policies use both names.
+
+**Themes.** Committee drafts and revises DRAFT/PROPOSED themes and submits them to the Chairman; the Chairman only moves PENDING_CHAIRMAN_APPROVAL to PENDING_EDITORIAL_POLISH and cannot change text; Editorial polishes and publishes. No role deletes a theme, published themes are immutable, and other authenticated roles read only published themes.
+
+**Asset escrow.** `sadu_asset_escrow` is limited to the owning artist/coordinator, Logistics, the Biennial Director and Technical. PR, Editorial and HIP keep their publication read of submitted scenarios but no longer see escrow data through the view.
+
+**Migrations.** `20261014100000_sadu_baseline_local_schema.sql` captures the schema previously applied by hand from `supabase/local/*.sql` and `migration.sql`, generated with `supabase db diff` and verified by replaying all migrations into a shadow database (only identical re-creations remain). Do not re-apply `supabase/local/*.sql` to a migrated database. `npm run test:sql` runs every `supabase/tests/*.sql` file; CI runs them against a fresh `supabase start`. No hosted database was changed.
+
 ## 2026-10-10 — Committee recommendation minute (replaces Committee approval)
 
 **Rule.** The Committee records an attributed recommendation minute; it never approves. `CURATE_COMMITTEE_RECOMMEND` (Committee only) needs a minute of at least 10 characters and is bound to the exact proposal revision and the current locked Defense Board snapshot. It leaves the nomination status, slot and artwork untouched. A second recommendation for the same revision and board is refused. `CURATE_ENDORSE` (Director only) refuses unless every selected, not-yet-endorsed proposal has a current minute. A new revision or a re-lock makes an older minute stale, so it authorizes nothing.
@@ -570,9 +580,11 @@ The assigned Logistics officer can acknowledge opening and record a meaningful a
 Technical receives no freight negotiation ticket access. Artist, officer, configured head and trusted Admin can read their scoped tickets. No emails or freight bookings are sent. Local logistics-sla.sql follows freight-closure.sql. Production schema rollout, routing/account provisioning and controlled correction/reassignment remain separate.
 
 ### 2026-10-13 — Packing declaration, return destination and freight change control
+
 Gallery intake now requires an explicit packing type (MUSEUM_CRATE, SOFT_PACK or NO_PACKAGING) and an exact return country, city and address. NO_PACKAGING measurements are the artwork's own; the form and ledger relabel them accordingly. The server refuses a Ready for Shipping ticket unless the record declares completed protective packing, has a return address and has no pending change request (`packing_ready_guard`). Tickets created earlier are not revoked; the queue labels a later hold, and historical readiness is not dispatch clearance.
 Submitted packing, return and closure terms change only through `sadu_freight_changes`. The owning artist, the assigned vendor or Logistics may request one pending change per consignment, with an estimated cost, payer and reason. Logistics and Finance approve independently and by different accounts against the recorded revision; either may reject. Approval merges the whitelisted proposal and increments `freight_revision`, which also versions the closure alert. These decisions authorize a recorded freight variance; they do not amend a signed contract or certify insurance.
 Local-only freight-changes.sql follows logistics-sla.sql; it is not in `supabase/migrations/` because the freight tables it alters are created by the local scripts, not by migrations. The gallery-consignment, freight-closure and logistics-sla SQL tests send the new fields and exercise them only once it is applied; supabase/tests/freight-changes.sql covers the change workflow.
+
 # 29 September 2026 — Invitation letter archive rehearsal
 
 The shared session archive separates invitation letters from portal invitations. Assigned Coordinators prepare bilingual versioned drafts from currently approved dossiers. Chairman and Director views can search by artist name, stable artist ID or artwork and download a watermarked rehearsal PDF without requesting a resend. All versions are retained; a new version never inherits approval evidence. The assigned Coordinator records fictional approver, delegation scope/reference and version-specific evidence with an explicit review acknowledgement; this records an assertion, not a new signing delegation. Historical or no-longer-eligible copies are labelled accordingly. PDF format does not establish tamper protection.

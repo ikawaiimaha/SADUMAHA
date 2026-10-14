@@ -7,19 +7,26 @@ insert into public.sadu_exhibition_scenarios(id,contract_id,artist_id,artwork_ch
 do $$begin begin insert into public.sadu_scenario_media values('11111111-1111-4111-8111-111111111111/scenarios/22222222-2222-4222-8222-222222222222/33333333-3333-4333-8333-333333333333/PRINT/test.png','22222222-2222-4222-8222-222222222222','33333333-3333-4333-8333-333333333333','PRINT','test.png',null);raise exception 'Unbundled media accepted';exception when others then if SQLERRM not like 'Artwork metadata required%' then raise;end if;end;end $$;
 insert into public.sadu_scenario_media values('11111111-1111-4111-8111-111111111111/scenarios/22222222-2222-4222-8222-222222222222/33333333-3333-4333-8333-333333333333/PRINT/test.png','22222222-2222-4222-8222-222222222222','33333333-3333-4333-8333-333333333333','PRINT','test.png','{"title":"Balance","medium":"Ink","year":"2026","height":"100","width":"80","depth":"2"}');
 insert into storage.objects(bucket_id,name,metadata) values('logistics-secure','11111111-1111-4111-8111-111111111111/scenarios/22222222-2222-4222-8222-222222222222/33333333-3333-4333-8333-333333333333/PRINT/test.png','{"size":100,"mimetype":"image/png"}');
+-- Structured delivery (structured-delivery.sql) requires a Director-approved scope before submission.
+select set_config('request.jwt.claims','{"sub":"55555555-5555-4555-8555-555555555555","role":"authenticated","app_metadata":{"institutional_role":"BIENNIAL_DIRECTOR"}}',true);
+insert into public.sadu_asset_scope(scenario_id,expected_count,approval_reference) values('22222222-2222-4222-8222-222222222222',1,'Test approved scope');
+select set_config('request.jwt.claims','{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","institutional_role":"ARTIST"}',true);
+-- complete_delivery fires before scenario_labels, so missing labels now surface as a count mismatch.
 do $$begin
- begin update public.sadu_exhibition_scenarios set status='SUBMITTED' where contract_id='catalog-test';raise exception 'TEST: missing labels accepted';exception when others then if SQLERRM not like 'Every artwork requires%' then raise;end if;end;
+ begin update public.sadu_exhibition_scenarios set status='SUBMITTED' where contract_id='catalog-test';raise exception 'TEST: missing labels accepted';exception when others then if SQLERRM not like 'Every artwork requires%' and SQLERRM not like 'Approved artwork count%' then raise;end if;end;
 end$$;
-insert into public.sadu_artwork_checklist(id,scenario_id,zone_id,media_object_name,source,production_year,height_cm,width_cm,weight_kg,crate_count) values('44444444-4444-4444-8444-444444444444','22222222-2222-4222-8222-222222222222','33333333-3333-4333-8333-333333333333','11111111-1111-4111-8111-111111111111/scenarios/22222222-2222-4222-8222-222222222222/33333333-3333-4333-8333-333333333333/PRINT/test.png','{"title":"Balance","language":"ar","medium":"Ink","concept":"A study of balance","bio":"Fictional biography"}',2026,100,80,20,1);
+insert into public.sadu_artwork_checklist(id,scenario_id,zone_id,media_object_name,source,production_year,height_cm,width_cm,weight_kg,crate_count,religious_text) values('44444444-4444-4444-8444-444444444444','22222222-2222-4222-8222-222222222222','33333333-3333-4333-8333-333333333333','11111111-1111-4111-8111-111111111111/scenarios/22222222-2222-4222-8222-222222222222/33333333-3333-4333-8333-333333333333/PRINT/test.png','{"title":"Balance","language":"ar","medium":"Ink","concept":"A study of balance","bio":"Fictional biography"}',2026,100,80,20,1,false);
+insert into public.sadu_artwork_values(artwork_id,amount_minor,currency,purpose) values('44444444-4444-4444-8444-444444444444',0,'USD','DECLARED_SALE_VALUE');
 update public.sadu_exhibition_scenarios set status='SUBMITTED' where contract_id='catalog-test';
 
 select set_config('request.jwt.claims','{"sub":"55555555-5555-4555-8555-555555555555","role":"authenticated","app_metadata":{"institutional_role":"BIENNIAL_DIRECTOR"}}',true);
-insert into public.sadu_asset_scope(scenario_id,expected_count,approval_reference) values('22222222-2222-4222-8222-222222222222',3,'Test approved scope');
 do $$begin
  begin insert into public.sadu_asset_scope(scenario_id,expected_count,approval_reference,approved_at) values('22222222-2222-4222-8222-222222222222',3,'Forged',now()-interval '49 hours');raise exception 'Forged time allowed';exception when insufficient_privilege then null;end;
  begin perform sadu_private.queue_asset_reminders();raise exception 'Privileged scheduler exposed';exception when insufficient_privilege then null;end;
 end $$;
 reset role;
+-- Fixture: a later Director re-scope to 3 leaves the submitted delivery short, as before structured delivery.
+update public.sadu_asset_scope set expected_count=3 where scenario_id='22222222-2222-4222-8222-222222222222';
 select sadu_private.queue_asset_reminders();
 do $$begin if exists(select 1 from public.sadu_asset_reminders where scenario_id='22222222-2222-4222-8222-222222222222') then raise exception 'Early reminder';end if;end $$;
 update public.sadu_asset_scope set approved_at=now()-interval '49 hours' where scenario_id='22222222-2222-4222-8222-222222222222';
