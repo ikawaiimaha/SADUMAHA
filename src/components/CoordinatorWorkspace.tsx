@@ -142,7 +142,7 @@ export const CoordinatorWorkspace: React.FC<CoordinatorWorkspaceProps> = ({
                 </span>
               </div>
               <h1 className="font-editorial text-2xl font-bold text-sadu-charcoal mt-1">
-                Coordinator Workspace (المنسق العام)
+                Exhibition Coordinator Workspace (منسق المعرض)
               </h1>
               <p className="text-xs text-sadu-muted">
                 Dossier Intake &amp; Bilateral Contracts Generator

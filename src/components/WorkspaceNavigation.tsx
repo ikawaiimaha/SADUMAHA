@@ -10,7 +10,7 @@ const ROLE_GROUPS: { ar: string; en: string; roles: [InstitutionalRole, string, 
     ['GENERAL_COORDINATOR', 'المنسقة', 'General Exhibition Coordinator'],
   ] },
   { ar: 'التنفيذ والتعاقد', en: 'Delivery & agreements', roles: [
-    ['COORDINATOR', 'المنسق العام', 'Coordinator'], ['ARTIST', 'الفنان', 'Artist'],
+    ['COORDINATOR', 'منسق المعرض', 'Exhibition Coordinator'], ['ARTIST', 'الفنان', 'Artist'],
     ['PR_PROTOCOL', 'التشريفات والعلاقات', 'PR & Protocol'], ['TECHNICAL', 'الفريق الفني', 'Technical'],
     ['FINANCE', 'الشؤون المالية', 'Finance'], ['LOGISTICS', 'اللوجستيات والإعادة', 'Logistics & Return'],
   ] },

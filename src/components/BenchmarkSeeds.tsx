@@ -82,11 +82,11 @@ export default function BenchmarkSeeds({
             />
           </label>
           <button className={button}>
-            Send benchmark to General Coordinator
+            Send benchmark to General Exhibition Coordinator
           </button>
           <p className="text-xs">
             Requires an approved theme and no issued briefs. Receipt is
-            recorded; the restricted dossier is held by the General Coordinator
+            recorded; the restricted dossier is held by the General Exhibition Coordinator
             until the combined board review.
           </p>
         </form>

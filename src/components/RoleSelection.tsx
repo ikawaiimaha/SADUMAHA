@@ -100,8 +100,8 @@ const ROLE_OPTIONS: RoleOption[] = [
   },
   {
     key: 'Coordinator',
-    titleEn: 'Coordinator',
-    titleAr: 'المنسق العام',
+    titleEn: 'Exhibition Coordinator',
+    titleAr: 'منسق المعرض',
     phaseBadge: 'Program Operations & Dossiers',
     description:
       'Assembles strict schema artist dossiers (CV, previous works, mockups) and drafts customized contracts post-Director approval.',

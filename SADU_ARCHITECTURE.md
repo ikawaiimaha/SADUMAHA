@@ -15,7 +15,7 @@ The browser role key `HIP` is now `GENERAL_COORDINATOR` (General Exhibition Coor
 
 Database (`20261014120000_sadu_retire_hip_role.sql`): exhibition-title locking, label/scope/title/publication reads, the operational guest calendar, pilot dossier/request reads and curator assignment moved from HIP to `GENERAL_COORDINATOR`; `VENUE_AUTHORITY` and `GENERAL_COORDINATOR` are provisionable; HIP is not. Cross-user account checks (freight vendor/curator, Logistics officer/department head) read `sadu_user_roles` instead of `auth.users` metadata. A retired HIP claim cannot lock a title (tested).
 
-Remaining terminology overlap, not changed here: the assigned `COORDINATOR` is still labelled "Coordinator" / المنسق العام, and several English strings say "General Coordinator" without making clear which role they mean.
+Role names in the UI: "General Exhibition Coordinator" / المنسقة always means the master role (including the supervisory identity and regional delegation inside the Coordinator desk); the assigned `COORDINATOR` is "Exhibition Coordinator" / منسق المعرض, matching the server's `Exhibition_Coordinator`. المنسق العام is no longer used. The prelaunch preview bar now follows the app language (it was Arabic-only).
 
 ## 2026-10-14 — Role claims, theme policies and migration baseline
 

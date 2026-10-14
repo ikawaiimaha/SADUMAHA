@@ -123,7 +123,7 @@ export default function ArtistNominationBuilder({
               className="text-xs font-semibold text-[#8B4513] bg-transparent outline-hidden cursor-pointer"
             >
               <option value="PREP_COMMITTEE">Preparatory Committee</option>
-              <option value="COORDINATOR">General Coordinator</option>
+              <option value="COORDINATOR">Exhibition Coordinator</option>
             </select>
           </div>
 
@@ -340,7 +340,7 @@ export default function ArtistNominationBuilder({
             {currentUserRole === 'PREP_COMMITTEE' ? (
               <div className="bg-stone-50 border border-stone-200 p-3 rounded-md flex items-center gap-3 text-stone-600 text-xs">
                 <Lock className="w-6 h-6 shrink-0 text-stone-400" />
-                <p>Drafting enabled. Only the designated <strong>General Coordinator</strong> can officially execute the <code className="bg-stone-200 px-1 rounded font-mono">SUBMIT_FOR_VETTING</code> action.</p>
+                <p>Drafting enabled. Only the assigned <strong>Exhibition Coordinator</strong> can officially execute the <code className="bg-stone-200 px-1 rounded font-mono">SUBMIT_FOR_VETTING</code> action.</p>
               </div>
             ) : (
               <button

@@ -310,7 +310,7 @@ export default function ArtistPortalWorkspace({
                   </span>
                 </div>
                 <p className="text-[11px] leading-relaxed">
-                  {isUnderReview ? tr('The General Coordinator is currently adjusting contract parameters and tranche allocations in the Coordinator Workspace. Signing is temporarily locked during revision.') : tr('Your amendment request has been logged and queued for the General Coordinator. Terms are pending administrative adjustment.')}
+                  {isUnderReview ? tr('Your Exhibition Coordinator is adjusting contract parameters and tranche allocations. Signing is temporarily locked during revision.') : tr('Your amendment request has been logged and queued for your Exhibition Coordinator. Terms are pending administrative adjustment.')}
                 </p>
                 {activeContract?.auditTrail && activeContract.auditTrail.length > 0 && (
                   <div className="bg-white/80 p-2.5 rounded border border-amber-200 mt-1">

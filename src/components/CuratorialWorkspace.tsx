@@ -267,8 +267,8 @@ export default function CuratorialWorkspace({
           )}
           {!slots.length && (
             <p className="rounded-xl border border-[#DED5C4] p-5 text-sm">
-              No slot briefs are assigned here yet. The General Coordinator
-              issues them after venue authorization.
+              No slot briefs are assigned here yet. The General Exhibition
+              Coordinator issues them after venue authorization.
             </p>
           )}
           {slots.length > 0 && (

@@ -3,6 +3,24 @@ import LocalReplayControls from './LocalReplayControls';
 import { startDemoReplay, pauseDemoReplay } from '../lib/demoReplay';
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { prelaunchCopy } from '../i18n/prelaunch.mjs';
+import { readPreference, writePreference } from '../utils/preferences';
+
+type GateLanguage = 'ar' | 'en';
+const asLanguage = (value: string | null): GateLanguage | null => value === 'ar' || value === 'en' ? value : null;
+
+/** The gate wraps the app, outside its I18nProvider: follow the language the app writes to <html lang>. */
+function useAppLanguage(): [GateLanguage, (next: GateLanguage) => void] {
+  const [language, setLanguage] = useState<GateLanguage>(() => asLanguage(readPreference('sadu_lang')) ?? 'ar');
+  useEffect(() => {
+    const root = document.documentElement;
+    const sync = () => { const lang = asLanguage(root.getAttribute('lang')); if (lang) setLanguage(lang); };
+    const observer = new MutationObserver(sync);
+    observer.observe(root, { attributes: true, attributeFilter: ['lang'] });
+    return () => observer.disconnect();
+  }, []);
+  const choose = useCallback((next: GateLanguage) => { setLanguage(next); writePreference('sadu_lang', next); }, []);
+  return [language, choose];
+}
 
 /** sessionStorage is a display hint only; the server cookie is always verified. */
 export default function GlobalPasswordGate({ children }: { children: ReactNode }) {
@@ -10,7 +28,8 @@ export default function GlobalPasswordGate({ children }: { children: ReactNode }
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [checking, setChecking] = useState(true);
-  const [language, setLanguage] = useState<'ar' | 'en'>('ar');
+  const [language, setLanguage] = useAppLanguage();
+  const dir = language === 'ar' ? 'rtl' : 'ltr';
   const copy = prelaunchCopy[language];
   const [error, setError] = useState<'' | 'verifyError' | 'lockError' | 'unlockError' | 'rateLimit' | 'unconfigured'>('');
   useEffect(()=>{if(verified)void startDemoReplay({hostname:window.location.hostname,pathname:window.location.pathname});else pauseDemoReplay();},[verified]);
@@ -24,16 +43,16 @@ export default function GlobalPasswordGate({ children }: { children: ReactNode }
   }, []);
   useEffect(() => { window.dispatchEvent(new Event('sadu:ready')); void check(); const id = setInterval(check, 60000); return () => clearInterval(id); }, [check]);
   useEffect(() => { try { if (verified) sessionStorage.setItem('sadu-prelaunch-verified', 'true'); else sessionStorage.removeItem('sadu-prelaunch-verified'); } catch { /* Storage is optional, never an auth source. */ } }, [verified]);
-  if (verified) return <><aside aria-label="Preview session" className="flex flex-wrap items-center justify-between gap-2 border-b border-[#D9CEBA] bg-[#F7F1E6] ps-5 pe-5 py-2 text-sm text-[#111817]">
-    {!executiveMode && <span lang="ar" dir="rtl">عرض سدو الخاص · بيانات تجريبية</span>}<LocalReplayControls/>
+  if (verified) return <><aside aria-label={copy.sessionLabel} lang={language} dir={dir} className="flex flex-wrap items-center justify-between gap-2 border-b border-[#D9CEBA] bg-[#F7F1E6] ps-5 pe-5 py-2 text-sm text-[#111817]">
+    {!executiveMode && <span>{copy.banner}</span>}<LocalReplayControls copy={copy}/>
     <button className="rounded border border-[#8C8173] ps-3 pe-3 py-2 font-semibold focus-visible:outline-2 focus-visible:outline-offset-2" disabled={busy} onClick={async () => {
       if (!window.confirm(copy.lockConfirm)) return;
       setBusy(true); setError('');
       try { const r = await fetch('/api/prelaunch/lock', { method: 'POST', signal: AbortSignal.timeout(10000) }); if (!r.ok) throw new Error(); setVerified(false); }
       catch { setError('lockError'); }
       finally { setBusy(false); }
-    }}>{busy ? 'جارٍ القفل…' : 'قفل العرض'}</button>
-    {error && <p role="alert" className="w-full" lang={language} dir={language === 'ar' ? 'rtl' : 'ltr'}>{copy[error]}</p>}
+    }}>{busy ? copy.locking : copy.lock}</button>
+    {error && <p role="alert" className="w-full">{copy[error]}</p>}
   </aside>{children}</>;
   if (checking) return <main lang={language} dir={language === 'ar' ? 'rtl' : 'ltr'} className="min-h-screen grid place-items-center bg-[#F7F1E6] text-[#111817]"><p role="status">{copy.checking}</p></main>;
   return <main lang={language} dir={language === 'ar' ? 'rtl' : 'ltr'} style={{ minHeight: '100svh', display: 'grid', placeItems: 'center', background: '#F7F1E6', color: '#111817', padding: 24 }}>
