@@ -11,7 +11,7 @@
 .sadu-guided button:disabled { opacity:.5; cursor:default; }
 .sadu-guided .guide-primary { background:var(--ink); color:var(--ivory); border-color:var(--ink); }
 .sadu-guided :focus-visible { outline:3px solid #9a4e1b; outline-offset:5px; }
-.sadu-guided h1:focus:not(:focus-visible) { outline:none; }
+.sadu-guided h1:focus { outline:none; } /* script-focused heading, not a control */
 .guide-skip { position:absolute; inset-inline-start:16px; inset-block-start:-100px; background:white; padding:12px; z-index:10; }
 .guide-skip:focus { inset-block-start:10px; }
 .guide-header { display:flex; align-items:center; gap:16px; padding:18px max(5%,calc((100% - 1120px)/2)); background:var(--ink); color:var(--ivory); }
@@ -22,7 +22,7 @@
 .guide-header button { color:var(--ivory); border-color:#b1a184; font-size:15px; }
 .sadu-guided main { max-inline-size:1120px; margin-inline:auto; padding-inline:5%; }
 .guide-progress { padding-block:24px 8px; font-size:16px; }
-.guide-progress progress { inline-size:100%; block-size:7px; accent-color:#8b4513; display:block; margin-block-start:12px; }
+.guide-progress progress { inline-size:100%; block-size:7px; accent-color:#8b4513; --progress-fill:#8b4513; display:block; margin-block-start:12px; }
 .guide-scene { padding-block:20px 32px; min-block-size:440px; }
 .guide-label { color:#6d4c2b; font-size:14px; }
 .sadu-guided .guide-intro { font-size:21px; line-height:1.85; max-inline-size:900px; margin-block:20px; }

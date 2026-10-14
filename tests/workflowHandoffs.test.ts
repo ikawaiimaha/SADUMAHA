@@ -1445,3 +1445,21 @@ test('passport gate uses calendar months and explicit national ID policy',async(
  assert.equal(validGuestIdentity({...v,passportExpiry:'2027-04-05'},'2026-10-06'),false);
  assert.equal(validGuestIdentity({...v,nationality:'Other'},'2026-10-06'),false);
 });
+
+import {institutionalRole,showsPilotTool} from '../src/lib/sessionRole';
+test('pilot reads the institutional role from the access token, not from user metadata',()=>{
+ const token=(claims:object)=>'header.'+Buffer.from(JSON.stringify(claims)).toString('base64url')+'.signature';
+ assert.equal(institutionalRole({access_token:token({app_metadata:{institutional_role:'BIENNIAL_DIRECTOR'}})}),'BIENNIAL_DIRECTOR');
+ assert.equal(institutionalRole({access_token:token({institutional_role:'COORDINATOR',name:'منسق'})}),'COORDINATOR');
+ assert.equal(institutionalRole({access_token:token({app_metadata:{provider:'email'}})}),'');
+ assert.equal(institutionalRole({access_token:'not-a-token'}),'');
+ assert.equal(institutionalRole(null),'');
+});
+test('pilot shows each role only its own tools',()=>{
+ assert.equal(showsPilotTool('BIENNIAL_DIRECTOR','guestTravel'),false);
+ assert.equal(showsPilotTool('BIENNIAL_DIRECTOR','pendingAssets'),true);
+ assert.equal(showsPilotTool('ARTIST','finalDeliverables'),true);
+ assert.equal(showsPilotTool('COORDINATOR','finalDeliverables'),false);
+ assert.equal(showsPilotTool('PR_PROTOCOL','guestTravel'),true);
+ assert.equal(showsPilotTool('','arrivalFeed'),false);
+});

@@ -27,6 +27,15 @@
 }
 
 @layer base {
+  /* Fieldsets default to min-width: min-content, which lets a long select widen the page on phones. */
+  fieldset { min-width: 0; }
+  /* Headings focused by script (tabindex="-1") only move the reading position; they are not controls. */
+  :is(h1,h2,h3,h4)[tabindex="-1"]:focus { outline: none; }
+  /* Native progress tracks render dark grey, so an empty bar read as a full one. */
+  progress { appearance: none; border: 1px solid var(--border-rule); border-radius: 999px; background: var(--surface-muted); overflow: hidden; }
+  progress::-webkit-progress-bar { background: var(--surface-muted); }
+  progress::-webkit-progress-value { background: var(--progress-fill, #8B261E); }
+  progress::-moz-progress-bar { background: var(--progress-fill, #8B261E); }
   :root {
     --bg-ground: #F7F1E6;
     --surface-white: #FFFDF7;
