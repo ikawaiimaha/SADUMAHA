@@ -45,7 +45,7 @@ test('presenter details trap focus, close on Escape and restore the trigger in b
 
 test('the workspace lock keeps focus inside and cannot be dismissed with Escape', async ({ page }) => {
   await enterWorkbench(page);
-  await page.getByRole('button', { name: /^Lock now$|^قفل الآن$/ }).click();
+  await page.getByRole('button', { name: /^Lock workspace$|^قفل مساحة العمل$/ }).click();
   const dialog = page.getByRole('dialog');
   await expectFocusTrapped(page, dialog);
   await page.keyboard.press('Escape');
@@ -84,7 +84,7 @@ test('on phones the floating lock control is icon-sized and never covers story f
     await page.addInitScript(value => localStorage.setItem('sadu_lang', value), lang);
     await page.goto('/workbench');
     await page.getByRole('button', { name: story, exact: true }).click();
-    const lock = page.getByRole('button', { name: lang === 'en' ? 'Lock now' : 'قفل الآن', exact: true });
+    const lock = page.getByRole('button', { name: lang === 'en' ? 'Lock workspace' : 'قفل مساحة العمل', exact: true });
     const box = (await lock.boundingBox())!;
     expect(box.width).toBeLessThanOrEqual(48);
     expect(box.height).toBeGreaterThanOrEqual(44);
