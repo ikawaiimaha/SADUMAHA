@@ -72,7 +72,7 @@ export function journeyReducer(state: JourneyState, action: JourneyAction): Jour
     || Date.parse(action.at) < Date.parse(record.confirmation.at) || action.checks.length !== task.checks.length || !action.checks.every(v => v === true)) return state;
   return { ...state, completed: { ...state.completed, [task.id]: { at: action.at, by: action.actor, decisionId: record.id, evidence: [...task.checks] } } };
 }
-export const ledgerRows = (state: JourneyState) => ([['advance', 13500], ['delivery', 18000], ['completion', 13500]] as const).filter(([id]) => state.completed[id]).map(([id, amount]) => ({ milestone: taskById(id).title, amount, ...state.completed[id]! }));
+export const ledgerRows = (state: JourneyState) => ([['advance', 13500], ['delivery', 18000], ['completion', 13500]] as const).filter(([id]) => state.completed[id]).map(([id, amount]) => ({ taskId: id as TaskId, milestone: taskById(id).title, amount, ...state.completed[id]! }));
 
 function recordPortalStatement(state: JourneyState, draft: DecisionDraft, action: { id: string; actor: Desk; at: string }): JourneyState {
   if (!action.id || state.decisions.some(d => d.id === action.id)) return state;
