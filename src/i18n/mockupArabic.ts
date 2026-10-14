@@ -166,6 +166,7 @@ export const MOCKUP_ARABIC: Record<string, string> = {
   "\"Submission blocked by current security/administrative directives.\"": "«تعذر التقديم بسبب التوجيهات الأمنية أو الإدارية الحالية.»",
   "e.g. Restricted Nationality: Country X": "مثال: جنسية مقيّدة: دولة س",
   "Add Tag": "إضافة وسم",
+  "e.g. Abstract Ink": "مثال: حبر تجريدي",
   "Quick Directives:": "توجيهات سريعة:",
   "Active Blocklist Tags (": "وسوم القيود النشطة (",
   "No active restrictions. All compliant nominations will be admitted.": "لا توجد قيود نشطة. تُقبل جميع الترشيحات المستوفية للشروط.",

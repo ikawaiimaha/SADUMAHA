@@ -278,9 +278,11 @@ export const GeneralCoordinatorWorkspace: React.FC<GeneralCoordinatorWorkspacePr
 
           {/* Add Tag */}
           <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Tag className="absolute start-3 top-2.5 h-3.5 w-3.5 text-sadu-muted" />
-              <label className="block">{isAr?'فئة القيد':'Restriction category'}<select value={restrictionCategory} onChange={e=>setRestrictionCategory(e.target.value)} className="block border ps-3 pe-3 py-2">{boundaryCategories.map(c=><option key={c}>{c}</option>)}</select></label><input
+            <div className="flex-1 space-y-2">
+              <label className="block">{isAr?'فئة القيد':'Restriction category'}<select value={restrictionCategory} onChange={e=>setRestrictionCategory(e.target.value)} className="block border ps-3 pe-3 py-2">{boundaryCategories.map(c=><option key={c} value={c}>{isAr?{Medium:'الوسيط',Style:'الأسلوب',Nationality:'الجنسية'}[c]:c}</option>)}</select></label>
+              <label className="block text-xs font-semibold">{isAr?'المصطلح المقيّد':'Restricted term'}<span className="relative mt-1 block">
+              <Tag aria-hidden="true" className="pointer-events-none absolute start-3 top-2.5 h-3.5 w-3.5 text-sadu-muted" />
+              <input
                 type="text"
                 value={newTagInput}
                 onChange={e => setNewTagInput(e.target.value)}
@@ -291,14 +293,15 @@ export const GeneralCoordinatorWorkspace: React.FC<GeneralCoordinatorWorkspacePr
                   }
                 }}
                 placeholder={tr("e.g. Abstract Ink")}
-                className="w-full rounded-md border border-sadu-gold/60 py-2 ps-9 pe-3 text-xs text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
+                className="w-full rounded-md border border-sadu-gold/60 py-2 ps-9 pe-3 text-xs font-normal text-sadu-charcoal focus:border-sadu-brick focus:outline-none focus:ring-1 focus:ring-sadu-brick"
               />
+              </span></label>
             </div>
             <button
               type="button"
               onClick={() => handleAddTag(`Restricted ${restrictionCategory}: ${newTagInput}`)}
               disabled={!newTagInput.trim() || restrictionPending || !restrictionReason.trim()}
-              className="inline-flex items-center gap-1 rounded-md bg-sadu-brick px-3.5 py-2 text-xs font-bold text-white hover:bg-sadu-brick-dark disabled:opacity-50 cursor-pointer"
+              className="inline-flex items-center gap-1 self-end rounded-md bg-sadu-brick ps-3.5 pe-3.5 py-2 text-xs font-bold text-white hover:bg-sadu-brick-dark disabled:opacity-50 cursor-pointer"
             >
               <Plus className="h-3.5 w-3.5" />
               <span>{tr("Add Tag")}</span>
