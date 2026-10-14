@@ -672,3 +672,8 @@ h1, h2, .font-serif, .font-editorial, [dir="rtl"] .font-editorial, [lang="ar"] .
 @media (max-width: 639px) {
   .idle-lock-content:not(:has(.story-experience)) { padding-bottom: 64px; }
 }
+
+/* Disabled primary actions: faded brick read as pink with unreadable white text.
+   A neutral fill keeps the label legible while still reading as unavailable. Unlayered so it
+   overrides the disabled:opacity-50 utility on these buttons. */
+button[class*="bg-[#8B261E]"]:disabled { background-color: #E4DCCF; color: #4F463D; opacity: 1; }

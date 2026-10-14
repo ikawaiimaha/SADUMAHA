@@ -38,7 +38,7 @@ const TASKS_AR: Record<TaskId, { title: string; due: string; detail: string; che
 const en = {
   dir: 'ltr' as 'ltr' | 'rtl', locale: 'en-GB', number: 'en-AE', switchTo: 'العربية', switchLang: 'ar' as JourneyLanguage,
   documentTitle: 'SADU — Fictional artist journey',
-  skip: 'Skip to current task', subtitle: 'Guided exhibition demo', demoControls: 'Demo controls',
+  skip: 'Skip to current task', subtitle: 'Guided exhibition demo', demoControls: 'Switch team view',
   demoControlsNote: 'Try another team’s view. This simulates responsibility, not sign-in.', rehearsalDesk: 'Rehearsal desk',
   dashboard: 'Artist dashboard', artistName: 'Noura Al Mazrouei', artistWork: 'Kufic Horizon: Architectural Bronze & Black Oxide', kg: 'kg',
   intro: 'Follow the next action below. Each step shows which team is responsible and what they need to check.',
@@ -98,7 +98,7 @@ export type JourneyCopy = typeof en;
 const ar: JourneyCopy = {
   ...en, dir: 'rtl', locale: 'ar-AE', number: 'ar-AE', switchTo: 'English', switchLang: 'en',
   documentTitle: 'سدو — رحلة فنانة افتراضية',
-  skip: 'الانتقال إلى المهمة الحالية', subtitle: 'عرض توجيهي للمعرض', demoControls: 'أدوات العرض',
+  skip: 'الانتقال إلى المهمة الحالية', subtitle: 'عرض توجيهي للمعرض', demoControls: 'تبديل عرض الفريق',
   demoControlsNote: 'جرّب عرض فريق آخر. هذه محاكاة للمسؤولية، وليست تسجيل دخول.', rehearsalDesk: 'مكتب التمرين',
   dashboard: 'لوحة الفنانة', artistName: 'نورة المزروعي', artistWork: 'أفق كوفي: برونز معماري وأكسيد أسود', kg: 'كغ',
   intro: 'اتبع الإجراء التالي أدناه. تُظهر كل خطوة الفريق المسؤول وما يلزمه التحقق منه.',
