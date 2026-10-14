@@ -180,3 +180,17 @@ export const useTranslation = () => {
     localizeDigits,
   };
 };
+
+/**
+ * Inline copy for components that are mounted both inside and outside an I18nProvider.
+ * Inside a provider: only the active language. Without one (standalone harnesses), the
+ * original copy is kept exactly: English for t(), and the "English / Arabic" pair for pair().
+ */
+export const useUiText = () => {
+  const ctx = useContext(I18nContext);
+  const isAr = ctx?.isAr ?? false;
+  const t = (en: string, ar: string) => (ctx && isAr ? ar : en);
+  const pair = (en: string, ar: string, arFirst = false) =>
+    ctx ? (isAr ? ar : en) : arFirst ? `${ar} / ${en}` : `${en} / ${ar}`;
+  return { isAr, hasLanguage: !!ctx, lang: ctx?.lang ?? 'en', toggleLang: ctx?.toggleLang, t, pair };
+};
