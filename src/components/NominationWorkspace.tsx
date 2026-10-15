@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { pilotSupabase as client } from '../lib/pilotSupabase';
 import { useUiText, UiText } from '../context/I18nContext';
+import { NominationPresentation, presentationBlob } from './NominationPresentation';
+import { buildDeck, deckFileName } from '../lib/nominationDeck';
+import { canWriteToFolder, folderSink, sharedFolder, writeExport, zipSink, exportStamp, safeName } from '../lib/nominationExport';
 import {
   acceptAttribute, acceptedExtension, CASE_COLUMNS, caseStage, linksFromText, MAX_WORKS, MIN_WORKS, missingForReady,
-  signedUrls, uploadCaseFile,
+  signedUrls, uploadCaseFile, BUCKET,
   type CaseStage, type CaseWork, type MissingItem, type NominationCase, type NominationDecision, type NominationEvent,
 } from '../lib/nominations';
 
@@ -55,7 +58,8 @@ export function NominationWorkspace({ userId }: { userId: string }) {
     if (!activeEvent) return;
     const cs = await client.from('artist_dossiers').select(CASE_COLUMNS).eq('event_id', activeEvent).order('created_at');
     if (cs.error) { setMessage(t('Cases could not be loaded.', 'تعذّر تحميل الترشيحات.')); return; }
-    const list = cs.data as unknown as NominationCase[];
+    // Discarded drafts stay in the database but are hidden here.
+    const list = (cs.data as unknown as NominationCase[]).filter(c => !c.discarded_at);
     const ids = list.map(c => c.id);
     const [ws, ds] = ids.length ? await Promise.all([
       client.from('sadu_case_works').select('*').in('dossier_id', ids).order('position').order('created_at'),
@@ -85,6 +89,34 @@ export function NominationWorkspace({ userId }: { userId: string }) {
   const readyUnsent = cases.filter(c => c.created_by === userId && caseStage(c) === 'READY');
   const approved = cases.filter(c => caseStage(c) === 'APPROVED');
 
+  async function exportCases(subset: NominationCase[], kind: 'ALL' | 'CASE', pickAgain = false) {
+    if (!client || !event || busy || !subset.length) return;
+    setBusy(true); setMessage('');
+    try {
+      const date = new Date();
+      const sink = canWriteToFolder() ? folderSink(await sharedFolder(pickAgain)) : await zipSink(`SADU export - ${safeName(event.name_en)} - ${exportStamp(date)}`);
+      const deckCases = kind === 'ALL' ? subset.filter(c => ['READY', 'SENT'].includes(caseStage(c))) : [];
+      const deckLang = isAr ? 'ar' : 'en';
+      const presentation = deckCases.length ? {
+        blob: await presentationBlob(buildDeck(event, deckCases.map(c => ({ ...c, works: worksFor(c.id) })), deckLang, date), deckLang, urls),
+        fileName: deckFileName(event, deckLang, date),
+      } : undefined;
+      const { missing } = await writeExport(sink, {
+        event, cases: subset, works, decisions, presentation, date,
+        fetchFile: async path => (await client!.storage.from(BUCKET).download(path)).data ?? null,
+      });
+      await client.from('sadu_export_log').insert({ event_id: event.id, kind, dossier_ids: subset.map(c => c.id) });
+      setMessage(missing.length
+        ? t(`Exported, but ${missing.length} file(s) could not be copied: ${missing.join('; ')}`, `صُدّر، لكن تعذّر نسخ ${missing.length} من الملفات: ${missing.join('؛ ')}`)
+        : canWriteToFolder()
+          ? t(`Exported ${subset.length} case(s) to the shared folder, in a new dated folder under “SADU export”.`, `صُدّر ${subset.length} من الترشيحات إلى المجلد المشترك، في مجلد جديد مؤرخ داخل «SADU export».`)
+          : t('Export downloaded as a ZIP file. Unzip it into the shared folder.', 'نُزّل التصدير كملف ZIP. فك ضغطه في المجلد المشترك.'));
+    } catch (error) {
+      const aborted = error instanceof DOMException && error.name === 'AbortError';
+      setMessage(aborted ? t('Export cancelled.', 'أُلغي التصدير.') : error instanceof Error ? error.message : t('The export failed.', 'تعذّر التصدير.'));
+    } finally { setBusy(false); }
+  }
+
   if (!client) return null;
   return <section className={panel} aria-labelledby="nominations-heading">
     <div className="flex flex-wrap items-end gap-3">
@@ -99,6 +131,8 @@ export function NominationWorkspace({ userId }: { userId: string }) {
 
     <div className="flex flex-wrap gap-3">
       <button type="button" className={button} disabled={busy || !eventId} onClick={() => { setCreating(true); setSelectedId(''); }}>{t('New case', 'ترشيح جديد')}</button>
+      {cases.length > 0 && <button type="button" className={quiet} disabled={busy} onClick={() => void exportCases(cases, 'ALL')}>{t('Export all to the shared folder', 'تصدير الكل إلى المجلد المشترك')}</button>}
+      {cases.length > 0 && canWriteToFolder() && <button type="button" className="text-sm underline" disabled={busy} onClick={() => void exportCases(cases, 'ALL', true)}>{t('Choose a different folder', 'اختيار مجلد آخر')}</button>}
       {readyUnsent.length > 0 && <button type="button" className={quiet} disabled={busy}
         onClick={() => void run(async () => {
           const { error } = await client!.rpc('sadu_mark_nominations_sent', { case_ids: readyUnsent.map(c => c.id) });
@@ -129,7 +163,10 @@ export function NominationWorkspace({ userId }: { userId: string }) {
       })}
     </ul>}
 
-    {selected && <CaseDetail key={selected.id} c={selected} works={worksFor(selected.id)} decisions={decisionsFor(selected.id)} urls={urls}
+    {event && <NominationPresentation event={event} cases={cases} works={works} urls={urls} busy={busy} onMessage={setMessage}
+      onExported={(ids, note) => { setMessage(note); void client!.from('sadu_export_log').insert({ event_id: event.id, kind: 'PRESENTATION', dossier_ids: ids }); }} />}
+
+    {selected && <CaseDetail key={selected.id} onExport={() => void exportCases([selected], 'CASE')} c={selected} works={worksFor(selected.id)} decisions={decisionsFor(selected.id)} urls={urls}
       mine={selected.created_by === userId} busy={busy} run={run} missingLabel={missingLabel} stageLabel={stageLabel} />}
 
     <section className="space-y-2" aria-labelledby="invite-heading">
@@ -158,10 +195,11 @@ function NewCaseForm({ busy, onCreate, onCancel }: { busy: boolean; onCreate: (d
 
 type RunFn = (work: () => Promise<void>, success: string) => Promise<void>;
 
-function CaseDetail({ c, works, decisions, urls, mine, busy, run, missingLabel, stageLabel }: {
+function CaseDetail({ c, works, decisions, urls, mine, busy, run, missingLabel, stageLabel, onExport }: {
   c: NominationCase; works: CaseWork[]; decisions: NominationDecision[]; urls: Record<string, string>; mine: boolean; busy: boolean;
-  run: RunFn; missingLabel: Record<MissingItem, string>; stageLabel: Record<CaseStage, string>;
+  run: RunFn; missingLabel: Record<MissingItem, string>; stageLabel: Record<CaseStage, string>; onExport: () => void;
 }) {
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
   const { t, isAr } = useUiText();
   const stage = caseStage(c);
   const editable = mine && stage === 'DRAFT';
@@ -191,6 +229,7 @@ function CaseDetail({ c, works, decisions, urls, mine, busy, run, missingLabel, 
     <header className="flex flex-wrap items-baseline gap-3">
       <h3 className="me-auto text-lg">{isAr ? c.arabic_name : c.name} <span className="text-[#5E554B]">· {isAr ? c.name : c.arabic_name}</span></h3>
       <span className="rounded border border-[#CBB89F] ps-2 pe-2 text-sm">{stageLabel[stage]}</span>
+      <button type="button" className="text-sm underline" disabled={busy} onClick={onExport}>{t('Export this case', 'تصدير هذا الترشيح')}</button>
     </header>
     {!editable && stage === 'DRAFT' && <p className="text-sm">{t('Only the coordinator who created this case can edit it.', 'لا يعدّل هذا الترشيح إلا المنسق الذي أنشأه.')}</p>}
 
@@ -224,6 +263,17 @@ function CaseDetail({ c, works, decisions, urls, mine, busy, run, missingLabel, 
         <ul className="list-inside list-disc">{missing.map(m => <li key={m}>{missingLabel[m]}</li>)}</ul></>
         : <p>{t('Everything required is in place. Marking ready locks the case.', 'اكتمل كل المطلوب. تعليم الترشيح كجاهز يقفله.')}</p>}
       <button type="button" className={button} disabled={busy || missing.length > 0} onClick={() => void markReady()}>{t('Mark ready', 'تعليم كجاهز')}</button>
+    </div>}
+
+    {editable && <div className="flex flex-wrap items-center gap-3 border-t border-[#D9CEBA] pt-3">
+      {!confirmDiscard ? <button type="button" className="text-sm text-[#8B261E] underline" disabled={busy} onClick={() => setConfirmDiscard(true)}>{t('Discard this draft', 'تجاهل هذه المسودة')}</button>
+        : <><p className="text-sm">{t('Discard this case? It disappears from the list and can no longer be edited or submitted.', 'تجاهل هذا الترشيح؟ سيختفي من القائمة ولن يمكن تعديله أو إرساله.')}</p>
+          <button type="button" className={button} disabled={busy} onClick={() => void run(async () => {
+            const { data, error } = await client!.from('artist_dossiers').update({ discarded_at: new Date().toISOString() }).eq('id', c.id).select('id');
+            if (error) throw new Error(error.message);
+            if (!data?.length) throw new Error(t('The case could not be discarded.', 'تعذّر تجاهل الترشيح.'));
+          }, t('Draft discarded.', 'تم تجاهل المسودة.'))}>{t('Discard', 'تجاهل')}</button>
+          <button type="button" className={quiet} onClick={() => setConfirmDiscard(false)}>{t('Keep it', 'إبقاء')}</button></>}
     </div>}
 
     {mine && (stage === 'READY' || stage === 'SENT') && <DecisionForm c={c} busy={busy} run={run} />}

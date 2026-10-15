@@ -10,7 +10,7 @@ export type NominationCase = {
   participation: 'EXISTING_WORK' | 'NEW_COMMISSION' | null; biography: string | null; rationale: string | null;
   links: string[]; cv_url: string | null; sent_to_committee_at: string | null;
   committee_recommendation: string | null; committee_minutes: string | null; rejection_reason: string | null;
-  created_at: string; updated_at: string;
+  created_at: string; updated_at: string; discarded_at: string | null;
 };
 export type CaseWork = {
   id: string; dossier_id: string; position: number; title: string; year: string | null; medium: string | null;
@@ -25,7 +25,7 @@ export type NominationDecision = {
 export const BUCKET = 'artist-dossiers';
 export const MIN_WORKS = 3;
 export const MAX_WORKS = 8;
-export const CASE_COLUMNS = 'id,event_id,created_by,status,name,arabic_name,nationality,base_city,category,medium,participation,biography,rationale,links,cv_url,sent_to_committee_at,committee_recommendation,committee_minutes,rejection_reason,created_at,updated_at';
+export const CASE_COLUMNS = 'id,event_id,created_by,status,name,arabic_name,nationality,base_city,category,medium,participation,biography,rationale,links,cv_url,sent_to_committee_at,committee_recommendation,committee_minutes,rejection_reason,created_at,updated_at,discarded_at';
 
 export type MissingItem = 'name' | 'arabic_name' | 'nationality' | 'category' | 'medium' | 'biography' | 'rationale' | 'works';
 const filled = (v: string | null | undefined) => !!v && v.trim().length > 0;

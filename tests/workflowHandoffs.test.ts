@@ -1488,3 +1488,37 @@ test('nomination files: only accepted types and sizes, stored under the case fol
  assert.match(casePath('case-1','works','png'),/^nominations\/case-1\/works\/[0-9a-f-]{36}\.png$/);
  assert.deepEqual(linksFromText(' https://a.example \n\nhttps://b.example\n'),['https://a.example','https://b.example']);
 });
+
+import {buildDeck,clip,coveringEmail,fit} from '../src/lib/nominationDeck';
+import {toCsv,safeName,nominationsCsv,caseFolderName} from '../src/lib/nominationExport';
+const nomEvent={id:'islamic-arts-festival',name_en:'Islamic Arts Festival',name_ar:'مهرجان الفنون الإسلامية',edition:null};
+const nomCase=(id:string,extra:object={})=>({id,event_id:'islamic-arts-festival',created_by:'u',status:'PENDING_COMMITTEE_REVIEW',name:`Artist ${id}`,arabic_name:`فنان ${id}`,nationality:'Test',base_city:null,category:'Emerging',medium:'Ink',participation:null,biography:'Bio',rationale:'Why',links:[],cv_url:null,sent_to_committee_at:null,committee_recommendation:null,committee_minutes:null,rejection_reason:null,created_at:'2026-10-15T08:00:00Z',updated_at:'2026-10-15T08:00:00Z',discarded_at:null,...extra});
+const nomWork=(dossier:string,n:number)=>({id:`${dossier}-${n}`,dossier_id:dossier,position:n,title:`Work ${n}`,year:'2024',medium:null,dimensions:null,source_credit:'Courtesy of the artist',image_path:`nominations/${dossier}/works/${n}.png`,created_at:'2026-10-15T08:00:00Z'});
+test('committee deck: title, paged summary, profile and paged works per artist, closing',()=>{
+ const cases=Array.from({length:12},(_,i)=>({...nomCase(String(i+1)),works:Array.from({length:i===0?8:3},(_,n)=>nomWork(String(i+1),n+1))}));
+ const slides=buildDeck(nomEvent,cases,'en',new Date('2026-10-15T08:00:00Z'));
+ assert.deepEqual(slides.map(s=>s.kind).slice(0,4),['title','summary','summary','profile']);
+ assert.equal(slides.filter(s=>s.kind==='summary').length,2);
+ assert.equal(slides.filter(s=>s.kind==='profile').length,12);
+ assert.equal(slides.filter(s=>s.kind==='works').length,13); // first artist has 8 works: two slides
+ assert.equal(slides.at(-1)?.kind,'closing');
+ const ar=buildDeck(nomEvent,cases.slice(0,1),'ar',new Date('2026-10-15T08:00:00Z'));
+ assert.equal(ar[0].kind==='title'&&ar[0].title,'مهرجان الفنون الإسلامية');
+ assert.equal(ar[2].kind==='profile'&&ar[2].name,'فنان 1');
+ assert.equal(clip('a '.repeat(500),100).length<=101,true);
+ assert.match(clip('word '.repeat(300),100),/…$/);
+ assert.equal(clip('short'),'short');
+ assert.match(coveringEmail(nomEvent,[nomCase('1')],'en'),/covering 1 artist:/);
+ assert.match(coveringEmail(nomEvent,[nomCase('1'),nomCase('2')],'ar'),/ترشيحين/);
+ assert.deepEqual(fit(200,100,{x:0,y:0,w:4,h:4}),{x:0,y:1,w:4,h:2});
+});
+test('shared-folder export: Excel-safe CSV and Windows-safe names',()=>{
+ const csv=toCsv([['a','b,c'],['"q"','line\nbreak'],[null,'فنان']]);
+ assert.ok(csv.startsWith('\uFEFF'));
+ assert.equal(csv,'\uFEFFa,"b,c"\r\n"""q""","line\nbreak"\r\n,فنان\r\n');
+ assert.equal(safeName('A/B: C*?.  '),'A B C');
+ assert.equal(safeName('   '),'Untitled');
+ assert.equal(caseFolderName({id:'12345678-aaaa',name:'Name/With:Slash'}),'Name With Slash - 12345678');
+ const rows=nominationsCsv([nomCase('1',{status:'DIRECTOR_APPROVED'})],[{id:'d',dossier_id:'1',committee_recommendation:'RECOMMENDED',director_decision:'APPROVED',decided_on:'2026-10-15',email_reference:'Email',minute:'Recommended; confirmed.',evidence_path:'x',recorded_by:'u',recorded_at:'2026-10-15T09:00:00Z'}]).split('\r\n');
+ assert.match(rows[1],/^1,Artist 1,فنان 1,Test,,Emerging,Ink,,Approved,,RECOMMENDED,APPROVED,2026-10-15,Recommended; confirmed\.$/);
+});

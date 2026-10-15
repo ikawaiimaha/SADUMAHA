@@ -96,6 +96,24 @@ do $$begin
  update public.artist_dossiers set rationale='Updated rationale' where id='case-return';if not FOUND then raise exception 'Returned case not editable';end if;
  if (select count(*) from public.sadu_nomination_decisions where dossier_id in ('case-approve','case-return'))<>2 then raise exception 'Decision history incomplete';end if;
 
+ -- Discarding: only a draft, only by its Coordinator; a discarded case is closed.
+ insert into public.artist_dossiers(id,name,arabic_name,category,nationality,medium,event_id) values('case-discard','Mistake','خطأ','Emerging','Test','Ink','islamic-arts-festival');
+ begin insert into public.artist_dossiers(id,name,arabic_name,category,nationality,medium,event_id,discarded_at) values('case-born-discarded','Mistake','خطأ','Emerging','Test','Ink','islamic-arts-festival',now());raise exception 'Case created discarded';exception when insufficient_privilege then null;end;
+ update public.artist_dossiers set discarded_at=now() where id='case-approve';if FOUND then raise exception 'Decided case discarded';end if;
+end$$;
+select set_config('request.jwt.claims','{"sub":"b2222222-2222-4222-8222-222222222222","role":"authenticated","app_metadata":{"institutional_role":"COORDINATOR"}}',true);
+do $$begin
+ begin update public.artist_dossiers set discarded_at=now() where id='case-discard';raise exception 'Other Coordinator discarded the case';exception when insufficient_privilege then null;end;
+end$$;
+select set_config('request.jwt.claims','{"sub":"b1111111-1111-4111-8111-111111111111","role":"authenticated","app_metadata":{"institutional_role":"COORDINATOR"}}',true);
+do $$begin
+ update public.artist_dossiers set discarded_at=now() where id='case-discard';
+ if not exists(select 1 from public.artist_dossiers where id='case-discard' and discarded_at is not null) then raise exception 'Discard not recorded';end if;
+ begin update public.artist_dossiers set rationale='Changed' where id='case-discard';raise exception 'Discarded case edited';exception when insufficient_privilege then null;end;
+ begin update public.artist_dossiers set discarded_at=null where id='case-discard';raise exception 'Discard undone';exception when insufficient_privilege then null;end;
+ begin insert into public.sadu_case_works(dossier_id,title,source_credit,image_path) values('case-discard','Work','Credit','nominations/case-discard/works/1.png');raise exception 'Work added to discarded case';exception when insufficient_privilege then null;end;
+ begin insert into storage.objects(bucket_id,name) values('artist-dossiers','nominations/case-discard/works/1.png');raise exception 'Upload into discarded case';exception when insufficient_privilege then null;end;
+
  -- Export records.
  insert into public.sadu_export_log(event_id,kind,dossier_ids) values('islamic-arts-festival','ALL',array['case-approve','case-return']);
 end$$;

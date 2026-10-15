@@ -677,3 +677,43 @@ h1, h2, .font-serif, .font-editorial, [dir="rtl"] .font-editorial, [lang="ar"] .
    A neutral fill keeps the label legible while still reading as unavailable. Unlayered so it
    overrides the disabled:opacity-50 utility on these buttons. */
 button[class*="bg-[#8B261E]"]:disabled { background-color: #E4DCCF; color: #4F463D; opacity: 1; }
+
+/* Committee presentation preview (NominationPresentation). Sizes use container units, so the
+   same slide reads the same on screen and on a printed 16:9 page (13.333in x 7.5in). */
+.sadu-deck { position: fixed; inset: 0; z-index: 60; overflow: auto; background: #3B3530; padding: 16px; }
+.sadu-deck-bar { position: sticky; top: 0; z-index: 1; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 0 auto 16px; max-width: 1100px; padding: 12px 16px; border-radius: 6px; background: #FFFDF7; }
+.sadu-deck-bar p { margin-inline-end: auto; }
+.sadu-slide { container-type: inline-size; position: relative; box-sizing: border-box; aspect-ratio: 16 / 9; width: 100%; max-width: 1100px; margin: 0 auto 16px; overflow: hidden;
+  padding: 4.5cqw; background: #FFFDF7; color: #111817; font-family: Arial, 'IBM Plex Sans Arabic', sans-serif; font-size: 1.5cqw; line-height: 1.45;
+  border-bottom: 0.9cqw solid #8B261E; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.sadu-slide :is(h1, h2) { margin: 0 0 1cqw; font-family: Georgia, Amiri, serif; font-weight: 700; line-height: 1.2; }
+.sadu-slide[dir='rtl'] :is(h1, h2), [dir='rtl'] .sadu-slide :is(h1, h2) { font-family: Amiri, Arial, serif; }
+.sadu-slide h1 { font-size: 4.2cqw; }
+.sadu-slide h2 { font-size: 3cqw; }
+.sadu-slide h3 { margin: 1.4cqw 0 0.3cqw; font-size: 1.5cqw; font-weight: 700; }
+.sadu-slide p { margin: 0 0 0.6cqw; }
+.sadu-slide-title { display: flex; flex-direction: column; justify-content: center; background: #F7F1E6; }
+.sadu-slide-accent { color: #8B261E; font-size: 2cqw; }
+.sadu-slide-title .sadu-slide-accent { font-size: 2.4cqw; }
+.sadu-slide-soft { color: #5E554B; }
+.sadu-slide table { width: 100%; border-collapse: collapse; font-size: 1.35cqw; }
+.sadu-slide :is(th, td) { padding: 0.5cqw 0.8cqw; border: 1px solid #D9CEBA; text-align: start; }
+.sadu-slide th { background: #8B261E; color: #FFFFFF; }
+.sadu-profile-body { display: grid; grid-template-columns: 1fr 36%; gap: 3cqw; height: 100%; }
+.sadu-profile-body p { font-size: 1.25cqw; line-height: 1.4; }
+.sadu-profile-body > div { overflow: hidden; }
+.sadu-slide figure { margin: 0; display: flex; flex-direction: column; gap: 0.5cqw; min-height: 0; }
+.sadu-slide figure img, .sadu-slide-placeholder { width: 100%; flex: 1; min-height: 0; object-fit: contain; background: #F1E7D6; }
+.sadu-profile-body figure img { max-height: 40cqw; }
+.sadu-slide figcaption { display: flex; flex-direction: column; font-size: 1.1cqw; color: #5E554B; }
+.sadu-slide figcaption strong { color: #111817; }
+.sadu-works-grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: 20cqw; gap: 2cqw; }
+.sadu-slide ul { margin: 1cqw 0 0; padding-inline-start: 2.5cqw; font-size: 1.8cqw; }
+@page deck { size: 13.333in 7.5in; margin: 0; }
+@media print {
+  html.sadu-deck-printing body * { visibility: hidden; }
+  html.sadu-deck-printing .sadu-deck, html.sadu-deck-printing .sadu-deck * { visibility: visible; }
+  html.sadu-deck-printing .sadu-deck { position: absolute; inset: 0; padding: 0; overflow: visible; background: none; }
+  html.sadu-deck-printing .no-print { display: none; }
+  .sadu-slide { page: deck; width: 13.333in; max-width: none; margin: 0; break-after: page; }
+}
