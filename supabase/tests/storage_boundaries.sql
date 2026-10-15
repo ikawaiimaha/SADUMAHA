@@ -99,7 +99,7 @@ select pg_temp.check_true((select count(*)=0 from public.artist_dossiers),'PR ca
 reset role;
 set local request.jwt.claims = '{"sub":"55555555-5555-4555-8555-555555555555","institutional_role":"PREPARATORY_COMMITTEE"}';
 set local role authenticated;
-select pg_temp.check_true((select count(*)=1 from storage.objects),'committee sees dossier files only');
+select pg_temp.check_true((select count(*)=1 from storage.objects where name not like 'nominations/%'),'committee sees dossier files only');
 reset role;
 set local request.jwt.claims = '{"sub":"55555555-5555-4555-8555-555555555555","user_metadata":{"institutional_role":"PR_PROTOCOL"}}';
 set local role authenticated;

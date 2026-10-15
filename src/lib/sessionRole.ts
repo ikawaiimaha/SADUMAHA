@@ -38,9 +38,10 @@ export const institutionalRoleLabels: Record<string, { en: string; ar: string }>
 export type PilotTool =
   | 'guestCalendar' | 'pendingAssets' | 'guestTravel' | 'conditionReports' | 'finalDeliverables'
   | 'freightPickup' | 'checklistQueue' | 'arrivalFeed' | 'freightChange' | 'logisticsQueue'
-  | 'freightClosure' | 'titleHeader' | 'publicationHandoff' | 'titleGate';
+  | 'freightClosure' | 'titleHeader' | 'publicationHandoff' | 'titleGate' | 'nominations';
 
 const pilotTools: Record<PilotTool, string[]> = {
+  nominations: ['COORDINATOR'],
   titleHeader: ['COORDINATOR', 'GENERAL_COORDINATOR', 'BIENNIAL_DIRECTOR', 'CHAIRMAN', 'PR_PROTOCOL', 'TECHNICAL'],
   titleGate: ['GENERAL_COORDINATOR'],
   pendingAssets: ['COORDINATOR', 'BIENNIAL_DIRECTOR', 'LOGISTICS'],

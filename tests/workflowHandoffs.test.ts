@@ -1463,3 +1463,28 @@ test('pilot shows each role only its own tools',()=>{
  assert.equal(showsPilotTool('PR_PROTOCOL','guestTravel'),true);
  assert.equal(showsPilotTool('','arrivalFeed'),false);
 });
+
+import {missingForReady,caseStage,acceptedExtension,linksFromText,casePath} from '../src/lib/nominations';
+test('nomination case: completeness mirrors the database rule and stages read clearly',()=>{
+ const base={name:'Artist',arabic_name:'فنان',nationality:'Test',category:'Emerging',medium:'Ink',biography:'Bio',rationale:'Why'};
+ assert.deepEqual(missingForReady(base,3),[]);
+ assert.deepEqual(missingForReady(base,2),['works']);
+ assert.deepEqual(missingForReady({...base,biography:'  ',rationale:null},3),['biography','rationale']);
+ assert.equal(caseStage({status:'INCOMPLETE_DOSSIER',sent_to_committee_at:null}),'DRAFT');
+ assert.equal(caseStage({status:'PENDING_COMMITTEE_REVIEW',sent_to_committee_at:null}),'READY');
+ assert.equal(caseStage({status:'PENDING_COMMITTEE_REVIEW',sent_to_committee_at:'2026-10-15T09:00:00Z'}),'SENT');
+ assert.equal(caseStage({status:'DIRECTOR_APPROVED',sent_to_committee_at:null}),'APPROVED');
+ assert.equal(caseStage({status:'DIRECTOR_VETOED',sent_to_committee_at:null}),'DECLINED');
+});
+test('nomination files: only accepted types and sizes, stored under the case folder',()=>{
+ const f=(name:string,type:string,size=1000)=>({name,type,size});
+ assert.equal(acceptedExtension(f('a.png','image/png'),'work'),'png');
+ assert.equal(acceptedExtension(f('a.gif','image/gif'),'work'),null);
+ assert.equal(acceptedExtension(f('a.png','image/png',21*1024*1024),'work'),null);
+ assert.equal(acceptedExtension(f('a.png','image/png',0),'work'),null);
+ assert.equal(acceptedExtension(f('cv.docx','application/vnd.openxmlformats-officedocument.wordprocessingml.document'),'cv'),'docx');
+ assert.equal(acceptedExtension(f('mail.msg',''),'evidence'),'msg');
+ assert.equal(acceptedExtension(f('mail.exe',''),'evidence'),null);
+ assert.match(casePath('case-1','works','png'),/^nominations\/case-1\/works\/[0-9a-f-]{36}\.png$/);
+ assert.deepEqual(linksFromText(' https://a.example \n\nhttps://b.example\n'),['https://a.example','https://b.example']);
+});
