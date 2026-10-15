@@ -186,11 +186,37 @@ export const useTranslation = () => {
  * Inside a provider: only the active language. Without one (standalone harnesses), the
  * original copy is kept exactly: English for t(), and the "English / Arabic" pair for pair().
  */
+// Every English/Arabic pair produced inside a provider, so a message stored in state while one
+// language was active can be shown in the other after a switch (see UiText). Capped; display only.
+const seenPairs = new Map<string, { en: string; ar: string }>();
+const remember = (en: string, ar: string) => {
+  if (!en || !ar || en === ar) return;
+  if (seenPairs.size > 4000) seenPairs.clear();
+  const entry = { en, ar };
+  seenPairs.set(en, entry);
+  seenPairs.set(ar, entry);
+};
+
 export const useUiText = () => {
   const ctx = useContext(I18nContext);
   const isAr = ctx?.isAr ?? false;
-  const t = (en: string, ar: string) => (ctx && isAr ? ar : en);
-  const pair = (en: string, ar: string, arFirst = false) =>
-    ctx ? (isAr ? ar : en) : arFirst ? `${ar} / ${en}` : `${en} / ${ar}`;
+  const t = (en: string, ar: string) => {
+    if (!ctx) return en;
+    remember(en, ar);
+    return isAr ? ar : en;
+  };
+  const pair = (en: string, ar: string, arFirst = false) => {
+    if (!ctx) return arFirst ? `${ar} / ${en}` : `${en} / ${ar}`;
+    remember(en, ar);
+    return isAr ? ar : en;
+  };
   return { isAr, hasLanguage: !!ctx, lang: ctx?.lang ?? 'en', toggleLang: ctx?.toggleLang, t, pair };
+};
+
+/** Shows a stored status message in the active language, if it came from t() or pair(). */
+export const UiText: React.FC<{ value: string | null | undefined }> = ({ value }) => {
+  const ctx = useContext(I18nContext);
+  if (!value) return null;
+  const known = ctx ? seenPairs.get(value) : undefined;
+  return <>{known ? (ctx!.isAr ? known.ar : known.en) : value}</>;
 };
