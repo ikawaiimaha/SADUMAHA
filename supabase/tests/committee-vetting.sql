@@ -2,11 +2,14 @@
 -- Stage 4: the Committee records a recommendation minute and never approves or rejects;
 -- the Biennial Director makes the executive decision.
 begin;
-insert into public.artist_dossiers(id,name,arabic_name,category,nationality,medium,status,cv_url,portfolio_url,mockups_url) values
- ('committee-test','Fictional artist','فنان','Emerging','Test','Ink','INCOMPLETE_DOSSIER','cv.pdf','portfolio.pdf','mockup.png'),
- ('committee-not-recommended','Fictional artist','فنان','Emerging','Test','Ink','PENDING_COMMITTEE_REVIEW','cv.pdf','portfolio.pdf','mockup.png'),
- ('committee-hold','Fictional artist','فنان','Emerging','Test','Ink','HIP_BLOCKED','cv.pdf','portfolio.pdf','mockup.png'),
- ('committee-legacy','Fictional artist','فنان','Emerging','Test','Ink','COMMITTEE_REJECTED','cv.pdf','portfolio.pdf','mockup.png');
+insert into public.artist_dossiers(id,name,arabic_name,category,nationality,medium,status,cv_url,portfolio_url,mockups_url,event_id,biography,rationale) values
+ ('committee-test','Fictional artist','فنان','Emerging','Test','Ink','INCOMPLETE_DOSSIER','cv.pdf','portfolio.pdf','mockup.png','islamic-arts-festival','Fictional biography','Fictional rationale'),
+ ('committee-not-recommended','Fictional artist','فنان','Emerging','Test','Ink','PENDING_COMMITTEE_REVIEW','cv.pdf','portfolio.pdf','mockup.png',null,null,null),
+ ('committee-hold','Fictional artist','فنان','Emerging','Test','Ink','HIP_BLOCKED','cv.pdf','portfolio.pdf','mockup.png',null,null,null),
+ ('committee-legacy','Fictional artist','فنان','Emerging','Test','Ink','COMMITTEE_REJECTED','cv.pdf','portfolio.pdf','mockup.png',null,null,null);
+-- A nomination case needs at least 3 credited works before submission.
+insert into public.sadu_case_works(dossier_id,title,source_credit,image_path)
+select 'committee-test','Work '||n,'Fictional credit','nominations/committee-test/works/'||n||'.png' from generate_series(1,3) n;
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","app_metadata":{"institutional_role":"COORDINATOR"}}',true);
 do $$begin
