@@ -94,7 +94,7 @@ do $$begin
  values('case-return','NOT_RECOMMENDED','RETURNED',current_date,'Email from the Committee','Add works from the last five years','nominations/case-return/decision-evidence/e.pdf');
  if not exists(select 1 from public.artist_dossiers where id='case-return' and status='INCOMPLETE_DOSSIER' and sent_to_committee_at is null and committee_recommendation is null) then raise exception 'Return not applied';end if;
  update public.artist_dossiers set rationale='Updated rationale' where id='case-return';if not FOUND then raise exception 'Returned case not editable';end if;
- if (select count(*) from public.sadu_nomination_decisions)<>2 then raise exception 'Decision history incomplete';end if;
+ if (select count(*) from public.sadu_nomination_decisions where dossier_id in ('case-approve','case-return'))<>2 then raise exception 'Decision history incomplete';end if;
 
  -- Export records.
  insert into public.sadu_export_log(event_id,kind,dossier_ids) values('islamic-arts-festival','ALL',array['case-approve','case-return']);
