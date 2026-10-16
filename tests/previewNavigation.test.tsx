@@ -5,14 +5,14 @@ import { readFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
 import RehearsalJourney from '../src/components/RehearsalJourney';
 import PreviewUnavailable from '../src/components/PreviewUnavailable';
-import { isLocalPreview, normalizePreviewPath, journeyPaths, pausedPaths } from '../src/lib/previewRoutes';
+import { isLocalPreview, normalizePreviewPath, journeyPaths, pausedPaths, pilotPaths } from '../src/lib/previewRoutes';
 import { JOURNEY_TASKS } from '../src/data/rehearsalJourney';
 import { emptyJournal, journalReducer, serializeJournal } from '../src/data/journeyJournal';
 
 test('every preview navigation destination has an exact SPA rewrite; APIs and unknown URLs do not', () => {
   const routes = JSON.parse(readFileSync(new URL('../vercel.json', import.meta.url), 'utf8')).routes;
   const rewrites = routes.filter(r => r.dest === '/index.html').map(r => new RegExp(`^${r.src}`));
-  for (const path of [...journeyPaths.filter(p => p !== '/'), '/overview', '/review', ...pausedPaths]) {
+  for (const path of [...journeyPaths.filter(p => p !== '/'), '/overview', '/review', ...pausedPaths, ...pilotPaths]) {
     assert.ok(rewrites.some(re => re.test(path)), path);
     assert.ok(rewrites.some(re => re.test(path + '/')), `${path}/`);
     assert.equal(normalizePreviewPath(path + '/'), path);

@@ -1,7 +1,7 @@
 import ExecutiveDashboard from './components/ExecutiveDashboard';
 import { executiveMode } from './lib/executiveMode';
 import PreviewUnavailable from './components/PreviewUnavailable';
-import { isLocalPreview, journeyPaths, normalizePreviewPath, pausedPaths } from './lib/previewRoutes';
+import { isLocalPreview, journeyPaths, normalizePreviewPath, pausedPaths, pilotPaths } from './lib/previewRoutes';
 import GlobalPasswordGate from './components/GlobalPasswordGate';
 import {StrictMode, useEffect, lazy, Suspense} from 'react';
 import {createRoot} from 'react-dom/client';
@@ -23,6 +23,8 @@ function ReadyApp() {
   const local = isLocalPreview(window.location.hostname);
   if (path === '/committee-gallery') return local ? <Suspense fallback={<p role="status">Loading Committee gallery…</p>}><CommitteeSpectatorWorkspace /></Suspense> : <PreviewUnavailable review />;
   if (path === '/connected-pilot') return local ? <Suspense fallback={<p role="status">Loading connected pilot…</p>}><ConnectedPilot /></Suspense> : <PreviewUnavailable review />;
+  // On the hosted site the front door is the Nominations pilot; the practice journey stays at /journey.
+  if (pilotPaths.includes(path) || (!local && path === '/')) return <Suspense fallback={<p role="status">Loading…</p>}><AuthenticatedPilot /></Suspense>;
   if (executiveMode && (journeyPaths.includes(path) || path === '/review')) return <ExecutiveDashboard />;
   if (path === '/overview') return <Suspense fallback={<p role="status">Loading presentation…</p>}><ExecutiveLanding /></Suspense>;
   if (path === '/review' && !local) return <PreviewUnavailable review />;
@@ -30,7 +32,6 @@ function ReadyApp() {
   if (path === '/review') return <Suspense fallback={<p>Loading submission review…</p>}><PublicationReview /></Suspense>;
   if(path === '/gallery-consignment') return <Suspense fallback={<p>Loading gallery form...</p>}><GalleryConsignmentForm /></Suspense>;
   if (path === '/workbench') return <Suspense fallback={<p>Loading earlier workbench…</p>}><Workbench /></Suspense>;
-  if (path === '/pilot') return <Suspense fallback={<p>Loading authenticated pilot…</p>}><AuthenticatedPilot /></Suspense>;
   if (local && pausedPaths.includes(path)) return <Suspense fallback={<p>Loading earlier workbench…</p>}><Workbench /></Suspense>;
   if (!journeyPaths.includes(path)) return <PreviewUnavailable notFound />;
   return <RehearsalJourney />;
