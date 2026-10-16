@@ -31,6 +31,8 @@ export function NominationWorkspace({ userId }: { userId: string }) {
   const [batches, setBatches] = useState<CommitteeBatch[]>([]);
   const [batchCases, setBatchCases] = useState<CommitteeBatchCase[]>([]);
   const [ideas, setIdeas] = useState<ArtIdea[]>([]);
+  // False until the scouting migration is applied; the Art ideas section stays hidden rather than failing.
+  const [ideasReady, setIdeasReady] = useState(false);
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [selectedId, setSelectedId] = useState('');
   const [creating, setCreating] = useState(false);
@@ -63,6 +65,7 @@ export function NominationWorkspace({ userId }: { userId: string }) {
     if (cs.error) { setMessage(t('Cases could not be loaded.', 'تعذّر تحميل الترشيحات.')); return; }
     const ai = await client.from('sadu_art_ideas').select('*').eq('event_id', activeEvent).is('archived_at', null).order('created_at');
     setIdeas((ai.data ?? []) as ArtIdea[]);
+    setIdeasReady(!ai.error);
     // Discarded drafts stay in the database but are hidden here.
     const list = (cs.data as unknown as NominationCase[]).filter(c => !c.discarded_at);
     const ids = list.map(c => c.id);
@@ -178,7 +181,7 @@ export function NominationWorkspace({ userId }: { userId: string }) {
     {selected && <CaseDetail key={selected.id} onExport={() => void exportCases([selected], 'CASE')} c={selected} works={worksFor(selected.id)} decisions={decisionsFor(selected.id)} sent={sentFor(selected.id)} urls={urls}
       mine={selected.created_by === userId} busy={busy} run={run} missingLabel={missingLabel} stageLabel={stageLabel} />}
 
-    {event && <ArtIdeas eventId={event.id} ideas={ideas} cases={cases} userId={userId} busy={busy} run={run} />}
+    {event && ideasReady && <ArtIdeas eventId={event.id} ideas={ideas} cases={cases} userId={userId} busy={busy} run={run} />}
 
     <section className="space-y-2" aria-labelledby="invite-heading">
       <h3 id="invite-heading" className="text-lg">{t('Invite list', 'قائمة الدعوات')}</h3>
@@ -306,7 +309,10 @@ function WorksSection({ c, works, urls, editable, busy, run }: { c: NominationCa
 
   const add = () => run(async () => {
     const path = await uploadCaseFile(client!, c.id, 'works', file!, ext!);
-    const { error } = await client!.from('sadu_case_works').insert({ dossier_id: c.id, position: works.length + 1, title: w.title.trim(), year: w.year.trim() || null, medium: w.medium.trim() || null, dimensions: w.dimensions.trim() || null, source_credit: w.source_credit.trim(), published_in: w.published_in.trim(), image_path: path });
+    const row = { dossier_id: c.id, position: works.length + 1, title: w.title.trim(), year: w.year.trim() || null, medium: w.medium.trim() || null, dimensions: w.dimensions.trim() || null, source_credit: w.source_credit.trim(), image_path: path };
+    let { error } = await client!.from('sadu_case_works').insert({ ...row, published_in: w.published_in.trim() });
+    // Before the scouting migration the column does not exist yet; keep the place of publication in the credit instead.
+    if (error?.code === 'PGRST204') ({ error } = await client!.from('sadu_case_works').insert({ ...row, source_credit: `${row.source_credit} · Published in: ${w.published_in.trim()}`.slice(0, 500) }));
     if (error) throw new Error(error.message);
     setW(empty); setFile(null); setInputKey(k => k + 1);
   }, t('Work added.', 'أُضيف العمل.'));
