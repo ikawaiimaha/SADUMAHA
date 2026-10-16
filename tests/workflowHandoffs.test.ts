@@ -1464,7 +1464,7 @@ test('pilot shows each role only its own tools',()=>{
  assert.equal(showsPilotTool('','arrivalFeed'),false);
 });
 
-import {missingForReady,caseStage,acceptedExtension,linksFromText,casePath} from '../src/lib/nominations';
+import {missingForReady,caseStage,acceptedExtension,linksFromText,casePath,batchDeckPath,sha256Hex} from '../src/lib/nominations';
 test('nomination case: completeness mirrors the database rule and stages read clearly',()=>{
  const base={name:'Artist',arabic_name:'فنان',nationality:'Test',category:'Emerging',medium:'Ink',biography:'Bio',rationale:'Why'};
  assert.deepEqual(missingForReady(base,3),[]);
@@ -1487,6 +1487,10 @@ test('nomination files: only accepted types and sizes, stored under the case fol
  assert.equal(acceptedExtension(f('mail.exe',''),'evidence'),null);
  assert.match(casePath('case-1','works','png'),/^nominations\/case-1\/works\/[0-9a-f-]{36}\.png$/);
  assert.deepEqual(linksFromText(' https://a.example \n\nhttps://b.example\n'),['https://a.example','https://b.example']);
+});
+test('committee batch: the sent deck is stored under the event and fingerprinted',async()=>{
+ assert.match(batchDeckPath('islamic-arts-festival'),/^nominations\/committee-batches\/islamic-arts-festival\/[0-9a-f-]{36}\.pptx$/);
+ assert.equal(await sha256Hex(new Blob(['abc'])),'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
 });
 
 import {arabicCount,buildDeck,clip,coveringEmail,fit} from '../src/lib/nominationDeck';
