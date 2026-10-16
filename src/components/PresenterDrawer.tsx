@@ -148,12 +148,12 @@ export const PresenterDrawer: React.FC<PresenterDrawerProps> = ({ isOpen, onClos
                       <td className="p-2.5 border-s border-sadu-gold/30">{isAr ? 'يعرض تسليم العمل بين الأقسام كمراحل متصلة.' : 'Shows handovers between sections as connected steps.'}</td>
                     </tr>
                     <tr className="hover:bg-sadu-linen/50 transition-colors">
-                      <td className="p-2.5 font-bold text-sadu-ink">Separation of duties</td>
+                      <td className="p-2.5 font-bold text-sadu-ink">{isAr ? 'الفصل بين المهام' : 'Separation of duties'}</td>
                       <td className="p-2.5 border-s border-sadu-gold/30 text-sadu-muted">Dubai Unified License<br/>(DUL)</td>
                       <td className="p-2.5 border-s border-sadu-gold/30">{isAr ? 'صلاحيات حسب الدور بين أقسام التقييم والمالية واللوجستيات. لم يُقيَّم الامتثال لقوانين حماية البيانات.' : 'Role-based access across curatorial, finance and logistics desks. Data-protection compliance has not been assessed.'}</td>
                     </tr>
                     <tr className="hover:bg-sadu-linen/50 transition-colors">
-                      <td className="p-2.5 font-bold text-sadu-ink">Data residency</td>
+                      <td className="p-2.5 font-bold text-sadu-ink">{isAr ? 'مكان حفظ البيانات' : 'Data residency'}</td>
                       <td className="p-2.5 border-s border-sadu-gold/30 text-sadu-muted">Sharjah Digital Department<br/>(SDD)</td>
                       <td className="p-2.5 border-s border-sadu-gold/30">{isAr ? 'لم يُحدَّد بعد. يجب أن تؤكد إدارة تقنية المعلومات في الدائرة بيئة الاستضافة المسموحة وتصنيف البيانات قبل أي تجربة فعلية. لا يثبت هذا النموذج أي ربط مع سحاب أو امتثالاً لمتطلبات إقامة البيانات.' : 'Not yet decided. SDC IT must confirm the permitted hosting environment and data classes before a live pilot. This prototype does not demonstrate an approved Sahab integration or compliance with data-residency requirements.'}</td>
                     </tr>
