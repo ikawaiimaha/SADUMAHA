@@ -125,10 +125,10 @@ export const PresenterDrawer: React.FC<PresenterDrawerProps> = ({ isOpen, onClos
               
               {/* Intro/Thesis */}
               <p className="text-xs text-sadu-charcoal leading-relaxed bg-white p-4 rounded-md border border-sadu-gold shadow-2xs">
-                <strong className="text-sadu-brick block mb-1">{isAr ? 'المسار التشغيلي المتخصص' : 'Vertical Enterprise Operations'}</strong>
+                <strong className="text-sadu-brick block mb-1">{isAr ? 'سير عمل متخصص' : 'A specialised workflow'}</strong>
                 {isAr 
-                  ? 'سدو ليس بوابة خدمية عامة للمعاملات الأفقية. إنه نظام تشغيل مؤسسي متخصص للدبلوماسية الثقافية، التدقيق التقييمي، والحفظ السيادي، صُمم ليتوافق مع أعلى المعايير الرقمية الوطنية.'
-                  : 'SADU is not a horizontal civic transaction portal. It is a specialized vertical enterprise OS for cultural diplomacy, curatorial vetting, and sovereign preservation, engineered to align with national digital standards.'}
+                  ? 'سدو ليس بوابة خدمات عامة. إنه نموذج أولي لسير عمل المعارض في الدائرة، من رصد الفنانين حتى قرار اللجنة. الجدول أدناه يقارن الأهداف، ولا يثبت التوافق مع المعايير الوطنية؛ ذلك يتطلب تقييماً مؤسسياً.'
+                  : 'SADU is not a public service portal. It is a prototype of the Department’s exhibition workflow, from artist scouting to the Committee’s decision. The table compares aims; it does not establish alignment with national standards, which needs an institutional assessment.'}
               </p>
 
               {/* Benchmark Table */}
@@ -138,24 +138,24 @@ export const PresenterDrawer: React.FC<PresenterDrawerProps> = ({ isOpen, onClos
                     <tr>
                       <th className="p-2.5 border-b border-sadu-gold/50">{isAr ? 'المعيار الوطني' : 'Benchmark Criterion'}</th>
                       <th className="p-2.5 border-b border-sadu-gold/50 border-s border-sadu-gold/30">{isAr ? 'المنصات الحكومية' : 'Live Civic Apps'}</th>
-                      <th className="p-2.5 border-b border-sadu-gold/50 border-s border-sadu-gold/30">{isAr ? 'مواءمة وتفوق منصة سدو' : 'SADU Parity & Advantage'}</th>
+                      <th className="p-2.5 border-b border-sadu-gold/50 border-s border-sadu-gold/30">{isAr ? 'ما يعرضه نموذج سدو' : 'What the SADU prototype shows'}</th>
                     </tr>
                   </thead>
                   <tbody className="text-[11px] divide-y divide-sadu-gold/30 text-sadu-charcoal">
                     <tr className="hover:bg-sadu-linen/50 transition-colors">
                       <td className="p-2.5 font-bold text-sadu-ink">Zero Bureaucracy</td>
                       <td className="p-2.5 border-s border-sadu-gold/30 text-sadu-muted">Work Bundle<br/>(Baqat Al Amal)</td>
-                      <td className="p-2.5 border-s border-sadu-gold/30">Streamlines cross-department handovers into a continuous state machine.</td>
+                      <td className="p-2.5 border-s border-sadu-gold/30">{isAr ? 'يعرض تسليم العمل بين الأقسام كمراحل متصلة.' : 'Shows handovers between sections as connected steps.'}</td>
                     </tr>
                     <tr className="hover:bg-sadu-linen/50 transition-colors">
-                      <td className="p-2.5 font-bold text-sadu-ink">Separation of Powers<br/>& PDPL</td>
+                      <td className="p-2.5 font-bold text-sadu-ink">Separation of duties</td>
                       <td className="p-2.5 border-s border-sadu-gold/30 text-sadu-muted">Dubai Unified License<br/>(DUL)</td>
-                      <td className="p-2.5 border-s border-sadu-gold/30">Strict RBAC across curatorial, financial, and logistics desks.</td>
+                      <td className="p-2.5 border-s border-sadu-gold/30">{isAr ? 'صلاحيات حسب الدور بين أقسام التقييم والمالية واللوجستيات. لم يُقيَّم الامتثال لقوانين حماية البيانات.' : 'Role-based access across curatorial, finance and logistics desks. Data-protection compliance has not been assessed.'}</td>
                     </tr>
                     <tr className="hover:bg-sadu-linen/50 transition-colors">
-                      <td className="p-2.5 font-bold text-sadu-ink">Sovereign Residency</td>
-                      <td className="p-2.5 border-s border-sadu-gold/30 text-sadu-muted">Sharjah Digital Cloud<br/>(SDD)</td>
-                      <td className="p-2.5 border-s border-sadu-gold/30">Containerized architecture ready for on-premise Sahab Smart Solutions deployment.</td>
+                      <td className="p-2.5 font-bold text-sadu-ink">Data residency</td>
+                      <td className="p-2.5 border-s border-sadu-gold/30 text-sadu-muted">Sharjah Digital Department<br/>(SDD)</td>
+                      <td className="p-2.5 border-s border-sadu-gold/30">{isAr ? 'لم يُحدَّد بعد. يجب أن تؤكد إدارة تقنية المعلومات في الدائرة بيئة الاستضافة المسموحة وتصنيف البيانات قبل أي تجربة فعلية. لا يثبت هذا النموذج أي ربط مع سحاب أو امتثالاً لمتطلبات إقامة البيانات.' : 'Not yet decided. SDC IT must confirm the permitted hosting environment and data classes before a live pilot. This prototype does not demonstrate an approved Sahab integration or compliance with data-residency requirements.'}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -176,7 +176,7 @@ export const PresenterDrawer: React.FC<PresenterDrawerProps> = ({ isOpen, onClos
                   </li>
                   <li>
                     <strong>{isAr ? 'الهوية الرقمية: ' : 'UAE PASS & APIs: '}</strong>
-                    {isAr ? 'واجهات التوقيع مصممة بدقة، وتنتظر مفاتيح الربط الفعلية من الشبكة الاتحادية (GSB).' : 'Biometric signing UI is mapped, awaiting actual PKI integration via federal GSB.'}
+                    {isAr ? 'غير مربوطة. لا يوجد تسجيل دخول أو توقيع عبر الهوية الرقمية؛ يتطلب الربط طلب انضمام رسمياً وتقييماً مؤسسياً.' : 'Not connected. There is no UAE PASS sign-in or signing; connecting it needs formal service-provider onboarding and an institutional assessment.'}
                   </li>
                   <li>
                     <strong>{isAr ? 'الإرث التاريخي: ' : 'Historical Ingestion: '}</strong>
