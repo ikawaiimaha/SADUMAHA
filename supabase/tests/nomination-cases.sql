@@ -17,13 +17,15 @@ do $$begin
  -- Work images go only in the case's own folder; uploads only by the owner while a draft.
  insert into storage.objects(bucket_id,name) values('artist-dossiers','nominations/case-approve/works/1.png'),('artist-dossiers','nominations/case-return/works/1.png');
  begin insert into public.sadu_case_works(dossier_id,title,source_credit,image_path) values('case-approve','Bad path','Credit','nominations/case-return/works/1.png');raise exception 'Foreign image path accepted';exception when raise_exception then if SQLERRM not like 'Work images must be stored%' then raise;end if;end;
- insert into public.sadu_case_works(dossier_id,title,source_credit,image_path,position)
- select 'case-approve','Work '||n,'Fictional credit','nominations/case-approve/works/'||n||'.png',n from generate_series(1,2) n;
- insert into public.sadu_case_works(dossier_id,title,source_credit,image_path,position)
- select 'case-return','Work '||n,'Fictional credit','nominations/case-return/works/'||n||'.png',n from generate_series(1,3) n;
+ -- Scouting holds published works only: a work must say where it was published.
+ begin insert into public.sadu_case_works(dossier_id,title,source_credit,image_path) values('case-approve','Unpublished','Credit','nominations/case-approve/works/1.png');raise exception 'Work without publication accepted';exception when raise_exception then if SQLERRM not like 'Each work needs the place it was published%' then raise;end if;end;
+ insert into public.sadu_case_works(dossier_id,title,source_credit,published_in,image_path,position)
+ select 'case-approve','Work '||n,'Fictional credit','Fictional catalogue, 2025','nominations/case-approve/works/'||n||'.png',n from generate_series(1,2) n;
+ insert into public.sadu_case_works(dossier_id,title,source_credit,published_in,image_path,position)
+ select 'case-return','Work '||n,'Fictional credit','Fictional catalogue, 2025','nominations/case-return/works/'||n||'.png',n from generate_series(1,3) n;
  -- Two works are not enough.
  begin update public.artist_dossiers set status='PENDING_COMMITTEE_REVIEW' where id='case-approve';raise exception 'Incomplete case submitted';exception when raise_exception then if SQLERRM not like 'Complete the case before submission%' then raise;end if;end;
- insert into public.sadu_case_works(dossier_id,title,source_credit,image_path,position) values('case-approve','Work 3','Fictional credit','nominations/case-approve/works/3.png',3);
+ insert into public.sadu_case_works(dossier_id,title,source_credit,published_in,image_path,position) values('case-approve','Work 3','Fictional credit','Fictional catalogue, 2025','nominations/case-approve/works/3.png',3);
 end$$;
 
 -- Another Coordinator cannot change the case, add works, or upload into it.

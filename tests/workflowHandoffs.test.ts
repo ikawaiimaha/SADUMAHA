@@ -1497,7 +1497,7 @@ import {arabicCount,buildDeck,clip,coveringEmail,fit} from '../src/lib/nominatio
 import {toCsv,safeName,nominationsCsv,caseFolderName} from '../src/lib/nominationExport';
 const nomEvent={id:'islamic-arts-festival',name_en:'Islamic Arts Festival',name_ar:'مهرجان الفنون الإسلامية',edition:null};
 const nomCase=(id:string,extra:object={})=>({id,event_id:'islamic-arts-festival',created_by:'u',status:'PENDING_COMMITTEE_REVIEW',name:`Artist ${id}`,arabic_name:`فنان ${id}`,nationality:'Test',base_city:null,category:'Emerging',medium:'Ink',participation:null,biography:'Bio',rationale:'Why',links:[],cv_url:null,sent_to_committee_at:null,committee_recommendation:null,committee_minutes:null,rejection_reason:null,created_at:'2026-10-15T08:00:00Z',updated_at:'2026-10-15T08:00:00Z',discarded_at:null,...extra});
-const nomWork=(dossier:string,n:number)=>({id:`${dossier}-${n}`,dossier_id:dossier,position:n,title:`Work ${n}`,year:'2024',medium:null,dimensions:null,source_credit:'Courtesy of the artist',image_path:`nominations/${dossier}/works/${n}.png`,created_at:'2026-10-15T08:00:00Z'});
+const nomWork=(dossier:string,n:number)=>({id:`${dossier}-${n}`,dossier_id:dossier,position:n,title:`Work ${n}`,year:'2024',medium:null,dimensions:null,source_credit:'Courtesy of the artist',published_in:'Gallery website',image_path:`nominations/${dossier}/works/${n}.png`,created_at:'2026-10-15T08:00:00Z'});
 test('committee deck: title, paged summary, profile and paged works per artist, closing',()=>{
  const cases=Array.from({length:12},(_,i)=>({...nomCase(String(i+1)),works:Array.from({length:i===0?8:3},(_,n)=>nomWork(String(i+1),n+1))}));
  const slides=buildDeck(nomEvent,cases,'en',new Date('2026-10-15T08:00:00Z'));
