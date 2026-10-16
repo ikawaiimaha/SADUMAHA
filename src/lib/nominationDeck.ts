@@ -28,8 +28,8 @@ const copy = {
   ar: {
     subtitle: 'ترشيحات الفنانين للعرض على اللجنة', prepared: 'إعداد منسق المعرض',
     summary: 'الفنانون المقترحون', headers: ['#', 'الفنان', 'الجنسية', 'الفئة', 'الوسيط', 'المشاركة'],
-    emerging: 'ناشئ', established: 'راسخ', existing: 'عمل قائم', commission: 'تكليف بعمل جديد', undecided: 'لم تُحدد بعد',
-    bio: 'السيرة', rationale: 'مبررات الترشيح', works: 'الأعمال المختارة', continued: 'تابع',
+    emerging: 'ناشئ', established: 'متمرّس', existing: 'عمل قائم', commission: 'تكليف بعمل جديد', undecided: 'لم تُحدد بعد',
+    bio: 'النبذة التعريفية', rationale: 'مبررات الترشيح', works: 'الأعمال المختارة', continued: 'تابع',
     closing: 'القرارات المطلوبة',
     closingIntro: 'يُرجى من اللجنة التوصية بشأن كل ترشيح، ومن المدير اعتماد القرار.',
     credit: 'المصدر',
@@ -92,11 +92,15 @@ export function buildDeck(event: NominationEvent, cases: DeckCase[], lang: DeckL
   return slides;
 }
 
+/** Arabic counted noun: one, two, 3 to 10 (plural), 11 and above (singular accusative). */
+export const arabicCount = (n: number, [one, two, few, many]: [string, string, string, string]) =>
+  n === 1 ? one : n === 2 ? two : n % 100 >= 3 && n % 100 <= 10 ? `${n} ${few}` : `${n} ${many}`;
+
 /** Covering message for the Outlook email that carries the presentation. */
 export function coveringEmail(event: NominationEvent, cases: NominationCase[], lang: DeckLang): string {
   const names = cases.map((k, i) => `${i + 1}. ${lang === 'ar' ? `${k.arabic_name} (${k.name})` : `${k.name} (${k.arabic_name})`} — ${k.nationality}`).join('\n');
   return lang === 'ar'
-    ? `السادة أعضاء اللجنة التحضيرية،\n\nتجدون مرفقاً عرض ترشيحات الفنانين لـ${event.name_ar}، ويضم ${cases.length} ${cases.length === 1 ? 'ترشيحاً' : cases.length === 2 ? 'ترشيحين' : 'ترشيحات'}:\n\n${names}\n\nنرجو التكرم بالتوصية بشأن كل ترشيح، واعتماد المدير للقرار، والرد على هذه الرسالة.\n\nمع التحية،`
+    ? `السادة أعضاء اللجنة التحضيرية،\n\nتجدون مرفقاً عرض ترشيحات الفنانين لـ${event.name_ar}، ويضم ${arabicCount(cases.length, ['ترشيحاً واحداً', 'ترشيحين', 'ترشيحات', 'ترشيحاً'])}:\n\n${names}\n\nنرجو التكرم بالتوصية بشأن كل ترشيح، واعتماد المدير للقرار، والرد على هذه الرسالة.\n\nمع التحية،`
     : `Dear members of the Preparatory Committee,\n\nPlease find attached the artist nominations for the ${event.name_en}, covering ${cases.length} ${cases.length === 1 ? 'artist' : 'artists'}:\n\n${names}\n\nWe would be grateful for the Committee's recommendation on each nomination and the Director's confirmation, by reply to this email.\n\nKind regards,`;
 }
 

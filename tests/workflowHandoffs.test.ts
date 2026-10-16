@@ -1489,7 +1489,7 @@ test('nomination files: only accepted types and sizes, stored under the case fol
  assert.deepEqual(linksFromText(' https://a.example \n\nhttps://b.example\n'),['https://a.example','https://b.example']);
 });
 
-import {buildDeck,clip,coveringEmail,fit} from '../src/lib/nominationDeck';
+import {arabicCount,buildDeck,clip,coveringEmail,fit} from '../src/lib/nominationDeck';
 import {toCsv,safeName,nominationsCsv,caseFolderName} from '../src/lib/nominationExport';
 const nomEvent={id:'islamic-arts-festival',name_en:'Islamic Arts Festival',name_ar:'مهرجان الفنون الإسلامية',edition:null};
 const nomCase=(id:string,extra:object={})=>({id,event_id:'islamic-arts-festival',created_by:'u',status:'PENDING_COMMITTEE_REVIEW',name:`Artist ${id}`,arabic_name:`فنان ${id}`,nationality:'Test',base_city:null,category:'Emerging',medium:'Ink',participation:null,biography:'Bio',rationale:'Why',links:[],cv_url:null,sent_to_committee_at:null,committee_recommendation:null,committee_minutes:null,rejection_reason:null,created_at:'2026-10-15T08:00:00Z',updated_at:'2026-10-15T08:00:00Z',discarded_at:null,...extra});
@@ -1510,6 +1510,11 @@ test('committee deck: title, paged summary, profile and paged works per artist, 
  assert.equal(clip('short'),'short');
  assert.match(coveringEmail(nomEvent,[nomCase('1')],'en'),/covering 1 artist:/);
  assert.match(coveringEmail(nomEvent,[nomCase('1'),nomCase('2')],'ar'),/ترشيحين/);
+ // Arabic counted nouns: one and two are spelled out; 3 to 10 take the plural; 11 and above the singular.
+ const slideForms:[string,string,string,string]=['شريحة واحدة','شريحتان','شرائح','شريحة'];
+ assert.deepEqual([1,2,5,10,11,24,100].map(n=>arabicCount(n,slideForms)),['شريحة واحدة','شريحتان','5 شرائح','10 شرائح','11 شريحة','24 شريحة','100 شريحة']);
+ assert.match(coveringEmail(nomEvent,[nomCase('1')],'ar'),/ويضم ترشيحاً واحداً:/);
+ assert.match(coveringEmail(nomEvent,Array.from({length:12},(_,i)=>nomCase(String(i))),'ar'),/ويضم 12 ترشيحاً:/);
  assert.deepEqual(fit(200,100,{x:0,y:0,w:4,h:4}),{x:0,y:1,w:4,h:2});
 });
 test('shared-folder export: Excel-safe CSV and Windows-safe names',()=>{

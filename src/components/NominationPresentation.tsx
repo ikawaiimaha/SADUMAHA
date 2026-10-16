@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useUiText } from '../context/I18nContext';
-import { buildDeck, coveringEmail, deckFileName, deckToPptx, type DeckLang, type Slide } from '../lib/nominationDeck';
+import { arabicCount, buildDeck, coveringEmail, deckFileName, deckToPptx, type DeckLang, type Slide } from '../lib/nominationDeck';
 import { downloadBlob } from '../lib/nominationExport';
 import { caseStage, type CaseWork, type NominationCase, type NominationEvent } from '../lib/nominations';
 
@@ -56,8 +56,8 @@ export function NominationPresentation({ event, cases, works, urls, busy, onExpo
   }
 
   return <section className="space-y-3 rounded border border-[#D9CEBA] bg-white ps-4 pe-4 py-4" aria-labelledby="presentation-heading">
-    <h3 id="presentation-heading" className="text-lg">{t('Committee presentation', 'عرض اللجنة')}</h3>
-    {!eligible.length ? <p className="text-sm">{t('Mark cases ready to include them in the presentation.', 'علّم الترشيحات كجاهزة لإدراجها في العرض.')}</p> : <>
+    <h3 id="presentation-heading" className="text-lg">{t('Committee presentation', 'العرض التقديمي للجنة')}</h3>
+    {!eligible.length ? <p className="text-sm">{t('Press “Ready for Committee” on a case to include it in the presentation.', 'اضغط «جاهز للجنة» في الترشيح لإدراجه في العرض.')}</p> : <>
       <fieldset className="space-y-1"><legend className="text-sm text-[#5E554B]">{t('Cases in the presentation', 'الترشيحات في العرض')}</legend>
         {eligible.map(c => <label key={c.id} className="flex items-center gap-2"><input type="checkbox" checked={chosen.includes(c.id)}
           onChange={e => setChosen(e.target.checked ? [...chosen, c.id] : chosen.filter(id => id !== c.id))} />
@@ -72,7 +72,7 @@ export function NominationPresentation({ event, cases, works, urls, busy, onExpo
         <button type="button" className={quiet} disabled={!selected.length} onClick={() => setPreview(true)}>{t('Preview and save as PDF', 'معاينة وحفظ PDF')}</button>
         <button type="button" className={quiet} disabled={!selected.length} onClick={() => void copyEmail()}>{t('Copy email text', 'نسخ نص الرسالة')}</button>
       </div>
-      <p className="text-sm text-[#5E554B]">{t(`${slides.length} slides. Long biographies and rationales are shortened on the slides; the full text is in the export.`, `${slides.length} شريحة. تُختصر السير والمبررات الطويلة في الشرائح؛ النص الكامل في الملف المُصدَّر.`)}</p>
+      <p className="text-sm text-[#5E554B]">{t(`${slides.length} slides. Long biographies and rationales are shortened on the slides; the full text is in the export.`, `${arabicCount(slides.length, ['شريحة واحدة', 'شريحتان', 'شرائح', 'شريحة'])}. تُختصر النبذ التعريفية ومبررات الترشيح الطويلة في الشرائح؛ النص الكامل في الملف المُصدَّر.`)}</p>
     </>}
     {preview && <DeckPreview slides={slides} lang={lang} urls={urls} onClose={() => setPreview(false)} />}
   </section>;
@@ -105,7 +105,7 @@ function DeckPreview({ slides, lang, urls, onClose }: { slides: Slide[]; lang: D
         </div>}
         {s.kind === 'works' && <><h2>{s.title}</h2><div className="sadu-works-grid">{s.works.map(w => <figure key={w.path}>{img(w.path, w.caption)}
           <figcaption><strong dir="auto">{w.caption}</strong><span dir="auto">{w.credit}</span></figcaption></figure>)}</div></>}
-        {s.kind === 'closing' && <><h2>{s.title}</h2><p className="sadu-slide-soft">{s.intro}</p><ul>{s.items.map(item => <li key={item}><bdi>{item}</bdi></li>)}</ul></>}
+        {s.kind === 'closing' && <><h2>{s.title}</h2><p className="sadu-slide-soft">{s.intro}</p><ul>{s.items.map((item, k) => <li key={k}><bdi>{item}</bdi></li>)}</ul></>}
       </section>)}
     </div>
   </div>;
