@@ -1,4 +1,5 @@
 import { executiveMode } from '../lib/executiveMode';
+import { isLocalPreview, normalizePreviewPath } from '../lib/previewRoutes';
 import LocalReplayControls from './LocalReplayControls';
 import { startDemoReplay, pauseDemoReplay } from '../lib/demoReplay';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
@@ -21,6 +22,9 @@ function useAppLanguage(): [GateLanguage, (next: GateLanguage) => void] {
   const choose = useCallback((next: GateLanguage) => { setLanguage(next); writePreference('sadu_lang', next); }, []);
   return [language, choose];
 }
+
+/** The Nominations pilot holds real records, so its bar must not say the data is synthetic. */
+const onPilot = () => { const path = normalizePreviewPath(window.location.pathname); return path === '/pilot' || (path === '/' && !isLocalPreview(window.location.hostname)); };
 
 /** sessionStorage is a display hint only; the server cookie is always verified. */
 export default function GlobalPasswordGate({ children }: { children: ReactNode }) {
@@ -56,7 +60,7 @@ export default function GlobalPasswordGate({ children }: { children: ReactNode }
     return () => { observer.disconnect(); root.style.removeProperty('--sadu-preview-bar'); };
   }, [verified]);
   if (verified) return <><aside ref={bar} aria-label={copy.sessionLabel} lang={language} dir={dir} className="flex flex-wrap items-center justify-between gap-2 border-b border-[#D9CEBA] bg-[#F7F1E6] ps-5 pe-5 py-2 text-sm text-[#111817]">
-    {!executiveMode && <span>{copy.banner}</span>}<LocalReplayControls copy={copy}/>
+    {!executiveMode && <span>{onPilot() ? copy.pilotBanner : copy.banner}</span>}<LocalReplayControls copy={copy}/>
     <button className="rounded border border-[#8C8173] ps-3 pe-3 py-2 font-semibold focus-visible:outline-2 focus-visible:outline-offset-2" disabled={busy} onClick={async () => {
       if (!window.confirm(copy.lockConfirm)) return;
       setBusy(true); setError('');
