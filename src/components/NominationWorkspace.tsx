@@ -6,8 +6,8 @@ import { buildDeck, deckFileName } from '../lib/nominationDeck';
 import { canWriteToFolder, folderSink, sharedFolder, writeExport, zipSink, exportStamp, safeName } from '../lib/nominationExport';
 import {
   acceptAttribute, acceptedExtension, CASE_COLUMNS, caseStage, linksFromText, MAX_WORKS, MIN_WORKS, missingForReady,
-  signedUrls, uploadCaseFile, BUCKET,
-  type CaseStage, type CaseWork, type MissingItem, type NominationCase, type NominationDecision, type NominationEvent,
+  signedUrls, uploadCaseFile, recordCommitteeBatch, BUCKET,
+  type CaseStage, type CaseWork, type CommitteeBatch, type CommitteeBatchCase, type MissingItem, type NominationCase, type NominationDecision, type NominationEvent,
 } from '../lib/nominations';
 
 const field = 'block w-full rounded border border-[#D9CEBA] bg-white ps-3 pe-3 py-2';
@@ -28,6 +28,8 @@ export function NominationWorkspace({ userId }: { userId: string }) {
   const [cases, setCases] = useState<NominationCase[]>([]);
   const [works, setWorks] = useState<CaseWork[]>([]);
   const [decisions, setDecisions] = useState<NominationDecision[]>([]);
+  const [batches, setBatches] = useState<CommitteeBatch[]>([]);
+  const [batchCases, setBatchCases] = useState<CommitteeBatchCase[]>([]);
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [selectedId, setSelectedId] = useState('');
   const [creating, setCreating] = useState(false);
@@ -61,24 +63,28 @@ export function NominationWorkspace({ userId }: { userId: string }) {
     // Discarded drafts stay in the database but are hidden here.
     const list = (cs.data as unknown as NominationCase[]).filter(c => !c.discarded_at);
     const ids = list.map(c => c.id);
-    const [ws, ds] = ids.length ? await Promise.all([
+    const [ws, ds, bs, bcs] = ids.length ? await Promise.all([
       client.from('sadu_case_works').select('*').in('dossier_id', ids).order('position').order('created_at'),
       client.from('sadu_nomination_decisions').select('*').in('dossier_id', ids).order('recorded_at'),
-    ]) : [{ data: [], error: null }, { data: [], error: null }];
+      client.from('sadu_committee_batches').select('*').eq('event_id', activeEvent).order('sent_at'),
+      client.from('sadu_committee_batch_cases').select('*').in('dossier_id', ids),
+    ]) : [{ data: [], error: null }, { data: [], error: null }, { data: [], error: null }, { data: [], error: null }];
     setCases(list);
     setWorks((ws.data ?? []) as CaseWork[]);
     setDecisions((ds.data ?? []) as NominationDecision[]);
+    setBatches((bs.data ?? []) as CommitteeBatch[]);
+    setBatchCases((bcs.data ?? []) as CommitteeBatchCase[]);
     setUrls(await signedUrls(client, (ws.data ?? []).map(w => (w as CaseWork).image_path)));
     if (!keepSelection) setSelectedId('');
   }, [eventId]);
 
   useEffect(() => { void load(); }, [load]);
 
-  async function run(work: () => Promise<void>, success: string) {
-    if (busy) return;
+  async function run(work: () => Promise<void>, success: string): Promise<boolean> {
+    if (busy) return false;
     setBusy(true); setMessage('');
-    try { await work(); await load(); setMessage(success); }
-    catch (error) { setMessage(error instanceof Error ? error.message : t('Something went wrong.', 'حدث خطأ.')); }
+    try { await work(); await load(); setMessage(success); return true; }
+    catch (error) { setMessage(error instanceof Error ? error.message : t('Something went wrong.', 'حدث خطأ.')); return false; }
     finally { setBusy(false); }
   }
 
@@ -86,7 +92,9 @@ export function NominationWorkspace({ userId }: { userId: string }) {
   const selected = cases.find(c => c.id === selectedId);
   const worksFor = (id: string) => works.filter(w => w.dossier_id === id);
   const decisionsFor = (id: string) => decisions.filter(d => d.dossier_id === id);
-  const readyUnsent = cases.filter(c => c.created_by === userId && caseStage(c) === 'READY');
+  const sentFor = (id: string) => batchCases.filter(bc => bc.dossier_id === id)
+    .map(entry => ({ entry, batch: batches.find(b => b.id === entry.batch_id) }))
+    .filter((s): s is SentEntry => !!s.batch).sort((a, b) => a.batch.sent_at.localeCompare(b.batch.sent_at));
   const approved = cases.filter(c => caseStage(c) === 'APPROVED');
 
   async function exportCases(subset: NominationCase[], kind: 'ALL' | 'CASE', pickAgain = false) {
@@ -134,12 +142,6 @@ export function NominationWorkspace({ userId }: { userId: string }) {
       <button type="button" className={button} disabled={busy || !eventId} onClick={() => { setCreating(true); setSelectedId(''); }}>{t('New case', 'ترشيح جديد')}</button>
       {cases.length > 0 && <button type="button" className={quiet} disabled={busy} onClick={() => void exportCases(cases, 'ALL')}>{t('Export all to the shared folder', 'تصدير الكل إلى المجلد المشترك')}</button>}
       {cases.length > 0 && canWriteToFolder() && <button type="button" className="text-sm underline" disabled={busy} onClick={() => void exportCases(cases, 'ALL', true)}>{t('Choose a different folder', 'اختيار مجلد آخر')}</button>}
-      {readyUnsent.length > 0 && <button type="button" className={quiet} disabled={busy}
-        onClick={() => void run(async () => {
-          const { error } = await client!.rpc('sadu_mark_nominations_sent', { case_ids: readyUnsent.map(c => c.id) });
-          if (error) throw new Error(error.message);
-        }, t('Marked as sent to the Committee.', 'سُجّل الإرسال إلى اللجنة.'))}>
-        {t(`Mark ${readyUnsent.length} ready case(s) as sent to the Committee`, `تسجيل إرسال ${readyUnsent.length} من الترشيحات الجاهزة إلى اللجنة`)}</button>}
     </div>
 
     {creating && <NewCaseForm busy={busy} onCancel={() => setCreating(false)} onCreate={draft => void run(async () => {
@@ -165,9 +167,11 @@ export function NominationWorkspace({ userId }: { userId: string }) {
     </ul>}
 
     {event && <NominationPresentation event={event} cases={cases} works={works} urls={urls} busy={busy} onMessage={setMessage}
-      onExported={(ids, note) => { setMessage(note); void client!.from('sadu_export_log').insert({ event_id: event.id, kind: 'PRESENTATION', dossier_ids: ids }); }} />}
+      onExported={(ids, note) => { setMessage(note); void client!.from('sadu_export_log').insert({ event_id: event.id, kind: 'PRESENTATION', dossier_ids: ids }); }}
+      onRecordSent={deck => run(async () => { await recordCommitteeBatch(client!, event.id, deck); },
+        t('Recorded as sent to the Committee. SADU keeps a copy of the PowerPoint with each case.', 'سُجّل الإرسال إلى اللجنة. يحتفظ سدو بنسخة من ملف PowerPoint مع كل ترشيح.'))} />}
 
-    {selected && <CaseDetail key={selected.id} onExport={() => void exportCases([selected], 'CASE')} c={selected} works={worksFor(selected.id)} decisions={decisionsFor(selected.id)} urls={urls}
+    {selected && <CaseDetail key={selected.id} onExport={() => void exportCases([selected], 'CASE')} c={selected} works={worksFor(selected.id)} decisions={decisionsFor(selected.id)} sent={sentFor(selected.id)} urls={urls}
       mine={selected.created_by === userId} busy={busy} run={run} missingLabel={missingLabel} stageLabel={stageLabel} />}
 
     <section className="space-y-2" aria-labelledby="invite-heading">
@@ -194,10 +198,11 @@ function NewCaseForm({ busy, onCreate, onCancel }: { busy: boolean; onCreate: (d
   </form>;
 }
 
-type RunFn = (work: () => Promise<void>, success: string) => Promise<void>;
+type RunFn = (work: () => Promise<void>, success: string) => Promise<boolean>;
+type SentEntry = { entry: CommitteeBatchCase; batch: CommitteeBatch };
 
-function CaseDetail({ c, works, decisions, urls, mine, busy, run, missingLabel, stageLabel, onExport }: {
-  c: NominationCase; works: CaseWork[]; decisions: NominationDecision[]; urls: Record<string, string>; mine: boolean; busy: boolean;
+function CaseDetail({ c, works, decisions, sent, urls, mine, busy, run, missingLabel, stageLabel, onExport }: {
+  c: NominationCase; works: CaseWork[]; decisions: NominationDecision[]; sent: SentEntry[]; urls: Record<string, string>; mine: boolean; busy: boolean;
   run: RunFn; missingLabel: Record<MissingItem, string>; stageLabel: Record<CaseStage, string>; onExport: () => void;
 }) {
   const [confirmDiscard, setConfirmDiscard] = useState(false);
@@ -278,7 +283,8 @@ function CaseDetail({ c, works, decisions, urls, mine, busy, run, missingLabel, 
     </div>}
 
     {mine && (stage === 'READY' || stage === 'SENT') && <DecisionForm c={c} busy={busy} run={run} />}
-    {decisions.length > 0 && <DecisionHistory decisions={decisions} />}
+    {sent.length > 0 && <SentHistory sent={sent} />}
+    {decisions.length > 0 && <DecisionHistory decisions={decisions} sent={sent} />}
   </article>;
 }
 
@@ -377,7 +383,24 @@ function DecisionForm({ c, busy, run }: { c: NominationCase; busy: boolean; run:
   </form>;
 }
 
-function DecisionHistory({ decisions }: { decisions: NominationDecision[] }) {
+/** Every deck that carried this case, kept after a return so the history stays complete. */
+function SentHistory({ sent }: { sent: SentEntry[] }) {
+  const { t } = useUiText();
+  const open = async (path: string) => {
+    const url = (await signedUrls(client!, [path]))[path];
+    if (url) window.open(url, '_blank', 'noopener');
+  };
+  return <section className="space-y-2" aria-label={t('Sent to the Committee', 'الإرسال إلى اللجنة')}>
+    <h4 className="font-semibold">{t('Sent to the Committee', 'الإرسال إلى اللجنة')}</h4>
+    <ol className="space-y-2">{sent.map(({ entry, batch }) => <li key={batch.id} className="rounded border border-[#D9CEBA] ps-3 pe-3 py-2">
+      <p><bdi dir="ltr">{batch.sent_at.slice(0, 10)}</bdi> · <button type="button" className="underline" onClick={() => void open(batch.deck_path)}><bdi>{batch.deck_file_name}</bdi></button>
+        {' · '}{batch.deck_language === 'ar' ? t('Arabic', 'العربية') : t('English', 'الإنجليزية')} · {t(`slide position ${entry.position}`, `الترتيب في العرض ${entry.position}`)}</p>
+      <p className="text-sm text-[#5E554B]">{t('Case as last edited on', 'الترشيح كما عُدّل آخر مرة في')} <bdi dir="ltr">{entry.case_version.slice(0, 16).replace('T', ' ')}</bdi></p>
+    </li>)}</ol>
+  </section>;
+}
+
+function DecisionHistory({ decisions, sent }: { decisions: NominationDecision[]; sent: SentEntry[] }) {
   const { t } = useUiText();
   const outcome = { APPROVED: t('Approved', 'معتمد'), DECLINED: t('Declined', 'مرفوض'), RETURNED: t('Returned for more information', 'أُعيد لاستكمال المعلومات') };
   const rec = { RECOMMENDED: t('Recommended', 'موصى به'), NOT_RECOMMENDED: t('Not recommended', 'غير موصى به') };
@@ -387,6 +410,9 @@ function DecisionHistory({ decisions }: { decisions: NominationDecision[] }) {
       <p><strong>{outcome[d.director_decision]}</strong> · {t('Committee', 'اللجنة')}: {rec[d.committee_recommendation]} · <bdi dir="ltr">{d.decided_on}</bdi></p>
       <p dir="auto" className="whitespace-pre-line">{d.minute}</p>
       <p className="text-sm text-[#5E554B]">{t('Recorded from email by the coordinator', 'سجّله المنسق من البريد الإلكتروني')} · <bdi>{d.email_reference}</bdi></p>
+      {(() => { const b = sent.find(s => s.batch.id === d.batch_id)?.batch; return <p className="text-sm text-[#5E554B]">{b
+        ? <>{t('Decided on the deck sent on', 'قرار بشأن العرض المُرسل في')} <bdi dir="ltr">{b.sent_at.slice(0, 10)}</bdi> · <bdi>{b.deck_file_name}</bdi></>
+        : t('No sent deck is recorded for this decision.', 'لا يوجد عرض مُرسل مسجّل لهذا القرار.')}</p>; })()}
     </li>)}</ol>
   </section>;
 }

@@ -51,14 +51,29 @@ do $$begin
  update public.artist_dossiers set rationale='Changed' where id='case-approve';if FOUND then raise exception 'Submitted case editable';end if;
  begin delete from public.sadu_case_works where dossier_id='case-approve';raise exception 'Submitted works deletable';exception when insufficient_privilege then null;end;
  begin insert into storage.objects(bucket_id,name) values('artist-dossiers','nominations/case-approve/works/7.png');raise exception 'Upload into submitted case';exception when insufficient_privilege then null;end;
- if public.sadu_mark_nominations_sent(array['case-approve','case-return'])<>2 then raise exception 'Mark sent failed';end if;
- if public.sadu_mark_nominations_sent(array['case-approve'])<>0 then raise exception 'Marked sent twice';end if;
+ -- Recording the sent deck: the file must be stored first, and every case must be ready.
+ begin perform public.sadu_record_committee_batch('islamic-arts-festival',array['case-approve','case-return'],'nominations/committee-batches/islamic-arts-festival/d1.pptx','Committee presentation','en',repeat('a',64),1000);
+  raise exception 'Batch without a stored deck accepted';exception when raise_exception then if SQLERRM not like 'Store the presentation%' then raise;end if;end;
+ insert into storage.objects(bucket_id,name) values('artist-dossiers','nominations/committee-batches/islamic-arts-festival/d1.pptx'),('artist-dossiers','nominations/committee-batches/islamic-arts-festival/d2.pptx');
+ begin perform public.sadu_record_committee_batch('islamic-arts-festival',array['case-approve','case-approve'],'nominations/committee-batches/islamic-arts-festival/d1.pptx','Committee presentation','en',repeat('a',64),1000);
+  raise exception 'Duplicate case in batch accepted';exception when raise_exception then if SQLERRM not like 'A batch lists each case once%' then raise;end if;end;
+ perform public.sadu_record_committee_batch('islamic-arts-festival',array['case-return','case-approve'],'nominations/committee-batches/islamic-arts-festival/d1.pptx','Committee presentation','en',repeat('a',64),1000);
+ if (select count(*) from public.artist_dossiers where id in ('case-approve','case-return') and sent_to_committee_at is not null)<>2 then raise exception 'Batch did not mark the cases sent';end if;
+ if (select string_agg(dossier_id,',' order by position) from public.sadu_committee_batch_cases)<>'case-return,case-approve' then raise exception 'Batch order not kept';end if;
+ if exists(select 1 from public.sadu_committee_batch_cases bc join public.artist_dossiers d on d.id=bc.dossier_id where bc.case_version<>d.updated_at) then raise exception 'Case version not recorded';end if;
+ -- Batches cannot be written directly or changed.
+ begin insert into public.sadu_committee_batches(event_id,sent_by,deck_path,deck_file_name,deck_language,deck_sha256,deck_bytes) values('islamic-arts-festival','b1111111-1111-4111-8111-111111111111','x','x','en',repeat('a',64),1);raise exception 'Batch inserted directly';exception when insufficient_privilege then null;end;
+ begin update public.sadu_committee_batches set deck_file_name='Rewritten';raise exception 'Batch editable';exception when insufficient_privilege then null;end;
+ begin delete from public.sadu_committee_batch_cases;raise exception 'Batch cases deletable';exception when insufficient_privilege then null;end;
 end$$;
 
 -- The Committee role cannot record an email decision; that is the Coordinator's record.
 select set_config('request.jwt.claims','{"sub":"b3333333-3333-4333-8333-333333333333","role":"authenticated","app_metadata":{"institutional_role":"PREPARATORY_COMMITTEE"}}',true);
 do $$begin
  if (select count(*) from public.sadu_case_works where dossier_id='case-approve')<>3 then raise exception 'Committee cannot read works';end if;
+ if (select count(*) from public.sadu_committee_batch_cases)<>2 then raise exception 'Committee cannot read the batch';end if;
+ begin perform public.sadu_record_committee_batch('islamic-arts-festival',array['case-approve'],'nominations/committee-batches/islamic-arts-festival/d2.pptx','Deck','ar',repeat('b',64),1000);
+  raise exception 'Committee recorded a batch';exception when insufficient_privilege then null;end;
  begin insert into public.sadu_nomination_decisions(dossier_id,committee_recommendation,director_decision,decided_on,email_reference,minute,evidence_path)
   values('case-approve','RECOMMENDED','APPROVED',current_date,'Email from Committee','Recommended unanimously','nominations/case-approve/decision-evidence/e.pdf');
   raise exception 'Committee recorded an email decision';exception when insufficient_privilege then null;end;
@@ -82,6 +97,7 @@ do $$begin
  insert into public.sadu_nomination_decisions(dossier_id,committee_recommendation,director_decision,decided_on,email_reference,minute,evidence_path)
  values('case-approve','RECOMMENDED','APPROVED',current_date,'  Email from the Committee, 14 Oct  ','  Recommended; the Director confirmed.  ','nominations/case-approve/decision-evidence/e.pdf');
  if not exists(select 1 from public.artist_dossiers where id='case-approve' and status='DIRECTOR_APPROVED' and committee_recommendation='RECOMMENDED' and committee_minutes='Recommended; the Director confirmed.' and committee_reviewed_by='b1111111-1111-4111-8111-111111111111') then raise exception 'Approval not applied';end if;
+ if (select batch_id from public.sadu_nomination_decisions where dossier_id='case-approve') is distinct from (select id from public.sadu_committee_batches where deck_path like '%/d1.pptx') then raise exception 'Decision not linked to the batch';end if;
  -- Recorded decisions cannot change, and a decided case takes no second decision.
  begin update public.sadu_nomination_decisions set minute='Rewritten minute text' where dossier_id='case-approve';raise exception 'Decision editable';exception when insufficient_privilege then null;end;
  begin delete from public.sadu_nomination_decisions where dossier_id='case-approve';raise exception 'Decision deletable';exception when insufficient_privilege then null;end;
@@ -94,6 +110,15 @@ do $$begin
  values('case-return','NOT_RECOMMENDED','RETURNED',current_date,'Email from the Committee','Add works from the last five years','nominations/case-return/decision-evidence/e.pdf');
  if not exists(select 1 from public.artist_dossiers where id='case-return' and status='INCOMPLETE_DOSSIER' and sent_to_committee_at is null and committee_recommendation is null) then raise exception 'Return not applied';end if;
  update public.artist_dossiers set rationale='Updated rationale' where id='case-return';if not FOUND then raise exception 'Returned case not editable';end if;
+ -- The batch survives the return; sending again adds a second batch, and only ready cases go in it.
+ if not exists(select 1 from public.sadu_committee_batch_cases where dossier_id='case-return') then raise exception 'Batch lost on return';end if;
+ begin perform public.sadu_record_committee_batch('islamic-arts-festival',array['case-return'],'nominations/committee-batches/islamic-arts-festival/d2.pptx','Deck','ar',repeat('b',64),1000);
+  raise exception 'Draft case recorded as sent';exception when insufficient_privilege then null;end;
+ update public.artist_dossiers set status='PENDING_COMMITTEE_REVIEW' where id='case-return';
+ perform public.sadu_record_committee_batch('islamic-arts-festival',array['case-return'],'nominations/committee-batches/islamic-arts-festival/d2.pptx','Deck','ar',repeat('B',64),1000);
+ if (select count(*) from public.sadu_committee_batch_cases where dossier_id='case-return')<>2 then raise exception 'Second batch not recorded';end if;
+ if (select case_version from public.sadu_committee_batch_cases bc join public.sadu_committee_batches b on b.id=bc.batch_id where dossier_id='case-return' and b.deck_language='ar')
+    <= (select case_version from public.sadu_committee_batch_cases bc join public.sadu_committee_batches b on b.id=bc.batch_id where dossier_id='case-return' and b.deck_language='en') then raise exception 'Resent case kept the old version';end if;
  if (select count(*) from public.sadu_nomination_decisions where dossier_id in ('case-approve','case-return'))<>2 then raise exception 'Decision history incomplete';end if;
 
  -- Discarding: only a draft, only by its Coordinator; a discarded case is closed.

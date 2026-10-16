@@ -19,8 +19,14 @@ export type CaseWork = {
 export type NominationDecision = {
   id: string; dossier_id: string; committee_recommendation: 'RECOMMENDED' | 'NOT_RECOMMENDED';
   director_decision: 'APPROVED' | 'DECLINED' | 'RETURNED'; decided_on: string; email_reference: string;
-  minute: string; evidence_path: string; recorded_by: string; recorded_at: string;
+  minute: string; evidence_path: string; recorded_by: string; recorded_at: string; batch_id: string | null;
 };
+/** A deck sent to the Committee, and the version of each case it carried (case_version = the case's updated_at). */
+export type CommitteeBatch = {
+  id: string; event_id: string; sent_at: string; sent_by: string; deck_path: string; deck_file_name: string;
+  deck_language: 'ar' | 'en'; deck_sha256: string; deck_bytes: number;
+};
+export type CommitteeBatchCase = { batch_id: string; dossier_id: string; position: number; case_version: string };
 
 export const BUCKET = 'artist-dossiers';
 export const MIN_WORKS = 3;
@@ -91,4 +97,28 @@ export async function signedUrls(client: SupabaseClient, paths: string[]): Promi
 
 export function linksFromText(text: string): string[] {
   return text.split(/\r?\n/).map(l => l.trim()).filter(Boolean).slice(0, 10);
+}
+
+export const batchDeckPath = (eventId: string) => `nominations/committee-batches/${eventId}/${crypto.randomUUID()}.pptx`;
+
+export async function sha256Hex(blob: Blob): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', await blob.arrayBuffer());
+  return [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+export type SentDeck = { blob: Blob; fileName: string; lang: 'ar' | 'en'; caseIds: string[] };
+
+/** Stores the exact PowerPoint that was emailed and records it as a batch sent to the Committee. */
+export async function recordCommitteeBatch(client: SupabaseClient, eventId: string, deck: SentDeck): Promise<string> {
+  const path = batchDeckPath(eventId);
+  const { error: uploadError } = await client.storage.from(BUCKET).upload(path, deck.blob, {
+    upsert: false, contentType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  });
+  if (uploadError) throw new Error(uploadError.message);
+  const { data, error } = await client.rpc('sadu_record_committee_batch', {
+    event_id: eventId, case_ids: deck.caseIds, deck_path: path, deck_file_name: `${deck.fileName}.pptx`,
+    deck_language: deck.lang, deck_sha256: await sha256Hex(deck.blob), deck_bytes: deck.blob.size,
+  });
+  if (error) throw new Error(error.message);
+  return data as string;
 }

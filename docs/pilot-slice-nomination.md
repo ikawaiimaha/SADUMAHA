@@ -68,7 +68,12 @@ this stage. Every image keeps its source and credit.
 - **Case editor:** the fields above, works with image upload, and "Ready for Committee" (disabled until the
   case is complete). A ready case is locked; changing it creates a new version.
 - **Committee presentation:** choose the ready cases and the language (Arabic or English), preview
-  the slides, then download PPTX and/or PDF. Marking the batch "Sent to Committee" records the date.
+  the slides, then download PPTX and/or PDF. After emailing the PowerPoint, "Record this PowerPoint
+  as sent to the Committee" stores that exact file in SADU as a sent batch: date, file name,
+  language, SHA-256, and each case with its slide position and version (its last edit). Batches
+  cannot be changed and are kept when a case is returned, so a resent case shows every deck it went
+  out in. Each decision recorded from email is linked to the latest batch that carried the case, and
+  the case shows both.
   A "Copy email text" button gives a short covering message listing the artists, to paste into
   Outlook.
 - **Record decision from email**, per artist: Committee recommendation (Recommended / Not

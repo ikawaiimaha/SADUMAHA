@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useUiText } from '../context/I18nContext';
 import { arabicCount, buildDeck, coveringEmail, deckFileName, deckToPptx, type DeckLang, type Slide } from '../lib/nominationDeck';
 import { downloadBlob } from '../lib/nominationExport';
-import { caseStage, type CaseWork, type NominationCase, type NominationEvent } from '../lib/nominations';
+import { caseStage, type CaseWork, type NominationCase, type NominationEvent, type SentDeck } from '../lib/nominations';
 
 const quiet = 'rounded border border-[#8C8173] bg-white ps-4 pe-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed';
 const button = 'rounded bg-[#8B261E] ps-4 pe-4 py-2 text-white disabled:opacity-50 disabled:cursor-not-allowed';
@@ -25,9 +25,11 @@ export async function presentationBlob(slides: Slide[], lang: DeckLang, urls: Re
   return deckToPptx(slides, lang, Object.fromEntries(loaded.filter(([, v]) => v)) as Record<string, ImageData>);
 }
 
-export function NominationPresentation({ event, cases, works, urls, busy, onExported, onMessage }: {
+export function NominationPresentation({ event, cases, works, urls, busy, onExported, onMessage, onRecordSent }: {
   event: NominationEvent; cases: NominationCase[]; works: CaseWork[]; urls: Record<string, string>; busy: boolean;
   onExported: (ids: string[], note: string) => void; onMessage: (message: string) => void;
+  /** Records the downloaded PowerPoint as the deck sent to the Committee; resolves true when recorded. */
+  onRecordSent: (deck: SentDeck) => Promise<boolean>;
 }) {
   const { t, lang: uiLang } = useUiText();
   const eligible = cases.filter(c => ['READY', 'SENT'].includes(caseStage(c)));
@@ -35,17 +37,23 @@ export function NominationPresentation({ event, cases, works, urls, busy, onExpo
   const [lang, setLang] = useState<DeckLang>(uiLang === 'ar' ? 'ar' : 'en');
   const [preview, setPreview] = useState(false);
   const [working, setWorking] = useState(false);
+  // The last PowerPoint downloaded, kept so the file recorded as sent is the very file that was emailed.
+  const [downloaded, setDownloaded] = useState<(SentDeck & { key: string }) | null>(null);
   const eligibleKey = eligible.map(c => c.id).join(',');
   // New ready cases join the selection; cases that are no longer eligible leave it.
   useEffect(() => { setChosen(prev => [...new Set([...prev.filter(id => eligibleKey.split(',').includes(id)), ...eligibleKey.split(',').filter(Boolean)])]); }, [eligibleKey]);
   const selected = eligible.filter(c => chosen.includes(c.id));
+  const deckKey = `${lang}:${selected.map(c => c.id).join(',')}`;
+  const recordable = downloaded && downloaded.key === deckKey ? downloaded : null;
   const slides = useMemo(() => buildDeck(event, selected.map(c => ({ ...c, works: works.filter(w => w.dossier_id === c.id) })), lang, new Date()), [event, selected, works, lang]);
 
   async function downloadPptx() {
     setWorking(true);
     try {
       const date = new Date();
-      downloadBlob(await presentationBlob(slides, lang, urls), `${deckFileName(event, lang, date)}.pptx`);
+      const blob = await presentationBlob(slides, lang, urls), fileName = deckFileName(event, lang, date);
+      downloadBlob(blob, `${fileName}.pptx`);
+      setDownloaded({ key: deckKey, blob, fileName, lang, caseIds: selected.map(c => c.id) });
       onExported(selected.map(c => c.id), t('PowerPoint downloaded. Attach it to your email to the Committee.', 'نُزّل ملف PowerPoint. أرفقه برسالتك إلى اللجنة.'));
     } catch (error) { onMessage(error instanceof Error ? error.message : t('The presentation could not be created.', 'تعذّر إنشاء العرض.')); }
     finally { setWorking(false); }
@@ -72,6 +80,12 @@ export function NominationPresentation({ event, cases, works, urls, busy, onExpo
         <button type="button" className={quiet} disabled={!selected.length} onClick={() => setPreview(true)}>{t('Preview and save as PDF', 'معاينة وحفظ PDF')}</button>
         <button type="button" className={quiet} disabled={!selected.length} onClick={() => void copyEmail()}>{t('Copy email text', 'نسخ نص الرسالة')}</button>
       </div>
+      {recordable && <div className="space-y-2 rounded border border-[#CBB89F] bg-[#FFFAF0] ps-3 pe-3 py-3">
+        <p className="text-sm">{t(`After you email “${recordable.fileName}.pptx” to the Committee, record it here. SADU keeps a copy of that file and which ${recordable.caseIds.length} case(s) it carried, so each decision can be matched to what the Committee read.`,
+          `بعد إرسال «${recordable.fileName}.pptx» إلى اللجنة بالبريد الإلكتروني، سجّله هنا. يحتفظ سدو بنسخة من الملف وبالترشيحات التي تضمنها (${recordable.caseIds.length})، ليُطابَق كل قرار بما اطّلعت عليه اللجنة.`)}</p>
+        <button type="button" className={button} disabled={busy || working} onClick={() => void onRecordSent(recordable).then(ok => { if (ok) setDownloaded(null); })}>
+          {t('Record this PowerPoint as sent to the Committee', 'تسجيل إرسال ملف PowerPoint هذا إلى اللجنة')}</button>
+      </div>}
       <p className="text-sm text-[#5E554B]">{t(`${slides.length} slides. Long biographies and rationales are shortened on the slides; the full text is in the export.`, `${arabicCount(slides.length, ['شريحة واحدة', 'شريحتان', 'شرائح', 'شريحة'])}. تُختصر النبذ التعريفية ومبررات الترشيح الطويلة في الشرائح؛ النص الكامل في الملف المُصدَّر.`)}</p>
     </>}
     {preview && <DeckPreview slides={slides} lang={lang} urls={urls} onClose={() => setPreview(false)} />}
