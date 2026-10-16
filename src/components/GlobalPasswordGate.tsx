@@ -24,7 +24,7 @@ function useAppLanguage(): [GateLanguage, (next: GateLanguage) => void] {
 }
 
 /** The Nominations pilot holds real records, so its bar must not say the data is synthetic. */
-const onPilot = () => { const path = normalizePreviewPath(window.location.pathname); return path === '/pilot' || (path === '/' && !isLocalPreview(window.location.hostname)); };
+const onPilot = () => { const path = normalizePreviewPath(window.location.pathname); return path === '/pilot' || path === '/intro' || (path === '/' && !isLocalPreview(window.location.hostname)); };
 
 /** sessionStorage is a display hint only; the server cookie is always verified. */
 export default function GlobalPasswordGate({ children }: { children: ReactNode }) {
