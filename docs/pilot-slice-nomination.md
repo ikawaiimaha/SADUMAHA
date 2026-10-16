@@ -49,13 +49,13 @@ there is no single list of who was proposed, why, and what was decided.
 | Biography | Short text in Arabic and/or English (used on the slide) |
 | Rationale | Why this artist for this festival and its theme |
 | Proposed participation | Existing work or new commission; indicative scale if known |
-| Selected works | 3 to 8 images, each with title, year, medium, dimensions and source/credit |
+| Selected works | 3 to 8 images, each with title, year, medium, dimensions, image credit and where it was published |
 | CV | Optional file, from public or artist-provided sources |
 | Links | Website, gallery, press |
 | Prepared by | The Coordinator, with date |
 
 Required before a case can go into a presentation: name in both languages, nationality,
-category, medium, biography, rationale, and at least 3 works with credit. SADU blocks submission
+category, medium, biography, rationale, and at least 3 works with credit and place of publication. SADU blocks submission
 until these are present.
 
 **Data:** professional, public-facing information only. No passports, contact or bank details at

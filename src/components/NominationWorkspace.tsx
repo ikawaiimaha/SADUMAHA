@@ -64,7 +64,9 @@ export function NominationWorkspace({ userId }: { userId: string }) {
     const cs = await client.from('artist_dossiers').select(CASE_COLUMNS).eq('event_id', activeEvent).order('created_at');
     if (cs.error) { setMessage(t('Cases could not be loaded.', 'تعذّر تحميل الترشيحات.')); return; }
     const ai = await client.from('sadu_art_ideas').select('*').eq('event_id', activeEvent).is('archived_at', null).order('created_at');
-    setIdeas((ai.data ?? []) as ArtIdea[]);
+    // PGRST205: the table is not there yet (scouting migration not applied), so the section stays hidden quietly.
+    if (ai.error && ai.error.code !== 'PGRST205') setMessage(t('Art ideas could not be loaded.', 'تعذّر تحميل الأفكار الفنية.'));
+    setIdeas(ai.error ? [] : (ai.data ?? []) as ArtIdea[]);
     setIdeasReady(!ai.error);
     // Discarded drafts stay in the database but are hidden here.
     const list = (cs.data as unknown as NominationCase[]).filter(c => !c.discarded_at);
@@ -471,7 +473,7 @@ function ArtIdeas({ eventId, ideas, cases, userId, busy, run }: { eventId: strin
       <label className="block">{t('Idea', 'الفكرة')}<input dir="auto" maxLength={200} className={field} value={d.title} onChange={e => setD({ ...d, title: e.target.value })} /></label>
       <label className="block">{t('Notes', 'ملاحظات')}<textarea rows={2} maxLength={4000} dir="auto" className={field} value={d.note} onChange={e => setD({ ...d, note: e.target.value })} /></label>
       <label className="block">{t('Links (one per line)', 'روابط (رابط في كل سطر)')}<textarea rows={2} dir="ltr" className={field} value={d.links} onChange={e => setD({ ...d, links: e.target.value })} /></label>
-      <div><button className={quiet} disabled={busy || !ok}>{t('Add idea', 'إضافة الفكرة')}</button></div>
+      <div><button type="submit" className={quiet} disabled={busy || !ok}>{t('Add idea', 'إضافة الفكرة')}</button></div>
     </form>
   </section>;
 }
