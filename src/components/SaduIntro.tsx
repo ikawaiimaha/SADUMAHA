@@ -183,8 +183,8 @@ const MILESTONES = [
   { date: new Date(2026, 9, 15), label: ['15 Oct 2026', '15 أكتوبر 2026'], title: ['Memo for approval', 'المذكرة للموافقة'], body: ['Reviewed with Fatima Al Zarooni, then presented to the Director.', 'تُراجَع مع فاطمه الزرعوني، ثم تُعرض على المدير.'] },
   { date: new Date(2026, 10, 16), label: ['16 Nov 2026', '16 نوفمبر 2026'], title: ['Scouting begins', 'بدء رصد الفنانين'], body: ['Artists and art ideas from published sources only, with no artist contact.', 'الفنانون والأفكار الفنية من المصادر المنشورة فقط، دون التواصل مع الفنانين.'] },
   { date: new Date(2027, 3, 15), label: ['Around April 2027', 'أبريل 2027 تقريباً'], title: ['Exhibitors chosen', 'اختيار العارضين'], body: ['Proposals gathered and the Committee decides, on the date the festival sets.', 'جمع المقترحات وقرار اللجنة، في الموعد الذي تحدده إدارة المهرجان.'] },
-  { date: new Date(2027, 4, 1), label: ['Two weeks later', 'بعد أسبوعين'], title: ['Pilot report', 'تقرير المرحلة التجريبية'], body: ['Each target met or not, then the decision on a Cultural Affairs project.', 'تحقق كل هدف أو عدمه، ثم البتّ في تحويله إلى مشروع.'] },
-  { date: new Date(2027, 11, 1), label: ['December 2027', 'ديسمبر 2027'], title: ['Islamic Arts Festival', 'مهرجان الشارقة للفنون الإسلامية'], body: ['The exhibitors SADU helped choose open to the public.', 'يفتتح العارضون الذين ساعد السدو في اختيارهم.'] },
+  { date: new Date(2027, 4, 1), label: ['Two weeks later', 'بعد أسبوعين'], title: ['Pilot report', 'تقرير المرحلة التجريبية'], body: ['Each target met or not, then the decision on a Cultural Affairs project for the Department’s other events.', 'تحقق كل هدف أو عدمه، ثم البتّ في تحويله إلى مشروع يخدم فعاليات الدائرة الأخرى.'] },
+  { date: new Date(2027, 11, 1), label: ['December 2027', 'ديسمبر 2027'], title: ['Sharjah Islamic Arts Festival', 'مهرجان الشارقة للفنون الإسلامية'], body: ['The exhibitors SADU helped choose open to the public.', 'يفتتح العارضون الذين ساعد السدو في اختيارهم.'] },
 ] as const;
 
 /** Where "today" sits along the evenly spaced timeline, as 0..1. */
@@ -219,7 +219,7 @@ export default function SaduIntro({ signedIn, onContinue }: { signedIn: boolean;
     scatter: t('Today: 117,557 files, about one in five a copy.', 'اليوم: 117,557 ملفاً، نحو ملف من كل خمسة نسخة مكررة.'),
     gather: t('Each department becomes one thread.', 'كل قسم يصبح خيطاً واحداً.'),
     weave: t('Every nomination passes through all of them.', 'كل ترشيح يمرّ عبرها جميعاً.'),
-    done: t('One record for every artist, every work and every decision.', 'سجل واحد لكل فنان، ولكل عمل، ولكل قرار.'),
+    done: t('One record for every artist, across every event.', 'سجل واحد لكل فنان، في كل فعالية.'),
   };
   return <div className="sadu-intro" lang={isAr ? 'ar' : 'en'} dir={isAr ? 'rtl' : 'ltr'}>
     <header className="si-top">
@@ -230,10 +230,10 @@ export default function SaduIntro({ signedIn, onContinue }: { signedIn: boolean;
 
     <section id="si-hero" className="si-hero">
       <div className="si-hero-copy">
-        <p className="si-eyebrow">{t('Islamic Arts Festival · December 2027', 'مهرجان الشارقة للفنون الإسلامية · ديسمبر 2027')}</p>
+        <p className="si-eyebrow">{t('For all the Department’s events · First pilot: Sharjah Islamic Arts Festival, December 2027', 'لكل فعاليات الدائرة · التجربة الأولى: مهرجان الشارقة للفنون الإسلامية، ديسمبر 2027')}</p>
         <h1 className="si-title"><span className="si-title-main">{isAr ? 'السدو' : 'SADU'}</span><span className="si-title-twin" lang={isAr ? 'en' : 'ar'}>{isAr ? 'SADU' : 'السدو'}</span></h1>
-        <p className="si-claim">{t('One record for every artist, every work and every decision.', 'سجل واحد لكل فنان، ولكل عمل، ولكل قرار.')}</p>
-        <p className="si-sub">{t('Today every department keeps its own copy of the same nomination, and artists are asked twice for the same material. SADU prepares each case once, for everyone, from scouting to the Committee’s decision.', 'يحفظ كل قسم اليوم نسخته من ملف الترشيح نفسه، ويُطلب من الفنانين إرسال ما سبق أن أرسلوه. يُعدّ السدو كل ملف مرة واحدة للجميع، من رصد الفنانين حتى قرار اللجنة.')}</p>
+        <p className="si-claim">{t('One record for every artist and every work, across all the Department’s events.', 'سجل واحد لكل فنان ولكل عمل، في كل فعاليات الدائرة.')}</p>
+        <p className="si-sub">{t('The Department works with many artists in Arab and Islamic art, and many take part in more than one of its events. Today every team keeps its own copy of the same artist, and artists are asked again for material they already sent. SADU keeps each artist once, for every event, from scouting to the Committee’s decision.', 'تعمل الدائرة مع فنانين كثيرين في الفنون العربية والإسلامية، ويشارك كثير منهم في أكثر من فعالية. واليوم يحفظ كل قسم نسخته من ملف الفنان نفسه، ويُطلب من الفنانين إرسال ما سبق أن أرسلوه. يحفظ السدو كل فنان مرة واحدة لكل الفعاليات، من رصده حتى قرار اللجنة.')}</p>
         <div className="si-actions">
           <button type="button" className="si-cta" onClick={onContinue}>{cta}</button>
           <a className="si-link" href="#si-why">{t('Why SADU', 'لماذا السدو')} <span aria-hidden="true">↓</span></a>
@@ -294,7 +294,7 @@ export default function SaduIntro({ signedIn, onContinue }: { signedIn: boolean;
 
     <Section className="si-dark" label={t('The pilot', 'المرحلة التجريبية')}>{() => <div className="si-wrap">
       <p className="si-eyebrow">{t('The pilot', 'المرحلة التجريبية')}</p>
-      <h2 className="si-h2">{t('One nomination round, from scouting to the festival.', 'دورة ترشيحات واحدة، من رصد الفنانين حتى المهرجان.')}</h2>
+      <h2 className="si-h2">{t('First pilot: one nomination round at the Sharjah Islamic Arts Festival.', 'التجربة الأولى: دورة ترشيحات واحدة في مهرجان الشارقة للفنون الإسلامية.')}</h2>
       {scoutingIn > 0 && <p className="si-countdown"><bdi dir="ltr" className="si-num">{scoutingIn}</bdi> {t(scoutingIn === 1 ? 'day until scouting begins' : 'days until scouting begins', 'يوماً حتى بدء رصد الفنانين')}</p>}
       <div className="si-timeline" style={{ ['--si-today' as string]: along }}>
         <div className="si-track" aria-hidden="true"><span className="si-track-fill"/><span className="si-today"><span>{t('Today', 'اليوم')}</span></span></div>
