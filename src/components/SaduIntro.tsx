@@ -246,7 +246,7 @@ export default function SaduIntro({ signedIn, onContinue }: { signedIn: boolean;
         <div className="si-loom-frame">
           <Loom onPhase={onPhase} replayKey={replay}/>
         </div>
-        <figcaption className="si-loom-caption"><span aria-live="polite" key={phase} className="si-caption-line">{caption[phase]}</span>
+        <figcaption className="si-loom-caption"><span aria-live="polite"><span key={phase} className="si-caption-line">{caption[phase]}</span></span>
           {phase === 'done' && !reducedMotion() && <button type="button" className="si-replay" onClick={() => setReplay(r => r + 1)}>{t('Replay', 'إعادة')}</button>}
         </figcaption>
       </figure>
