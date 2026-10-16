@@ -31,11 +31,11 @@ function PilotPage() {
  const [email,setEmail]=useState(''),[password,setPassword]=useState('');
  const [dossiers,setDossiers]=useState<Dossier[]>([]),[spaces,setSpaces]=useState<Space[]>([]),[claims,setClaims]=useState<Claim[]>([]),[requests,setRequests]=useState<Request[]>([]);
  const [busy,setBusy]=useState(false),[message,setMessage]=useState(''),[signInError,setSignInError]=useState(''),[ready,setReady]=useState(false);
- // The intro explains why SADU exists before sign-in; /intro shows it to signed-in staff too.
- const [onIntro,setOnIntro]=useState(()=>normalizePreviewPath(window.location.pathname)==='/intro'),[signingIn,setSigningIn]=useState(false);
- useEffect(()=>{const onBack=()=>{setOnIntro(normalizePreviewPath(window.location.pathname)==='/intro');setSigningIn(false);};window.addEventListener('popstate',onBack);return()=>window.removeEventListener('popstate',onBack);},[]);
- const openIntro=()=>{window.history.pushState(null,'','/intro');setOnIntro(true);setSigningIn(false);window.scrollTo({top:0,behavior:'instant'});};
- const leaveIntro=()=>{if(onIntro)window.history.pushState(null,'','/pilot');setOnIntro(false);setSigningIn(true);window.scrollTo({top:0,behavior:'instant'});};
+ // The intro lives on the proposal site; /intro and "Why SADU" keep a copy here for anyone already in the prototype.
+ const [onIntro,setOnIntro]=useState(()=>normalizePreviewPath(window.location.pathname)==='/intro');
+ useEffect(()=>{const onBack=()=>{setOnIntro(normalizePreviewPath(window.location.pathname)==='/intro');};window.addEventListener('popstate',onBack);return()=>window.removeEventListener('popstate',onBack);},[]);
+ const openIntro=()=>{window.history.pushState(null,'','/intro');setOnIntro(true);window.scrollTo({top:0,behavior:'instant'});};
+ const leaveIntro=()=>{if(onIntro)window.history.pushState(null,'','/pilot');setOnIntro(false);window.scrollTo({top:0,behavior:'instant'});};
  const [artist,setArtist]=useState(''),[nationality,setNationality]=useState(''),[medium,setMedium]=useState('');
  const [selected,setSelected]=useState(''),[claimId,setClaimId]=useState(''),[equipment,setEquipment]=useState('AV Projectors'),[mounting,setMounting]=useState('Floor Freestanding'),[phase,setPhase]=useState('FINAL_INSTALLATION');
  useEffect(()=>{if(!client)return; const {data}=client.auth.onAuthStateChange((_event,next)=>{const changed=currentUser.current!==next?.user.id;currentUser.current=next?.user.id;setSession(next);setReady(true);if(changed){setRole('');setDossiers([]);setClaims([]);setRequests([]);setMessage('');}});return()=>data.subscription.unsubscribe();},[]);
@@ -57,7 +57,7 @@ function PilotPage() {
  const button='rounded-md bg-[#8B261E] ps-4 pe-4 py-2 font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed';
  const quiet='rounded-md border border-[#CBB89F] bg-white ps-4 pe-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed';
  const panel='space-y-4 rounded-xl border border-[#E4D8C4] bg-white ps-5 pe-5 py-5';
- if(onIntro||(!session&&!signingIn)){if(client&&!ready&&!onIntro)return null;return <SaduIntro signedIn={!!session} onContinue={leaveIntro}/>;}
+ if(onIntro)return <SaduIntro signedIn={!!session} onContinue={leaveIntro}/>;
  if(!client)return <main className="grid min-h-[70vh] place-items-center ps-4 pe-4"><section className="max-w-md space-y-3 rounded-xl border border-[#E4D8C4] bg-white ps-6 pe-6 py-6 text-start"><p className="font-serif text-2xl text-[#8B261E]">{isAr?'سدو':'SADU'}</p><h1 className="text-xl font-semibold">{t('Nominations is not connected yet','الترشيحات غير متصلة بعد')}</h1><p className="text-[#5E554B]">{t('This copy of SADU has no database connection, so nobody can sign in here yet. The site owner adds it in the hosting settings.','لا يتصل هذا الإصدار من سدو بقاعدة بيانات، لذلك لا يمكن تسجيل الدخول هنا بعد. يضيف صاحب الموقع الاتصال من إعدادات الاستضافة.')}</p><p className="text-sm text-[#6E6259]" dir="ltr">VITE_SUPABASE_URL · VITE_SUPABASE_PUBLISHABLE_KEY</p><a className="inline-block text-[#8B261E] underline" href="/journey">{t('Open the practice demo instead','فتح العرض التدريبي بدلاً من ذلك')}</a></section></main>;
  const access=institutionalRole(session);
  const label=institutionalRoleLabels[access];
