@@ -65,7 +65,7 @@ this stage. Every image keeps its source and credit.
 
 - **My cases** for the selected event: one row per artist with completeness and status (Draft,
   Ready, Sent to Committee, Approved, Declined, Returned for more information).
-- **Case editor:** the fields above, works with image upload, and "Mark ready" (disabled until the
+- **Case editor:** the fields above, works with image upload, and "Ready for Committee" (disabled until the
   case is complete). A ready case is locked; changing it creates a new version.
 - **Committee presentation:** choose the ready cases and the language (Arabic or English), preview
   the slides, then download PPTX and/or PDF. Marking the batch "Sent to Committee" records the date.

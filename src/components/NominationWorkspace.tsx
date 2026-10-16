@@ -43,7 +43,7 @@ export function NominationWorkspace({ userId }: { userId: string }) {
   };
   const missingLabel: Record<MissingItem, string> = {
     name: t('English name', 'الاسم بالإنجليزية'), arabic_name: t('Arabic name', 'الاسم بالعربية'), nationality: t('Nationality', 'الجنسية'),
-    category: t('Category', 'الفئة'), medium: t('Medium', 'الوسيط الفني'), biography: t('Biography', 'السيرة'),
+    category: t('Category', 'الفئة'), medium: t('Medium', 'الوسيط الفني'), biography: t('Biography', 'النبذة التعريفية'),
     rationale: t('Rationale', 'مبررات الترشيح'), works: t(`At least ${MIN_WORKS} credited works`, `${MIN_WORKS} أعمال على الأقل مع ذكر المصدر`),
   };
 
@@ -95,7 +95,8 @@ export function NominationWorkspace({ userId }: { userId: string }) {
     try {
       const date = new Date();
       const sink = canWriteToFolder() ? folderSink(await sharedFolder(pickAgain)) : await zipSink(`SADU export - ${safeName(event.name_en)} - ${exportStamp(date)}`);
-      const deckCases = kind === 'ALL' ? subset.filter(c => ['READY', 'SENT'].includes(caseStage(c))) : [];
+      // Every case that reached the presentation stays in it, so an export after the decisions still carries the deck.
+      const deckCases = kind === 'ALL' ? subset.filter(c => caseStage(c) !== 'DRAFT') : [];
       const deckLang = isAr ? 'ar' : 'en';
       const presentation = deckCases.length ? {
         blob: await presentationBlob(buildDeck(event, deckCases.map(c => ({ ...c, works: worksFor(c.id) })), deckLang, date), deckLang, urls),
@@ -145,7 +146,7 @@ export function NominationWorkspace({ userId }: { userId: string }) {
       const { data, error } = await client!.from('artist_dossiers').insert({ event_id: eventId, name: draft.name.trim(), arabic_name: draft.arabic_name.trim(), nationality: draft.nationality.trim(), category: draft.category, medium: draft.medium.trim() }).select('id').single();
       if (error) throw new Error(error.message);
       setCreating(false); setSelectedId((data as { id: string }).id);
-    }, t('Case created. Add the biography, rationale and works.', 'أُنشئ الترشيح. أضف السيرة ومبررات الترشيح والأعمال.'))} />}
+    }, t('Case created. Add the biography, rationale and works.', 'أُنشئ الترشيح. أضف النبذة التعريفية ومبررات الترشيح والأعمال.'))} />}
 
     {!cases.length && !creating && <p>{t('No cases for this event yet.', 'لا توجد ترشيحات لهذه الفعالية بعد.')}</p>}
     {cases.length > 0 && <ul className="divide-y divide-[#D9CEBA] rounded border border-[#D9CEBA] bg-white">
@@ -188,7 +189,7 @@ function NewCaseForm({ busy, onCreate, onCancel }: { busy: boolean; onCreate: (d
     <label className="block">{t('Nationality', 'الجنسية')}<input required className={field} value={d.nationality} onChange={e => setD({ ...d, nationality: e.target.value })} /></label>
     <label className="block">{t('Medium / practice', 'الوسيط / الممارسة الفنية')}<input required className={field} value={d.medium} onChange={e => setD({ ...d, medium: e.target.value })} /></label>
     <label className="block">{t('Category', 'الفئة')}<select className={field} value={d.category} onChange={e => setD({ ...d, category: e.target.value })}>
-      <option value="Emerging">{t('Emerging', 'ناشئ')}</option><option value="Established">{t('Established', 'راسخ')}</option></select></label>
+      <option value="Emerging">{t('Emerging', 'ناشئ')}</option><option value="Established">{t('Established', 'متمرّس')}</option></select></label>
     <div className="flex items-end gap-3"><button className={button} disabled={busy || !ok}>{t('Create case', 'إنشاء الترشيح')}</button><button type="button" className={quiet} onClick={onCancel}>{t('Cancel', 'إلغاء')}</button></div>
   </form>;
 }
@@ -222,8 +223,8 @@ function CaseDetail({ c, works, decisions, urls, mine, busy, run, missingLabel, 
     if (dirty) await persist();
     const { data, error } = await client!.from('artist_dossiers').update({ status: 'PENDING_COMMITTEE_REVIEW' }).eq('id', c.id).select('id');
     if (error) throw new Error(error.message);
-    if (!data?.length) throw new Error(t('The case could not be marked ready. Refresh and try again.', 'تعذّر تعليم الترشيح كجاهز. حدّث الصفحة وحاول مجدداً.'));
-  }, t('Case marked ready and locked. Include it in the Committee presentation.', 'عُلّم الترشيح كجاهز وقُفل. أدرجه في عرض اللجنة.'));
+    if (!data?.length) throw new Error(t('The case could not be made ready for the Committee. Refresh and try again.', 'تعذّر تجهيز الترشيح للجنة. حدّث الصفحة وحاول مجدداً.'));
+  }, t('The case is ready for the Committee and locked. Include it in the Committee presentation.', 'أصبح الترشيح جاهزاً للجنة وقُفل. أدرجه في العرض التقديمي للجنة.'));
 
   return <article className="space-y-4 rounded border border-[#D9CEBA] bg-white ps-4 pe-4 py-4" aria-label={isAr ? c.arabic_name : c.name}>
     <header className="flex flex-wrap items-baseline gap-3">
@@ -239,19 +240,19 @@ function CaseDetail({ c, works, decisions, urls, mine, busy, run, missingLabel, 
       <label className="block">{t('Nationality', 'الجنسية')}<input className={field} value={draft.nationality} onChange={set('nationality')} /></label>
       <label className="block">{t('Base city', 'مدينة الإقامة')}<input className={field} value={draft.base_city} onChange={set('base_city')} /></label>
       <label className="block">{t('Category', 'الفئة')}<select className={field} value={draft.category} onChange={set('category')}>
-        <option value="Emerging">{t('Emerging', 'ناشئ')}</option><option value="Established">{t('Established', 'راسخ')}</option></select></label>
+        <option value="Emerging">{t('Emerging', 'ناشئ')}</option><option value="Established">{t('Established', 'متمرّس')}</option></select></label>
       <label className="block">{t('Medium / practice', 'الوسيط / الممارسة الفنية')}<input className={field} value={draft.medium} onChange={set('medium')} /></label>
       <label className="block sm:col-span-2">{t('Proposed participation', 'المشاركة المقترحة')}<select className={field} value={draft.participation} onChange={set('participation')}>
         <option value="">{t('Not decided yet', 'لم تُحدد بعد')}</option><option value="EXISTING_WORK">{t('Existing work', 'عمل قائم')}</option><option value="NEW_COMMISSION">{t('New commission', 'تكليف بعمل جديد')}</option></select></label>
-      <label className="block sm:col-span-2">{t('Biography', 'السيرة')}<textarea rows={4} maxLength={6000} dir="auto" className={field} value={draft.biography} onChange={set('biography')} /></label>
+      <label className="block sm:col-span-2">{t('Biography', 'النبذة التعريفية')}<textarea rows={4} maxLength={6000} dir="auto" className={field} value={draft.biography} onChange={set('biography')} /></label>
       <label className="block sm:col-span-2">{t('Rationale: why this artist for this festival', 'مبررات الترشيح: لماذا هذا الفنان لهذا المهرجان')}<textarea rows={4} maxLength={6000} dir="auto" className={field} value={draft.rationale} onChange={set('rationale')} /></label>
       <label className="block sm:col-span-2">{t('Links (one per line)', 'روابط (رابط في كل سطر)')}<textarea rows={2} dir="ltr" className={field} value={draft.links} onChange={set('links')} /></label>
       <div className="sm:col-span-2"><button type="button" className={quiet} disabled={busy || !dirty} onClick={() => void save()}>{t('Save changes', 'حفظ التغييرات')}</button></div>
     </div> : <dl className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
-      {[[t('Nationality', 'الجنسية'), c.nationality], [t('Base city', 'مدينة الإقامة'), c.base_city], [t('Category', 'الفئة'), c.category === 'Emerging' ? t('Emerging', 'ناشئ') : c.category === 'Established' ? t('Established', 'راسخ') : c.category], [t('Medium / practice', 'الوسيط / الممارسة الفنية'), c.medium],
+      {[[t('Nationality', 'الجنسية'), c.nationality], [t('Base city', 'مدينة الإقامة'), c.base_city], [t('Category', 'الفئة'), c.category === 'Emerging' ? t('Emerging', 'ناشئ') : c.category === 'Established' ? t('Established', 'متمرّس') : c.category], [t('Medium / practice', 'الوسيط / الممارسة الفنية'), c.medium],
         [t('Proposed participation', 'المشاركة المقترحة'), c.participation === 'EXISTING_WORK' ? t('Existing work', 'عمل قائم') : c.participation === 'NEW_COMMISSION' ? t('New commission', 'تكليف بعمل جديد') : '']].map(([k, v]) =>
         <div key={k}><dt className="text-sm text-[#5E554B]">{k}</dt><dd dir="auto">{v || '—'}</dd></div>)}
-      <div className="sm:col-span-2"><dt className="text-sm text-[#5E554B]">{t('Biography', 'السيرة')}</dt><dd dir="auto" className="whitespace-pre-line">{c.biography || '—'}</dd></div>
+      <div className="sm:col-span-2"><dt className="text-sm text-[#5E554B]">{t('Biography', 'النبذة التعريفية')}</dt><dd dir="auto" className="whitespace-pre-line">{c.biography || '—'}</dd></div>
       <div className="sm:col-span-2"><dt className="text-sm text-[#5E554B]">{t('Rationale', 'مبررات الترشيح')}</dt><dd dir="auto" className="whitespace-pre-line">{c.rationale || '—'}</dd></div>
     </dl>}
 
@@ -259,20 +260,20 @@ function CaseDetail({ c, works, decisions, urls, mine, busy, run, missingLabel, 
     {editable && <CvUpload c={c} busy={busy} run={run} />}
 
     {editable && <div className="space-y-2 rounded border border-[#CBB89F] bg-[#FFFAF0] ps-4 pe-4 py-3">
-      {missing.length ? <><p>{t('Still needed before this case can be marked ready:', 'مطلوب قبل تعليم الترشيح كجاهز:')}</p>
+      {missing.length ? <><p>{t('Still needed before this case is ready for the Committee:', 'مطلوب قبل أن يصبح الترشيح جاهزاً للجنة:')}</p>
         <ul className="list-inside list-disc">{missing.map(m => <li key={m}>{missingLabel[m]}</li>)}</ul></>
-        : <p>{t('Everything required is in place. Marking ready locks the case.', 'اكتمل كل المطلوب. تعليم الترشيح كجاهز يقفله.')}</p>}
-      <button type="button" className={button} disabled={busy || missing.length > 0} onClick={() => void markReady()}>{t('Mark ready', 'تعليم كجاهز')}</button>
+        : <p>{t('Everything required is in place. Pressing “Ready for Committee” locks the case.', 'اكتمل كل المطلوب. عند الضغط على «جاهز للجنة» يُقفل الترشيح.')}</p>}
+      <button type="button" className={button} disabled={busy || missing.length > 0} onClick={() => void markReady()}>{t('Ready for Committee', 'جاهز للجنة')}</button>
     </div>}
 
     {editable && <div className="flex flex-wrap items-center gap-3 border-t border-[#D9CEBA] pt-3">
-      {!confirmDiscard ? <button type="button" className="text-sm text-[#8B261E] underline" disabled={busy} onClick={() => setConfirmDiscard(true)}>{t('Discard this draft', 'تجاهل هذه المسودة')}</button>
-        : <><p className="text-sm">{t('Discard this case? It disappears from the list and can no longer be edited or submitted.', 'تجاهل هذا الترشيح؟ سيختفي من القائمة ولن يمكن تعديله أو إرساله.')}</p>
+      {!confirmDiscard ? <button type="button" className="text-sm text-[#8B261E] underline" disabled={busy} onClick={() => setConfirmDiscard(true)}>{t('Discard this draft', 'استبعاد هذه المسودة')}</button>
+        : <><p className="text-sm">{t('Discard this case? It disappears from the list and can no longer be edited or submitted.', 'استبعاد هذا الترشيح؟ سيختفي من القائمة ولن يمكن تعديله أو إرساله.')}</p>
           <button type="button" className={button} disabled={busy} onClick={() => void run(async () => {
             const { data, error } = await client!.from('artist_dossiers').update({ discarded_at: new Date().toISOString() }).eq('id', c.id).select('id');
             if (error) throw new Error(error.message);
-            if (!data?.length) throw new Error(t('The case could not be discarded.', 'تعذّر تجاهل الترشيح.'));
-          }, t('Draft discarded.', 'تم تجاهل المسودة.'))}>{t('Discard', 'تجاهل')}</button>
+            if (!data?.length) throw new Error(t('The case could not be discarded.', 'تعذّر استبعاد الترشيح.'));
+          }, t('Draft discarded.', 'استُبعدت المسودة.'))}>{t('Discard', 'استبعاد')}</button>
           <button type="button" className={quiet} onClick={() => setConfirmDiscard(false)}>{t('Keep it', 'إبقاء')}</button></>}
     </div>}
 
