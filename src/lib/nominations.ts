@@ -14,7 +14,12 @@ export type NominationCase = {
 };
 export type CaseWork = {
   id: string; dossier_id: string; position: number; title: string; year: string | null; medium: string | null;
-  dimensions: string | null; source_credit: string; image_path: string; created_at: string;
+  dimensions: string | null; source_credit: string; published_in: string | null; image_path: string; created_at: string;
+};
+/** A scouting note on an art idea that is not tied to an artist yet (it may be linked to a case later). */
+export type ArtIdea = {
+  id: string; event_id: string; title: string; note: string | null; links: string[]; dossier_id: string | null;
+  created_by: string; created_at: string; updated_at: string; archived_at: string | null;
 };
 export type NominationDecision = {
   id: string; dossier_id: string; committee_recommendation: 'RECOMMENDED' | 'NOT_RECOMMENDED';
@@ -44,7 +49,8 @@ export function missingForReady(c: Pick<NominationCase, 'name' | 'arabic_name' |
   return missing;
 }
 
-/** The step a case is at, as the Coordinator sees it. */
+/** The step a case is at, as the Coordinator sees it. A draft is a scouting case: built from published
+ * sources, artist not contacted. "Ready for Committee" turns it into a nomination. */
 export type CaseStage = 'DRAFT' | 'READY' | 'SENT' | 'APPROVED' | 'DECLINED' | 'OTHER';
 export function caseStage(c: Pick<NominationCase, 'status' | 'sent_to_committee_at'>): CaseStage {
   if (c.status === 'INCOMPLETE_DOSSIER') return 'DRAFT';

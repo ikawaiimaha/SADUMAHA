@@ -26,7 +26,7 @@ export const exportStamp = (date: Date) => {
 
 export const caseFolderName = (c: Pick<NominationCase, 'id' | 'name'>) => `${safeName(c.name, 60)} - ${c.id.slice(0, 8)}`;
 
-const stageNames = { DRAFT: 'Draft', READY: 'Ready', SENT: 'Sent to Committee', APPROVED: 'Approved', DECLINED: 'Declined', OTHER: 'Other' } as const;
+const stageNames = { DRAFT: 'Scouting (not contacted)', READY: 'Ready', SENT: 'Sent to Committee', APPROVED: 'Approved', DECLINED: 'Declined', OTHER: 'Other' } as const;
 
 export function nominationsCsv(cases: NominationCase[], decisions: NominationDecision[]): string {
   const latest = (id: string) => decisions.filter(d => d.dossier_id === id).sort((a, b) => b.recorded_at.localeCompare(a.recorded_at))[0];
@@ -47,8 +47,8 @@ export function caseSummaryCsv(c: NominationCase, works: CaseWork[]): string {
     ['Base city', c.base_city], ['Category', c.category], ['Medium', c.medium], ['Participation', c.participation ?? ''],
     ['Status', stageNames[caseStage(c)]], ['Biography', c.biography], ['Rationale', c.rationale], ['Links', c.links.join('\n')],
     [],
-    ['Work', 'Title', 'Year', 'Medium', 'Dimensions', 'Credit', 'File'],
-    ...works.map((w, i) => [String(i + 1), w.title, w.year, w.medium, w.dimensions, w.source_credit, workFileName(w, i)]),
+    ['Work', 'Title', 'Year', 'Medium', 'Dimensions', 'Credit', 'Published in', 'File'],
+    ...works.map((w, i) => [String(i + 1), w.title, w.year, w.medium, w.dimensions, w.source_credit, w.published_in, workFileName(w, i)]),
   ]);
 }
 

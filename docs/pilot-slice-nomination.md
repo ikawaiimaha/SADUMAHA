@@ -61,9 +61,23 @@ until these are present.
 **Data:** professional, public-facing information only. No passports, contact or bank details at
 this stage. Every image keeps its source and credit.
 
+## Scouting before nomination (from 16 Nov 2026)
+
+The pilot starts with scouting. Until selection opens around April 2027, Coordinators build each
+artist case from published sources only and do not contact the artist. A draft case is that
+scouting case: the app shows it as "Scouting" and every case as "Not contacted" until the Director
+approves it; contact begins at the invitation step. Each work must name where it was published
+(exhibition, catalogue, website or press) besides its image credit; the database refuses a work
+without it (migration `20261016130000_sadu_scouting.sql`). "Ready for Committee" turns the
+scouting case into a nomination.
+
+**Art ideas** sit beside the cases: a title, notes and links for an idea that is not tied to an
+artist yet. Coordinators see each other's ideas; only the author can link an idea to a case of
+the same event or archive it. Ideas are never deleted and do not go to the Committee.
+
 ## Screens (all in /pilot, Coordinator role)
 
-- **My cases** for the selected event: one row per artist with completeness and status (Draft,
+- **My cases** for the selected event: one row per artist with completeness and status (Scouting,
   Ready, Sent to Committee, Approved, Declined, Returned for more information).
 - **Case editor:** the fields above, works with image upload, and "Ready for Committee" (disabled until the
   case is complete). A ready case is locked; changing it creates a new version.

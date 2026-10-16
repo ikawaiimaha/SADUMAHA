@@ -7,7 +7,7 @@ import { canWriteToFolder, folderSink, sharedFolder, writeExport, zipSink, expor
 import {
   acceptAttribute, acceptedExtension, CASE_COLUMNS, caseStage, linksFromText, MAX_WORKS, MIN_WORKS, missingForReady,
   signedUrls, uploadCaseFile, recordCommitteeBatch, BUCKET,
-  type CaseStage, type CaseWork, type CommitteeBatch, type CommitteeBatchCase, type MissingItem, type NominationCase, type NominationDecision, type NominationEvent,
+  type ArtIdea, type CaseStage, type CaseWork, type CommitteeBatch, type CommitteeBatchCase, type MissingItem, type NominationCase, type NominationDecision, type NominationEvent,
 } from '../lib/nominations';
 
 const field = 'block w-full rounded border border-[#D9CEBA] bg-white ps-3 pe-3 py-2';
@@ -30,6 +30,7 @@ export function NominationWorkspace({ userId }: { userId: string }) {
   const [decisions, setDecisions] = useState<NominationDecision[]>([]);
   const [batches, setBatches] = useState<CommitteeBatch[]>([]);
   const [batchCases, setBatchCases] = useState<CommitteeBatchCase[]>([]);
+  const [ideas, setIdeas] = useState<ArtIdea[]>([]);
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [selectedId, setSelectedId] = useState('');
   const [creating, setCreating] = useState(false);
@@ -40,7 +41,7 @@ export function NominationWorkspace({ userId }: { userId: string }) {
   text.current = t;
 
   const stageLabel: Record<CaseStage, string> = {
-    DRAFT: t('Draft', 'مسودة'), READY: t('Ready', 'جاهز'), SENT: t('Sent to Committee', 'أُرسل إلى اللجنة'),
+    DRAFT: t('Scouting', 'استكشاف'), READY: t('Ready', 'جاهز'), SENT: t('Sent to Committee', 'أُرسل إلى اللجنة'),
     APPROVED: t('Approved', 'معتمد'), DECLINED: t('Declined', 'مرفوض'), OTHER: t('Other', 'أخرى'),
   };
   const missingLabel: Record<MissingItem, string> = {
@@ -60,6 +61,8 @@ export function NominationWorkspace({ userId }: { userId: string }) {
     if (!activeEvent) return;
     const cs = await client.from('artist_dossiers').select(CASE_COLUMNS).eq('event_id', activeEvent).order('created_at');
     if (cs.error) { setMessage(t('Cases could not be loaded.', 'تعذّر تحميل الترشيحات.')); return; }
+    const ai = await client.from('sadu_art_ideas').select('*').eq('event_id', activeEvent).is('archived_at', null).order('created_at');
+    setIdeas((ai.data ?? []) as ArtIdea[]);
     // Discarded drafts stay in the database but are hidden here.
     const list = (cs.data as unknown as NominationCase[]).filter(c => !c.discarded_at);
     const ids = list.map(c => c.id);
@@ -135,7 +138,7 @@ export function NominationWorkspace({ userId }: { userId: string }) {
           {events.map(e => <option key={e.id} value={e.id}>{isAr ? e.name_ar : e.name_en}{e.edition ? ` · ${e.edition}` : ''}</option>)}
         </select></label>}
     </div>
-    {event && <p className="text-sm text-[#5E554B]">{isAr ? event.name_ar : event.name_en} · {t('Build a case for each artist, send the Committee presentation by email, then record the decision here.', 'جهّز ملف ترشيح لكل فنان، وأرسل العرض إلى اللجنة بالبريد الإلكتروني، ثم سجّل القرار هنا.')}</p>}
+    {event && <p className="text-sm text-[#5E554B]">{isAr ? event.name_ar : event.name_en} · {t('Scout first: build a case for each artist from published sources only, without contacting them. When selection opens, mark the case ready for the Committee, send the presentation by email, then record the decision here.', 'ابدأ بالاستكشاف: جهّز ملفاً لكل فنان من المصادر المنشورة فقط، دون التواصل معه. عند فتح باب الاختيار، اجعل الملف جاهزاً للجنة، وأرسل العرض بالبريد الإلكتروني، ثم سجّل القرار هنا.')}</p>}
     <p role="status" aria-live="polite" className="empty:hidden"><UiText value={message} /></p>
 
     <div className="flex flex-wrap gap-3">
@@ -159,6 +162,7 @@ export function NominationWorkspace({ userId }: { userId: string }) {
             className={`flex w-full flex-wrap items-center gap-x-4 gap-y-1 ps-4 pe-4 py-3 text-start ${c.id === selectedId ? 'bg-[#FFFAF0]' : ''}`}>
             <span className="me-auto min-w-0"><strong>{isAr ? c.arabic_name : c.name}</strong> <span className="text-sm text-[#5E554B]">· {isAr ? c.name : c.arabic_name} · {c.nationality}</span></span>
             <span className="rounded border border-[#CBB89F] ps-2 pe-2 text-sm">{stageLabel[stage]}</span>
+            {stage !== 'APPROVED' && <span className="text-sm text-[#5E554B]">{t('Not contacted', 'لم يُتواصل معه')}</span>}
             {stage === 'DRAFT' && <span className="text-sm">{missing.length ? t(`${missing.length} item(s) missing`, `ينقص ${missing.length}`) : t('Complete', 'مكتمل')}</span>}
             {!mine && <span className="text-sm text-[#5E554B]">{t('Another coordinator', 'منسق آخر')}</span>}
           </button>
@@ -173,6 +177,8 @@ export function NominationWorkspace({ userId }: { userId: string }) {
 
     {selected && <CaseDetail key={selected.id} onExport={() => void exportCases([selected], 'CASE')} c={selected} works={worksFor(selected.id)} decisions={decisionsFor(selected.id)} sent={sentFor(selected.id)} urls={urls}
       mine={selected.created_by === userId} busy={busy} run={run} missingLabel={missingLabel} stageLabel={stageLabel} />}
+
+    {event && <ArtIdeas eventId={event.id} ideas={ideas} cases={cases} userId={userId} busy={busy} run={run} />}
 
     <section className="space-y-2" aria-labelledby="invite-heading">
       <h3 id="invite-heading" className="text-lg">{t('Invite list', 'قائمة الدعوات')}</h3>
@@ -237,6 +243,7 @@ function CaseDetail({ c, works, decisions, sent, urls, mine, busy, run, missingL
       <span className="rounded border border-[#CBB89F] ps-2 pe-2 text-sm">{stageLabel[stage]}</span>
       <button type="button" className="text-sm underline" disabled={busy} onClick={onExport}>{t('Export this case', 'تصدير هذا الترشيح')}</button>
     </header>
+    {stage === 'DRAFT' && <p className="rounded border border-[#CBB89F] bg-[#FFFAF0] ps-3 pe-3 py-2 text-sm">{t('Scouting case · artist not contacted. Use published sources only (exhibitions, catalogues, websites, press). The artist is contacted only after the Director approves, at the invitation step.', 'ملف استكشاف · لم يُتواصل مع الفنان. استخدم المصادر المنشورة فقط (المعارض والكتالوجات والمواقع والصحافة). لا يُتواصل مع الفنان إلا بعد اعتماد المدير، في خطوة الدعوة.')}</p>}
     {!editable && stage === 'DRAFT' && <p className="text-sm">{t('Only the coordinator who created this case can edit it.', 'لا يعدّل هذا الترشيح إلا المنسق الذي أنشأه.')}</p>}
 
     {editable ? <div className="grid gap-3 sm:grid-cols-2">
@@ -290,16 +297,16 @@ function CaseDetail({ c, works, decisions, sent, urls, mine, busy, run, missingL
 
 function WorksSection({ c, works, urls, editable, busy, run }: { c: NominationCase; works: CaseWork[]; urls: Record<string, string>; editable: boolean; busy: boolean; run: RunFn }) {
   const { t } = useUiText();
-  const empty = { title: '', year: '', medium: '', dimensions: '', source_credit: '' };
+  const empty = { title: '', year: '', medium: '', dimensions: '', source_credit: '', published_in: '' };
   const [w, setW] = useState(empty);
   const [file, setFile] = useState<File | null>(null);
   const [inputKey, setInputKey] = useState(0);
   const ext = file ? acceptedExtension(file, 'work') : null;
-  const canAdd = editable && works.length < MAX_WORKS && !!ext && w.title.trim() && w.source_credit.trim().length >= 2;
+  const canAdd = editable && works.length < MAX_WORKS && !!ext && w.title.trim() && w.source_credit.trim().length >= 2 && w.published_in.trim().length >= 2;
 
   const add = () => run(async () => {
     const path = await uploadCaseFile(client!, c.id, 'works', file!, ext!);
-    const { error } = await client!.from('sadu_case_works').insert({ dossier_id: c.id, position: works.length + 1, title: w.title.trim(), year: w.year.trim() || null, medium: w.medium.trim() || null, dimensions: w.dimensions.trim() || null, source_credit: w.source_credit.trim(), image_path: path });
+    const { error } = await client!.from('sadu_case_works').insert({ dossier_id: c.id, position: works.length + 1, title: w.title.trim(), year: w.year.trim() || null, medium: w.medium.trim() || null, dimensions: w.dimensions.trim() || null, source_credit: w.source_credit.trim(), published_in: w.published_in.trim(), image_path: path });
     if (error) throw new Error(error.message);
     setW(empty); setFile(null); setInputKey(k => k + 1);
   }, t('Work added.', 'أُضيف العمل.'));
@@ -316,6 +323,7 @@ function WorksSection({ c, works, urls, editable, busy, run }: { c: NominationCa
       <p dir="auto" className="font-semibold">{work.title}{work.year ? `, ${work.year}` : ''}</p>
       <p className="text-sm">{[work.medium, work.dimensions].filter(Boolean).join(' · ')}</p>
       <p className="text-sm text-[#5E554B]">{t('Credit', 'المصدر')}: <bdi>{work.source_credit}</bdi></p>
+      {work.published_in && <p className="text-sm text-[#5E554B]">{t('Published in', 'نُشر في')}: <bdi>{work.published_in}</bdi></p>}
       {editable && <button type="button" className="text-sm text-[#8B261E] underline" disabled={busy} onClick={() => void remove(work.id)}>{t('Remove', 'إزالة')}</button>}
     </li>)}</ul>}
     {editable && works.length < MAX_WORKS && <form className="grid gap-3 rounded border border-dashed border-[#CBB89F] ps-3 pe-3 py-3 sm:grid-cols-2" onSubmit={e => { e.preventDefault(); if (canAdd) void add(); }}>
@@ -327,6 +335,7 @@ function WorksSection({ c, works, urls, editable, busy, run }: { c: NominationCa
       <label className="block">{t('Medium', 'الوسيط')}<input className={field} value={w.medium} onChange={e => setW({ ...w, medium: e.target.value })} /></label>
       <label className="block">{t('Dimensions', 'الأبعاد')}<input className={field} value={w.dimensions} onChange={e => setW({ ...w, dimensions: e.target.value })} /></label>
       <label className="block sm:col-span-2">{t('Image source / credit (required)', 'مصدر الصورة / حقوقها (مطلوب)')}<input className={field} value={w.source_credit} onChange={e => setW({ ...w, source_credit: e.target.value })} /></label>
+      <label className="block sm:col-span-2">{t('Where it was published: exhibition, catalogue, website or press (required)', 'مكان النشر: معرض أو كتالوج أو موقع أو صحافة (مطلوب)')}<input className={field} value={w.published_in} onChange={e => setW({ ...w, published_in: e.target.value })} /></label>
       <div className="sm:col-span-2"><button className={quiet} disabled={busy || !canAdd}>{t('Add work', 'إضافة العمل')}</button></div>
     </form>}
   </section>;
@@ -414,5 +423,49 @@ function DecisionHistory({ decisions, sent }: { decisions: NominationDecision[];
         ? <>{t('Decided on the deck sent on', 'قرار بشأن العرض المُرسل في')} <bdi dir="ltr">{b.sent_at.slice(0, 10)}</bdi> · <bdi>{b.deck_file_name}</bdi></>
         : t('No sent deck is recorded for this decision.', 'لا يوجد عرض مُرسل مسجّل لهذا القرار.')}</p>; })()}
     </li>)}</ol>
+  </section>;
+}
+
+/** Art ideas noted while scouting, before (or without) an artist. Shared with the other coordinators; only the author edits. */
+function ArtIdeas({ eventId, ideas, cases, userId, busy, run }: { eventId: string; ideas: ArtIdea[]; cases: NominationCase[]; userId: string; busy: boolean; run: RunFn }) {
+  const { t, isAr } = useUiText();
+  const [d, setD] = useState({ title: '', note: '', links: '' });
+  const ok = d.title.trim().length >= 3;
+  const caseName = (id: string | null) => { const c = cases.find(x => x.id === id); return c ? (isAr ? c.arabic_name : c.name) : ''; };
+  const update = (id: string, change: Partial<Pick<ArtIdea, 'dossier_id' | 'archived_at'>>, success: string) => run(async () => {
+    const { data, error } = await client!.from('sadu_art_ideas').update(change).eq('id', id).select('id');
+    if (error) throw new Error(error.message);
+    if (!data?.length) throw new Error(t('The idea could not be changed.', 'تعذّر تعديل الفكرة.'));
+  }, success);
+
+  return <section className="space-y-3" aria-labelledby="ideas-heading">
+    <h3 id="ideas-heading" className="text-lg">{t('Art ideas', 'أفكار فنية')}</h3>
+    <p className="text-sm">{t('Note an idea for the festival that is not tied to an artist yet. Link it to a case when you find the right artist.', 'دوّن فكرة للمهرجان غير مرتبطة بفنان بعد. اربطها بملف عندما تجد الفنان المناسب.')}</p>
+    {ideas.length > 0 && <ul className="space-y-2">{ideas.map(idea => {
+      const mine = idea.created_by === userId;
+      return <li key={idea.id} className="space-y-1 rounded border border-[#D9CEBA] bg-white ps-3 pe-3 py-2">
+        <p dir="auto" className="font-semibold">{idea.title}</p>
+        {idea.note && <p dir="auto" className="whitespace-pre-line text-sm">{idea.note}</p>}
+        {idea.links.length > 0 && <ul className="text-sm">{idea.links.map(l => <li key={l}><bdi dir="ltr">{l}</bdi></li>)}</ul>}
+        {mine ? <div className="flex flex-wrap items-end gap-3">
+          <label className="block text-sm">{t('Linked artist case', 'ملف الفنان المرتبط')}
+            <select className={field} disabled={busy} value={idea.dossier_id ?? ''} onChange={e => void update(idea.id, { dossier_id: e.target.value || null }, t('Idea updated.', 'حُدّثت الفكرة.'))}>
+              <option value="">{t('No artist yet', 'لا يوجد فنان بعد')}</option>
+              {cases.map(c => <option key={c.id} value={c.id}>{isAr ? c.arabic_name : c.name}</option>)}
+            </select></label>
+          <button type="button" className="text-sm underline" disabled={busy} onClick={() => void update(idea.id, { archived_at: new Date().toISOString() }, t('Idea archived.', 'أُرشفت الفكرة.'))}>{t('Archive', 'أرشفة')}</button>
+        </div> : <p className="text-sm text-[#5E554B]">{idea.dossier_id ? <>{t('Linked to', 'مرتبطة بـ')} {caseName(idea.dossier_id)} · </> : null}{t('Another coordinator', 'منسق آخر')}</p>}
+      </li>;
+    })}</ul>}
+    <form className="grid gap-3 rounded border border-dashed border-[#CBB89F] bg-white ps-3 pe-3 py-3" onSubmit={e => { e.preventDefault(); if (ok) void run(async () => {
+      const { error } = await client!.from('sadu_art_ideas').insert({ event_id: eventId, title: d.title.trim(), note: d.note.trim() || null, links: linksFromText(d.links) });
+      if (error) throw new Error(error.message);
+      setD({ title: '', note: '', links: '' });
+    }, t('Idea added.', 'أُضيفت الفكرة.')); }}>
+      <label className="block">{t('Idea', 'الفكرة')}<input dir="auto" maxLength={200} className={field} value={d.title} onChange={e => setD({ ...d, title: e.target.value })} /></label>
+      <label className="block">{t('Notes', 'ملاحظات')}<textarea rows={2} maxLength={4000} dir="auto" className={field} value={d.note} onChange={e => setD({ ...d, note: e.target.value })} /></label>
+      <label className="block">{t('Links (one per line)', 'روابط (رابط في كل سطر)')}<textarea rows={2} dir="ltr" className={field} value={d.links} onChange={e => setD({ ...d, links: e.target.value })} /></label>
+      <div><button className={quiet} disabled={busy || !ok}>{t('Add idea', 'إضافة الفكرة')}</button></div>
+    </form>
   </section>;
 }
