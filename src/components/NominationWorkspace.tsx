@@ -245,7 +245,7 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
     {view === 'artists' && (selected
       ? <CaseDetail key={selected.id} onBack={() => go('artists')} onDeck={() => go('deck')} onExport={() => void exportCases([selected], 'CASE')} c={selected}
         works={worksFor(selected.id)} decisions={decisionsFor(selected.id)} sent={sentFor(selected.id)} urls={urls}
-        mine={!readOnly && selected.created_by === userId} readOnly={readOnly} briefReady={briefReady} busy={busy} run={run} refresh={() => load()} missingLabel={missingLabel} stageLabel={stageLabel} />
+        mine={!readOnly && selected.created_by === userId} readOnly={readOnly} briefReady={briefReady && briefs.length > 0} busy={busy} run={run} refresh={() => load()} missingLabel={missingLabel} stageLabel={stageLabel} />
       : <ArtistsView cases={cases} filter={filter} setFilter={setFilter} stageLabel={stageLabel} count={count} thumb={thumb} worksFor={worksFor} userId={userId}
         loaded={loaded} busy={busy} readOnly={readOnly} creating={creating} setCreating={setCreating} onOpen={openCase} eventReady={!!eventId}
         onExportAll={pick => void exportCases(cases, 'ALL', pick)}
@@ -797,14 +797,17 @@ function BriefView({ eventId, briefs, cases, decisions, readOnly, busy, run, onO
   const current = briefs[briefs.length - 1];
   const empty = { theme: '', venues: '', artist_count: '', media: '', other_requirements: '', source: '' };
   const [d, setD] = useState(empty);
+  const [initial, setInitial] = useState(empty);
   const [editing, setEditing] = useState(false);
-  const started = editing && Object.values(d).some(v => v.trim());
+  const started = editing && (Object.keys(d) as (keyof typeof d)[]).some(k => d[k].trim() !== initial[k].trim());
   useEffect(() => { markUnsaved('brief', started); }, [started]);
   useEffect(() => () => markUnsaved('brief', false), []);
   const count = d.artist_count.trim() ? Number(d.artist_count) : null;
   const ok = d.theme.trim().length >= 2 && d.source.trim().length >= 5 && (count === null || (Number.isInteger(count) && count >= 1 && count <= 1000));
   const startEditing = () => {
-    setD(current ? { theme: current.theme, venues: current.venues ?? '', artist_count: current.artist_count ? String(current.artist_count) : '', media: current.media ?? '', other_requirements: current.other_requirements ?? '', source: '' } : empty);
+    const start = current ? { theme: current.theme, venues: current.venues ?? '', artist_count: current.artist_count ? String(current.artist_count) : '', media: current.media ?? '', other_requirements: current.other_requirements ?? '', source: '' } : empty;
+    setD(start);
+    setInitial(start);
     setEditing(true);
   };
   const name = (id: string) => { const c = cases.find(x => x.id === id); return c ? (isAr ? c.arabic_name : c.name) : id; };
@@ -848,7 +851,7 @@ function BriefView({ eventId, briefs, cases, decisions, readOnly, busy, run, onO
       <p className="text-xs text-[#6E6259]"><bdi>{current.source}</bdi> · {t('recorded', 'سُجّلت في')} <bdi dir="ltr">{current.recorded_at.slice(0, 10)}</bdi>{briefs.length > 1 ? ` · ${t(`version ${briefs.length}`, `النسخة ${briefs.length}`)}` : ''}</p>
       {briefs.length > 1 && <details className="text-sm"><summary className="cursor-pointer text-[#8B261E]">{t('Earlier versions', 'النسخ السابقة')}</summary>
         <ol className="mt-2 space-y-2">{briefs.slice(0, -1).reverse().map(b => <li key={b.id} className="rounded-lg bg-[#FBF7F0] ps-3 pe-3 py-2">
-          <p dir="auto">{b.theme}{b.artist_count ? ` · ${b.artist_count}` : ''}{b.media ? ` · ${b.media}` : ''}</p>
+          <p dir="auto">{b.theme}{b.venues ? ` · ${b.venues}` : ''}{b.artist_count ? ` · ${b.artist_count}` : ''}{b.media ? ` · ${b.media}` : ''}{b.other_requirements ? ` · ${b.other_requirements}` : ''}</p>
           <p className="text-xs text-[#6E6259]"><bdi>{b.source}</bdi> · <bdi dir="ltr">{b.recorded_at.slice(0, 10)}</bdi></p></li>)}</ol></details>}
     </div> : !editing && <Empty icon={<ClipboardList aria-hidden className="size-6" />} title={t('No brief recorded yet', 'لم تُسجَّل التوجيهات بعد')}
       body={readOnly ? t('The theme, venues, number of artists and media the festival management sets appear here.', 'يظهر هنا ما تحدده إدارة المهرجان من موضوع ومواقع وعدد الفنانين والوسائط.') : t('Before scouting, write down the theme, venues, number of artists and the media and disciplines the festival management has set, and who set them.', 'قبل الاستكشاف، دوّن الموضوع والمواقع وعدد الفنانين والوسائط والتخصصات التي حددتها إدارة المهرجان، ومن حددها.')} />}
