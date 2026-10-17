@@ -622,8 +622,8 @@ export const MOUNIR_FATMI_SUBMISSION: CommitteeReviewSubmission = {
 export const INITIAL_MESSAGES: MessageRecord[] = [
   {
     id: 'msg-01',
-    senderNameEn: 'Maha (Exhibition Coordinator)',
-    senderNameAr: 'مها (منسق المعارض)',
+    senderNameEn: 'Exhibition Coordinator',
+    senderNameAr: 'منسق المعارض',
     senderRole: 'COORDINATOR',
     recipientRole: 'ARTIST',
     timestamp: 'Yesterday at 10:14 AM',
@@ -657,8 +657,8 @@ export const ROLE_PROFILES: Record<RoleKey, {
   permittedViews: string[];
 }> = {
   COORDINATOR: {
-    nameEn: 'Maha (Exhibition Coordinator)',
-    nameAr: 'مها (منسق المعارض)',
+    nameEn: 'Exhibition Coordinator',
+    nameAr: 'منسق المعارض',
     titleEn: 'Cultural Affairs Project Coordinator',
     titleAr: 'منسق الشؤون الثقافية والمشاريع الفنية',
     scopeEn: 'The Overseer: Managing the artist relationship, tracking proposal completeness, and monitoring cross-departmental readiness.',
@@ -668,8 +668,8 @@ export const ROLE_PROFILES: Record<RoleKey, {
     permittedViews: ['overview', 'dossiers', 'approved-scope', 'communications'],
   },
   SDC_COORDINATOR: {
-    nameEn: 'Maha (Exhibition Coordinator)',
-    nameAr: 'مها (منسق المعارض)',
+    nameEn: 'Exhibition Coordinator',
+    nameAr: 'منسق المعارض',
     titleEn: 'Cultural Affairs Project Coordinator',
     titleAr: 'منسق الشؤون الثقافية والمشاريع الفنية',
     scopeEn: 'The Overseer: Managing the artist relationship, tracking proposal completeness, and monitoring cross-departmental readiness.',
