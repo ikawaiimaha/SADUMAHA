@@ -62,6 +62,13 @@ export function NominationWorkspace({ userId }: { userId: string }) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const top = useRef<HTMLDivElement>(null);
+  // True while the open case has edits that are not saved; leaving it asks first.
+  const dirty = useRef(false);
+  useEffect(() => {
+    const warn = (e: BeforeUnloadEvent) => { if (dirty.current) e.preventDefault(); };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, []);
   // t() is recreated on every render; read it through a ref so loading does not depend on it.
   const text = useRef(t);
   text.current = t;
@@ -133,6 +140,8 @@ export function NominationWorkspace({ userId }: { userId: string }) {
   const thumb = (id: string) => { const w = worksFor(id)[0]; return w ? urls[w.image_path] : undefined; };
 
   const go = (next: View, caseId = '') => {
+    if (dirty.current && !window.confirm(t('This case has changes you have not saved. Leave without saving them?', 'في هذا الملف تغييرات غير محفوظة. هل تغادر دون حفظها؟'))) return;
+    dirty.current = false;
     setView(next); setSelectedId(caseId); setCreating(false); setMessage('');
     requestAnimationFrame(() => top.current?.scrollIntoView({ block: 'start' }));
   };
@@ -168,18 +177,20 @@ export function NominationWorkspace({ userId }: { userId: string }) {
   }
 
   if (!client) return null;
-  const tabs: { id: View; label: string; icon: ReactNode; badge?: number; hidden?: boolean }[] = [
-    { id: 'artists', label: t('Artists', 'الفنانون'), icon: <Users aria-hidden className="size-4" />, badge: cases.length },
-    { id: 'ideas', label: t('Art ideas', 'أفكار فنية'), icon: <Lightbulb aria-hidden className="size-4" />, badge: ideas.length, hidden: !ideasReady },
-    { id: 'deck', label: t('Committee deck', 'العرض التقديمي للجنة'), icon: <Presentation aria-hidden className="size-4" />, badge: count('READY') },
-    { id: 'invite', label: t('Invite list', 'قائمة الدعوات'), icon: <UserPlus aria-hidden className="size-4" />, badge: approved.length },
+  // Phones show the short label so all four sections fit on one row without scrolling sideways.
+  const tabs: { id: View; label: string; short: string; icon: ReactNode; badge?: number; hidden?: boolean }[] = [
+    { id: 'artists', label: t('Artists', 'الفنانون'), short: t('Artists', 'الفنانون'), icon: <Users aria-hidden className="size-4" />, badge: cases.length },
+    { id: 'ideas', label: t('Art ideas', 'أفكار فنية'), short: t('Ideas', 'أفكار'), icon: <Lightbulb aria-hidden className="size-4" />, badge: ideas.length, hidden: !ideasReady },
+    { id: 'deck', label: t('Committee deck', 'العرض التقديمي للجنة'), short: t('Committee', 'اللجنة'), icon: <Presentation aria-hidden className="size-4" />, badge: count('READY') },
+    { id: 'invite', label: t('Invite list', 'قائمة الدعوات'), short: t('Invite', 'الدعوات'), icon: <UserPlus aria-hidden className="size-4" />, badge: approved.length },
   ];
+  const shownTabs = tabs.filter(tab => !tab.hidden);
 
   return <section aria-labelledby="nominations-heading" className="space-y-5">
     <div ref={top} className="scroll-mt-4 flex flex-wrap items-end gap-x-6 gap-y-2">
       <div className="me-auto min-w-0">
-        <p className="text-sm font-medium uppercase tracking-wide text-[#8B261E]">{t('Nominations', 'الترشيحات')}</p>
-        <h1 id="nominations-heading" className="font-serif text-3xl text-[#1A1817]">{event ? `${isAr ? event.name_ar : event.name_en}${event.edition ? ` ${event.edition}` : ''}` : t('Nominations', 'الترشيحات')}</h1>
+        <h1 id="nominations-heading" className="font-serif text-2xl text-[#1A1817] sm:text-3xl">{event ? `${isAr ? event.name_ar : event.name_en}${event.edition ? ` ${event.edition}` : ''}` : t('Nominations', 'الترشيحات')}</h1>
+        <p className={`max-w-2xl ${ui.muted}`}>{t('Scout artists from published sources, send the ready ones to the Committee as a deck, and record the decision. Artists are not contacted until the Director approves.', 'استكشف الفنانين من المصادر المنشورة، وأرسل الجاهزين منهم إلى اللجنة في عرض تقديمي، ثم سجّل القرار. لا يُتواصل مع الفنان قبل اعتماد المدير.')}</p>
       </div>
       {events.length > 1 && <label className={ui.label}>{t('Event', 'الفعالية')}
         <select className={ui.field} value={eventId} onChange={e => { setEventId(e.target.value); go('artists'); }}>
@@ -187,12 +198,12 @@ export function NominationWorkspace({ userId }: { userId: string }) {
         </select></label>}
     </div>
 
-    <nav aria-label={t('Nominations sections', 'أقسام الترشيحات')} className="-mx-1 flex gap-1 overflow-x-auto border-b border-[#E4D8C4] ps-1 pe-1">
-      {tabs.filter(tab => !tab.hidden).map(tab => {
+    <nav aria-label={t('Nominations sections', 'أقسام الترشيحات')} className={`grid border-b border-[#E4D8C4] sm:flex sm:gap-1 ${shownTabs.length > 3 ? 'grid-cols-4' : 'grid-cols-3'}`}>
+      {shownTabs.map(tab => {
         const active = view === tab.id;
         return <button key={tab.id} type="button" aria-current={active ? 'page' : undefined} onClick={() => go(tab.id)}
-          className={`-mb-px inline-flex shrink-0 items-center gap-2 border-b-2 ps-3 pe-3 py-3 text-sm font-semibold ${active ? 'border-[#8B261E] text-[#8B261E]' : 'border-transparent text-[#5E554B] hover:text-[#1A1817]'}`}>
-          {tab.icon}{tab.label}
+          className={`-mb-px inline-flex min-w-0 flex-col items-center gap-1 border-b-2 ps-1 pe-1 py-2 text-xs font-semibold sm:flex-row sm:gap-2 sm:ps-3 sm:pe-3 sm:py-3 sm:text-sm ${active ? 'border-[#8B261E] text-[#8B261E]' : 'border-transparent text-[#5E554B] hover:text-[#1A1817]'}`}>
+          <span className="inline-flex items-center gap-1.5">{tab.icon}<span className="sm:hidden">{tab.short}</span><span className="hidden sm:inline">{tab.label}</span></span>
           {!!tab.badge && <span className={`rounded-full ps-2 pe-2 text-xs ${active ? 'bg-[#8B261E] text-white' : 'bg-[#F1E7D6] text-[#5E554B]'}`}>{tab.badge}</span>}
         </button>;
       })}
@@ -206,7 +217,7 @@ export function NominationWorkspace({ userId }: { userId: string }) {
     {view === 'artists' && (selected
       ? <CaseDetail key={selected.id} onBack={() => go('artists')} onDeck={() => go('deck')} onExport={() => void exportCases([selected], 'CASE')} c={selected}
         works={worksFor(selected.id)} decisions={decisionsFor(selected.id)} sent={sentFor(selected.id)} urls={urls}
-        mine={selected.created_by === userId} busy={busy} run={run} missingLabel={missingLabel} stageLabel={stageLabel} />
+        mine={selected.created_by === userId} busy={busy} run={run} missingLabel={missingLabel} stageLabel={stageLabel} onDirty={value => { dirty.current = value; }} />
       : <ArtistsView cases={cases} filter={filter} setFilter={setFilter} stageLabel={stageLabel} count={count} thumb={thumb} worksFor={worksFor} userId={userId}
         loaded={loaded} busy={busy} creating={creating} setCreating={setCreating} onOpen={openCase} eventReady={!!eventId}
         onExportAll={pick => void exportCases(cases, 'ALL', pick)}
@@ -282,24 +293,24 @@ function ArtistsView({ cases, filter, setFilter, stageLabel, count, thumb, works
     {loaded && !cases.length && !creating ? <Empty icon={<Users aria-hidden className="size-6" />} title={t('Start by scouting an artist', 'ابدأ باستكشاف فنان')}
       body={t('Build a case from published sources only (exhibitions, catalogues, websites, press). Artists are not contacted until the Director approves them.', 'جهّز ملفاً من المصادر المنشورة فقط (المعارض والكتالوجات والمواقع والصحافة). لا يُتواصل مع الفنان إلا بعد اعتماد المدير.')}
       action={<div className="pt-2">{newButton}</div>} /> : cases.length > 0 && <>
-      <ol aria-label={t('How a nomination moves', 'مراحل الترشيح')} className={`grid grid-cols-2 gap-2 ${stages.length > 4 ? 'sm:grid-cols-5' : 'sm:grid-cols-4'}`}>
+      <ol aria-label={t('How a nomination moves', 'مراحل الترشيح')} className={`grid gap-1.5 sm:gap-2 ${stages.length > 4 ? 'grid-cols-5' : 'grid-cols-4'}`}>
         {stages.map((s, i) => <li key={s}>
           <button type="button" aria-pressed={filter === s} onClick={() => setFilter(filter === s ? 'ALL' : s)}
-            className={`${ui.card} flex w-full items-center gap-3 ps-3 pe-3 py-3 text-start ${filter === s ? '!border-[#8B261E] !bg-[#FBF4F1]' : 'hover:border-[#CBB89F]'}`}>
-            <span className="grid size-8 shrink-0 place-items-center rounded-full bg-[#F7F1E6] text-sm font-semibold text-[#8B261E]">{s === 'DECLINED' ? <X aria-hidden className="size-4" /> : i + 1}</span>
-            <span className="min-w-0"><span className="block text-2xl font-semibold leading-none">{count(s)}</span>
-              <span className="block truncate text-sm text-[#5E554B]">{s === 'SENT' ? t('Waiting for decision', 'بانتظار القرار') : stageLabel[s]}</span></span>
+            className={`${ui.card} flex h-full w-full flex-col items-start gap-1 ps-2 pe-2 py-2 text-start sm:flex-row sm:items-center sm:gap-3 sm:ps-3 sm:pe-3 sm:py-3 ${filter === s ? '!border-[#8B261E] !bg-[#FBF4F1]' : 'hover:border-[#CBB89F]'}`}>
+            <span className="hidden size-8 shrink-0 place-items-center rounded-full bg-[#F7F1E6] text-sm font-semibold text-[#8B261E] sm:grid">{s === 'DECLINED' ? <X aria-hidden className="size-4" /> : i + 1}</span>
+            <span className="min-w-0"><span className="block text-xl font-semibold leading-none sm:text-2xl">{count(s)}</span>
+              <span className="block text-xs leading-tight text-[#5E554B] sm:truncate sm:text-sm">{s === 'SENT' ? t('Waiting for decision', 'بانتظار القرار') : stageLabel[s]}</span></span>
           </button></li>)}
       </ol>
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        {!creating && <span className="w-full sm:order-last sm:w-auto [&>button]:w-full">{newButton}</span>}
         <p className="me-auto text-sm text-[#5E554B]">{filter === 'ALL' ? t(`All ${cases.length} artists`, `كل الفنانين (${cases.length})`)
           : <>{t(`Showing: ${stageLabel[filter]}`, `المعروض: ${stageLabel[filter]}`)} · <button type="button" className={ui.link} onClick={() => setFilter('ALL')}>{t('Show all', 'عرض الكل')}</button></>}</p>
+        {canWriteToFolder() && <button type="button" className={ui.link} disabled={busy} onClick={() => onExportAll(true)}>{t('Choose export folder', 'اختيار مجلد التصدير')}</button>}
         <button type="button" className={ui.quiet} disabled={busy} onClick={() => onExportAll(false)} title={t('Copies every case, the deck and a summary sheet into the department’s shared folder.', 'ينسخ كل الملفات والعرض وجدولاً ملخصاً إلى المجلد المشترك للإدارة.')}>
           <FolderOutput aria-hidden className="size-4" />{t('Export all', 'تصدير الكل')}</button>
-        {!creating && newButton}
       </div>
-      {canWriteToFolder() && <p className="-mt-3 text-end"><button type="button" className={ui.link} disabled={busy} onClick={() => onExportAll(true)}>{t('Export to a different folder', 'التصدير إلى مجلد آخر')}</button></p>}
 
       {shown.length ? <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{shown.map(c => {
         const stage = caseStage(c), mine = c.created_by === userId;
@@ -363,15 +374,16 @@ function StageTrack({ stage }: { stage: CaseStage }) {
   </ol>;
 }
 
-function Section({ title, children, aside }: { title: string; children: ReactNode; aside?: ReactNode }) {
-  return <section className={`${ui.card} space-y-4 ps-5 pe-5 py-5`} aria-label={title}>
+function Section({ title, children, aside, id }: { title: string; children: ReactNode; aside?: ReactNode; id?: string }) {
+  return <section id={id} className={`${ui.card} scroll-mt-4 space-y-4 ps-5 pe-5 py-5`} aria-label={title}>
     <div className="flex flex-wrap items-baseline gap-2"><h3 className="me-auto font-serif text-xl">{title}</h3>{aside}</div>{children}
   </section>;
 }
 
-function CaseDetail({ c, works, decisions, sent, urls, mine, busy, run, missingLabel, stageLabel, onExport, onBack, onDeck }: {
+function CaseDetail({ c, works, decisions, sent, urls, mine, busy, run, missingLabel, stageLabel, onExport, onBack, onDeck, onDirty }: {
   c: NominationCase; works: CaseWork[]; decisions: NominationDecision[]; sent: SentEntry[]; urls: Record<string, string>; mine: boolean; busy: boolean;
   run: RunFn; missingLabel: Record<MissingItem, string>; stageLabel: Record<CaseStage, string>; onExport: () => void; onBack: () => void; onDeck: () => void;
+  onDirty: (dirty: boolean) => void;
 }) {
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const { t, isAr } = useUiText();
@@ -379,6 +391,14 @@ function CaseDetail({ c, works, decisions, sent, urls, mine, busy, run, missingL
   const editable = mine && stage === 'DRAFT';
   const [draft, setDraft] = useState<Draft>(() => toDraft(c));
   const dirty = useMemo(() => JSON.stringify(draft) !== JSON.stringify(toDraft(c)), [draft, c]);
+  useEffect(() => { onDirty(dirty); }, [dirty, onDirty]);
+  useEffect(() => () => onDirty(false), [onDirty]);
+  /** Takes the coordinator from a missing item in the checklist to the place where it is filled in. */
+  const jumpTo = (m: MissingItem) => {
+    const el = document.getElementById(`case-${m}`);
+    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement) el.focus({ preventScroll: true });
+  };
   const missing = missingForReady({ ...c, ...draft }, works.length);
   const set = (k: keyof Draft) => (e: { target: { value: string } }) => setDraft({ ...draft, [k]: e.target.value });
   const decisionRef = useRef<HTMLDivElement>(null);
@@ -418,17 +438,17 @@ function CaseDetail({ c, works, decisions, sent, urls, mine, busy, run, missingL
       <div className="space-y-5">
         {editable ? <Section title={t('About the artist', 'عن الفنان')}>
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className={ui.label}>{t('Artist name (English)', 'اسم الفنان بالإنجليزية')}<input dir="ltr" className={ui.field} value={draft.name} onChange={set('name')} /></label>
-            <label className={ui.label}>{t('Artist name (Arabic)', 'اسم الفنان بالعربية')}<input dir="rtl" lang="ar" className={ui.field} value={draft.arabic_name} onChange={set('arabic_name')} /></label>
-            <label className={ui.label}>{t('Nationality', 'الجنسية')}<input className={ui.field} value={draft.nationality} onChange={set('nationality')} /></label>
+            <label className={ui.label}>{t('Artist name (English)', 'اسم الفنان بالإنجليزية')}<input dir="ltr" className={ui.field} id="case-name" value={draft.name} onChange={set('name')} /></label>
+            <label className={ui.label}>{t('Artist name (Arabic)', 'اسم الفنان بالعربية')}<input dir="rtl" lang="ar" className={ui.field} id="case-arabic_name" value={draft.arabic_name} onChange={set('arabic_name')} /></label>
+            <label className={ui.label}>{t('Nationality', 'الجنسية')}<input className={ui.field} id="case-nationality" value={draft.nationality} onChange={set('nationality')} /></label>
             <label className={ui.label}>{t('Base city', 'مدينة الإقامة')}<input className={ui.field} value={draft.base_city} onChange={set('base_city')} /></label>
-            <label className={ui.label}>{t('Category', 'الفئة')}<select className={ui.field} value={draft.category} onChange={set('category')}>
+            <label className={ui.label}>{t('Category', 'الفئة')}<select className={ui.field} id="case-category" value={draft.category} onChange={set('category')}>
               <option value="Emerging">{t('Emerging', 'ناشئ')}</option><option value="Established">{t('Established', 'متمرّس')}</option></select></label>
-            <label className={ui.label}>{t('Medium / practice', 'الوسيط / الممارسة الفنية')}<input className={ui.field} value={draft.medium} onChange={set('medium')} /></label>
+            <label className={ui.label}>{t('Medium / practice', 'الوسيط / الممارسة الفنية')}<input className={ui.field} id="case-medium" value={draft.medium} onChange={set('medium')} /></label>
             <label className={`${ui.label} sm:col-span-2`}>{t('Proposed participation', 'المشاركة المقترحة')}<select className={ui.field} value={draft.participation} onChange={set('participation')}>
               <option value="">{t('Not decided yet', 'لم تُحدد بعد')}</option><option value="EXISTING_WORK">{t('Existing work', 'عمل قائم')}</option><option value="NEW_COMMISSION">{t('New commission', 'تكليف بعمل جديد')}</option></select></label>
-            <label className={`${ui.label} sm:col-span-2`}>{t('Biography', 'النبذة التعريفية')}<span className={`block font-normal ${ui.muted}`}>{t('A short paragraph for the slide.', 'فقرة قصيرة للشريحة.')}</span><textarea rows={4} maxLength={6000} dir="auto" className={ui.field} value={draft.biography} onChange={set('biography')} /></label>
-            <label className={`${ui.label} sm:col-span-2`}>{t('Rationale', 'مبررات الترشيح')}<span className={`block font-normal ${ui.muted}`}>{t('Why this artist, for this festival and its theme.', 'لماذا هذا الفنان، لهذا المهرجان وموضوعه.')}</span><textarea rows={4} maxLength={6000} dir="auto" className={ui.field} value={draft.rationale} onChange={set('rationale')} /></label>
+            <label className={`${ui.label} sm:col-span-2`}>{t('Biography', 'النبذة التعريفية')}<span className={`block font-normal ${ui.muted}`}>{t('A short paragraph for the slide.', 'فقرة قصيرة للشريحة.')}</span><textarea rows={4} maxLength={6000} dir="auto" className={ui.field} id="case-biography" value={draft.biography} onChange={set('biography')} /></label>
+            <label className={`${ui.label} sm:col-span-2`}>{t('Rationale', 'مبررات الترشيح')}<span className={`block font-normal ${ui.muted}`}>{t('Why this artist, for this festival and its theme.', 'لماذا هذا الفنان، لهذا المهرجان وموضوعه.')}</span><textarea rows={4} maxLength={6000} dir="auto" className={ui.field} id="case-rationale" value={draft.rationale} onChange={set('rationale')} /></label>
             <label className={`${ui.label} sm:col-span-2`}>{t('Links (one per line)', 'روابط (رابط في كل سطر)')}<span className={`block font-normal ${ui.muted}`}>{t('Website, gallery, press.', 'الموقع الإلكتروني، صالة العرض، الصحافة.')}</span><textarea rows={2} dir="ltr" className={ui.field} value={draft.links} onChange={set('links')} /></label>
           </div>
           <div className="flex flex-wrap items-center gap-3"><button type="button" className={ui.quiet} disabled={busy || !dirty} onClick={() => void save()}>{t('Save changes', 'حفظ التغييرات')}</button>
@@ -454,16 +474,19 @@ function CaseDetail({ c, works, decisions, sent, urls, mine, busy, run, missingL
         </Section>}
       </div>
 
-      <aside className="space-y-4 lg:sticky lg:top-4">
+      <aside className="order-first space-y-4 lg:order-none lg:sticky lg:top-4">
         <div className={`${ui.card} space-y-3 ps-5 pe-5 py-5`}>
           <p className="text-xs font-semibold uppercase tracking-wide text-[#8B261E]">{t('Next step', 'الخطوة التالية')}</p>
           {stage === 'DRAFT' && (editable ? <>
             <h3 className="font-serif text-lg">{missing.length ? t('Complete the case', 'استكمل الملف') : t('Ready to go to the Committee', 'جاهز للعرض على اللجنة')}</h3>
             <ul className="space-y-1.5">{REQUIREMENTS.map(m => { const ok = !missing.includes(m); return <li key={m} className={`flex items-center gap-2 text-sm ${ok ? 'text-[#6E6259]' : 'text-[#1A1817]'}`}>
-              {ok ? <Check aria-hidden className="size-4 text-[#2E6B3A]" /> : <Circle aria-hidden className="size-4 text-[#B9875A]" />}<span className={ok ? 'line-through decoration-[#CBB89F]' : ''}>{missingLabel[m]}</span>
+              {ok ? <Check aria-hidden className="size-4 text-[#2E6B3A]" /> : <Circle aria-hidden className="size-4 text-[#B9875A]" />}
+              {ok ? <span className="line-through decoration-[#CBB89F]">{missingLabel[m]}</span>
+                : <button type="button" className="text-start underline decoration-[#CBB89F] underline-offset-4 hover:text-[#8B261E]" onClick={() => jumpTo(m)}>{missingLabel[m]}</button>}
               <span className="sr-only">{ok ? t('done', 'مكتمل') : t('missing', 'ناقص')}</span></li>; })}</ul>
+            {dirty && <button type="button" className={`${ui.quiet} w-full`} disabled={busy} onClick={() => void save()}>{t('Save changes', 'حفظ التغييرات')}</button>}
             <button type="button" className={`${ui.button} w-full`} disabled={busy || missing.length > 0} onClick={() => void markReady()}>{t('Ready for Committee', 'جاهز للجنة')}</button>
-            <p className={ui.muted}>{missing.length ? t('The button unlocks when everything above is ticked.', 'يُفعَّل الزر عند اكتمال كل ما سبق.') : t('This locks the case so the Committee sees exactly what you prepared.', 'يُقفل هذا الملف حتى ترى اللجنة ما أعددته كما هو.')}</p>
+            <p className={ui.muted}>{missing.length ? t('Select a missing item to go to it. The button unlocks when everything is ticked.', 'اختر بنداً ناقصاً للانتقال إليه. يُفعَّل الزر عند اكتمال كل البنود.') : t('This locks the case so the Committee sees exactly what you prepared.', 'يُقفل هذا الملف حتى ترى اللجنة ما أعددته كما هو.')}</p>
           </> : <><h3 className="font-serif text-lg">{t('Being scouted', 'قيد الاستكشاف')}</h3><p className={ui.muted}>{t('Only the coordinator who created this case can edit it.', 'لا يعدّل هذا الترشيح إلا المنسق الذي أنشأه.')}</p></>)}
           {stage === 'READY' && <><h3 className="font-serif text-lg">{t('Add it to the Committee deck', 'أضفه إلى العرض التقديمي للجنة')}</h3>
             <p className={ui.muted}>{t('Download the PowerPoint, email it to the Committee, then record it as sent.', 'نزّل ملف PowerPoint وأرسله إلى اللجنة بالبريد، ثم سجّل الإرسال.')}</p>
@@ -518,7 +541,7 @@ function WorksSection({ c, works, urls, editable, busy, run }: { c: NominationCa
     if (error) throw new Error(error.message);
   }, t('Work removed from the case.', 'أُزيل العمل من الترشيح.'));
 
-  return <Section title={t('Selected works', 'الأعمال المختارة')} aside={<span className={ui.muted}>{t(`${works.length} of ${MAX_WORKS} · at least ${MIN_WORKS}`, `${works.length} من ${MAX_WORKS} · ${MIN_WORKS} على الأقل`)}</span>}>
+  return <Section id="case-works" title={t('Selected works', 'الأعمال المختارة')} aside={<span className={ui.muted}>{t(`${works.length} of ${MAX_WORKS} · at least ${MIN_WORKS}`, `${works.length} من ${MAX_WORKS} · ${MIN_WORKS} على الأقل`)}</span>}>
     {works.length > 0 ? <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{works.map(work => <li key={work.id} className="space-y-1">
       {urls[work.image_path] ? <img src={urls[work.image_path]} alt={work.title} className="aspect-[4/3] w-full rounded-lg object-cover" /> : <div className="aspect-[4/3] w-full rounded-lg bg-[#F1E7D6]" />}
       <p dir="auto" className="pt-1 font-semibold">{work.title}{work.year ? `, ${work.year}` : ''}</p>
