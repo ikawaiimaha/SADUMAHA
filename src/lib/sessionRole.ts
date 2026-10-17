@@ -38,10 +38,12 @@ export const institutionalRoleLabels: Record<string, { en: string; ar: string }>
 export type PilotTool =
   | 'guestCalendar' | 'pendingAssets' | 'guestTravel' | 'conditionReports' | 'finalDeliverables'
   | 'freightPickup' | 'checklistQueue' | 'arrivalFeed' | 'freightChange' | 'logisticsQueue'
-  | 'freightClosure' | 'titleHeader' | 'publicationHandoff' | 'titleGate' | 'nominations';
+  | 'freightClosure' | 'titleHeader' | 'publicationHandoff' | 'titleGate' | 'nominations' | 'nominationsRead';
 
 const pilotTools: Record<PilotTool, string[]> = {
   nominations: ['COORDINATOR'],
+  // Reads every case without preparing or recording anything; row-level security allows reads only.
+  nominationsRead: ['GENERAL_COORDINATOR'],
   titleHeader: ['COORDINATOR', 'GENERAL_COORDINATOR', 'BIENNIAL_DIRECTOR', 'CHAIRMAN', 'PR_PROTOCOL', 'TECHNICAL'],
   titleGate: ['GENERAL_COORDINATOR'],
   pendingAssets: ['COORDINATOR', 'BIENNIAL_DIRECTOR', 'LOGISTICS'],

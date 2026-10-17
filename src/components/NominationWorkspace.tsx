@@ -54,7 +54,8 @@ export const leaveCaseQuestion = (t: (en: string, ar: string) => string) =>
   t('This case has changes you have not saved. Leave without saving them?', 'في هذا الملف تغييرات غير محفوظة. هل تغادر دون حفظها؟');
 type Filter = 'ALL' | CaseStage;
 
-export function NominationWorkspace({ userId }: { userId: string }) {
+/** readOnly: the General Coordinator follows every case without preparing, sending or recording anything. */
+export function NominationWorkspace({ userId, readOnly = false }: { userId: string; readOnly?: boolean }) {
   const { t, isAr } = useUiText();
   const [events, setEvents] = useState<NominationEvent[]>([]);
   const [eventId, setEventId] = useState('');
@@ -191,7 +192,7 @@ export function NominationWorkspace({ userId }: { userId: string }) {
   const tabs: { id: View; label: string; short: string; icon: ReactNode; badge?: number; hidden?: boolean }[] = [
     { id: 'artists', label: t('Artists', 'الفنانون'), short: t('Artists', 'الفنانون'), icon: <Users aria-hidden className="size-4" />, badge: cases.length },
     { id: 'ideas', label: t('Art ideas', 'أفكار فنية'), short: t('Ideas', 'أفكار'), icon: <Lightbulb aria-hidden className="size-4" />, badge: ideas.length, hidden: !ideasReady },
-    { id: 'deck', label: t('Committee deck', 'العرض التقديمي للجنة'), short: t('Committee', 'اللجنة'), icon: <Presentation aria-hidden className="size-4" />, badge: count('READY') },
+    { id: 'deck', label: t('Committee deck', 'العرض التقديمي للجنة'), short: t('Committee', 'اللجنة'), icon: <Presentation aria-hidden className="size-4" />, badge: count('READY'), hidden: readOnly },
     { id: 'invite', label: t('Invite list', 'قائمة الدعوات'), short: t('Invite', 'الدعوات'), icon: <UserPlus aria-hidden className="size-4" />, badge: approved.length },
   ];
   const shownTabs = tabs.filter(tab => !tab.hidden);
@@ -200,7 +201,7 @@ export function NominationWorkspace({ userId }: { userId: string }) {
     <div ref={top} className="scroll-mt-4 flex flex-wrap items-end gap-x-6 gap-y-2">
       <div className="me-auto min-w-0">
         <h1 id="nominations-heading" className="font-serif text-2xl text-[#1A1817] sm:text-3xl">{event ? `${isAr ? event.name_ar : event.name_en}${event.edition ? ` ${event.edition}` : ''}` : t('Nominations', 'الترشيحات')}</h1>
-        <p className={`max-w-2xl ${ui.muted}`}>{t('Scout artists from published sources, send the ready ones to the Committee as a deck, and record the decision. Artists are not contacted until the Director approves.', 'استكشف الفنانين من المصادر المنشورة، وأرسل الجاهزين منهم إلى اللجنة في عرض تقديمي، ثم سجّل القرار. لا يُتواصل مع الفنان قبل اعتماد المدير.')}</p>
+        <p className={`max-w-2xl ${ui.muted}`}>{readOnly ? t('Every artist case the coordinators are preparing, and where each one stands. You can read them here; the coordinators edit them and record the decisions.', 'كل ملفات الفنانين التي يعدّها المنسقون، ومرحلة كل ملف. يمكنك الاطلاع عليها هنا، ويتولى المنسقون تعديلها وتسجيل القرارات.') : t('Scout artists from published sources, send the ready ones to the Committee as a deck, and record the decision. Artists are not contacted until the Director approves.', 'استكشف الفنانين من المصادر المنشورة، وأرسل الجاهزين منهم إلى اللجنة في عرض تقديمي، ثم سجّل القرار. لا يُتواصل مع الفنان قبل اعتماد المدير.')}</p>
       </div>
       {events.length > 1 && <label className={ui.label}>{t('Event', 'الفعالية')}
         <select className={ui.field} value={eventId} onChange={e => { if (!confirmLeavingCase(leaveCaseQuestion(t))) return; setEventId(e.target.value); go('artists'); }}>
@@ -227,9 +228,9 @@ export function NominationWorkspace({ userId }: { userId: string }) {
     {view === 'artists' && (selected
       ? <CaseDetail key={selected.id} onBack={() => go('artists')} onDeck={() => go('deck')} onExport={() => void exportCases([selected], 'CASE')} c={selected}
         works={worksFor(selected.id)} decisions={decisionsFor(selected.id)} sent={sentFor(selected.id)} urls={urls}
-        mine={selected.created_by === userId} busy={busy} run={run} missingLabel={missingLabel} stageLabel={stageLabel} />
+        mine={!readOnly && selected.created_by === userId} readOnly={readOnly} busy={busy} run={run} missingLabel={missingLabel} stageLabel={stageLabel} />
       : <ArtistsView cases={cases} filter={filter} setFilter={setFilter} stageLabel={stageLabel} count={count} thumb={thumb} worksFor={worksFor} userId={userId}
-        loaded={loaded} busy={busy} creating={creating} setCreating={setCreating} onOpen={openCase} eventReady={!!eventId}
+        loaded={loaded} busy={busy} readOnly={readOnly} creating={creating} setCreating={setCreating} onOpen={openCase} eventReady={!!eventId}
         onExportAll={pick => void exportCases(cases, 'ALL', pick)}
         onCreate={draft => void run(async () => {
           const { data, error } = await client!.from('artist_dossiers').insert({ event_id: eventId, name: draft.name.trim(), arabic_name: draft.arabic_name.trim(), nationality: draft.nationality.trim(), category: draft.category, medium: draft.medium.trim() }).select('id').single();
@@ -242,7 +243,7 @@ export function NominationWorkspace({ userId }: { userId: string }) {
       onRecordSent={deck => run(async () => { await recordCommitteeBatch(client!, event.id, deck); },
         t('Recorded as sent to the Committee. When the decision email arrives, open each artist and record it.', 'سُجّل الإرسال إلى اللجنة. عند وصول رسالة القرار، افتح ملف كل فنان وسجّل القرار.'))} />}
 
-    {view === 'ideas' && event && ideasReady && <ArtIdeas eventId={event.id} ideas={ideas} cases={cases} userId={userId} busy={busy} run={run} />}
+    {view === 'ideas' && event && ideasReady && <ArtIdeas eventId={event.id} ideas={ideas} cases={cases} userId={userId} readOnly={readOnly} busy={busy} run={run} />}
 
     {view === 'invite' && <section className="space-y-4" aria-labelledby="invite-heading">
       <div><h2 id="invite-heading" className="font-serif text-2xl">{t('Invite list', 'قائمة الدعوات')}</h2>
@@ -278,9 +279,9 @@ function Empty({ icon, title, body, action }: { icon: ReactNode; title: string; 
   </div>;
 }
 
-function ArtistsView({ cases, filter, setFilter, stageLabel, count, thumb, worksFor, userId, loaded, busy, creating, setCreating, onOpen, onCreate, onExportAll, eventReady }: {
+function ArtistsView({ cases, filter, setFilter, stageLabel, count, thumb, worksFor, userId, loaded, busy, readOnly, creating, setCreating, onOpen, onCreate, onExportAll, eventReady }: {
   cases: NominationCase[]; filter: Filter; setFilter: (f: Filter) => void; stageLabel: Record<CaseStage, string>; count: (s: CaseStage) => number;
-  thumb: (id: string) => string | undefined; worksFor: (id: string) => CaseWork[]; userId: string; loaded: boolean; busy: boolean; eventReady: boolean;
+  thumb: (id: string) => string | undefined; worksFor: (id: string) => CaseWork[]; userId: string; loaded: boolean; busy: boolean; readOnly: boolean; eventReady: boolean;
   creating: boolean; setCreating: (v: boolean) => void; onOpen: (id: string) => void; onExportAll: (pickAgain: boolean) => void;
   onCreate: (d: Pick<Draft, 'name' | 'arabic_name' | 'nationality' | 'category' | 'medium'>) => void;
 }) {
@@ -300,7 +301,8 @@ function ArtistsView({ cases, filter, setFilter, stageLabel, count, thumb, works
   return <div className="space-y-5">
     {creating && <NewCaseForm busy={busy} onCancel={() => setCreating(false)} onCreate={onCreate} />}
 
-    {loaded && !cases.length && !creating ? <Empty icon={<Users aria-hidden className="size-6" />} title={t('Start by scouting an artist', 'ابدأ باستكشاف فنان')}
+    {loaded && !cases.length && !creating ? readOnly ? <Empty icon={<Users aria-hidden className="size-6" />} title={t('No artist cases yet', 'لا توجد ملفات فنانين بعد')}
+      body={t('When a coordinator starts scouting an artist, the case appears here.', 'عندما يبدأ أحد المنسقين استكشاف فنان، يظهر ملفه هنا.')} /> : <Empty icon={<Users aria-hidden className="size-6" />} title={t('Start by scouting an artist', 'ابدأ باستكشاف فنان')}
       body={t('Build a case from published sources only (exhibitions, catalogues, websites, press). Artists are not contacted until the Director approves them.', 'جهّز ملفاً من المصادر المنشورة فقط (المعارض والكتالوجات والمواقع والصحافة). لا يُتواصل مع الفنان إلا بعد اعتماد المدير.')}
       action={<div className="pt-2">{newButton}</div>} /> : cases.length > 0 && <>
       <ol aria-label={t('How a nomination moves', 'مراحل الترشيح')} className={`grid gap-1.5 sm:gap-2 ${stages.length > 4 ? 'grid-cols-5' : 'grid-cols-4'}`}>
@@ -314,12 +316,12 @@ function ArtistsView({ cases, filter, setFilter, stageLabel, count, thumb, works
       </ol>
 
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        {!creating && <span className="w-full sm:order-last sm:w-auto [&>button]:w-full">{newButton}</span>}
+        {!creating && !readOnly && <span className="w-full sm:order-last sm:w-auto [&>button]:w-full">{newButton}</span>}
         <p className="me-auto text-sm text-[#5E554B]">{filter === 'ALL' ? t(`All ${cases.length} artists`, `كل الفنانين (${cases.length})`)
           : <>{t(`Showing: ${stageLabel[filter]}`, `المعروض: ${stageLabel[filter]}`)} · <button type="button" className={ui.link} onClick={() => setFilter('ALL')}>{t('Show all', 'عرض الكل')}</button></>}</p>
-        {canWriteToFolder() && <button type="button" className={ui.link} disabled={busy} onClick={() => onExportAll(true)}>{t('Choose export folder', 'اختيار مجلد التصدير')}</button>}
-        <button type="button" className={ui.quiet} disabled={busy} onClick={() => onExportAll(false)} title={t('Copies every case, the deck and a summary sheet into the department’s shared folder.', 'ينسخ كل الملفات والعرض وجدولاً ملخصاً إلى المجلد المشترك للإدارة.')}>
-          <FolderOutput aria-hidden className="size-4" />{t('Export all', 'تصدير الكل')}</button>
+        {!readOnly && canWriteToFolder() && <button type="button" className={ui.link} disabled={busy} onClick={() => onExportAll(true)}>{t('Choose export folder', 'اختيار مجلد التصدير')}</button>}
+        {!readOnly && <button type="button" className={ui.quiet} disabled={busy} onClick={() => onExportAll(false)} title={t('Copies every case, the deck and a summary sheet into the department’s shared folder.', 'ينسخ كل الملفات والعرض وجدولاً ملخصاً إلى المجلد المشترك للإدارة.')}>
+          <FolderOutput aria-hidden className="size-4" />{t('Export all', 'تصدير الكل')}</button>}
       </div>
 
       {shown.length ? <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{shown.map(c => {
@@ -336,7 +338,7 @@ function ArtistsView({ cases, filter, setFilter, stageLabel, count, thumb, works
           </span>
           <span className="flex w-full flex-wrap items-center gap-2">
             <StagePill stage={stage} label={stageLabel[stage]} />
-            {!mine && <span className="text-xs text-[#6E6259]">{t('Another coordinator’s case', 'ملف منسق آخر')}</span>}
+            {!mine && !readOnly && <span className="text-xs text-[#6E6259]">{t('Another coordinator’s case', 'ملف منسق آخر')}</span>}
           </span>
           {stage === 'DRAFT' && <span className="flex w-full items-center gap-2" aria-label={t(`${done} of ${REQUIREMENTS.length} required items done`, `اكتمل ${done} من ${REQUIREMENTS.length} من البنود المطلوبة`)}>
             <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#F1E7D6]"><span className="block h-full rounded-full bg-[#B9875A]" style={{ width: `${(done / REQUIREMENTS.length) * 100}%` }} /></span>
@@ -390,8 +392,8 @@ function Section({ title, children, aside, id }: { title: string; children: Reac
   </section>;
 }
 
-function CaseDetail({ c, works, decisions, sent, urls, mine, busy, run, missingLabel, stageLabel, onExport, onBack, onDeck }: {
-  c: NominationCase; works: CaseWork[]; decisions: NominationDecision[]; sent: SentEntry[]; urls: Record<string, string>; mine: boolean; busy: boolean;
+function CaseDetail({ c, works, decisions, sent, urls, mine, readOnly, busy, run, missingLabel, stageLabel, onExport, onBack, onDeck }: {
+  c: NominationCase; works: CaseWork[]; decisions: NominationDecision[]; sent: SentEntry[]; urls: Record<string, string>; mine: boolean; readOnly: boolean; busy: boolean;
   run: RunFn; missingLabel: Record<MissingItem, string>; stageLabel: Record<CaseStage, string>; onExport: () => void; onBack: () => void; onDeck: () => void;
 }) {
   const [confirmDiscard, setConfirmDiscard] = useState(false);
@@ -499,7 +501,7 @@ function CaseDetail({ c, works, decisions, sent, urls, mine, busy, run, missingL
           </> : <><h3 className="font-serif text-lg">{t('Being scouted', 'قيد الاستكشاف')}</h3><p className={ui.muted}>{t('Only the coordinator who created this case can edit it.', 'لا يعدّل هذا الترشيح إلا المنسق الذي أنشأه.')}</p></>)}
           {stage === 'READY' && <><h3 className="font-serif text-lg">{t('Add it to the Committee deck', 'أضفه إلى العرض التقديمي للجنة')}</h3>
             <p className={ui.muted}>{t('Download the PowerPoint, email it to the Committee, then record it as sent.', 'نزّل ملف PowerPoint وأرسله إلى اللجنة بالبريد، ثم سجّل الإرسال.')}</p>
-            <button type="button" className={`${ui.button} w-full`} onClick={onDeck}><Presentation aria-hidden className="size-4" />{t('Open the Committee deck', 'فتح العرض التقديمي للجنة')}</button></>}
+            {!readOnly && <button type="button" className={`${ui.button} w-full`} onClick={onDeck}><Presentation aria-hidden className="size-4" />{t('Open the Committee deck', 'فتح العرض التقديمي للجنة')}</button>}</>}
           {stage === 'SENT' && <><h3 className="font-serif text-lg">{t('Waiting for the decision', 'بانتظار القرار')}</h3>
             <p className={ui.muted}>{t('When the Committee and Director reply by email, record their decision.', 'عندما تردّ اللجنة والمدير بالبريد، سجّل قرارهما.')}</p>
             {mine && <button type="button" className={`${ui.button} w-full`} onClick={() => decisionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>{t('Record the decision', 'تسجيل القرار')}</button>}</>}
@@ -508,7 +510,7 @@ function CaseDetail({ c, works, decisions, sent, urls, mine, busy, run, missingL
           {stage !== 'APPROVED' && <p className="rounded-md bg-[#F7F1E6] ps-3 pe-3 py-2 text-xs text-[#5E554B]">{t('Artist not contacted. Use published sources only until the Director approves.', 'لم يُتواصل مع الفنان. استخدم المصادر المنشورة فقط حتى يعتمد المدير.')}</p>}
         </div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 ps-1 pe-1">
-          <button type="button" className={ui.link} disabled={busy} onClick={onExport}><Download aria-hidden className="size-4" />{t('Export this case', 'تصدير هذا الترشيح')}</button>
+          {!readOnly && <button type="button" className={ui.link} disabled={busy} onClick={onExport}><Download aria-hidden className="size-4" />{t('Export this case', 'تصدير هذا الترشيح')}</button>}
           {editable && !confirmDiscard && <button type="button" className="text-sm text-[#6E6259] underline-offset-4 hover:text-[#8B261E] hover:underline" disabled={busy} onClick={() => setConfirmDiscard(true)}>{t('Discard this draft', 'استبعاد هذه المسودة')}</button>}
         </div>
         {editable && confirmDiscard && <div className={`${ui.card} space-y-3 border-[#E3B8B1] ps-4 pe-4 py-4`}>
@@ -668,7 +670,7 @@ function DecisionHistory({ decisions, sent }: { decisions: NominationDecision[];
 }
 
 /** Art ideas noted while scouting, before (or without) an artist. Shared with the other coordinators; only the author edits. */
-function ArtIdeas({ eventId, ideas, cases, userId, busy, run }: { eventId: string; ideas: ArtIdea[]; cases: NominationCase[]; userId: string; busy: boolean; run: RunFn }) {
+function ArtIdeas({ eventId, ideas, cases, userId, readOnly, busy, run }: { eventId: string; ideas: ArtIdea[]; cases: NominationCase[]; userId: string; readOnly: boolean; busy: boolean; run: RunFn }) {
   const { t, isAr } = useUiText();
   const [d, setD] = useState({ title: '', note: '', links: '' });
   const [adding, setAdding] = useState(false);
@@ -696,7 +698,7 @@ function ArtIdeas({ eventId, ideas, cases, userId, busy, run }: { eventId: strin
     <div className="flex flex-wrap items-end gap-3">
       <div className="me-auto"><h2 id="ideas-heading" className="font-serif text-2xl">{t('Art ideas', 'أفكار فنية')}</h2>
         <p className={ui.muted}>{t('Ideas for the festival that are not tied to an artist yet. Shared with the other coordinators; they never go to the Committee.', 'أفكار للمهرجان غير مرتبطة بفنان بعد. يراها المنسقون الآخرون، ولا تُعرض على اللجنة.')}</p></div>
-      {!adding && <button type="button" className={ui.button} onClick={() => setAdding(true)}><Plus aria-hidden className="size-4" />{t('New idea', 'فكرة جديدة')}</button>}
+      {!adding && !readOnly && <button type="button" className={ui.button} onClick={() => setAdding(true)}><Plus aria-hidden className="size-4" />{t('New idea', 'فكرة جديدة')}</button>}
     </div>
     {adding && form}
     {ideas.length > 0 ? <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{ideas.map(idea => {
@@ -713,10 +715,10 @@ function ArtIdeas({ eventId, ideas, cases, userId, busy, run }: { eventId: strin
                 {cases.map(c => <option key={c.id} value={c.id}>{isAr ? c.arabic_name : c.name}</option>)}
               </select></label>
             <button type="button" className="pb-2 text-sm text-[#6E6259] underline-offset-4 hover:underline" disabled={busy} onClick={() => void update(idea.id, { archived_at: new Date().toISOString() }, t('Idea archived.', 'أُرشفت الفكرة.'))}>{t('Archive', 'أرشفة')}</button>
-          </div> : <p className="text-xs text-[#6E6259]">{idea.dossier_id ? <>{t('Linked to', 'مرتبطة بـ')} {caseName(idea.dossier_id)} · </> : null}{t('Another coordinator’s idea', 'فكرة منسق آخر')}</p>}
+          </div> : <p className="text-xs text-[#6E6259]">{[idea.dossier_id ? `${t('Linked to', 'مرتبطة بـ')} ${caseName(idea.dossier_id)}` : '', readOnly ? '' : t('Another coordinator’s idea', 'فكرة منسق آخر')].filter(Boolean).join(' · ')}</p>}
         </div>
       </li>;
     })}</ul> : !adding && <Empty icon={<Lightbulb aria-hidden className="size-6" />} title={t('No ideas yet', 'لا توجد أفكار بعد')}
-      body={t('Note a theme, material or kind of work you want at the festival. Link it to an artist when you find the right one.', 'دوّن موضوعاً أو خامة أو نوعاً من الأعمال تريده في المهرجان، واربطه بفنان عندما تجد الفنان المناسب.')} />}
+      body={readOnly ? t('Ideas the coordinators note while scouting appear here.', 'تظهر هنا الأفكار التي يدوّنها المنسقون أثناء الاستكشاف.') : t('Note a theme, material or kind of work you want at the festival. Link it to an artist when you find the right one.', 'دوّن موضوعاً أو خامة أو نوعاً من الأعمال تريده في المهرجان، واربطه بفنان عندما تجد الفنان المناسب.')} />}
   </section>;
 }
