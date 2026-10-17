@@ -157,6 +157,8 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
   }
 
   const event = events.find(e => e.id === eventId);
+  // Briefs left over from the previously selected event never show or seed a version under this one.
+  const eventBriefs = briefs.filter(b => b.event_id === eventId);
   const selected = cases.find(c => c.id === selectedId);
   const worksFor = (id: string) => works.filter(w => w.dossier_id === id);
   const decisionsFor = (id: string) => decisions.filter(d => d.dossier_id === id);
@@ -245,7 +247,7 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
     {view === 'artists' && (selected
       ? <CaseDetail key={selected.id} onBack={() => go('artists')} onDeck={() => go('deck')} onExport={() => void exportCases([selected], 'CASE')} c={selected}
         works={worksFor(selected.id)} decisions={decisionsFor(selected.id)} sent={sentFor(selected.id)} urls={urls}
-        mine={!readOnly && selected.created_by === userId} readOnly={readOnly} briefReady={briefReady && briefs.length > 0} busy={busy} run={run} refresh={() => load()} missingLabel={missingLabel} stageLabel={stageLabel} />
+        mine={!readOnly && selected.created_by === userId} readOnly={readOnly} briefReady={briefReady && eventBriefs.length > 0} busy={busy} run={run} refresh={() => load()} missingLabel={missingLabel} stageLabel={stageLabel} />
       : <ArtistsView cases={cases} filter={filter} setFilter={setFilter} stageLabel={stageLabel} count={count} thumb={thumb} worksFor={worksFor} userId={userId}
         loaded={loaded} busy={busy} readOnly={readOnly} creating={creating} setCreating={setCreating} onOpen={openCase} eventReady={!!eventId}
         onExportAll={pick => void exportCases(cases, 'ALL', pick)}
@@ -260,7 +262,7 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
       onRecordSent={deck => run(async () => { await recordCommitteeBatch(client!, event.id, deck); },
         t('Recorded as sent to the Committee. When the decision email arrives, open each artist and record it.', 'سُجّل الإرسال إلى اللجنة. عند وصول رسالة القرار، افتح ملف كل فنان وسجّل القرار.'))} />}
 
-    {view === 'brief' && event && briefReady && <BriefView eventId={event.id} briefs={briefs} cases={cases} decisions={decisions} readOnly={readOnly} busy={busy} run={run} onOpenCase={openCase} />}
+    {view === 'brief' && event && briefReady && <BriefView key={event.id} eventId={event.id} briefs={eventBriefs} cases={cases} decisions={decisions} readOnly={readOnly} busy={busy} run={run} onOpenCase={openCase} />}
 
     {view === 'ideas' && event && ideasReady && <ArtIdeas eventId={event.id} ideas={ideas} cases={cases} userId={userId} readOnly={readOnly} busy={busy} run={run} />}
 
