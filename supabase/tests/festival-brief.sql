@@ -9,12 +9,12 @@ do $$begin
  insert into public.sadu_event_briefs(event_id,theme,venues,artist_count,media,source)
  values('islamic-arts-festival','  Light  ','Sharjah Art Museum',40,'Calligraphy, installation','Festival management meeting');
  if not exists(select 1 from public.sadu_event_briefs where theme='Light' and recorded_by='b1111111-1111-4111-8111-111111111111') then raise exception 'Brief not recorded by its author';end if;
- begin insert into public.sadu_event_briefs(event_id,theme,source,recorded_by) values('islamic-arts-festival','Other','Festival management','b2222222-2222-4222-8222-222222222222');raise exception 'Brief recorded for someone else';exception when insufficient_privilege then null;end;
+ -- A brief naming someone else as its author is stamped with the real author.
+ insert into public.sadu_event_briefs(event_id,theme,source,recorded_by,recorded_at) values('islamic-arts-festival','Other','Festival management','b2222222-2222-4222-8222-222222222222','2020-01-01');
+ if exists(select 1 from public.sadu_event_briefs where theme='Other' and (recorded_by<>'b1111111-1111-4111-8111-111111111111' or recorded_at<'2026-01-01')) then raise exception 'Brief author or time forged';end if;
  begin insert into public.sadu_event_briefs(event_id,theme,source) values('islamic-arts-festival','Light','x');raise exception 'Brief accepted without a source';exception when check_violation then null;end;
- update public.sadu_event_briefs set theme='Changed';
- if exists(select 1 from public.sadu_event_briefs where theme='Changed') then raise exception 'A brief was edited';end if;
- delete from public.sadu_event_briefs;
- if not exists(select 1 from public.sadu_event_briefs where theme='Light') then raise exception 'A brief was deleted';end if;
+ begin update public.sadu_event_briefs set theme='Changed';raise exception 'A brief was edited';exception when insufficient_privilege then null;end;
+ begin delete from public.sadu_event_briefs;raise exception 'A brief was deleted';exception when insufficient_privilege then null;end;
 
  insert into public.artist_dossiers(id,name,arabic_name,category,nationality,medium,event_id,biography,rationale)
  values('fb-case','Fictional artist','فنان افتراضي','Emerging','Test','Ink','islamic-arts-festival','Fictional biography','Fits the theme of light');
