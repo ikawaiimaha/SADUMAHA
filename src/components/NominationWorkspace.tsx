@@ -13,10 +13,10 @@ import {
 
 // One look for the whole Nominations area: white cards on the sand ground, brick for the one main action per screen.
 const ui = {
-  field: 'mt-1 block w-full rounded-md border border-[#D9CEBA] bg-white ps-3 pe-3 py-2 focus:border-[#8B261E] focus:outline-none focus:ring-2 focus:ring-[#8B261E]/20',
-  button: 'inline-flex items-center justify-center gap-2 rounded-md bg-[#8B261E] ps-4 pe-4 py-2 font-semibold text-white shadow-sm hover:bg-[#74201A] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8B261E]',
-  quiet: 'inline-flex items-center justify-center gap-2 rounded-md border border-[#CBB89F] bg-white ps-4 pe-4 py-2 font-medium text-[#2C2A29] hover:bg-[#FFFAF0] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8B261E]',
-  link: 'inline-flex items-center gap-1 text-sm font-medium text-[#8B261E] underline-offset-4 hover:underline disabled:opacity-40',
+  field: 'mt-1 block w-full rounded-md border border-[#D9CEBA] bg-white ps-3 pe-3 py-2 focus:border-[#8B261E] focus:outline-none focus:ring-2 focus:ring-[#8B261E]/20 pointer-coarse:min-h-[44px]',
+  button: 'inline-flex items-center justify-center gap-2 rounded-md bg-[#8B261E] ps-4 pe-4 py-2 font-semibold text-white shadow-sm hover:bg-[#74201A] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8B261E] pointer-coarse:min-h-[44px]',
+  quiet: 'inline-flex items-center justify-center gap-2 rounded-md border border-[#CBB89F] bg-white ps-4 pe-4 py-2 font-medium text-[#2C2A29] hover:bg-[#FFFAF0] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8B261E] pointer-coarse:min-h-[44px]',
+  link: 'inline-flex items-center gap-1 text-sm font-medium text-[#8B261E] underline-offset-4 hover:underline disabled:opacity-40 min-h-6 pointer-coarse:min-h-[44px]',
   card: 'rounded-xl border border-[#E4D8C4] bg-white shadow-[0_1px_2px_rgba(44,42,41,0.06)]',
   label: 'block text-sm font-medium text-[#3F3A35]',
   muted: 'text-sm text-[#6E6259]',
@@ -36,6 +36,13 @@ const toDraft = (c: NominationCase): Draft => ({
   name: c.name, arabic_name: c.arabic_name, nationality: c.nationality, base_city: c.base_city ?? '', category: c.category, medium: c.medium,
   participation: c.participation ?? '', biography: c.biography ?? '', rationale: c.rationale ?? '', links: c.links.join('\n'),
 });
+/** The row the case form writes; also what decides whether the form holds anything unsaved. */
+const toRow = (d: Draft) => ({
+  name: d.name.trim(), arabic_name: d.arabic_name.trim(), nationality: d.nationality.trim(), base_city: d.base_city.trim() || null,
+  category: d.category, medium: d.medium.trim(), participation: d.participation || null,
+  biography: d.biography.trim() || null, rationale: d.rationale.trim() || null, links: linksFromText(d.links),
+});
+const AUTOSAVE_MS = 1500;
 const REQUIREMENTS: MissingItem[] = ['name', 'arabic_name', 'nationality', 'category', 'medium', 'biography', 'rationale', 'works'];
 
 type View = 'artists' | 'ideas' | 'deck' | 'invite';
@@ -53,6 +60,8 @@ export function confirmLeavingCase(question: string): boolean {
 export const leaveCaseQuestion = (t: (en: string, ar: string) => string) =>
   t('This case has changes you have not saved. Leave without saving them?', 'في هذا الملف تغييرات غير محفوظة. هل تغادر دون حفظها؟');
 type Filter = 'ALL' | CaseStage;
+// Smooth scrolling only for people who have not asked their device for reduced motion.
+const scrollBehavior = (): ScrollBehavior => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
 
 /** readOnly: the General Coordinator follows every case without preparing, sending or recording anything. */
 export function NominationWorkspace({ userId, readOnly = false }: { userId: string; readOnly?: boolean }) {
@@ -228,7 +237,7 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
     {view === 'artists' && (selected
       ? <CaseDetail key={selected.id} onBack={() => go('artists')} onDeck={() => go('deck')} onExport={() => void exportCases([selected], 'CASE')} c={selected}
         works={worksFor(selected.id)} decisions={decisionsFor(selected.id)} sent={sentFor(selected.id)} urls={urls}
-        mine={!readOnly && selected.created_by === userId} readOnly={readOnly} busy={busy} run={run} missingLabel={missingLabel} stageLabel={stageLabel} />
+        mine={!readOnly && selected.created_by === userId} readOnly={readOnly} busy={busy} run={run} refresh={() => load()} missingLabel={missingLabel} stageLabel={stageLabel} />
       : <ArtistsView cases={cases} filter={filter} setFilter={setFilter} stageLabel={stageLabel} count={count} thumb={thumb} worksFor={worksFor} userId={userId}
         loaded={loaded} busy={busy} readOnly={readOnly} creating={creating} setCreating={setCreating} onOpen={openCase} eventReady={!!eventId}
         onExportAll={pick => void exportCases(cases, 'ALL', pick)}
@@ -286,8 +295,15 @@ function ArtistsView({ cases, filter, setFilter, stageLabel, count, thumb, works
   onCreate: (d: Pick<Draft, 'name' | 'arabic_name' | 'nationality' | 'category' | 'medium'>) => void;
 }) {
   const { t, isAr } = useUiText();
+  const [query, setQuery] = useState('');
   const nextStep = (c: NominationCase): string => {
     const stage = caseStage(c), missing = missingForReady(c, worksFor(c.id).length).length;
+    // Read-only viewers get where the case stands, not a to-do that is not theirs.
+    if (readOnly) {
+      if (stage === 'DRAFT') return missing ? t(`Being prepared, ${missing} ${missing === 1 ? 'item' : 'items'} missing`, `قيد الإعداد (ينقص ${missing})`) : t('Complete, not yet marked ready', 'مكتمل، ولم يُعلَّم جاهزاً بعد');
+      if (stage === 'READY') return t('Ready, waiting to go to the Committee', 'جاهز، بانتظار إرساله إلى اللجنة');
+      if (stage === 'SENT') return t('With the Committee, waiting for the decision', 'لدى اللجنة، بانتظار القرار');
+    }
     if (stage === 'DRAFT') return missing ? t(`Next: complete the case (${missing} missing)`, `التالي: استكمال الملف (ينقص ${missing})`) : t('Next: mark it ready for the Committee', 'التالي: اجعله جاهزاً للجنة');
     if (stage === 'READY') return t('Next: include it in the Committee deck', 'التالي: أدرجه في العرض التقديمي للجنة');
     if (stage === 'SENT') return t('Next: record the decision from email', 'التالي: سجّل القرار الوارد بالبريد');
@@ -295,11 +311,23 @@ function ArtistsView({ cases, filter, setFilter, stageLabel, count, thumb, works
     return '';
   };
   const stages: CaseStage[] = ['DRAFT', 'READY', 'SENT', 'APPROVED', ...(count('DECLINED') ? ['DECLINED' as CaseStage] : [])];
-  const shown = filter === 'ALL' ? cases : cases.filter(c => caseStage(c) === filter);
+  // Search appears once the list is long enough to scan; it matches either name, nationality or medium.
+  const searchable = cases.length > 5;
+  const needle = searchable ? query.trim().toLocaleLowerCase() : '';
+  const matches = (c: NominationCase) => !needle || [c.name, c.arabic_name, c.nationality, c.medium].some(v => v?.toLocaleLowerCase().includes(needle));
+  const shown = cases.filter(c => (filter === 'ALL' || caseStage(c) === filter) && matches(c));
   const newButton = <button type="button" className={ui.button} disabled={busy || !eventReady} onClick={() => setCreating(true)}><Plus aria-hidden className="size-4" />{t('New artist case', 'ملف فنان جديد')}</button>;
 
   return <div className="space-y-5">
     {creating && <NewCaseForm busy={busy} onCancel={() => setCreating(false)} onCreate={onCreate} />}
+
+    {!loaded && <div aria-busy="true" aria-label={t('Loading artist cases', 'جارٍ تحميل ملفات الفنانين')} className="space-y-5">
+      <div className="grid grid-cols-4 gap-2">{[0, 1, 2, 3].map(i => <div key={i} className={`${ui.card} h-16 animate-pulse motion-reduce:animate-none`} />)}</div>
+      <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{[0, 1, 2].map(i => <li key={i} className={`${ui.card} flex gap-3 ps-4 pe-4 py-4`}>
+        <span className="size-14 shrink-0 animate-pulse rounded-lg bg-[#F1E7D6] motion-reduce:animate-none" />
+        <span className="flex-1 space-y-2 pt-1"><span className="block h-4 w-2/3 animate-pulse rounded bg-[#F1E7D6] motion-reduce:animate-none" /><span className="block h-3 w-1/2 animate-pulse rounded bg-[#F1E7D6] motion-reduce:animate-none" /></span>
+      </li>)}</ul>
+    </div>}
 
     {loaded && !cases.length && !creating ? readOnly ? <Empty icon={<Users aria-hidden className="size-6" />} title={t('No artist cases yet', 'لا توجد ملفات فنانين بعد')}
       body={t('When a coordinator starts scouting an artist, the case appears here.', 'عندما يبدأ أحد المنسقين استكشاف فنان، يظهر ملفه هنا.')} /> : <Empty icon={<Users aria-hidden className="size-6" />} title={t('Start by scouting an artist', 'ابدأ باستكشاف فنان')}
@@ -319,6 +347,8 @@ function ArtistsView({ cases, filter, setFilter, stageLabel, count, thumb, works
         {!creating && !readOnly && <span className="w-full sm:order-last sm:w-auto [&>button]:w-full">{newButton}</span>}
         <p className="me-auto text-sm text-[#5E554B]">{filter === 'ALL' ? t(`All ${cases.length} artists`, `كل الفنانين (${cases.length})`)
           : <>{t(`Showing: ${stageLabel[filter]}`, `المعروض: ${stageLabel[filter]}`)} · <button type="button" className={ui.link} onClick={() => setFilter('ALL')}>{t('Show all', 'عرض الكل')}</button></>}</p>
+        {searchable && <label className="w-full sm:order-first sm:w-64"><span className="sr-only">{t('Search artists', 'البحث عن فنان')}</span>
+          <input type="search" className={`${ui.field} !mt-0`} value={query} onChange={e => setQuery(e.target.value)} placeholder={t('Search by name, nationality or medium', 'ابحث بالاسم أو الجنسية أو الوسيط')} /></label>}
         {!readOnly && canWriteToFolder() && <button type="button" className={ui.link} disabled={busy} onClick={() => onExportAll(true)}>{t('Choose export folder', 'اختيار مجلد التصدير')}</button>}
         {!readOnly && <button type="button" className={ui.quiet} disabled={busy} onClick={() => onExportAll(false)} title={t('Copies every case, the deck and a summary sheet into the department’s shared folder.', 'ينسخ كل الملفات والعرض وجدولاً ملخصاً إلى المجلد المشترك للإدارة.')}>
           <FolderOutput aria-hidden className="size-4" />{t('Export all', 'تصدير الكل')}</button>}
@@ -346,7 +376,7 @@ function ArtistsView({ cases, filter, setFilter, stageLabel, count, thumb, works
           </span>}
           <span className="mt-auto text-sm font-medium text-[#8B261E]">{nextStep(c)}</span>
         </button></li>;
-      })}</ul> : <p className={ui.muted}>{t('No artists at this step.', 'لا يوجد فنانون في هذه المرحلة.')}</p>}
+      })}</ul> : <p className={ui.muted}>{needle ? t(`No artists match “${query.trim()}”.`, `لا يوجد فنان يطابق «${query.trim()}».`) : t('No artists at this step.', 'لا يوجد فنانون في هذه المرحلة.')}</p>}
     </>}
   </div>;
 }
@@ -392,22 +422,27 @@ function Section({ title, children, aside, id }: { title: string; children: Reac
   </section>;
 }
 
-function CaseDetail({ c, works, decisions, sent, urls, mine, readOnly, busy, run, missingLabel, stageLabel, onExport, onBack, onDeck }: {
+function CaseDetail({ c, works, decisions, sent, urls, mine, readOnly, busy, run, refresh, missingLabel, stageLabel, onExport, onBack, onDeck }: {
   c: NominationCase; works: CaseWork[]; decisions: NominationDecision[]; sent: SentEntry[]; urls: Record<string, string>; mine: boolean; readOnly: boolean; busy: boolean;
-  run: RunFn; missingLabel: Record<MissingItem, string>; stageLabel: Record<CaseStage, string>; onExport: () => void; onBack: () => void; onDeck: () => void;
+  run: RunFn; refresh: () => Promise<void>; missingLabel: Record<MissingItem, string>; stageLabel: Record<CaseStage, string>; onExport: () => void; onBack: () => void; onDeck: () => void;
 }) {
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const { t, isAr } = useUiText();
   const stage = caseStage(c);
   const editable = mine && stage === 'DRAFT';
   const [draft, setDraft] = useState<Draft>(() => toDraft(c));
-  const dirty = useMemo(() => JSON.stringify(draft) !== JSON.stringify(toDraft(c)), [draft, c]);
+  const row = useMemo(() => JSON.stringify(toRow(draft)), [draft]);
+  const dirty = row !== JSON.stringify(toRow(toDraft(c)));
+  // Autosave: edits are written a moment after typing stops, so nothing is lost by switching away.
+  // The manual save stays as a fallback, and the unsaved warning stays on until a save succeeds.
+  const [autosave, setAutosave] = useState<'idle' | 'saving' | 'saved' | 'failed'>('idle');
+  const attempted = useRef('');
   useEffect(() => { markUnsaved('case', dirty); }, [dirty]);
   useEffect(() => () => markUnsaved('case', false), []);
   /** Takes the coordinator from a missing item in the checklist to the place where it is filled in. */
   const jumpTo = (m: MissingItem) => {
     const el = document.getElementById(`case-${m}`);
-    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el?.scrollIntoView({ behavior: scrollBehavior(), block: 'center' });
     if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement) el.focus({ preventScroll: true });
   };
   const missing = missingForReady({ ...c, ...draft }, works.length);
@@ -415,14 +450,20 @@ function CaseDetail({ c, works, decisions, sent, urls, mine, readOnly, busy, run
   const decisionRef = useRef<HTMLDivElement>(null);
 
   const persist = async () => {
-    const { error } = await client!.from('artist_dossiers').update({
-      name: draft.name.trim(), arabic_name: draft.arabic_name.trim(), nationality: draft.nationality.trim(), base_city: draft.base_city.trim() || null,
-      category: draft.category, medium: draft.medium.trim(), participation: draft.participation || null,
-      biography: draft.biography.trim() || null, rationale: draft.rationale.trim() || null, links: linksFromText(draft.links),
-    }).eq('id', c.id);
+    const { error } = await client!.from('artist_dossiers').update(toRow(draft)).eq('id', c.id);
     if (error) throw new Error(error.message);
   };
   const save = () => run(persist, t('Case saved.', 'حُفظ الترشيح.'));
+  useEffect(() => {
+    if (!editable || !dirty || busy || autosave === 'saving' || attempted.current === row) return;
+    const timer = window.setTimeout(() => {
+      attempted.current = row;
+      setAutosave('saving');
+      persist().then(refresh).then(() => setAutosave('saved'), () => setAutosave('failed'));
+    }, AUTOSAVE_MS);
+    return () => window.clearTimeout(timer);
+  // persist and refresh read the latest draft through row; listing them would restart the timer every render.
+  }, [row, dirty, editable, busy, autosave]);
 
   const markReady = () => run(async () => {
     if (dirty) await persist();
@@ -463,7 +504,10 @@ function CaseDetail({ c, works, decisions, sent, urls, mine, readOnly, busy, run
             <label className={`${ui.label} sm:col-span-2`}>{t('Links (one per line)', 'روابط (رابط في كل سطر)')}<span className={`block font-normal ${ui.muted}`}>{t('Website, gallery, press.', 'الموقع الإلكتروني، صالة العرض، الصحافة.')}</span><textarea rows={2} dir="ltr" className={ui.field} value={draft.links} onChange={set('links')} /></label>
           </div>
           <div className="flex flex-wrap items-center gap-3"><button type="button" className={ui.quiet} disabled={busy || !dirty} onClick={() => void save()}>{t('Save changes', 'حفظ التغييرات')}</button>
-            {dirty && <span className={ui.muted}>{t('Unsaved changes', 'تغييرات غير محفوظة')}</span>}</div>
+            <span role="status" className={autosave === 'failed' && dirty ? 'text-sm text-[#8B261E]' : ui.muted}>{
+              autosave === 'saving' ? t('Saving…', 'جارٍ الحفظ…')
+              : dirty ? (autosave === 'failed' ? t('Not saved automatically. Use Save changes.', 'لم يُحفظ تلقائياً. استخدم «حفظ التغييرات».') : t('Unsaved changes', 'تغييرات غير محفوظة'))
+              : autosave === 'saved' ? t('All changes saved', 'حُفظت كل التغييرات') : ''}</span></div>
         </Section> : <Section title={t('About the artist', 'عن الفنان')}>
           <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
             {[[t('Nationality', 'الجنسية'), c.nationality], [t('Base city', 'مدينة الإقامة'), c.base_city], [t('Category', 'الفئة'), category], [t('Medium / practice', 'الوسيط / الممارسة الفنية'), c.medium],
@@ -493,7 +537,7 @@ function CaseDetail({ c, works, decisions, sent, urls, mine, readOnly, busy, run
             <ul className="space-y-1.5">{REQUIREMENTS.map(m => { const ok = !missing.includes(m); return <li key={m} className={`flex items-center gap-2 text-sm ${ok ? 'text-[#6E6259]' : 'text-[#1A1817]'}`}>
               {ok ? <Check aria-hidden className="size-4 text-[#2E6B3A]" /> : <Circle aria-hidden className="size-4 text-[#B9875A]" />}
               {ok ? <span className="line-through decoration-[#CBB89F]">{missingLabel[m]}</span>
-                : <button type="button" className="text-start underline decoration-[#CBB89F] underline-offset-4 hover:text-[#8B261E]" onClick={() => jumpTo(m)}>{missingLabel[m]}</button>}
+                : <button type="button" className="text-start underline decoration-[#CBB89F] underline-offset-4 hover:text-[#8B261E] min-h-6 pointer-coarse:min-h-[44px]" onClick={() => jumpTo(m)}>{missingLabel[m]}</button>}
               <span className="sr-only">{ok ? t('done', 'مكتمل') : t('missing', 'ناقص')}</span></li>; })}</ul>
             {dirty && <button type="button" className={`${ui.quiet} w-full`} disabled={busy} onClick={() => void save()}>{t('Save changes', 'حفظ التغييرات')}</button>}
             <button type="button" className={`${ui.button} w-full`} disabled={busy || missing.length > 0} onClick={() => void markReady()}>{t('Ready for Committee', 'جاهز للجنة')}</button>
@@ -504,14 +548,14 @@ function CaseDetail({ c, works, decisions, sent, urls, mine, readOnly, busy, run
             {!readOnly && <button type="button" className={`${ui.button} w-full`} onClick={onDeck}><Presentation aria-hidden className="size-4" />{t('Open the Committee deck', 'فتح العرض التقديمي للجنة')}</button>}</>}
           {stage === 'SENT' && <><h3 className="font-serif text-lg">{t('Waiting for the decision', 'بانتظار القرار')}</h3>
             <p className={ui.muted}>{t('When the Committee and Director reply by email, record their decision.', 'عندما تردّ اللجنة والمدير بالبريد، سجّل قرارهما.')}</p>
-            {mine && <button type="button" className={`${ui.button} w-full`} onClick={() => decisionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>{t('Record the decision', 'تسجيل القرار')}</button>}</>}
+            {mine && <button type="button" className={`${ui.button} w-full`} onClick={() => decisionRef.current?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' })}>{t('Record the decision', 'تسجيل القرار')}</button>}</>}
           {stage === 'APPROVED' && <><h3 className="font-serif text-lg">{t('Approved', 'معتمد')}</h3><p className={ui.muted}>{t('This artist is on the invite list. Contact begins at the invitation step.', 'هذا الفنان في قائمة الدعوات. يبدأ التواصل في خطوة الدعوة.')}</p></>}
           {stage === 'DECLINED' && <><h3 className="font-serif text-lg">{t('Declined', 'مرفوض')}</h3><p className={ui.muted}>{t('The case and its reasons are kept in the history.', 'يُحفظ الملف وأسبابه في السجل.')}</p></>}
           {stage !== 'APPROVED' && <p className="rounded-md bg-[#F7F1E6] ps-3 pe-3 py-2 text-xs text-[#5E554B]">{t('Artist not contacted. Use published sources only until the Director approves.', 'لم يُتواصل مع الفنان. استخدم المصادر المنشورة فقط حتى يعتمد المدير.')}</p>}
         </div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 ps-1 pe-1">
           {!readOnly && <button type="button" className={ui.link} disabled={busy} onClick={onExport}><Download aria-hidden className="size-4" />{t('Export this case', 'تصدير هذا الترشيح')}</button>}
-          {editable && !confirmDiscard && <button type="button" className="text-sm text-[#6E6259] underline-offset-4 hover:text-[#8B261E] hover:underline" disabled={busy} onClick={() => setConfirmDiscard(true)}>{t('Discard this draft', 'استبعاد هذه المسودة')}</button>}
+          {editable && !confirmDiscard && <button type="button" className="text-sm text-[#6E6259] underline-offset-4 hover:text-[#8B261E] hover:underline min-h-6 pointer-coarse:min-h-[44px]" disabled={busy} onClick={() => setConfirmDiscard(true)}>{t('Discard this draft', 'استبعاد هذه المسودة')}</button>}
         </div>
         {editable && confirmDiscard && <div className={`${ui.card} space-y-3 border-[#E3B8B1] ps-4 pe-4 py-4`}>
           <p className="text-sm">{t('Discard this case? It disappears from the list and can no longer be edited or submitted.', 'استبعاد هذا الترشيح؟ سيختفي من القائمة ولن يمكن تعديله أو إرساله.')}</p>
@@ -562,7 +606,7 @@ function WorksSection({ c, works, urls, editable, busy, run }: { c: NominationCa
       {(work.medium || work.dimensions) && <p className="text-sm">{[work.medium, work.dimensions].filter(Boolean).join(' · ')}</p>}
       <p className="text-xs text-[#6E6259]">{t('Credit', 'المصدر')}: <bdi>{work.source_credit}</bdi></p>
       {work.published_in && <p className="text-xs text-[#6E6259]">{t('Published in', 'نُشر في')}: <bdi>{work.published_in}</bdi></p>}
-      {editable && <button type="button" className="text-xs text-[#8B261E] underline" disabled={busy} onClick={() => void remove(work.id)}>{t('Remove', 'إزالة')}</button>}
+      {editable && <button type="button" className="inline-flex min-h-6 min-w-6 items-center justify-center ps-1 pe-1 text-sm text-[#8B261E] underline pointer-coarse:min-h-[44px] pointer-coarse:ps-2 pointer-coarse:pe-2" disabled={busy} onClick={() => void remove(work.id)}>{t('Remove', 'إزالة')}</button>}
     </li>)}</ul> : !adding && <p className={ui.muted}>{t('No works yet. Add images of the artist’s work from published sources, each with its credit.', 'لا توجد أعمال بعد. أضف صور أعمال الفنان من مصادر منشورة، مع ذكر مصدر كل صورة.')}</p>}
     {editable && works.length < MAX_WORKS && (!adding
       ? <button type="button" className={ui.quiet} onClick={() => setAdding(true)}><ImagePlus aria-hidden className="size-4" />{t('Add a work', 'إضافة عمل')}</button>
@@ -714,7 +758,7 @@ function ArtIdeas({ eventId, ideas, cases, userId, readOnly, busy, run }: { even
                 <option value="">{t('No artist yet', 'لا يوجد فنان بعد')}</option>
                 {cases.map(c => <option key={c.id} value={c.id}>{isAr ? c.arabic_name : c.name}</option>)}
               </select></label>
-            <button type="button" className="pb-2 text-sm text-[#6E6259] underline-offset-4 hover:underline" disabled={busy} onClick={() => void update(idea.id, { archived_at: new Date().toISOString() }, t('Idea archived.', 'أُرشفت الفكرة.'))}>{t('Archive', 'أرشفة')}</button>
+            <button type="button" className="pb-2 text-sm text-[#6E6259] underline-offset-4 hover:underline pointer-coarse:min-h-[44px]" disabled={busy} onClick={() => void update(idea.id, { archived_at: new Date().toISOString() }, t('Idea archived.', 'أُرشفت الفكرة.'))}>{t('Archive', 'أرشفة')}</button>
           </div> : <p className="text-xs text-[#6E6259]">{[idea.dossier_id ? `${t('Linked to', 'مرتبطة بـ')} ${caseName(idea.dossier_id)}` : '', readOnly ? '' : t('Another coordinator’s idea', 'فكرة منسق آخر')].filter(Boolean).join(' · ')}</p>}
         </div>
       </li>;
