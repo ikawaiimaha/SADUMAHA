@@ -343,7 +343,7 @@ export default function SaduIntro({ signedIn, onContinue }: { signedIn: boolean;
         <p className="si-close-line" lang="ar">خيوط كثيرة، ونسيج واحد.</p>
         <p className="si-close-line si-close-en" lang="en">Many threads, one cloth.</p>
         <button type="button" className="si-cta" onClick={onContinue}>{cta}</button>
-        <p className="si-credit">{t('Prepared by Maha Alsuwaidi, Exhibition Coordinator. Guided and reviewed by Fatima Ahmed Mohamed Al Zarooni, General Exhibition Coordinator, Cultural Affairs.', 'أعدّته مها السويدي، منسقة المعارض، بتوجيه ومراجعة فاطمه أحمد محمد الزرعوني، منسق معرض عام في إدارة الشؤون الثقافية.')}</p>
+        <p className="si-credit">{t('Prepared by Maha Alsuwaidi, Exhibition Technician, who coordinates exhibitions and is the liaison between artists and the Department. Guided and reviewed by Fatima Ahmed Mohamed Al Zarooni, General Exhibition Coordinator, Cultural Affairs.', 'أعدّته مها السويدي، فني معارض، وتتولى تنسيق المعارض والتواصل بين الفنانين ودائرة الثقافة، بتوجيه ومراجعة فاطمه أحمد محمد الزرعوني، منسق معرض عام في إدارة الشؤون الثقافية.')}</p>
         <a className="si-link si-link-quiet" href="https://sadu-proposal.vercel.app" target="_blank" rel="noreferrer">{t('Read the full approval memo', 'قراءة مذكرة الموافقة كاملة')} <span aria-hidden="true">↗</span></a>
       </div>
     </section>
