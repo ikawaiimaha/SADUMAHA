@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ArrowLeft, Check, Circle, ClipboardList, Download, FolderOutput, ImagePlus, Lightbulb, Plus, Presentation, UserPlus, Users, X } from 'lucide-react';
 import { pilotSupabase as client } from '../lib/pilotSupabase';
 import { useUiText, UiText } from '../context/I18nContext';
@@ -94,7 +94,7 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
   const loadSeq = useRef(0);
   // A refresh started before an event switch (for example after an action) loads the event selected now.
   const selectedEvent = useRef(eventId);
-  selectedEvent.current = eventId;
+  useLayoutEffect(() => { selectedEvent.current = eventId; }, [eventId]);
   useEffect(() => {
     const warn = (e: BeforeUnloadEvent) => { if (unsaved.size) e.preventDefault(); };
     window.addEventListener('beforeunload', warn);
