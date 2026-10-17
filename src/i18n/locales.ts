@@ -307,7 +307,7 @@ export const LOCALES: Record<Language, Translations> = {
   en: {
     common: {
       systemName: 'SADU',
-      systemSubname: 'System for Arts Data Unification',
+      systemSubname: 'Artist nominations across the Department of Culture’s events',
       department: 'Sharjah Department of Culture',
       loading: 'Loading...',
       close: 'Close',
@@ -627,7 +627,7 @@ export const LOCALES: Record<Language, Translations> = {
   ar: {
     common: {
       systemName: 'سدو',
-      systemSubname: 'نظام توحيد بيانات الفنون والبرامج الثقافية',
+      systemSubname: 'ترشيحات الفنانين في فعاليات دائرة الثقافة',
       department: 'دائرة الثقافة — الشارقة',
       loading: 'جاري التحميل...',
       close: 'إغلاق',
