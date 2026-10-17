@@ -390,7 +390,7 @@ function ArtistsView({ cases, filter, setFilter, stageLabel, count, thumb, works
             <Thumb src={thumb(c.id)} name={isAr ? c.arabic_name : c.name} size="size-14" />
             <span className="min-w-0 flex-1">
               <strong className="block truncate text-lg group-hover:text-[#8B261E]">{isAr ? c.arabic_name : c.name}</strong>
-              <span className="block truncate text-sm text-[#5E554B]" lang={isAr ? 'en' : 'ar'}>{isAr ? c.name : c.arabic_name}</span>
+              <span className="block truncate text-sm text-[#5E554B]" lang={isAr ? 'en' : 'ar'}><bdi>{isAr ? c.name : c.arabic_name}</bdi></span>
               <span className="block truncate text-sm text-[#5E554B]">{c.nationality} · {c.medium}</span>
             </span>
           </span>
@@ -508,7 +508,7 @@ function CaseDetail({ c, works, decisions, sent, urls, mine, readOnly, briefRead
     <header className={`${ui.card} flex flex-wrap items-center gap-4 ps-5 pe-5 py-5`}>
       <Thumb src={works[0] ? urls[works[0].image_path] : undefined} name={isAr ? c.arabic_name : c.name} size="size-16" />
       <div className="me-auto min-w-0 space-y-1">
-        <h2 className="font-serif text-2xl leading-tight sm:text-3xl">{isAr ? c.arabic_name : c.name} <span className="text-lg text-[#6E6259]" lang={isAr ? 'en' : 'ar'}>{isAr ? c.name : c.arabic_name}</span></h2>
+        <h2 className="font-serif text-2xl leading-tight sm:text-3xl">{isAr ? c.arabic_name : c.name} <span className="text-lg text-[#6E6259]" lang={isAr ? 'en' : 'ar'}><bdi>{isAr ? c.name : c.arabic_name}</bdi></span></h2>
         <p className={ui.muted}>{[c.nationality, c.base_city, category, c.medium].filter(Boolean).join(' · ')}</p>
       </div>
       <div className="w-full"><StageTrack stage={stage} /></div>

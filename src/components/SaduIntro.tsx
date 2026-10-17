@@ -224,7 +224,7 @@ export default function SaduIntro({ signedIn, onContinue }: { signedIn: boolean;
   return <div className="sadu-intro" lang={isAr ? 'ar' : 'en'} dir={isAr ? 'rtl' : 'ltr'}>
     <header className="si-top">
       <a href="#si-hero" className="si-brand"><span className="si-brand-mark">{isAr ? 'سدو' : 'SADU'}</span><span className="si-brand-sub">{t('Cultural Affairs · Sharjah Department of Culture', 'إدارة الشؤون الثقافية · دائرة الثقافة')}</span></a>
-      <button type="button" className="si-ghost" lang={isAr ? 'en' : 'ar'} onClick={toggleLang}>{isAr ? 'English' : 'العربية'}</button>
+      <button type="button" className="si-ghost" lang={isAr ? 'en' : 'ar'} dir={isAr ? 'ltr' : 'rtl'} onClick={toggleLang}>{isAr ? 'English' : 'العربية'}</button>
       <button type="button" className="si-ghost si-ghost-strong" onClick={onContinue}>{signedIn ? t('Nominations', 'الترشيحات') : t('Sign in', 'تسجيل الدخول')}</button>
     </header>
     <main>
@@ -232,7 +232,7 @@ export default function SaduIntro({ signedIn, onContinue }: { signedIn: boolean;
     <section id="si-hero" className="si-hero">
       <div className="si-hero-copy">
         <p className="si-eyebrow">{t('For all the Department’s events · First pilot: Sharjah Islamic Arts Festival, December 2027', 'لكل فعاليات الدائرة · التجربة الأولى: مهرجان الشارقة للفنون الإسلامية، ديسمبر 2027')}</p>
-        <h1 className="si-title"><span className="si-title-main">{isAr ? 'السدو' : 'SADU'}</span><span className="si-title-twin" lang={isAr ? 'en' : 'ar'}>{isAr ? 'SADU' : 'السدو'}</span></h1>
+        <h1 className="si-title"><span className="si-title-main">{isAr ? 'السدو' : 'SADU'}</span><span className="si-title-twin" lang={isAr ? 'en' : 'ar'} dir={isAr ? 'ltr' : 'rtl'}>{isAr ? 'SADU' : 'السدو'}</span></h1>
         <p className="si-claim">{t('One record for every artist and every work, across all the Department’s events.', 'سجل واحد لكل فنان ولكل عمل، في كل فعاليات الدائرة.')}</p>
         <p className="si-sub">{t('The Department works with many artists in Arab and Islamic art, and many take part in more than one of its events. Today every team keeps its own copy of the same artist, and artists are asked again for material they already sent. SADU keeps each artist once, for every event, from scouting to the Committee’s decision.', 'تعمل الدائرة مع فنانين كثيرين في الفنون العربية والإسلامية، ويشارك كثير منهم في أكثر من فعالية. واليوم يحفظ كل قسم نسخته من ملف الفنان نفسه، ويُطلب من الفنانين إرسال ما سبق أن أرسلوه. يحفظ السدو كل فنان مرة واحدة لكل الفعاليات، من رصده حتى قرار اللجنة.')}</p>
         <div className="si-actions">
@@ -251,7 +251,7 @@ export default function SaduIntro({ signedIn, onContinue }: { signedIn: boolean;
           {phase === 'done' && !reducedMotion() && <button type="button" className="si-replay" onClick={() => setReplay(r => r + 1)}>{t('Replay', 'إعادة العرض')}</button>}
         </figcaption>
       </figure>
-      <p className="si-proverb"><span lang="ar">السَّدى واللُّحمة: خيوط كثيرة، ونسيج واحد.</span><span lang="en">Warp and weft: many threads, one cloth.</span></p>
+      <p className="si-proverb"><span lang="ar" dir="rtl">السَّدى واللُّحمة: خيوط كثيرة، ونسيج واحد.</span><span lang="en" dir="ltr">Warp and weft: many threads, one cloth.</span></p>
     </section>
 
     <Section id="si-why" className="si-light" label={t('Why SADU exists', 'الحاجة إلى السدو')}>{inView => <div className="si-wrap">
@@ -341,11 +341,11 @@ export default function SaduIntro({ signedIn, onContinue }: { signedIn: boolean;
     <section className="si-close">
       <div className="si-strip" aria-hidden="true"/>
       <div className="si-wrap">
-        <p className="si-close-line" lang="ar">خيوط كثيرة، ونسيج واحد.</p>
-        <p className="si-close-line si-close-en" lang="en">Many threads, one cloth.</p>
+        <p className="si-close-line" lang="ar" dir="rtl">خيوط كثيرة، ونسيج واحد.</p>
+        <p className="si-close-line si-close-en" lang="en" dir="ltr">Many threads, one cloth.</p>
         <button type="button" className="si-cta" onClick={onContinue}>{cta}</button>
         <p className="si-credit">{t('Prepared by Maha Alsuwaidi, Exhibition Technician and liaison between artists and the Department. Guided and reviewed by Fatima Ahmed Mohamed Al Zarooni, General Exhibition Coordinator, Cultural Affairs.', 'أعدّته مها السويدي، فني معارض وحلقة الوصل بين الفنانين ودائرة الثقافة، بتوجيه ومراجعة من فاطمه أحمد محمد الزرعوني، منسق معرض عام في إدارة الشؤون الثقافية.')}</p>
-        <a className="si-link si-link-quiet" href="https://sadu-proposal.vercel.app" target="_blank" rel="noreferrer">{t('Read the full approval memo', 'قراءة مذكرة الموافقة كاملة')} <span aria-hidden="true">↗</span></a>
+        <a className="si-link si-link-quiet" href="https://sadu-proposal.vercel.app" target="_blank" rel="noreferrer">{t('Read the full approval memo', 'قراءة مذكرة الموافقة كاملة')} <span aria-hidden="true">{isAr ? '↖' : '↗'}</span></a>
       </div>
     </section>
     </main>
