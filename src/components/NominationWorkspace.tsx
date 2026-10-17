@@ -39,6 +39,20 @@ const toDraft = (c: NominationCase): Draft => ({
 const REQUIREMENTS: MissingItem[] = ['name', 'arabic_name', 'nationality', 'category', 'medium', 'biography', 'rationale', 'works'];
 
 type View = 'artists' | 'ideas' | 'deck' | 'invite';
+
+// Forms in the open case that hold edits not yet saved (case fields, a work being added, a decision
+// being recorded). Kept per form so one clean form cannot clear another's unsaved entries, and at
+// module level so the page around the workspace (refresh, sign out) can ask before discarding them.
+const unsaved = new Set<string>();
+const markUnsaved = (form: string, value: boolean) => { if (value) unsaved.add(form); else unsaved.delete(form); };
+/** True when it is fine to leave the open case: nothing unsaved, or the coordinator confirmed. */
+export function confirmLeavingCase(question: string): boolean {
+  if (unsaved.size && !window.confirm(question)) return false;
+  unsaved.clear();
+  return true;
+}
+export const leaveCaseQuestion = (t: (en: string, ar: string) => string) =>
+  t('This case has changes you have not saved. Leave without saving them?', 'في هذا الملف تغييرات غير محفوظة. هل تغادر دون حفظها؟');
 type Filter = 'ALL' | CaseStage;
 
 export function NominationWorkspace({ userId }: { userId: string }) {
@@ -62,10 +76,8 @@ export function NominationWorkspace({ userId }: { userId: string }) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const top = useRef<HTMLDivElement>(null);
-  // True while the open case has edits that are not saved; leaving it asks first.
-  const dirty = useRef(false);
   useEffect(() => {
-    const warn = (e: BeforeUnloadEvent) => { if (dirty.current) e.preventDefault(); };
+    const warn = (e: BeforeUnloadEvent) => { if (unsaved.size) e.preventDefault(); };
     window.addEventListener('beforeunload', warn);
     return () => window.removeEventListener('beforeunload', warn);
   }, []);
@@ -140,8 +152,7 @@ export function NominationWorkspace({ userId }: { userId: string }) {
   const thumb = (id: string) => { const w = worksFor(id)[0]; return w ? urls[w.image_path] : undefined; };
 
   const go = (next: View, caseId = '') => {
-    if (dirty.current && !window.confirm(t('This case has changes you have not saved. Leave without saving them?', 'في هذا الملف تغييرات غير محفوظة. هل تغادر دون حفظها؟'))) return;
-    dirty.current = false;
+    if (!confirmLeavingCase(leaveCaseQuestion(t))) return;
     setView(next); setSelectedId(caseId); setCreating(false); setMessage('');
     requestAnimationFrame(() => top.current?.scrollIntoView({ block: 'start' }));
   };
@@ -193,7 +204,7 @@ export function NominationWorkspace({ userId }: { userId: string }) {
         <p className={`max-w-2xl ${ui.muted}`}>{t('Scout artists from published sources, send the ready ones to the Committee as a deck, and record the decision. Artists are not contacted until the Director approves.', 'استكشف الفنانين من المصادر المنشورة، وأرسل الجاهزين منهم إلى اللجنة في عرض تقديمي، ثم سجّل القرار. لا يُتواصل مع الفنان قبل اعتماد المدير.')}</p>
       </div>
       {events.length > 1 && <label className={ui.label}>{t('Event', 'الفعالية')}
-        <select className={ui.field} value={eventId} onChange={e => { setEventId(e.target.value); go('artists'); }}>
+        <select className={ui.field} value={eventId} onChange={e => { if (!confirmLeavingCase(leaveCaseQuestion(t))) return; setEventId(e.target.value); go('artists'); }}>
           {events.map(e => <option key={e.id} value={e.id}>{isAr ? e.name_ar : e.name_en}{e.edition ? ` · ${e.edition}` : ''}</option>)}
         </select></label>}
     </div>
@@ -217,7 +228,7 @@ export function NominationWorkspace({ userId }: { userId: string }) {
     {view === 'artists' && (selected
       ? <CaseDetail key={selected.id} onBack={() => go('artists')} onDeck={() => go('deck')} onExport={() => void exportCases([selected], 'CASE')} c={selected}
         works={worksFor(selected.id)} decisions={decisionsFor(selected.id)} sent={sentFor(selected.id)} urls={urls}
-        mine={selected.created_by === userId} busy={busy} run={run} missingLabel={missingLabel} stageLabel={stageLabel} onDirty={value => { dirty.current = value; }} />
+        mine={selected.created_by === userId} busy={busy} run={run} missingLabel={missingLabel} stageLabel={stageLabel} />
       : <ArtistsView cases={cases} filter={filter} setFilter={setFilter} stageLabel={stageLabel} count={count} thumb={thumb} worksFor={worksFor} userId={userId}
         loaded={loaded} busy={busy} creating={creating} setCreating={setCreating} onOpen={openCase} eventReady={!!eventId}
         onExportAll={pick => void exportCases(cases, 'ALL', pick)}
@@ -380,10 +391,9 @@ function Section({ title, children, aside, id }: { title: string; children: Reac
   </section>;
 }
 
-function CaseDetail({ c, works, decisions, sent, urls, mine, busy, run, missingLabel, stageLabel, onExport, onBack, onDeck, onDirty }: {
+function CaseDetail({ c, works, decisions, sent, urls, mine, busy, run, missingLabel, stageLabel, onExport, onBack, onDeck }: {
   c: NominationCase; works: CaseWork[]; decisions: NominationDecision[]; sent: SentEntry[]; urls: Record<string, string>; mine: boolean; busy: boolean;
   run: RunFn; missingLabel: Record<MissingItem, string>; stageLabel: Record<CaseStage, string>; onExport: () => void; onBack: () => void; onDeck: () => void;
-  onDirty: (dirty: boolean) => void;
 }) {
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const { t, isAr } = useUiText();
@@ -391,8 +401,8 @@ function CaseDetail({ c, works, decisions, sent, urls, mine, busy, run, missingL
   const editable = mine && stage === 'DRAFT';
   const [draft, setDraft] = useState<Draft>(() => toDraft(c));
   const dirty = useMemo(() => JSON.stringify(draft) !== JSON.stringify(toDraft(c)), [draft, c]);
-  useEffect(() => { onDirty(dirty); }, [dirty, onDirty]);
-  useEffect(() => () => onDirty(false), [onDirty]);
+  useEffect(() => { markUnsaved('case', dirty); }, [dirty]);
+  useEffect(() => () => markUnsaved('case', false), []);
   /** Takes the coordinator from a missing item in the checklist to the place where it is filled in. */
   const jumpTo = (m: MissingItem) => {
     const el = document.getElementById(`case-${m}`);
@@ -524,6 +534,9 @@ function WorksSection({ c, works, urls, editable, busy, run }: { c: NominationCa
   const [inputKey, setInputKey] = useState(0);
   const [adding, setAdding] = useState(false);
   const ext = file ? acceptedExtension(file, 'work') : null;
+  const started = adding && (!!file || Object.values(w).some(v => v.trim()));
+  useEffect(() => { markUnsaved('work', started); }, [started]);
+  useEffect(() => () => markUnsaved('work', false), []);
   const canAdd = editable && works.length < MAX_WORKS && !!ext && w.title.trim() && w.source_credit.trim().length >= 2 && w.published_in.trim().length >= 2;
 
   const add = () => run(async () => {
@@ -591,6 +604,9 @@ function DecisionForm({ c, busy, run }: { c: NominationCase; busy: boolean; run:
   const [d, setD] = useState({ committee: '', director: '', decided_on: today, email_reference: '', minute: '' });
   const [file, setFile] = useState<File | null>(null);
   const ext = file ? acceptedExtension(file, 'evidence') : null;
+  const started = !!(d.committee || d.director || d.email_reference.trim() || d.minute.trim() || file);
+  useEffect(() => { markUnsaved('decision', started); }, [started]);
+  useEffect(() => () => markUnsaved('decision', false), []);
   const ok = d.committee && d.director && d.decided_on && d.decided_on <= today && d.email_reference.trim().length >= 5 && d.minute.trim().length >= 10 && !!ext;
   const choice = (name: 'committee' | 'director', value: string, label: string) =>
     <label className={`flex cursor-pointer items-center gap-2 rounded-md border ps-3 pe-3 py-2 text-sm ${d[name] === value ? 'border-[#8B261E] bg-[#FBF4F1] font-semibold' : 'border-[#D9CEBA] bg-white'}`}>
