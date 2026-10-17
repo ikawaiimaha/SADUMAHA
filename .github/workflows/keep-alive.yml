@@ -1,0 +1,32 @@
+name: Keep database awake
+
+# The prototype's Supabase project is on the Free plan, which pauses a project after about a week
+# of low database activity. Twice a day this sends one read request with the public browser key.
+# The browser key has no table grants, so Postgres refuses the read with "permission denied"
+# (42501); the request still runs in the database, which is what keeps the project active.
+on:
+  schedule:
+    - cron: '17 3,15 * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Query the database once
+        env:
+          # The publishable key is the public browser key and is already shipped in the site's JavaScript.
+          SUPABASE_URL: https://hhjenabsvgohkgegphcr.supabase.co
+          SUPABASE_PUBLISHABLE_KEY: sb_publishable_ANWW8AITsUgy-l-5_eStFA_-2fzyS1n
+        run: |
+          status=$(curl -sS -o body.json -w '%{http_code}' \
+            -H "apikey: $SUPABASE_PUBLISHABLE_KEY" \
+            "$SUPABASE_URL/rest/v1/sadu_events?select=id&limit=1")
+          echo "HTTP $status"; cat body.json; echo
+          if [ "$status" = 200 ]; then exit 0; fi
+          if grep -q '"42501"' body.json; then exit 0; fi
+          echo "::error::The database did not answer as expected; it may be paused."
+          exit 1
