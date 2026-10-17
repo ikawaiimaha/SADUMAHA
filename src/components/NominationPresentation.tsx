@@ -75,11 +75,11 @@ export function NominationPresentation({ event, cases, works, urls, busy, onExpo
 
   return <section className="space-y-4" aria-labelledby="presentation-heading">
     <div><h2 id="presentation-heading" className="font-serif text-2xl">{t('Committee presentation', 'العرض التقديمي للجنة')}</h2>
-      <p className="text-sm text-[#6E6259]">{t('The Committee and the Director do not use SADU. You send them this deck by email, and record their reply on each artist.', 'لا تستخدم اللجنة والمدير سدو. ترسل إليهم هذا العرض بالبريد الإلكتروني، وتسجّل ردّهم في ملف كل فنان.')}</p></div>
+      <p className="text-sm text-[#6E6259]">{t('The Committee and the Director do not use SADU. You send them this deck by email, and record their reply on each artist.', 'لا تستخدم اللجنة ولا المدير السدو؛ بل ترسل إليهما هذا العرض بالبريد الإلكتروني، ثم تسجّل ردّهما في ملف كل فنان.')}</p></div>
     {!eligible.length ? <div className={`${card} space-y-2 ps-6 pe-6 py-8 text-center`}>
       <h3 className="font-serif text-xl">{t('No artist is ready yet', 'لا يوجد فنان جاهز بعد')}</h3>
       <p className="mx-auto max-w-md text-sm text-[#6E6259]">{scouting
-        ? t(`Open an artist from the Artists tab, complete the case and press “Ready for Committee”. ${scouting} case(s) are still being scouted.`, `افتح ملف فنان من تبويب الفنانين، واستكمله، ثم اضغط «جاهز للجنة». ما زال ${scouting} من الملفات قيد الاستكشاف.`)
+        ? t(`Open an artist from the Artists tab, complete the case and press “Ready for Committee”. ${scouting} case(s) are still being scouted.`, `افتح ملف فنان من تبويب الفنانين، واستكمله، ثم اضغط «جاهز للجنة». ما زال ${scouting} من الملفات قيد الرصد.`)
         : t('Start an artist case in the Artists tab first.', 'ابدأ بملف فنان في تبويب الفنانين أولاً.')}</p>
     </div> : <ol className="space-y-3">
       {step(1, t('Choose the artists', 'اختر الفنانين'), <ul className="grid gap-2 sm:grid-cols-2">
@@ -97,7 +97,7 @@ export function NominationPresentation({ event, cases, works, urls, busy, onExpo
             className={`rounded-md ps-4 pe-4 py-1.5 text-sm font-semibold ${lang === l ? 'bg-[#1A1817] text-white' : 'text-[#3F3A35]'}`} lang={l}>{l === 'ar' ? 'العربية' : 'English'}</button>)}
         </div>
         <p className="text-sm text-[#6E6259]">{t(`${slides.length} slides. Long biographies and rationales are shortened on the slides; the full text is in the export.`, `${arabicCount(slides.length, ['شريحة واحدة', 'شريحتان', 'شرائح', 'شريحة'])}. تُختصر النبذ التعريفية ومبررات الترشيح الطويلة في الشرائح؛ النص الكامل في الملف المُصدَّر.`)}</p>
-        <button type="button" className={quiet} disabled={!selected.length} onClick={() => setPreview(true)}><Eye aria-hidden className="size-4" />{t('Preview slides (and save as PDF)', 'معاينة الشرائح (وحفظها PDF)')}</button>
+        <button type="button" className={quiet} disabled={!selected.length} onClick={() => setPreview(true)}><Eye aria-hidden className="size-4" />{t('Preview slides (and save as PDF)', 'معاينة الشرائح (وحفظها بصيغة PDF)')}</button>
       </>)}
       {step(3, t('Download the PowerPoint and email it', 'نزّل ملف PowerPoint وأرسله بالبريد'), <>
         <div className="flex flex-wrap gap-3">
@@ -108,10 +108,10 @@ export function NominationPresentation({ event, cases, works, urls, busy, onExpo
       </>, !!recordable)}
       {step(4, t('Record it as sent', 'سجّل الإرسال'), recordable ? <>
         <p className="text-sm">{t(`After you email “${recordable.fileName}.pptx” to the Committee, record it here. SADU keeps a copy of that file and which ${recordable.caseIds.length} case(s) it carried, so each decision can be matched to what the Committee read.`,
-          `بعد إرسال «${recordable.fileName}.pptx» إلى اللجنة بالبريد الإلكتروني، سجّله هنا. يحتفظ سدو بنسخة من الملف وبالترشيحات التي تضمنها (${recordable.caseIds.length})، ليُطابَق كل قرار بما اطّلعت عليه اللجنة.`)}</p>
+          `بعد إرسال «${recordable.fileName}.pptx» إلى اللجنة بالبريد الإلكتروني، سجّله هنا. يحتفظ السدو بنسخة من الملف وبالترشيحات التي تضمنها (${recordable.caseIds.length})، ليُطابَق كل قرار بما اطّلعت عليه اللجنة.`)}</p>
         <button type="button" className={button} disabled={busy || working} onClick={() => void onRecordSent(recordable).then(ok => { if (ok) setDownloaded(null); })}>
           <Send aria-hidden className="size-4" />{t('Record this PowerPoint as sent', 'تسجيل إرسال ملف PowerPoint هذا')}</button>
-      </> : <p className="text-sm text-[#6E6259]">{t('Available after you download the PowerPoint in step 3, so SADU keeps the exact file you emailed.', 'يتاح بعد تنزيل ملف PowerPoint في الخطوة 3، ليحتفظ سدو بالملف نفسه الذي أرسلته.')}</p>)}
+      </> : <p className="text-sm text-[#6E6259]">{t('Available after you download the PowerPoint in step 3, so SADU keeps the exact file you emailed.', 'يتاح بعد تنزيل ملف PowerPoint في الخطوة 3، ليحتفظ السدو بالملف نفسه الذي أرسلته.')}</p>)}
     </ol>}
     {preview && <DeckPreview slides={slides} lang={lang} urls={urls} onClose={() => setPreview(false)} />}
   </section>;
@@ -128,8 +128,8 @@ function DeckPreview({ slides, lang, urls, onClose }: { slides: Slide[]; lang: D
   const img = (path: string, alt: string) => urls[path] ? <img src={urls[path]} alt={alt} /> : <div className="sadu-slide-placeholder" />;
   return <div className="sadu-deck" role="dialog" aria-modal="true" aria-label={t('Presentation preview', 'معاينة العرض')}>
     <div className="sadu-deck-bar no-print">
-      <p>{t('Use “Save as PDF” as the printer to make the PDF.', 'اختر «حفظ بتنسيق PDF» كطابعة لإنشاء ملف PDF.')}</p>
-      <button type="button" className={button} onClick={() => window.print()}>{t('Print or save as PDF', 'طباعة أو حفظ PDF')}</button>
+      <p>{t('Use “Save as PDF” as the printer to make the PDF.', 'اختر «حفظ بتنسيق PDF» من قائمة الطابعات لإنشاء ملف PDF.')}</p>
+      <button type="button" className={button} onClick={() => window.print()}>{t('Print or save as PDF', 'طباعة أو حفظ بصيغة PDF')}</button>
       <button type="button" className={quiet} onClick={onClose}>{t('Close', 'إغلاق')}</button>
     </div>
     <div lang={lang} dir={lang === 'ar' ? 'rtl' : 'ltr'}>

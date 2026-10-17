@@ -64,8 +64,8 @@ export function readMe(event: NominationEvent, date: Date, count: number): strin
     'Export again from SADU for a newer copy; each export is a new dated folder.',
     'Decision emails stay in SADU and are not included.',
     '',
-    `صُدّر من سدو بتاريخ ${date.toISOString()}. هذا المجلد نسخة باتجاه واحد؛ سدو هو السجل المعتمد للترشيحات وقراراتها.`,
-    'لا تُحدَّث الملفات هنا تلقائياً، ولا تصل التعديلات التي تُجرى هنا إلى سدو. صدّر مجدداً للحصول على نسخة أحدث.',
+    `صُدِّر من السدو بتاريخ ${date.toISOString()}. هذا المجلد نسخة للاطلاع فقط؛ والسدو هو السجل المعتمد للترشيحات وقراراتها.`,
+    'لا تُحدَّث الملفات هنا تلقائياً، ولا تنتقل التعديلات التي تُجرى هنا إلى السدو. أعد التصدير للحصول على نسخة أحدث.',
   ].join('\r\n');
 }
 

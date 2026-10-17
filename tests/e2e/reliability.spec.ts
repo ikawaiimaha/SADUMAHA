@@ -8,7 +8,7 @@ test('failed app script leaves bilingual retry outside React', async ({ page }) 
   await page.goto('/');
   await expect(page.locator('#sadu-fallback')).toBeVisible();
   await expect(page.getByRole('button', { name: /Retry/ })).toBeVisible();
-  await expect(page.getByText('لم يكتمل تحميل سدو. تحقق من الاتصال ثم أعد المحاولة.')).toBeVisible();
+  await expect(page.getByText('لم يكتمل تحميل السدو. تحقق من الاتصال ثم أعد المحاولة.')).toBeVisible();
 });
 
 test('unresolved optional font CSS does not block the application', async ({ page }) => {
