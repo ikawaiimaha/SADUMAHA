@@ -1462,6 +1462,9 @@ test('pilot shows each role only its own tools',()=>{
  assert.equal(showsPilotTool('COORDINATOR','finalDeliverables'),false);
  assert.equal(showsPilotTool('PR_PROTOCOL','guestTravel'),true);
  assert.equal(showsPilotTool('','arrivalFeed'),false);
+ assert.equal(showsPilotTool('GENERAL_COORDINATOR','nominations'),false);
+ assert.equal(showsPilotTool('GENERAL_COORDINATOR','nominationsRead'),true);
+ assert.equal(showsPilotTool('COORDINATOR','nominationsRead'),false);
 });
 
 import {missingForReady,caseStage,acceptedExtension,linksFromText,casePath,batchDeckPath,sha256Hex} from '../src/lib/nominations';
