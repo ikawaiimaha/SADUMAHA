@@ -79,7 +79,7 @@ export default function GlobalPasswordGate({ children }: { children: ReactNode }
       finally { setPassword(''); setBusy(false); }
     }}>
       <button type="button" className="border rounded ps-4 pe-4 py-3 mb-6" lang={language === 'ar' ? 'en' : 'ar'} onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}>{language === 'ar' ? 'English' : 'العربية'}</button>
-      <p>{copy.institution}</p><h1 className="text-3xl font-semibold my-4"><span lang="ar">سدو</span> · <span lang="en">SADU</span></h1>
+      <p>{copy.institution}</p><h1 className="text-3xl font-semibold my-4"><span lang="ar">سدو</span> · <span lang="en" dir="ltr">SADU</span></h1>
       <p>{copy.introduction}</p>
       <label className="block text-start mt-6">{copy.password}<input className="block w-full border p-3 mt-2 rounded" dir="ltr" type="password" autoComplete="current-password" required maxLength={256} value={password} onChange={e => setPassword(e.target.value)} disabled={busy}/></label>
       <button className="w-full mt-3 p-3 rounded bg-[#111817] text-[#F7F1E6] disabled:opacity-50" disabled={busy}>{busy ? copy.checking : copy.submit}</button>
