@@ -238,7 +238,7 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
           setCreating(false); setSelectedId((data as { id: string }).id);
         }, t('Case created. Add the biography, rationale and works.', 'أُنشئ الترشيح. أضف النبذة التعريفية ومبررات الترشيح والأعمال.'))} />)}
 
-    {view === 'deck' && event && <NominationPresentation event={event} cases={cases} works={works} urls={urls} busy={busy} onMessage={setMessage} onOpenCase={openCase}
+    {view === 'deck' && event && !readOnly && <NominationPresentation event={event} cases={cases} works={works} urls={urls} busy={busy} onMessage={setMessage} onOpenCase={openCase}
       onExported={(ids, note) => { setMessage(note); void client!.from('sadu_export_log').insert({ event_id: event.id, kind: 'PRESENTATION', dossier_ids: ids }); }}
       onRecordSent={deck => run(async () => { await recordCommitteeBatch(client!, event.id, deck); },
         t('Recorded as sent to the Committee. When the decision email arrives, open each artist and record it.', 'سُجّل الإرسال إلى اللجنة. عند وصول رسالة القرار، افتح ملف كل فنان وسجّل القرار.'))} />}
@@ -708,7 +708,7 @@ function ArtIdeas({ eventId, ideas, cases, userId, readOnly, busy, run }: { even
         {idea.note && <p dir="auto" className="whitespace-pre-line text-sm text-[#3F3A35]">{idea.note}</p>}
         {idea.links.length > 0 && <ul className="text-sm">{idea.links.map(l => <li key={l}><bdi dir="ltr" className="break-all text-[#6E6259]">{l}</bdi></li>)}</ul>}
         <div className="mt-auto border-t border-[#EFE6D6] pt-2">
-          {mine ? <div className="flex flex-wrap items-end gap-3">
+          {mine && !readOnly ? <div className="flex flex-wrap items-end gap-3">
             <label className={`${ui.label} min-w-0 flex-1`}>{t('Linked artist', 'الفنان المرتبط')}
               <select className={ui.field} disabled={busy} value={idea.dossier_id ?? ''} onChange={e => void update(idea.id, { dossier_id: e.target.value || null }, t('Idea updated.', 'حُدّثت الفكرة.'))}>
                 <option value="">{t('No artist yet', 'لا يوجد فنان بعد')}</option>
