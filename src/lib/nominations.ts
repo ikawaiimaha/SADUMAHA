@@ -104,7 +104,8 @@ export async function uploadCaseFile(client: SupabaseClient, caseId: string, fol
 
 export async function signedUrls(client: SupabaseClient, paths: string[]): Promise<Record<string, string>> {
   if (!paths.length) return {};
-  const { data, error } = await client.storage.from(BUCKET).createSignedUrls(paths, 3600);
+  // A failed request leaves images unshown; it never stops the records from loading.
+  const { data, error } = await client.storage.from(BUCKET).createSignedUrls(paths, 3600).catch(() => ({ data: null, error: true }));
   if (error || !data) return {};
   return Object.fromEntries(data.filter(d => d.signedUrl && d.path).map(d => [d.path as string, d.signedUrl as string]));
 }
