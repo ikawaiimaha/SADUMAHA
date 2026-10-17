@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ArrowLeft, Check, Circle, ClipboardList, Download, FolderOutput, ImagePlus, Lightbulb, Plus, Presentation, UserPlus, Users, X } from 'lucide-react';
 import { pilotSupabase as client } from '../lib/pilotSupabase';
 import { useUiText, UiText } from '../context/I18nContext';
@@ -79,6 +79,8 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
   const [briefs, setBriefs] = useState<EventBrief[]>([]);
   // False until the festival-brief migration is applied; the Brief tab and the reason note stay hidden.
   const [briefReady, setBriefReady] = useState(false);
+  // The event whose briefs are loaded; until it matches the selected event, briefs count as still loading.
+  const [briefEvent, setBriefEvent] = useState('');
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [loaded, setLoaded] = useState(false);
   const [view, setView] = useState<View>('artists');
@@ -88,6 +90,11 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const top = useRef<HTMLDivElement>(null);
+  // Counts loads so a slower, superseded load never overwrites what a newer one set.
+  const loadSeq = useRef(0);
+  // A refresh started before an event switch (for example after an action) loads the event selected now.
+  const selectedEvent = useRef(eventId);
+  useLayoutEffect(() => { selectedEvent.current = eventId; }, [eventId]);
   useEffect(() => {
     const warn = (e: BeforeUnloadEvent) => { if (unsaved.size) e.preventDefault(); };
     window.addEventListener('beforeunload', warn);
@@ -109,24 +116,27 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
 
   const load = useCallback(async (keepSelection = true) => {
     if (!client) return;
+    const seq = ++loadSeq.current;
+    const stale = () => seq !== loadSeq.current;
     const t = text.current;
     const ev = await client.from('sadu_events').select('id,name_en,name_ar,edition').eq('active', true).order('name_en');
+    if (stale()) return;
     if (ev.error) { setMessage(t('Events could not be loaded.', 'تعذّر تحميل الفعاليات.')); setLoaded(true); return; }
     setEvents(ev.data as NominationEvent[]);
-    const activeEvent = eventId || ev.data?.[0]?.id || '';
-    if (!eventId && activeEvent) setEventId(activeEvent);
+    const current = selectedEvent.current;
+    const activeEvent = current || ev.data?.[0]?.id || '';
+    if (!current && activeEvent) setEventId(activeEvent);
     if (!activeEvent) { setLoaded(true); return; }
     const cs = await client.from('artist_dossiers').select(CASE_COLUMNS).eq('event_id', activeEvent).order('created_at');
-    if (cs.error) { setMessage(t('Cases could not be loaded.', 'تعذّر تحميل الترشيحات.')); setLoaded(true); return; }
     const ai = await client.from('sadu_art_ideas').select('*').eq('event_id', activeEvent).is('archived_at', null).order('created_at');
+    const br = await client.from('sadu_event_briefs').select('*').eq('event_id', activeEvent).order('recorded_at');
+    if (stale()) return;
+    if (cs.error) { setMessage(t('Cases could not be loaded.', 'تعذّر تحميل الترشيحات.')); setLoaded(true); return; }
     // PGRST205: the table is not there yet (scouting migration not applied), so the tab stays hidden quietly.
     if (ai.error && ai.error.code !== 'PGRST205') setMessage(t('Art ideas could not be loaded.', 'تعذّر تحميل الأفكار الفنية.'));
     setIdeas(ai.error ? [] : (ai.data ?? []) as ArtIdea[]);
     setIdeasReady(!ai.error);
-    const br = await client.from('sadu_event_briefs').select('*').eq('event_id', activeEvent).order('recorded_at');
     if (br.error && br.error.code !== 'PGRST205') setMessage(t('The festival brief could not be loaded.', 'تعذّر تحميل توجيهات المهرجان.'));
-    setBriefs(br.error ? [] : (br.data ?? []) as EventBrief[]);
-    setBriefReady(!br.error);
     // Discarded drafts stay in the database but are hidden here.
     const list = (cs.data as unknown as NominationCase[]).filter(c => !c.discarded_at);
     const ids = list.map(c => c.id);
@@ -136,12 +146,17 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
       client.from('sadu_committee_batches').select('*').eq('event_id', activeEvent).order('sent_at'),
       client.from('sadu_committee_batch_cases').select('*').in('dossier_id', ids),
     ]) : [{ data: [], error: null }, { data: [], error: null }, { data: [], error: null }, { data: [], error: null }];
+    const signed = await signedUrls(client, (ws.data ?? []).map(w => (w as CaseWork).image_path));
+    if (stale()) return;
+    setBriefs(br.error ? [] : (br.data ?? []) as EventBrief[]);
+    setBriefReady(!br.error);
+    setBriefEvent(activeEvent);
     setCases(list);
     setWorks((ws.data ?? []) as CaseWork[]);
     setDecisions((ds.data ?? []) as NominationDecision[]);
     setBatches((bs.data ?? []) as CommitteeBatch[]);
     setBatchCases((bcs.data ?? []) as CommitteeBatchCase[]);
-    setUrls(await signedUrls(client, (ws.data ?? []).map(w => (w as CaseWork).image_path)));
+    setUrls(signed);
     if (!keepSelection) setSelectedId('');
     setLoaded(true);
   }, [eventId]);
@@ -157,6 +172,9 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
   }
 
   const event = events.find(e => e.id === eventId);
+  // Briefs left over from the previously selected event never show or seed a version under this one.
+  const eventBriefs = briefs.filter(b => b.event_id === eventId);
+  const briefsLoaded = briefReady && briefEvent === eventId;
   const selected = cases.find(c => c.id === selectedId);
   const worksFor = (id: string) => works.filter(w => w.dossier_id === id);
   const decisionsFor = (id: string) => decisions.filter(d => d.dossier_id === id);
@@ -245,7 +263,7 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
     {view === 'artists' && (selected
       ? <CaseDetail key={selected.id} onBack={() => go('artists')} onDeck={() => go('deck')} onExport={() => void exportCases([selected], 'CASE')} c={selected}
         works={worksFor(selected.id)} decisions={decisionsFor(selected.id)} sent={sentFor(selected.id)} urls={urls}
-        mine={!readOnly && selected.created_by === userId} readOnly={readOnly} briefReady={briefReady && briefs.length > 0} busy={busy} run={run} refresh={() => load()} missingLabel={missingLabel} stageLabel={stageLabel} />
+        mine={!readOnly && selected.created_by === userId} readOnly={readOnly} briefReady={briefsLoaded && eventBriefs.length > 0} busy={busy} run={run} refresh={() => load()} missingLabel={missingLabel} stageLabel={stageLabel} />
       : <ArtistsView cases={cases} filter={filter} setFilter={setFilter} stageLabel={stageLabel} count={count} thumb={thumb} worksFor={worksFor} userId={userId}
         loaded={loaded} busy={busy} readOnly={readOnly} creating={creating} setCreating={setCreating} onOpen={openCase} eventReady={!!eventId}
         onExportAll={pick => void exportCases(cases, 'ALL', pick)}
@@ -260,7 +278,7 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
       onRecordSent={deck => run(async () => { await recordCommitteeBatch(client!, event.id, deck); },
         t('Recorded as sent to the Committee. When the decision email arrives, open each artist and record it.', 'سُجّل الإرسال إلى اللجنة. عند وصول رسالة القرار، افتح ملف كل فنان وسجّل القرار.'))} />}
 
-    {view === 'brief' && event && briefReady && <BriefView eventId={event.id} briefs={briefs} cases={cases} decisions={decisions} readOnly={readOnly} busy={busy} run={run} onOpenCase={openCase} />}
+    {view === 'brief' && event && briefsLoaded && <BriefView key={event.id} eventId={event.id} briefs={eventBriefs} cases={cases} decisions={decisions} readOnly={readOnly} busy={busy} run={run} onOpenCase={openCase} />}
 
     {view === 'ideas' && event && ideasReady && <ArtIdeas eventId={event.id} ideas={ideas} cases={cases} userId={userId} readOnly={readOnly} busy={busy} run={run} />}
 
