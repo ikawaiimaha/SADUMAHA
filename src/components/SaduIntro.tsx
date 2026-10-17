@@ -227,6 +227,7 @@ export default function SaduIntro({ signedIn, onContinue }: { signedIn: boolean;
       <button type="button" className="si-ghost" lang={isAr ? 'en' : 'ar'} onClick={toggleLang}>{isAr ? 'English' : 'العربية'}</button>
       <button type="button" className="si-ghost si-ghost-strong" onClick={onContinue}>{signedIn ? t('Nominations', 'الترشيحات') : t('Sign in', 'تسجيل الدخول')}</button>
     </header>
+    <main>
 
     <section id="si-hero" className="si-hero">
       <div className="si-hero-copy">
@@ -347,5 +348,6 @@ export default function SaduIntro({ signedIn, onContinue }: { signedIn: boolean;
         <a className="si-link si-link-quiet" href="https://sadu-proposal.vercel.app" target="_blank" rel="noreferrer">{t('Read the full approval memo', 'قراءة مذكرة الموافقة كاملة')} <span aria-hidden="true">↗</span></a>
       </div>
     </section>
+    </main>
   </div>;
 }

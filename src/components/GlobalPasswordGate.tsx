@@ -61,7 +61,7 @@ export default function GlobalPasswordGate({ children }: { children: ReactNode }
   }, [verified]);
   if (verified) return <><aside ref={bar} aria-label={copy.sessionLabel} lang={language} dir={dir} className="flex flex-wrap items-center justify-between gap-2 border-b border-[#D9CEBA] bg-[#F7F1E6] ps-5 pe-5 py-2 text-sm text-[#111817]">
     {!executiveMode && <span>{onPilot() ? copy.pilotBanner : copy.banner}</span>}<LocalReplayControls copy={copy}/>
-    <button className="rounded border border-[#8C8173] ps-3 pe-3 py-2 font-semibold focus-visible:outline-2 focus-visible:outline-offset-2" disabled={busy} onClick={async () => {
+    <button className="rounded border border-[#8C8173] ps-3 pe-3 py-2 font-semibold pointer-coarse:min-h-[44px] focus-visible:outline-2 focus-visible:outline-offset-2" disabled={busy} onClick={async () => {
       if (!window.confirm(copy.lockConfirm)) return;
       setBusy(true); setError('');
       try { const r = await fetch('/api/prelaunch/lock', { method: 'POST', signal: AbortSignal.timeout(10000) }); if (!r.ok) throw new Error(); setVerified(false); }

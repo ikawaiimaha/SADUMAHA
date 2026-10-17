@@ -428,6 +428,16 @@ html[lang="ar"] select {
   letter-spacing: normal !important;
 }
 
+/* Touch screens: keep Arabic fields at the 44px touch target the rest of the app uses. */
+@media (pointer: coarse) {
+  html[dir="rtl"] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]),
+  html[lang="ar"] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]),
+  html[dir="rtl"] select,
+  html[lang="ar"] select {
+    min-height: 44px;
+  }
+}
+
 html[dir="rtl"] select option,
 html[lang="ar"] select option {
   font-family: 'Noto Naskh Arabic', sans-serif;
