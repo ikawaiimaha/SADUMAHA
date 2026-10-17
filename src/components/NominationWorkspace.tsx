@@ -92,6 +92,9 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
   const top = useRef<HTMLDivElement>(null);
   // Counts loads so a slower, superseded load never overwrites what a newer one set.
   const loadSeq = useRef(0);
+  // A refresh started before an event switch (for example after an action) loads the event selected now.
+  const selectedEvent = useRef(eventId);
+  selectedEvent.current = eventId;
   useEffect(() => {
     const warn = (e: BeforeUnloadEvent) => { if (unsaved.size) e.preventDefault(); };
     window.addEventListener('beforeunload', warn);
@@ -120,8 +123,9 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
     if (stale()) return;
     if (ev.error) { setMessage(t('Events could not be loaded.', 'تعذّر تحميل الفعاليات.')); setLoaded(true); return; }
     setEvents(ev.data as NominationEvent[]);
-    const activeEvent = eventId || ev.data?.[0]?.id || '';
-    if (!eventId && activeEvent) setEventId(activeEvent);
+    const current = selectedEvent.current;
+    const activeEvent = current || ev.data?.[0]?.id || '';
+    if (!current && activeEvent) setEventId(activeEvent);
     if (!activeEvent) { setLoaded(true); return; }
     const cs = await client.from('artist_dossiers').select(CASE_COLUMNS).eq('event_id', activeEvent).order('created_at');
     const ai = await client.from('sadu_art_ideas').select('*').eq('event_id', activeEvent).is('archived_at', null).order('created_at');
@@ -133,9 +137,6 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
     setIdeas(ai.error ? [] : (ai.data ?? []) as ArtIdea[]);
     setIdeasReady(!ai.error);
     if (br.error && br.error.code !== 'PGRST205') setMessage(t('The festival brief could not be loaded.', 'تعذّر تحميل توجيهات المهرجان.'));
-    setBriefs(br.error ? [] : (br.data ?? []) as EventBrief[]);
-    setBriefReady(!br.error);
-    setBriefEvent(activeEvent);
     // Discarded drafts stay in the database but are hidden here.
     const list = (cs.data as unknown as NominationCase[]).filter(c => !c.discarded_at);
     const ids = list.map(c => c.id);
@@ -147,6 +148,9 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
     ]) : [{ data: [], error: null }, { data: [], error: null }, { data: [], error: null }, { data: [], error: null }];
     const signed = await signedUrls(client, (ws.data ?? []).map(w => (w as CaseWork).image_path));
     if (stale()) return;
+    setBriefs(br.error ? [] : (br.data ?? []) as EventBrief[]);
+    setBriefReady(!br.error);
+    setBriefEvent(activeEvent);
     setCases(list);
     setWorks((ws.data ?? []) as CaseWork[]);
     setDecisions((ds.data ?? []) as NominationDecision[]);
