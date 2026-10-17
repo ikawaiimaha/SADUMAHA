@@ -88,6 +88,8 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const top = useRef<HTMLDivElement>(null);
+  // Counts loads so a slower, superseded load never overwrites what a newer one set.
+  const loadSeq = useRef(0);
   useEffect(() => {
     const warn = (e: BeforeUnloadEvent) => { if (unsaved.size) e.preventDefault(); };
     window.addEventListener('beforeunload', warn);
@@ -109,6 +111,7 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
 
   const load = useCallback(async (keepSelection = true) => {
     if (!client) return;
+    const seq = ++loadSeq.current;
     const t = text.current;
     const ev = await client.from('sadu_events').select('id,name_en,name_ar,edition').eq('active', true).order('name_en');
     if (ev.error) { setMessage(t('Events could not be loaded.', 'تعذّر تحميل الفعاليات.')); setLoaded(true); return; }
@@ -124,6 +127,7 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
     setIdeas(ai.error ? [] : (ai.data ?? []) as ArtIdea[]);
     setIdeasReady(!ai.error);
     const br = await client.from('sadu_event_briefs').select('*').eq('event_id', activeEvent).order('recorded_at');
+    if (seq !== loadSeq.current) return;
     if (br.error && br.error.code !== 'PGRST205') setMessage(t('The festival brief could not be loaded.', 'تعذّر تحميل توجيهات المهرجان.'));
     setBriefs(br.error ? [] : (br.data ?? []) as EventBrief[]);
     setBriefReady(!br.error);
