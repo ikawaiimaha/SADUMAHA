@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ArrowLeft, Check, Circle, Download, FolderOutput, ImagePlus, Lightbulb, Plus, Presentation, UserPlus, Users, X } from 'lucide-react';
+import { ArrowLeft, Check, Circle, ClipboardList, Download, FolderOutput, ImagePlus, Lightbulb, Plus, Presentation, UserPlus, Users, X } from 'lucide-react';
 import { pilotSupabase as client } from '../lib/pilotSupabase';
 import { useUiText, UiText } from '../context/I18nContext';
 import { NominationPresentation, presentationBlob } from './NominationPresentation';
@@ -8,7 +8,7 @@ import { canWriteToFolder, folderSink, sharedFolder, writeExport, zipSink, expor
 import {
   acceptAttribute, acceptedExtension, CASE_COLUMNS, caseStage, linksFromText, MAX_WORKS, MIN_WORKS, missingForReady,
   signedUrls, uploadCaseFile, recordCommitteeBatch, BUCKET,
-  type ArtIdea, type CaseStage, type CaseWork, type CommitteeBatch, type CommitteeBatchCase, type MissingItem, type NominationCase, type NominationDecision, type NominationEvent,
+  type ArtIdea, type CaseStage, type EventBrief, type ReasonInBrief, type CaseWork, type CommitteeBatch, type CommitteeBatchCase, type MissingItem, type NominationCase, type NominationDecision, type NominationEvent,
 } from '../lib/nominations';
 
 // One look for the whole Nominations area: white cards on the sand ground, brick for the one main action per screen.
@@ -45,7 +45,7 @@ const toRow = (d: Draft) => ({
 const AUTOSAVE_MS = 1500;
 const REQUIREMENTS: MissingItem[] = ['name', 'arabic_name', 'nationality', 'category', 'medium', 'biography', 'rationale', 'works'];
 
-type View = 'artists' | 'ideas' | 'deck' | 'invite';
+type View = 'artists' | 'ideas' | 'brief' | 'deck' | 'invite';
 
 // Forms in the open case that hold edits not yet saved (case fields, a work being added, a decision
 // being recorded). Kept per form so one clean form cannot clear another's unsaved entries, and at
@@ -76,6 +76,9 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
   const [ideas, setIdeas] = useState<ArtIdea[]>([]);
   // False until the scouting migration is applied; the Art ideas tab stays hidden rather than failing.
   const [ideasReady, setIdeasReady] = useState(false);
+  const [briefs, setBriefs] = useState<EventBrief[]>([]);
+  // False until the festival-brief migration is applied; the Brief tab and the reason note stay hidden.
+  const [briefReady, setBriefReady] = useState(false);
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [loaded, setLoaded] = useState(false);
   const [view, setView] = useState<View>('artists');
@@ -120,6 +123,10 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
     if (ai.error && ai.error.code !== 'PGRST205') setMessage(t('Art ideas could not be loaded.', 'تعذّر تحميل الأفكار الفنية.'));
     setIdeas(ai.error ? [] : (ai.data ?? []) as ArtIdea[]);
     setIdeasReady(!ai.error);
+    const br = await client.from('sadu_event_briefs').select('*').eq('event_id', activeEvent).order('recorded_at');
+    if (br.error && br.error.code !== 'PGRST205') setMessage(t('The festival brief could not be loaded.', 'تعذّر تحميل توجيهات المهرجان.'));
+    setBriefs(br.error ? [] : (br.data ?? []) as EventBrief[]);
+    setBriefReady(!br.error);
     // Discarded drafts stay in the database but are hidden here.
     const list = (cs.data as unknown as NominationCase[]).filter(c => !c.discarded_at);
     const ids = list.map(c => c.id);
@@ -201,6 +208,7 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
   const tabs: { id: View; label: string; short: string; icon: ReactNode; badge?: number; hidden?: boolean }[] = [
     { id: 'artists', label: t('Artists', 'الفنانون'), short: t('Artists', 'الفنانون'), icon: <Users aria-hidden className="size-4" />, badge: cases.length },
     { id: 'ideas', label: t('Art ideas', 'أفكار فنية'), short: t('Ideas', 'أفكار'), icon: <Lightbulb aria-hidden className="size-4" />, badge: ideas.length, hidden: !ideasReady },
+    { id: 'brief', label: t('Brief and reasons', 'التوجيهات والأسباب'), short: t('Brief', 'التوجيهات'), icon: <ClipboardList aria-hidden className="size-4" />, hidden: !briefReady },
     { id: 'deck', label: t('Committee deck', 'العرض التقديمي للجنة'), short: t('Committee', 'اللجنة'), icon: <Presentation aria-hidden className="size-4" />, badge: count('READY'), hidden: readOnly },
     { id: 'invite', label: t('Invite list', 'قائمة الدعوات'), short: t('Invite', 'الدعوات'), icon: <UserPlus aria-hidden className="size-4" />, badge: approved.length },
   ];
@@ -218,7 +226,7 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
         </select></label>}
     </div>
 
-    <nav aria-label={t('Nominations sections', 'أقسام الترشيحات')} className={`grid border-b border-[#E4D8C4] sm:flex sm:gap-1 ${shownTabs.length > 3 ? 'grid-cols-4' : 'grid-cols-3'}`}>
+    <nav aria-label={t('Nominations sections', 'أقسام الترشيحات')} className={`grid border-b border-[#E4D8C4] sm:flex sm:gap-1 ${shownTabs.length > 4 ? 'grid-cols-5' : shownTabs.length > 3 ? 'grid-cols-4' : 'grid-cols-3'}`}>
       {shownTabs.map(tab => {
         const active = view === tab.id;
         return <button key={tab.id} type="button" aria-current={active ? 'page' : undefined} onClick={() => go(tab.id)}
@@ -237,7 +245,7 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
     {view === 'artists' && (selected
       ? <CaseDetail key={selected.id} onBack={() => go('artists')} onDeck={() => go('deck')} onExport={() => void exportCases([selected], 'CASE')} c={selected}
         works={worksFor(selected.id)} decisions={decisionsFor(selected.id)} sent={sentFor(selected.id)} urls={urls}
-        mine={!readOnly && selected.created_by === userId} readOnly={readOnly} busy={busy} run={run} refresh={() => load()} missingLabel={missingLabel} stageLabel={stageLabel} />
+        mine={!readOnly && selected.created_by === userId} readOnly={readOnly} briefReady={briefReady} busy={busy} run={run} refresh={() => load()} missingLabel={missingLabel} stageLabel={stageLabel} />
       : <ArtistsView cases={cases} filter={filter} setFilter={setFilter} stageLabel={stageLabel} count={count} thumb={thumb} worksFor={worksFor} userId={userId}
         loaded={loaded} busy={busy} readOnly={readOnly} creating={creating} setCreating={setCreating} onOpen={openCase} eventReady={!!eventId}
         onExportAll={pick => void exportCases(cases, 'ALL', pick)}
@@ -251,6 +259,8 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
       onExported={(ids, note) => { setMessage(note); void client!.from('sadu_export_log').insert({ event_id: event.id, kind: 'PRESENTATION', dossier_ids: ids }); }}
       onRecordSent={deck => run(async () => { await recordCommitteeBatch(client!, event.id, deck); },
         t('Recorded as sent to the Committee. When the decision email arrives, open each artist and record it.', 'سُجّل الإرسال إلى اللجنة. عند وصول رسالة القرار، افتح ملف كل فنان وسجّل القرار.'))} />}
+
+    {view === 'brief' && event && briefReady && <BriefView eventId={event.id} briefs={briefs} cases={cases} decisions={decisions} readOnly={readOnly} busy={busy} run={run} onOpenCase={openCase} />}
 
     {view === 'ideas' && event && ideasReady && <ArtIdeas eventId={event.id} ideas={ideas} cases={cases} userId={userId} readOnly={readOnly} busy={busy} run={run} />}
 
@@ -422,8 +432,8 @@ function Section({ title, children, aside, id }: { title: string; children: Reac
   </section>;
 }
 
-function CaseDetail({ c, works, decisions, sent, urls, mine, readOnly, busy, run, refresh, missingLabel, stageLabel, onExport, onBack, onDeck }: {
-  c: NominationCase; works: CaseWork[]; decisions: NominationDecision[]; sent: SentEntry[]; urls: Record<string, string>; mine: boolean; readOnly: boolean; busy: boolean;
+function CaseDetail({ c, works, decisions, sent, urls, mine, readOnly, briefReady, busy, run, refresh, missingLabel, stageLabel, onExport, onBack, onDeck }: {
+  c: NominationCase; works: CaseWork[]; decisions: NominationDecision[]; sent: SentEntry[]; urls: Record<string, string>; mine: boolean; readOnly: boolean; briefReady: boolean; busy: boolean;
   run: RunFn; refresh: () => Promise<void>; missingLabel: Record<MissingItem, string>; stageLabel: Record<CaseStage, string>; onExport: () => void; onBack: () => void; onDeck: () => void;
 }) {
   const [confirmDiscard, setConfirmDiscard] = useState(false);
@@ -500,7 +510,7 @@ function CaseDetail({ c, works, decisions, sent, urls, mine, readOnly, busy, run
             <label className={`${ui.label} sm:col-span-2`}>{t('Proposed participation', 'المشاركة المقترحة')}<select className={ui.field} value={draft.participation} onChange={set('participation')}>
               <option value="">{t('Not decided yet', 'لم تُحدد بعد')}</option><option value="EXISTING_WORK">{t('Existing work', 'عمل قائم')}</option><option value="NEW_COMMISSION">{t('New commission', 'تكليف بعمل جديد')}</option></select></label>
             <label className={`${ui.label} sm:col-span-2`}>{t('Biography', 'النبذة التعريفية')}<span className={`block font-normal ${ui.muted}`}>{t('A short paragraph for the slide.', 'فقرة قصيرة للشريحة.')}</span><textarea rows={4} maxLength={6000} dir="auto" className={ui.field} id="case-biography" value={draft.biography} onChange={set('biography')} /></label>
-            <label className={`${ui.label} sm:col-span-2`}>{t('Rationale', 'مبررات الترشيح')}<span className={`block font-normal ${ui.muted}`}>{t('Why this artist, for this festival and its theme.', 'لماذا هذا الفنان، لهذا المهرجان وموضوعه.')}</span><textarea rows={4} maxLength={6000} dir="auto" className={ui.field} id="case-rationale" value={draft.rationale} onChange={set('rationale')} /></label>
+            <label className={`${ui.label} sm:col-span-2`}>{t('Rationale', 'مبررات الترشيح')}<span className={`block font-normal ${ui.muted}`}>{t('Why this artist, and how the work fits the festival brief: theme, venues, media and disciplines.', 'لماذا هذا الفنان، وكيف يتوافق العمل مع توجيهات المهرجان: الموضوع والمواقع والوسائط والتخصصات.')}</span><textarea rows={4} maxLength={6000} dir="auto" className={ui.field} id="case-rationale" value={draft.rationale} onChange={set('rationale')} /></label>
             <label className={`${ui.label} sm:col-span-2`}>{t('Links (one per line)', 'روابط (رابط في كل سطر)')}<span className={`block font-normal ${ui.muted}`}>{t('Website, gallery, press.', 'الموقع الإلكتروني، صالة العرض، الصحافة.')}</span><textarea rows={2} dir="ltr" className={ui.field} value={draft.links} onChange={set('links')} /></label>
           </div>
           <div className="flex flex-wrap items-center gap-3"><button type="button" className={ui.quiet} disabled={busy || !dirty} onClick={() => void save()}>{t('Save changes', 'حفظ التغييرات')}</button>
@@ -522,7 +532,7 @@ function CaseDetail({ c, works, decisions, sent, urls, mine, readOnly, busy, run
         <WorksSection c={c} works={works} urls={urls} editable={editable} busy={busy} run={run} />
         {editable && <Section title={t('CV', 'السيرة الذاتية')} aside={<span className={ui.muted}>{t('Optional', 'اختياري')}</span>}><CvUpload c={c} busy={busy} run={run} /></Section>}
 
-        {mine && (stage === 'READY' || stage === 'SENT') && <div ref={decisionRef} className="scroll-mt-4"><DecisionForm c={c} busy={busy} run={run} /></div>}
+        {mine && (stage === 'READY' || stage === 'SENT') && <div ref={decisionRef} className="scroll-mt-4"><DecisionForm c={c} briefReady={briefReady} busy={busy} run={run} /></div>}
         {(sent.length > 0 || decisions.length > 0) && <Section title={t('History', 'السجل')}>
           {sent.length > 0 && <SentHistory sent={sent} />}
           {decisions.length > 0 && <DecisionHistory decisions={decisions} sent={sent} />}
@@ -643,10 +653,10 @@ function CvUpload({ c, busy, run }: { c: NominationCase; busy: boolean; run: Run
   </div>;
 }
 
-function DecisionForm({ c, busy, run }: { c: NominationCase; busy: boolean; run: RunFn }) {
+function DecisionForm({ c, briefReady, busy, run }: { c: NominationCase; briefReady: boolean; busy: boolean; run: RunFn }) {
   const { t } = useUiText();
   const today = new Date().toISOString().slice(0, 10);
-  const [d, setD] = useState({ committee: '', director: '', decided_on: today, email_reference: '', minute: '' });
+  const [d, setD] = useState({ committee: '', director: '', decided_on: today, email_reference: '', minute: '', reason_in_brief: '' as ReasonInBrief | '' });
   const [file, setFile] = useState<File | null>(null);
   const ext = file ? acceptedExtension(file, 'evidence') : null;
   const started = !!(d.committee || d.director || d.email_reference.trim() || d.minute.trim() || file);
@@ -659,7 +669,7 @@ function DecisionForm({ c, busy, run }: { c: NominationCase; busy: boolean; run:
 
   return <form className={`${ui.card} space-y-4 border-[#CBB89F] ps-5 pe-5 py-5`} onSubmit={e => { e.preventDefault(); if (ok) void run(async () => {
     const path = await uploadCaseFile(client!, c.id, 'decision-evidence', file!, ext!);
-    const { error } = await client!.from('sadu_nomination_decisions').insert({ dossier_id: c.id, committee_recommendation: d.committee, director_decision: d.director, decided_on: d.decided_on, email_reference: d.email_reference.trim(), minute: d.minute.trim(), evidence_path: path });
+    const { error } = await client!.from('sadu_nomination_decisions').insert({ dossier_id: c.id, committee_recommendation: d.committee, director_decision: d.director, decided_on: d.decided_on, email_reference: d.email_reference.trim(), minute: d.minute.trim(), evidence_path: path, ...(briefReady && d.reason_in_brief ? { reason_in_brief: d.reason_in_brief } : {}) });
     if (error) throw new Error(error.message);
   }, t('Decision recorded.', 'سُجّل القرار.')); }}>
     <div><h3 className="font-serif text-xl">{t('Record the decision from email', 'تسجيل القرار الوارد بالبريد الإلكتروني')}</h3>
@@ -672,7 +682,12 @@ function DecisionForm({ c, busy, run }: { c: NominationCase; busy: boolean; run:
       <label className={ui.label}>{t('Decision date', 'تاريخ القرار')}<input type="date" max={today} className={ui.field} value={d.decided_on} onChange={e => setD({ ...d, decided_on: e.target.value })} /></label>
       <label className={ui.label}>{t('Email reference (sender, date, subject)', 'مرجع البريد (المرسل، التاريخ، الموضوع)')}<input className={ui.field} value={d.email_reference} onChange={e => setD({ ...d, email_reference: e.target.value })} /></label>
     </div>
-    <label className={ui.label}>{t('Minute or reason (at least 10 characters)', 'المحضر أو السبب (10 أحرف على الأقل)')}<textarea rows={3} maxLength={4000} className={ui.field} value={d.minute} onChange={e => setD({ ...d, minute: e.target.value })} /></label>
+    <label className={ui.label}>{t('Minute or reason, as given (at least 10 characters)', 'المحضر أو السبب كما ورد (10 أحرف على الأقل)')}<textarea rows={3} maxLength={4000} className={ui.field} value={d.minute} onChange={e => setD({ ...d, minute: e.target.value })} /></label>
+    {briefReady && <fieldset className="space-y-2"><legend className={ui.label}>{t('Was this reason in the festival brief? (optional)', 'هل كان هذا السبب وارداً في توجيهات المهرجان؟ (اختياري)')}</legend>
+      <div className="flex flex-wrap gap-2">{([['IN_BRIEF', t('Yes, it was in the brief', 'نعم، كان وارداً')], ['NOT_IN_BRIEF', t('No, it was not in the brief', 'لا، لم يكن وارداً')], ['NO_REASON_GIVEN', t('No reason was given', 'لم يُذكر سبب')]] as const).map(([value, label]) =>
+        <label key={value} className={`flex cursor-pointer items-center gap-2 rounded-md border ps-3 pe-3 py-2 text-sm ${d.reason_in_brief === value ? 'border-[#8B261E] bg-[#FBF4F1] font-semibold' : 'border-[#D9CEBA] bg-white'}`}>
+          <input type="radio" className="accent-[#8B261E]" name={`reason-in-brief-${c.id}`} value={value} checked={d.reason_in_brief === value} onChange={() => setD({ ...d, reason_in_brief: value })} />{label}</label>)}</div>
+      <p className="text-xs text-[#6E6259]">{t('This is your note, not the Committee’s. Over a round it shows which requirements were never written down.', 'هذه ملاحظتك لا ملاحظة اللجنة. وعلى مدى الدورة تبيّن المتطلبات التي لم تُكتب.')}</p></fieldset>}
     <label className={ui.label}>{t('The decision email, saved as PDF, .msg or .eml', 'رسالة القرار محفوظة بصيغة PDF أو ‎.msg أو ‎.eml')}
       <input type="file" accept={acceptAttribute.evidence} className={ui.field} onChange={e => setFile(e.target.files?.[0] ?? null)} /></label>
     {file && !ext && <p role="alert" className="text-[#8B261E]">{t('This file type or size is not accepted.', 'نوع الملف أو حجمه غير مقبول.')}</p>}
@@ -705,6 +720,7 @@ function DecisionHistory({ decisions, sent }: { decisions: NominationDecision[];
     <ol className="space-y-2">{decisions.map(d => <li key={d.id} className="space-y-1 rounded-lg bg-[#FBF7F0] ps-3 pe-3 py-2">
       <p><strong>{outcome[d.director_decision]}</strong> · {t('Committee', 'اللجنة')}: {rec[d.committee_recommendation]} · <bdi dir="ltr">{d.decided_on}</bdi></p>
       <p dir="auto" className="whitespace-pre-line">{d.minute}</p>
+      {d.reason_in_brief && <p className="text-xs text-[#6E6259]">{reasonInBriefLabel(t)[d.reason_in_brief]}</p>}
       <p className="text-xs text-[#6E6259]">{t('Recorded from email by the coordinator', 'سجّله المنسق من البريد الإلكتروني')} · <bdi>{d.email_reference}</bdi></p>
       {(() => { const b = sent.find(s => s.batch.id === d.batch_id)?.batch; return <p className="text-xs text-[#6E6259]">{b
         ? <>{t('Decided on the deck sent on', 'قرار بشأن العرض المُرسل في')} <bdi dir="ltr">{b.sent_at.slice(0, 10)}</bdi> · <bdi>{b.deck_file_name}</bdi></>
@@ -764,5 +780,90 @@ function ArtIdeas({ eventId, ideas, cases, userId, readOnly, busy, run }: { even
       </li>;
     })}</ul> : !adding && <Empty icon={<Lightbulb aria-hidden className="size-6" />} title={t('No ideas yet', 'لا توجد أفكار بعد')}
       body={readOnly ? t('Ideas the coordinators note while scouting appear here.', 'تظهر هنا الأفكار التي يدوّنها المنسقون أثناء الاستكشاف.') : t('Note a theme, material or kind of work you want at the festival. Link it to an artist when you find the right one.', 'دوّن موضوعاً أو خامة أو نوعاً من الأعمال تريده في المهرجان، واربطه بفنان عندما تجد الفنان المناسب.')} />}
+  </section>;
+}
+
+const reasonInBriefLabel = (t: (en: string, ar: string) => string): Record<ReasonInBrief, string> => ({
+  IN_BRIEF: t('The reason was in the festival brief', 'كان السبب وارداً في توجيهات المهرجان'),
+  NOT_IN_BRIEF: t('The reason was not in the festival brief', 'لم يكن السبب وارداً في توجيهات المهرجان'),
+  NO_REASON_GIVEN: t('No reason was given', 'لم يُذكر سبب'),
+});
+
+/** The festival brief as the festival management set it, and every reason a nomination was not selected. */
+function BriefView({ eventId, briefs, cases, decisions, readOnly, busy, run, onOpenCase }: {
+  eventId: string; briefs: EventBrief[]; cases: NominationCase[]; decisions: NominationDecision[]; readOnly: boolean; busy: boolean; run: RunFn; onOpenCase: (id: string) => void;
+}) {
+  const { t, isAr } = useUiText();
+  const current = briefs[briefs.length - 1];
+  const empty = { theme: '', venues: '', artist_count: '', media: '', other_requirements: '', source: '' };
+  const [d, setD] = useState(empty);
+  const [editing, setEditing] = useState(false);
+  const started = editing && Object.values(d).some(v => v.trim());
+  useEffect(() => { markUnsaved('brief', started); }, [started]);
+  useEffect(() => () => markUnsaved('brief', false), []);
+  const count = d.artist_count.trim() ? Number(d.artist_count) : null;
+  const ok = d.theme.trim().length >= 2 && d.source.trim().length >= 5 && (count === null || (Number.isInteger(count) && count >= 1 && count <= 1000));
+  const startEditing = () => {
+    setD(current ? { theme: current.theme, venues: current.venues ?? '', artist_count: current.artist_count ? String(current.artist_count) : '', media: current.media ?? '', other_requirements: current.other_requirements ?? '', source: '' } : empty);
+    setEditing(true);
+  };
+  const name = (id: string) => { const c = cases.find(x => x.id === id); return c ? (isAr ? c.arabic_name : c.name) : id; };
+  const notSelected = decisions.filter(x => x.director_decision === 'DECLINED' || x.committee_recommendation === 'NOT_RECOMMENDED');
+  const labels = reasonInBriefLabel(t);
+  const tally = (v: ReasonInBrief | null) => notSelected.filter(x => (x.reason_in_brief ?? null) === v).length;
+  const field = (label: string, value: string | number | null) => value ? <div><dt className="text-sm font-semibold text-[#5E554B]">{label}</dt><dd dir="auto" className="whitespace-pre-line">{value}</dd></div> : null;
+
+  const form = <form className={`${ui.card} grid gap-4 ps-5 pe-5 py-5`} onSubmit={e => { e.preventDefault(); if (ok) void run(async () => {
+    const { error } = await client!.from('sadu_event_briefs').insert({ event_id: eventId, theme: d.theme.trim(), venues: d.venues.trim() || null, artist_count: count,
+      media: d.media.trim() || null, other_requirements: d.other_requirements.trim() || null, source: d.source.trim() });
+    if (error) throw new Error(error.message);
+    setEditing(false); setD(empty);
+  }, t('Brief recorded. Earlier versions are kept.', 'سُجّلت التوجيهات، وتُحفظ النسخ السابقة.')); }}>
+    <h3 className="font-serif text-xl">{current ? t('New version of the brief', 'نسخة جديدة من التوجيهات') : t('Record the festival brief', 'تسجيل توجيهات المهرجان')}</h3>
+    <p className={ui.muted}>{t('Write down only what the festival management has decided. Leave a field empty if it has not been decided.', 'اكتب ما قررته إدارة المهرجان فقط، واترك الحقل فارغاً إن لم يُقرَّر بعد.')}</p>
+    <label className={ui.label}>{t('Theme', 'الموضوع')}<input dir="auto" autoFocus maxLength={1000} className={ui.field} value={d.theme} onChange={e => setD({ ...d, theme: e.target.value })} /></label>
+    <div className="grid gap-4 sm:grid-cols-2">
+      <label className={ui.label}>{t('Venues', 'المواقع')}<input dir="auto" maxLength={1000} className={ui.field} value={d.venues} onChange={e => setD({ ...d, venues: e.target.value })} /></label>
+      <label className={ui.label}>{t('Number of artists', 'عدد الفنانين')}<input type="number" min={1} max={1000} inputMode="numeric" className={ui.field} value={d.artist_count} onChange={e => setD({ ...d, artist_count: e.target.value })} /></label>
+    </div>
+    <label className={ui.label}>{t('Media and disciplines wanted', 'الوسائط والتخصصات المطلوبة')}<textarea rows={2} maxLength={2000} dir="auto" className={ui.field} value={d.media} onChange={e => setD({ ...d, media: e.target.value })} /></label>
+    <label className={ui.label}>{t('Other requirements', 'متطلبات أخرى')}<textarea rows={3} maxLength={4000} dir="auto" className={ui.field} value={d.other_requirements} onChange={e => setD({ ...d, other_requirements: e.target.value })} /></label>
+    <label className={ui.label}>{t('Who set this, and where (a meeting or an email, with its date)', 'من حدّدها وأين (اجتماع أو رسالة، مع التاريخ)')}<input dir="auto" maxLength={500} className={ui.field} value={d.source} onChange={e => setD({ ...d, source: e.target.value })} /></label>
+    <div className="flex gap-3"><button type="submit" className={ui.button} disabled={busy || !ok}>{t('Record brief', 'تسجيل التوجيهات')}</button><button type="button" className={ui.quiet} onClick={() => setEditing(false)}>{t('Cancel', 'إلغاء')}</button></div>
+  </form>;
+
+  return <section className="space-y-6" aria-labelledby="brief-heading">
+    <div className="flex flex-wrap items-end gap-3">
+      <div className="me-auto"><h2 id="brief-heading" className="font-serif text-2xl">{t('Festival brief', 'توجيهات المهرجان')}</h2>
+        <p className={`max-w-2xl ${ui.muted}`}>{t('What the festival management has decided, so artists and works are chosen against written requirements. Each case’s rationale says how it fits.', 'ما قررته إدارة المهرجان، لتُختار الأعمال والفنانون وفق متطلبات مكتوبة. وتبيّن مبررات كل ترشيح مدى توافقه معها.')}</p></div>
+      {!editing && !readOnly && <button type="button" className={current ? ui.quiet : ui.button} onClick={startEditing}><Plus aria-hidden className="size-4" />{current ? t('New version', 'نسخة جديدة') : t('Record the brief', 'تسجيل التوجيهات')}</button>}
+    </div>
+    {editing && form}
+    {current ? <div className={`${ui.card} space-y-3 ps-5 pe-5 py-5`}>
+      <dl className="grid gap-3 sm:grid-cols-2">
+        {field(t('Theme', 'الموضوع'), current.theme)}{field(t('Venues', 'المواقع'), current.venues)}
+        {field(t('Number of artists', 'عدد الفنانين'), current.artist_count)}{field(t('Media and disciplines', 'الوسائط والتخصصات'), current.media)}
+        {field(t('Other requirements', 'متطلبات أخرى'), current.other_requirements)}
+      </dl>
+      <p className="text-xs text-[#6E6259]"><bdi>{current.source}</bdi> · {t('recorded', 'سُجّلت في')} <bdi dir="ltr">{current.recorded_at.slice(0, 10)}</bdi>{briefs.length > 1 ? ` · ${t(`version ${briefs.length}`, `النسخة ${briefs.length}`)}` : ''}</p>
+      {briefs.length > 1 && <details className="text-sm"><summary className="cursor-pointer text-[#8B261E]">{t('Earlier versions', 'النسخ السابقة')}</summary>
+        <ol className="mt-2 space-y-2">{briefs.slice(0, -1).reverse().map(b => <li key={b.id} className="rounded-lg bg-[#FBF7F0] ps-3 pe-3 py-2">
+          <p dir="auto">{b.theme}{b.artist_count ? ` · ${b.artist_count}` : ''}{b.media ? ` · ${b.media}` : ''}</p>
+          <p className="text-xs text-[#6E6259]"><bdi>{b.source}</bdi> · <bdi dir="ltr">{b.recorded_at.slice(0, 10)}</bdi></p></li>)}</ol></details>}
+    </div> : !editing && <Empty icon={<ClipboardList aria-hidden className="size-6" />} title={t('No brief recorded yet', 'لم تُسجَّل التوجيهات بعد')}
+      body={readOnly ? t('The theme, venues, number of artists and media the festival management sets appear here.', 'يظهر هنا ما تحدده إدارة المهرجان من موضوع ومواقع وعدد الفنانين والوسائط.') : t('Before scouting, write down the theme, venues, number of artists and the media and disciplines the festival management has set, and who set them.', 'قبل الاستكشاف، دوّن الموضوع والمواقع وعدد الفنانين والوسائط والتخصصات التي حددتها إدارة المهرجان، ومن حددها.')} />}
+
+    <div className="space-y-3">
+      <div><h3 className="font-serif text-xl">{t('Reasons nominations were not selected', 'أسباب عدم اختيار الترشيحات')}</h3>
+        <p className={`max-w-2xl ${ui.muted}`}>{t('Each reason as the Committee or the Director gave it. Reasons that were not in the brief are requirements nobody had written down; review them with the General Exhibition Coordinator before the next round.', 'كل سبب كما ذكرته اللجنة أو المدير. والأسباب غير الواردة في التوجيهات متطلبات لم تُكتب من قبل؛ تُراجَع مع المنسقة العامة للمعارض قبل الدورة التالية.')}</p></div>
+      {notSelected.length ? <>
+        <p className="text-sm">{[`${tally('IN_BRIEF')} ${t('in the brief', 'واردة في التوجيهات')}`, `${tally('NOT_IN_BRIEF')} ${t('not in the brief', 'غير واردة')}`, `${tally('NO_REASON_GIVEN')} ${t('without a reason', 'دون سبب')}`, `${tally(null)} ${t('not noted', 'غير مصنّفة')}`].join(' · ')}</p>
+        <ul className="space-y-2">{notSelected.slice().reverse().map(x => <li key={x.id} className={`${ui.card} space-y-1 ps-4 pe-4 py-3`}>
+          <p><button type="button" className="font-semibold text-[#8B261E] underline-offset-4 hover:underline" onClick={() => onOpenCase(x.dossier_id)}>{name(x.dossier_id)}</button> · <bdi dir="ltr">{x.decided_on}</bdi></p>
+          <p dir="auto" className="whitespace-pre-line">{x.minute}</p>
+          <p className="text-xs text-[#6E6259]">{x.reason_in_brief ? labels[x.reason_in_brief] : t('Not noted against the brief', 'لم يُقارَن بالتوجيهات')}</p>
+        </li>)}</ul>
+      </> : <p className={ui.muted}>{t('No nomination has been declined or not recommended yet.', 'لم يُرفض أي ترشيح ولم يُستبعد أي ترشيح من التوصية بعد.')}</p>}
+    </div>
   </section>;
 }

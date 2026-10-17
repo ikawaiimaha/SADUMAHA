@@ -25,6 +25,14 @@ export type NominationDecision = {
   id: string; dossier_id: string; committee_recommendation: 'RECOMMENDED' | 'NOT_RECOMMENDED';
   director_decision: 'APPROVED' | 'DECLINED' | 'RETURNED'; decided_on: string; email_reference: string;
   minute: string; evidence_path: string; recorded_by: string; recorded_at: string; batch_id: string | null;
+  /** Absent until the festival-brief migration is applied. */
+  reason_in_brief?: ReasonInBrief | null;
+};
+export type ReasonInBrief = 'IN_BRIEF' | 'NOT_IN_BRIEF' | 'NO_REASON_GIVEN';
+/** One version of the festival brief as the festival management set it; the latest is current. */
+export type EventBrief = {
+  id: string; event_id: string; theme: string; venues: string | null; artist_count: number | null; media: string | null;
+  other_requirements: string | null; source: string; recorded_by: string; recorded_at: string;
 };
 /** A deck sent to the Committee, and the version of each case it carried (case_version = the case's updated_at). */
 export type CommitteeBatch = {
