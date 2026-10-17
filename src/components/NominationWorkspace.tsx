@@ -112,22 +112,24 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
   const load = useCallback(async (keepSelection = true) => {
     if (!client) return;
     const seq = ++loadSeq.current;
+    const stale = () => seq !== loadSeq.current;
     const t = text.current;
     const ev = await client.from('sadu_events').select('id,name_en,name_ar,edition').eq('active', true).order('name_en');
+    if (stale()) return;
     if (ev.error) { setMessage(t('Events could not be loaded.', 'تعذّر تحميل الفعاليات.')); setLoaded(true); return; }
     setEvents(ev.data as NominationEvent[]);
     const activeEvent = eventId || ev.data?.[0]?.id || '';
     if (!eventId && activeEvent) setEventId(activeEvent);
     if (!activeEvent) { setLoaded(true); return; }
     const cs = await client.from('artist_dossiers').select(CASE_COLUMNS).eq('event_id', activeEvent).order('created_at');
-    if (cs.error) { setMessage(t('Cases could not be loaded.', 'تعذّر تحميل الترشيحات.')); setLoaded(true); return; }
     const ai = await client.from('sadu_art_ideas').select('*').eq('event_id', activeEvent).is('archived_at', null).order('created_at');
+    const br = await client.from('sadu_event_briefs').select('*').eq('event_id', activeEvent).order('recorded_at');
+    if (stale()) return;
+    if (cs.error) { setMessage(t('Cases could not be loaded.', 'تعذّر تحميل الترشيحات.')); setLoaded(true); return; }
     // PGRST205: the table is not there yet (scouting migration not applied), so the tab stays hidden quietly.
     if (ai.error && ai.error.code !== 'PGRST205') setMessage(t('Art ideas could not be loaded.', 'تعذّر تحميل الأفكار الفنية.'));
     setIdeas(ai.error ? [] : (ai.data ?? []) as ArtIdea[]);
     setIdeasReady(!ai.error);
-    const br = await client.from('sadu_event_briefs').select('*').eq('event_id', activeEvent).order('recorded_at');
-    if (seq !== loadSeq.current) return;
     if (br.error && br.error.code !== 'PGRST205') setMessage(t('The festival brief could not be loaded.', 'تعذّر تحميل توجيهات المهرجان.'));
     setBriefs(br.error ? [] : (br.data ?? []) as EventBrief[]);
     setBriefReady(!br.error);
@@ -140,12 +142,14 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
       client.from('sadu_committee_batches').select('*').eq('event_id', activeEvent).order('sent_at'),
       client.from('sadu_committee_batch_cases').select('*').in('dossier_id', ids),
     ]) : [{ data: [], error: null }, { data: [], error: null }, { data: [], error: null }, { data: [], error: null }];
+    const signed = await signedUrls(client, (ws.data ?? []).map(w => (w as CaseWork).image_path));
+    if (stale()) return;
     setCases(list);
     setWorks((ws.data ?? []) as CaseWork[]);
     setDecisions((ds.data ?? []) as NominationDecision[]);
     setBatches((bs.data ?? []) as CommitteeBatch[]);
     setBatchCases((bcs.data ?? []) as CommitteeBatchCase[]);
-    setUrls(await signedUrls(client, (ws.data ?? []).map(w => (w as CaseWork).image_path)));
+    setUrls(signed);
     if (!keepSelection) setSelectedId('');
     setLoaded(true);
   }, [eventId]);
