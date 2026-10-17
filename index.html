@@ -20,14 +20,14 @@
     </style>
   </head>
   <body class="bg-[#F7F1E6] text-[#111817] font-sans antialiased selection:bg-[#8B3A1F] selection:text-white">
-    <section id="sadu-fallback" aria-label="SADU loading / تحميل سدو">
+    <section id="sadu-fallback" aria-label="SADU loading / تحميل السدو">
       <h1>SADU · <span lang="ar" dir="rtl">سدو</span></h1>
       <div role="status" id="sadu-load-message">
         <p>Loading the SADU demonstration…</p>
-        <p lang="ar" dir="rtl">جارٍ تحميل العرض التجريبي لسدو…</p>
+        <p lang="ar" dir="rtl">جارٍ تحميل العرض التجريبي للسدو…</p>
       </div>
       <button type="button" onclick="window.location.reload()">Retry · <span lang="ar" dir="rtl">إعادة المحاولة</span></button>
-      <noscript><p>Enable JavaScript to use SADU.</p><p lang="ar" dir="rtl">فعّل JavaScript لاستخدام سدو.</p></noscript>
+      <noscript><p>Enable JavaScript to use SADU.</p><p lang="ar" dir="rtl">فعّل JavaScript لاستخدام السدو.</p></noscript>
     </section>
     <div id="root"></div>
     <script>
@@ -36,7 +36,7 @@
         const message = document.getElementById('sadu-load-message');
         const showRetry = () => {
           if (fallback.hidden) return;
-          message.innerHTML = '<p>SADU has not loaded. Check your connection and retry.</p><p lang="ar" dir="rtl">لم يكتمل تحميل سدو. تحقق من الاتصال ثم أعد المحاولة.</p>';
+          message.innerHTML = '<p>SADU has not loaded. Check your connection and retry.</p><p lang="ar" dir="rtl">لم يكتمل تحميل السدو. تحقق من الاتصال ثم أعد المحاولة.</p>';
         };
         const timer = setTimeout(showRetry, 8000);
         window.addEventListener('sadu:ready', () => { clearTimeout(timer); fallback.hidden = true; }, { once: true });

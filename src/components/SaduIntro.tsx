@@ -172,19 +172,19 @@ function Loom({ onPhase, replayKey }: { onPhase: (p: Phase) => void; replayKey: 
 /* ---------- Page ---------- */
 
 const CASES = [
-  { then: ['Two months of emails with an artist’s studio before we learned they only make large new commissions, when the round needed existing works.', 'شهران من المراسلات مع استوديو أحد الفنانين قبل أن نعلم أنه لا ينتج إلا أعمالاً جديدة كبيرة بالتكليف، في حين كانت الدورة تتطلب أعمالاً قائمة.'], now: ['Every case states “existing work” or “new commission” before the Committee sees it.', 'يحدد كل ملف ترشيح «عملاً قائماً» أو «تكليفاً بعمل جديد» قبل أن تراه اللجنة.'] },
-  { then: ['An artist’s proposal was declined in a three-word message after the coordinator had contacted them.', 'رُفض مقترح أحد الفنانين برسالة من ثلاث كلمات بعد أن تواصل المنسق معه.'], now: ['The invitation list is built only from recorded decisions, and every decision keeps the Committee’s reason.', 'لا تُبنى قائمة الدعوات إلا من القرارات المسجلة، ويُسجَّل كل قرار مع السبب الذي تقدمه اللجنة.'] },
-  { then: ['An artist’s name was wrong in an internal directive, and the error carried into the letters that followed.', 'ورد اسم فنان خطأً في توجيه داخلي، وانتقل الخطأ إلى ما تلاه من مراسلات.'], now: ['One case per artist holds the approved Arabic and English name, and every document takes it from there.', 'ملف واحد لكل فنان باسمه العربي والإنجليزي المعتمد، ومنه يُنقل الاسم إلى بقية المراسلات والوثائق.'] },
-  { then: ['Artists were asked to resend the titles and images of their works, weeks after they had sent them.', 'طُلب من فنانين إعادة إرسال عناوين أعمالهم وصورها، وقد أرسلوها قبل أسابيع.'], now: ['Profile, works, sources and CV sit in one case, with a dated copy in the shared folder.', 'النبذة التعريفية والأعمال ومصادرها والسيرة الذاتية في ملف واحد، مع نسخة مؤرخة في المجلد المشترك.'] },
+  { then: ['Two months of emails with an artist’s studio before we learned they only make large new commissions, when the round needed existing works.', 'شهران من المراسلات مع استوديو أحد الفنانين قبل أن نعلم أنه لا ينفّذ إلا أعمالاً جديدة كبيرة بتكليف خاص، في حين كانت الدورة تتطلب أعمالاً منجزة.'], now: ['Every case states “existing work” or “new commission” before the Committee sees it.', 'يحدد كل ملف ترشيح «عملاً منجزاً» أو «تكليفاً بعمل جديد» قبل أن تراه اللجنة.'] },
+  { then: ['An artist’s proposal was declined in a three-word message after the coordinator had contacted them.', 'رُفض مقترح أحد الفنانين برسالة من ثلاث كلمات بعد أن تواصل المنسق معه.'], now: ['The invitation list is built only from recorded decisions, and every decision keeps the Committee’s reason.', 'لا تُعدّ قائمة الدعوات إلا من القرارات المسجلة، ويُسجَّل كل قرار مع السبب الذي تبديه اللجنة.'] },
+  { then: ['An artist’s name was wrong in an internal directive, and the error carried into the letters that followed.', 'ورد اسم فنان خطأً في توجيه داخلي، وانتقل الخطأ إلى ما تلاه من مراسلات.'], now: ['One case per artist holds the approved Arabic and English name, and every document takes it from there.', 'لكل فنان ملف واحد يتضمن اسمه المعتمد بالعربية والإنجليزية، ومنه يُنقل الاسم إلى بقية المراسلات والوثائق.'] },
+  { then: ['Artists were asked to resend the titles and images of their works, weeks after they had sent them.', 'طُلب من فنانين إعادة إرسال عناوين أعمالهم وصورها بعد أسابيع من إرسالها.'], now: ['Profile, works, sources and CV sit in one case, with a dated copy in the shared folder.', 'تُحفظ النبذة التعريفية والأعمال والمصادر والسيرة الذاتية في ملف واحد، مع نسخة مؤرخة في المجلد المشترك.'] },
   { then: ['When an artist withdrew late for health reasons, the search for a replacement started from zero.', 'حين انسحب فنان في وقت متأخر لأسباب صحية، بدأ البحث عن بديل من الصفر.'], now: ['Every candidate’s case and decision is kept, so a replacement starts from a list already reviewed.', 'تبقى ملفات جميع المرشحين وقراراتهم محفوظة، فيبدأ البحث عن بديل من قائمة سبقت مراجعتها.'] },
 ] as const;
 
 const MILESTONES = [
-  { date: new Date(2026, 9, 15), label: ['15 Oct 2026', '15 أكتوبر 2026'], title: ['Memo for approval', 'المذكرة للموافقة'], body: ['Reviewed with Fatima Al Zarooni, then presented to the Director.', 'تُراجَع مع فاطمه الزرعوني، ثم تُعرض على المدير.'] },
+  { date: new Date(2026, 9, 15), label: ['15 Oct 2026', '15 أكتوبر 2026'], title: ['Memo for approval', 'رفع المذكرة للموافقة'], body: ['Reviewed with Fatima Al Zarooni, then presented to the Director.', 'تُراجَع مع فاطمه الزرعوني، ثم تُعرض على المدير.'] },
   { date: new Date(2026, 10, 16), label: ['16 Nov 2026', '16 نوفمبر 2026'], title: ['Scouting begins', 'بدء رصد الفنانين'], body: ['Artists and art ideas from published sources only, with no artist contact.', 'الفنانون والأفكار الفنية من المصادر المنشورة فقط، دون التواصل مع الفنانين.'] },
-  { date: new Date(2027, 3, 15), label: ['Around April 2027', 'أبريل 2027 تقريباً'], title: ['Exhibitors chosen', 'اختيار العارضين'], body: ['Proposals gathered and the Committee decides, on the date the festival sets.', 'جمع المقترحات وقرار اللجنة، في الموعد الذي تحدده إدارة المهرجان.'] },
-  { date: new Date(2027, 4, 1), label: ['Two weeks later', 'بعد أسبوعين'], title: ['Pilot report', 'تقرير المرحلة التجريبية'], body: ['Each target met or not, then the decision on a Cultural Affairs project for the Department’s other events.', 'تحقق كل هدف أو عدمه، ثم البتّ في تحويله إلى مشروع يخدم فعاليات الدائرة الأخرى.'] },
-  { date: new Date(2027, 11, 1), label: ['December 2027', 'ديسمبر 2027'], title: ['Sharjah Islamic Arts Festival', 'مهرجان الشارقة للفنون الإسلامية'], body: ['The exhibitors SADU helped choose open to the public.', 'يفتتح العارضون الذين ساعد السدو في اختيارهم.'] },
+  { date: new Date(2027, 3, 15), label: ['Around April 2027', 'أبريل 2027 تقريباً'], title: ['Exhibitors chosen', 'اختيار العارضين'], body: ['Proposals gathered and the Committee decides, on the date the festival sets.', 'تُجمع المقترحات وتتخذ اللجنة قرارها في الموعد الذي تحدده إدارة المهرجان.'] },
+  { date: new Date(2027, 4, 1), label: ['Two weeks later', 'بعد أسبوعين'], title: ['Pilot report', 'تقرير المرحلة التجريبية'], body: ['Each target met or not, then the decision on a Cultural Affairs project for the Department’s other events.', 'بيان ما تحقق من الأهداف وما لم يتحقق، ثم البتّ في تحويل التجربة إلى مشروع لإدارة الشؤون الثقافية يخدم فعاليات الدائرة الأخرى.'] },
+  { date: new Date(2027, 11, 1), label: ['December 2027', 'ديسمبر 2027'], title: ['Sharjah Islamic Arts Festival', 'مهرجان الشارقة للفنون الإسلامية'], body: ['The exhibitors SADU helped choose open to the public.', 'تُفتتح للجمهور مشاركات العارضين الذين أسهم السدو في اختيارهم.'] },
 ] as const;
 
 /** Where "today" sits along the evenly spaced timeline, as 0..1. */
@@ -216,10 +216,10 @@ export default function SaduIntro({ signedIn, onContinue }: { signedIn: boolean;
   useEffect(() => { document.title = isAr ? 'سدو · لماذا السدو' : 'SADU · Why SADU'; }, [isAr]);
   const cta = signedIn ? t('Open Nominations', 'فتح الترشيحات') : t('Sign in to Nominations', 'الدخول إلى الترشيحات');
   const caption: Record<Phase, string> = {
-    scatter: t('Today: 117,557 files, about one in five a copy.', 'اليوم: 117,557 ملفاً، نحو ملف من كل خمسة نسخة مكررة.'),
-    gather: t('Each department becomes one thread.', 'كل قسم يصبح خيطاً واحداً.'),
-    weave: t('Every nomination passes through all of them.', 'كل ترشيح يمرّ عبرها جميعاً.'),
-    done: t('One record for every artist, across every event.', 'سجل واحد لكل فنان، في كل فعالية.'),
+    scatter: t('Today: 117,557 files, about one in five a copy.', 'اليوم: 117,557 ملفاً، نحو خُمسها نسخ مكررة.'),
+    gather: t('Each department becomes one thread.', 'يصير كل قسم خيطاً واحداً.'),
+    weave: t('Every nomination passes through all of them.', 'ويمرّ كل ترشيح بها جميعاً.'),
+    done: t('One record for every artist, across every event.', 'سجل واحد لكل فنان في جميع الفعاليات.'),
   };
   return <div className="sadu-intro" lang={isAr ? 'ar' : 'en'} dir={isAr ? 'rtl' : 'ltr'}>
     <header className="si-top">
@@ -248,18 +248,18 @@ export default function SaduIntro({ signedIn, onContinue }: { signedIn: boolean;
           <Loom onPhase={onPhase} replayKey={replay}/>
         </div>
         <figcaption className="si-loom-caption"><span aria-live="polite"><span key={phase} className="si-caption-line">{caption[phase]}</span></span>
-          {phase === 'done' && !reducedMotion() && <button type="button" className="si-replay" onClick={() => setReplay(r => r + 1)}>{t('Replay', 'إعادة')}</button>}
+          {phase === 'done' && !reducedMotion() && <button type="button" className="si-replay" onClick={() => setReplay(r => r + 1)}>{t('Replay', 'إعادة العرض')}</button>}
         </figcaption>
       </figure>
       <p className="si-proverb"><span lang="ar">السَّدى واللُّحمة: خيوط كثيرة، ونسيج واحد.</span><span lang="en">Warp and weft: many threads, one cloth.</span></p>
     </section>
 
-    <Section id="si-why" className="si-light" label={t('Why SADU exists', 'لماذا وُجد السدو')}>{inView => <div className="si-wrap">
-      <p className="si-eyebrow si-eyebrow-dark">{t('Why SADU exists', 'لماذا وُجد السدو')}</p>
-      <h2 className="si-h2">{t('Everything is saved. Nothing can be found.', 'كل شيء محفوظ، ولا شيء يمكن العثور عليه.')}</h2>
+    <Section id="si-why" className="si-light" label={t('Why SADU exists', 'الحاجة إلى السدو')}>{inView => <div className="si-wrap">
+      <p className="si-eyebrow si-eyebrow-dark">{t('Why SADU exists', 'الحاجة إلى السدو')}</p>
+      <h2 className="si-h2">{t('Everything is saved. Nothing can be found.', 'كل شيء محفوظ، ولا يُعثر على شيء.')}</h2>
       <div className="si-why">
         <dl className="si-stats">
-          <div className="si-stat"><dt><CountUp value={117557} run={inView}/></dt><dd>{t('files in 11,875 folders of the shared drive', 'ملفاً في 11,875 مجلداً في المجلد المشترك')}</dd></div>
+          <div className="si-stat"><dt><CountUp value={117557} run={inView}/></dt><dd>{t('files in 11,875 folders of the shared drive', 'ملفاً في 11,875 مجلداً على وحدة التخزين المشتركة')}</dd></div>
           <div className="si-stat"><dt><CountUp value={815} run={inView}/> <small>{t('GB', 'غيغابايت')}</small></dt><dd>{t('of files with no index', 'من الملفات دون فهرسة')}</dd></div>
           <div className="si-stat si-stat-alert"><dt><CountUp value={23050} run={inView}/></dt><dd>{t('duplicates with the same name and size: about one file in five', 'نسخة مكررة بالاسم والحجم نفسيهما، أي نحو ملف من كل خمسة')}</dd></div>
           <div className="si-stat"><dt><CountUp value={2621} run={inView}/></dt><dd>{t('files named as passports, visas, ID cards or bank details, open to most staff', 'ملفاً تشير أسماؤها إلى جوازات سفر أو تأشيرات أو بطاقات هوية أو بيانات مصرفية، ومعظمها متاح لمعظم الموظفين')}</dd></div>
@@ -269,15 +269,15 @@ export default function SaduIntro({ signedIn, onContinue }: { signedIn: boolean;
           <figcaption>{t('Every square is a file. The red ones are copies of a file that already exists.', 'كل مربع ملف، والمربعات الحمراء نسخ من ملف موجود أصلاً.')}</figcaption>
         </figure>
       </div>
-      <p className="si-lede">{t('Each department saves its own copy of the same artist’s files inside the other departments’ folders. Nobody knows which copy is the latest, artists are asked to resend what they already sent, and personal documents stay open far more widely than they should.', 'يحتفظ كل قسم بنسخته من ملفات الفنان نفسه داخل مجلدات الأقسام الأخرى. والنتيجة أنه لا أحد يعرف أي نسخة هي الأحدث، ويُطلب من الفنانين إعادة إرسال ما سبق أن أرسلوه، وتبقى الوثائق الشخصية متاحة على نطاق أوسع بكثير مما ينبغي.')}</p>
-      <p className="si-source">{t('Source: a count of file names and sizes in the Department’s shared drive on 31 August 2026, without opening any file. Duplicates are counted conservatively; renamed copies are not included.', 'المصدر: حصر لأسماء الملفات وأحجامها في المجلد المشترك للدائرة بتاريخ 31 أغسطس 2026، دون فتح أي ملف. احتُسبت النسخ المكررة بتحفظ؛ فلا تشمل النسخ التي غُيّرت أسماؤها.')}</p>
+      <p className="si-lede">{t('Each department saves its own copy of the same artist’s files inside the other departments’ folders. Nobody knows which copy is the latest, artists are asked to resend what they already sent, and personal documents stay open far more widely than they should.', 'يحتفظ كل قسم بنسخته من ملفات الفنان نفسه داخل مجلدات الأقسام الأخرى. فلا يعرف أحد أيّ النسخ أحدث، ويُطلب من الفنانين إعادة إرسال ما سبق أن أرسلوه، وتبقى الوثائق الشخصية متاحة على نطاق أوسع بكثير مما ينبغي.')}</p>
+      <p className="si-source">{t('Source: a count of file names and sizes in the Department’s shared drive on 31 August 2026, without opening any file. Duplicates are counted conservatively; renamed copies are not included.', 'المصدر: حصر لأسماء الملفات وأحجامها في وحدة التخزين المشتركة للدائرة بتاريخ 31 أغسطس 2026، دون فتح أي ملف. احتُسبت النسخ المكررة بتحفظ؛ فلا تشمل النسخ التي غُيّرت أسماؤها.')}</p>
     </div>}</Section>
 
     <Section className="si-light si-cases-band" label={t('From our own work', 'من واقع عملنا')}>{() => <div className="si-wrap">
       <div className="si-cases-head">
         <div><p className="si-eyebrow si-eyebrow-dark">{t('From our own work', 'من واقع عملنا')}</p>
           <h2 className="si-h2">{t('Five recent nominations. Five threads that broke.', 'خمسة ترشيحات حديثة، وخمسة خيوط انقطعت.')}</h2></div>
-        <div className="si-switch" role="group" aria-label={t('Show', 'اعرض')}>
+        <div className="si-switch" role="group" aria-label={t('Show', 'عرض')}>
           <button type="button" aria-pressed={!withSadu} onClick={() => setWithSadu(false)}>{t('What happened', 'ما حدث')}</button>
           <button type="button" aria-pressed={withSadu} onClick={() => setWithSadu(true)}>{t('With SADU', 'مع السدو')}</button>
         </div>
@@ -296,7 +296,7 @@ export default function SaduIntro({ signedIn, onContinue }: { signedIn: boolean;
     <Section className="si-dark" label={t('The pilot', 'المرحلة التجريبية')}>{() => <div className="si-wrap">
       <p className="si-eyebrow">{t('The pilot', 'المرحلة التجريبية')}</p>
       <h2 className="si-h2">{t('First pilot: one nomination round at the Sharjah Islamic Arts Festival.', 'التجربة الأولى: دورة ترشيحات واحدة في مهرجان الشارقة للفنون الإسلامية.')}</h2>
-      {scoutingIn > 0 && <p className="si-countdown"><bdi dir="ltr" className="si-num">{scoutingIn}</bdi> {t(scoutingIn === 1 ? 'day until scouting begins' : 'days until scouting begins', 'يوماً حتى بدء رصد الفنانين')}</p>}
+      {scoutingIn > 0 && <p className="si-countdown"><bdi dir="ltr" className="si-num">{scoutingIn}</bdi> {t(scoutingIn === 1 ? 'day until scouting begins' : 'days until scouting begins', `${scoutingIn <= 2 ? 'يوم' : scoutingIn <= 10 ? 'أيام' : 'يوماً'} حتى بدء رصد الفنانين`)}</p>}
       <div className="si-timeline" style={{ ['--si-today' as string]: along }}>
         <div className="si-track" aria-hidden="true"><span className="si-track-fill"/><span className="si-today"><span>{t('Today', 'اليوم')}</span></span></div>
         <ol>{MILESTONES.map((m, i) => <li key={i} className={now >= m.date ? 'is-past' : ''} style={{ transitionDelay: `${300 + i * 140}ms` }}>
@@ -316,9 +316,9 @@ export default function SaduIntro({ signedIn, onContinue }: { signedIn: boolean;
       <div className="si-two">
         <div className="si-col si-col-change"><p className="si-eyebrow si-eyebrow-dark">{t('What SADU changes', 'ما الذي يغيّره السدو')}</p>
           <ul>
-            <li>{t('One record per nomination, from the moment the artist’s files first arrive.', 'سجل واحد لكل ترشيح، منذ اللحظة التي تصل فيها ملفات الفنان أول مرة.')}</li>
-            <li>{t('The Committee presentation is prepared from the cases, not rebuilt by hand.', 'يُعدّ العرض التقديمي للجنة من الملفات نفسها، لا من جديد يدوياً.')}</li>
-            <li>{t('Every decision is recorded with the reason the Committee gives.', 'يُسجَّل كل قرار مع السبب الذي تقدمه اللجنة.')}</li>
+            <li>{t('One record per nomination, from the moment the artist’s files first arrive.', 'سجل واحد لكل ترشيح، منذ وصول ملفات الفنان أول مرة.')}</li>
+            <li>{t('The Committee presentation is prepared from the cases, not rebuilt by hand.', 'يُعدّ العرض التقديمي للجنة من الملفات مباشرة، بدلاً من إعادة إعداده يدوياً.')}</li>
+            <li>{t('Every decision is recorded with the reason the Committee gives.', 'يُسجَّل كل قرار مع السبب الذي تبديه اللجنة.')}</li>
             <li>{t('Exports go to one dated “SADU export” folder, so departments stop copying files.', 'تُحفظ الملفات المُصدَّرة في مجلد واحد مؤرخ باسم «SADU export»، فتتوقف الأقسام عن نسخ الملفات.')}</li>
           </ul></div>
         <div className="si-col"><p className="si-eyebrow si-eyebrow-dark">{t('What stays the same', 'ما الذي يبقى كما هو')}</p>
@@ -334,7 +334,7 @@ export default function SaduIntro({ signedIn, onContinue }: { signedIn: boolean;
         <li><strong>{t('30% less', '30% أقل')}</strong><span>{t('time per nomination case, measured against the current way', 'من الوقت لكل ملف ترشيح، مقارنةً بالطريقة الحالية')}</span></li>
         <li><strong>{t('3 days', '3 أيام')}</strong><span>{t('working days at most to prepare the Committee presentation', 'عمل أو أقل لإعداد العرض التقديمي للجنة')}</span></li>
         <li><strong>{t('5 or fewer', '5 أو أقل')}</strong><span>{t('cases returned for missing information', 'ملفات معادة لنقص المعلومات')}</span></li>
-        <li><strong>{t('None', 'صفر')}</strong><span>{t('artist files passed around by email, WhatsApp or WeTransfer, apart from the Committee presentation', 'ملفات فنانين متبادلة عبر البريد أو واتساب أو WeTransfer، باستثناء العرض التقديمي للجنة')}</span></li>
+        <li><strong>{t('None', 'صفر')}</strong><span>{t('artist files passed around by email, WhatsApp or WeTransfer, apart from the Committee presentation', 'ملفات فنانين تُتداول عبر البريد أو واتساب أو WeTransfer، باستثناء العرض التقديمي للجنة')}</span></li>
       </ul>
     </div>}</Section>
 
@@ -344,7 +344,7 @@ export default function SaduIntro({ signedIn, onContinue }: { signedIn: boolean;
         <p className="si-close-line" lang="ar">خيوط كثيرة، ونسيج واحد.</p>
         <p className="si-close-line si-close-en" lang="en">Many threads, one cloth.</p>
         <button type="button" className="si-cta" onClick={onContinue}>{cta}</button>
-        <p className="si-credit">{t('Prepared by Maha Alsuwaidi, Exhibition Technician and liaison between artists and the Department. Guided and reviewed by Fatima Ahmed Mohamed Al Zarooni, General Exhibition Coordinator, Cultural Affairs.', 'أعدّته مها السويدي، فني معارض، وحلقة الوصل بين الفنانين ودائرة الثقافة، بتوجيه ومراجعة فاطمه أحمد محمد الزرعوني، منسق معرض عام في إدارة الشؤون الثقافية.')}</p>
+        <p className="si-credit">{t('Prepared by Maha Alsuwaidi, Exhibition Technician and liaison between artists and the Department. Guided and reviewed by Fatima Ahmed Mohamed Al Zarooni, General Exhibition Coordinator, Cultural Affairs.', 'أعدّته مها السويدي، فني معارض وحلقة الوصل بين الفنانين ودائرة الثقافة، بتوجيه ومراجعة من فاطمه أحمد محمد الزرعوني، منسق معرض عام في إدارة الشؤون الثقافية.')}</p>
         <a className="si-link si-link-quiet" href="https://sadu-proposal.vercel.app" target="_blank" rel="noreferrer">{t('Read the full approval memo', 'قراءة مذكرة الموافقة كاملة')} <span aria-hidden="true">↗</span></a>
       </div>
     </section>

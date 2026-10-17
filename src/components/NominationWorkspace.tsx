@@ -105,7 +105,7 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
   text.current = t;
 
   const stageLabel: Record<CaseStage, string> = {
-    DRAFT: t('Scouting', 'استكشاف'), READY: t('Ready for Committee', 'جاهز للجنة'), SENT: t('Sent to Committee', 'أُرسل إلى اللجنة'),
+    DRAFT: t('Scouting', 'رصد'), READY: t('Ready for Committee', 'جاهز للجنة'), SENT: t('Sent to Committee', 'مُرسَل إلى اللجنة'),
     APPROVED: t('Approved', 'معتمد'), DECLINED: t('Declined', 'مرفوض'), OTHER: t('Other', 'أخرى'),
   };
   const missingLabel: Record<MissingItem, string> = {
@@ -131,7 +131,7 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
     const ai = await client.from('sadu_art_ideas').select('*').eq('event_id', activeEvent).is('archived_at', null).order('created_at');
     const br = await client.from('sadu_event_briefs').select('*').eq('event_id', activeEvent).order('recorded_at');
     if (stale()) return;
-    if (cs.error) { setMessage(t('Cases could not be loaded.', 'تعذّر تحميل الترشيحات.')); setLoaded(true); return; }
+    if (cs.error) { setMessage(t('Cases could not be loaded.', 'تعذّر تحميل ملفات الفنانين.')); setLoaded(true); return; }
     // PGRST205: the table is not there yet (scouting migration not applied), so the tab stays hidden quietly.
     if (ai.error && ai.error.code !== 'PGRST205') setMessage(t('Art ideas could not be loaded.', 'تعذّر تحميل الأفكار الفنية.'));
     setIdeas(ai.error ? [] : (ai.data ?? []) as ArtIdea[]);
@@ -211,10 +211,10 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
       });
       await client.from('sadu_export_log').insert({ event_id: event.id, kind, dossier_ids: subset.map(c => c.id) });
       setMessage(missing.length
-        ? t(`Exported, but ${missing.length} file(s) could not be copied: ${missing.join('; ')}`, `صُدّر، لكن تعذّر نسخ ${missing.length} من الملفات: ${missing.join('؛ ')}`)
+        ? t(`Exported, but ${missing.length} file(s) could not be copied: ${missing.join('; ')}`, `اكتمل التصدير، لكن تعذّر نسخ ${missing.length} من الملفات: ${missing.join('؛ ')}`)
         : canWriteToFolder()
-          ? t(`Exported ${subset.length} case(s) to the shared folder, in a new dated folder under “SADU export”.`, `صُدّر ${subset.length} من الترشيحات إلى المجلد المشترك، في مجلد جديد مؤرخ داخل «SADU export».`)
-          : t('Export downloaded as a ZIP file. Unzip it into the shared folder.', 'نُزّل التصدير كملف ZIP. فك ضغطه في المجلد المشترك.'));
+          ? t(`Exported ${subset.length} case(s) to the shared folder, in a new dated folder under “SADU export”.`, `صُدِّر ${subset.length} من ملفات الفنانين إلى مجلد جديد مؤرخ داخل «SADU export» في المجلد المشترك.`)
+          : t('Export downloaded as a ZIP file. Unzip it into the shared folder.', 'نُزِّلت الملفات المُصدَّرة في ملف مضغوط (ZIP). استخرج محتواه في المجلد المشترك.'));
     } catch (error) {
       const aborted = error instanceof DOMException && error.name === 'AbortError';
       setMessage(aborted ? t('Export cancelled.', 'أُلغي التصدير.') : error instanceof Error ? error.message : t('The export failed.', 'تعذّر التصدير.'));
@@ -236,7 +236,7 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
     <div ref={top} className="scroll-mt-4 flex flex-wrap items-end gap-x-6 gap-y-2">
       <div className="me-auto min-w-0">
         <h1 id="nominations-heading" className="font-serif text-2xl text-[#1A1817] sm:text-3xl">{event ? `${isAr ? event.name_ar : event.name_en}${event.edition ? ` ${event.edition}` : ''}` : t('Nominations', 'الترشيحات')}</h1>
-        <p className={`max-w-2xl ${ui.muted}`}>{readOnly ? t('Every artist case the coordinators are preparing, and where each one stands. You can read them here; the coordinators edit them and record the decisions.', 'كل ملفات الفنانين التي يعدّها المنسقون، ومرحلة كل ملف. يمكنك الاطلاع عليها هنا، ويتولى المنسقون تعديلها وتسجيل القرارات.') : t('Scout artists from published sources, send the ready ones to the Committee as a deck, and record the decision. Artists are not contacted until the Director approves.', 'استكشف الفنانين من المصادر المنشورة، وأرسل الجاهزين منهم إلى اللجنة في عرض تقديمي، ثم سجّل القرار. لا يُتواصل مع الفنان قبل اعتماد المدير.')}</p>
+        <p className={`max-w-2xl ${ui.muted}`}>{readOnly ? t('Every artist case the coordinators are preparing, and where each one stands. You can read them here; the coordinators edit them and record the decisions.', 'كل ملفات الفنانين التي يعدّها المنسقون، ومرحلة كل ملف. يمكنك الاطلاع عليها هنا، ويتولى المنسقون تعديلها وتسجيل القرارات.') : t('Scout artists from published sources, send the ready ones to the Committee as a deck, and record the decision. Artists are not contacted until the Director approves.', 'ارصد الفنانين من المصادر المنشورة، وأرسل الجاهزين منهم إلى اللجنة في عرض تقديمي، ثم سجّل القرار. لا يُتواصل مع الفنان قبل اعتماد المدير.')}</p>
       </div>
       {events.length > 1 && <label className={ui.label}>{t('Event', 'الفعالية')}
         <select className={ui.field} value={eventId} onChange={e => { if (!confirmLeavingCase(leaveCaseQuestion(t))) return; setEventId(e.target.value); go('artists'); }}>
@@ -271,7 +271,7 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
           const { data, error } = await client!.from('artist_dossiers').insert({ event_id: eventId, name: draft.name.trim(), arabic_name: draft.arabic_name.trim(), nationality: draft.nationality.trim(), category: draft.category, medium: draft.medium.trim() }).select('id').single();
           if (error) throw new Error(error.message);
           setCreating(false); setSelectedId((data as { id: string }).id);
-        }, t('Case created. Add the biography, rationale and works.', 'أُنشئ الترشيح. أضف النبذة التعريفية ومبررات الترشيح والأعمال.'))} />)}
+        }, t('Case created. Add the biography, rationale and works.', 'أُنشئ الملف. أضف النبذة التعريفية ومبررات الترشيح والأعمال.'))} />)}
 
     {view === 'deck' && event && !readOnly && <NominationPresentation event={event} cases={cases} works={works} urls={urls} busy={busy} onMessage={setMessage} onOpenCase={openCase}
       onExported={(ids, note) => { setMessage(note); void client!.from('sadu_export_log').insert({ event_id: event.id, kind: 'PRESENTATION', dossier_ids: ids }); }}
@@ -291,7 +291,7 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
           <Thumb src={thumb(c.id)} name={isAr ? c.arabic_name : c.name} size="size-14" />
           <span className="min-w-0"><strong className="block truncate">{isAr ? c.arabic_name : c.name}</strong>
             <span className={`block truncate ${ui.muted}`}>{c.nationality} · {c.medium}</span>
-            {d && <span className={`block ${ui.muted}`}>{t('Approved on', 'اعتُمد في')} <bdi dir="ltr">{d.decided_on}</bdi></span>}</span>
+            {d && <span className={`block ${ui.muted}`}>{t('Approved on', 'اعتُمد بتاريخ')} <bdi dir="ltr">{d.decided_on}</bdi></span>}</span>
         </button></li>;
       })}</ul>
         : <Empty icon={<UserPlus aria-hidden className="size-6" />} title={t('Nobody approved yet', 'لا يوجد فنان معتمد بعد')}
@@ -328,13 +328,13 @@ function ArtistsView({ cases, filter, setFilter, stageLabel, count, thumb, works
     const stage = caseStage(c), missing = missingForReady(c, worksFor(c.id).length).length;
     // Read-only viewers get where the case stands, not a to-do that is not theirs.
     if (readOnly) {
-      if (stage === 'DRAFT') return missing ? t(`Being prepared, ${missing} ${missing === 1 ? 'item' : 'items'} missing`, `قيد الإعداد (ينقص ${missing})`) : t('Complete, not yet marked ready', 'مكتمل، ولم يُعلَّم جاهزاً بعد');
+      if (stage === 'DRAFT') return missing ? t(`Being prepared, ${missing} ${missing === 1 ? 'item' : 'items'} missing`, `قيد الإعداد (ينقص ${missing})`) : t('Complete, not yet marked ready', 'مكتمل، ولم يُحدَّد جاهزاً للجنة بعد');
       if (stage === 'READY') return t('Ready, waiting to go to the Committee', 'جاهز، بانتظار إرساله إلى اللجنة');
       if (stage === 'SENT') return t('With the Committee, waiting for the decision', 'لدى اللجنة، بانتظار القرار');
     }
-    if (stage === 'DRAFT') return missing ? t(`Next: complete the case (${missing} missing)`, `التالي: استكمال الملف (ينقص ${missing})`) : t('Next: mark it ready for the Committee', 'التالي: اجعله جاهزاً للجنة');
-    if (stage === 'READY') return t('Next: include it in the Committee deck', 'التالي: أدرجه في العرض التقديمي للجنة');
-    if (stage === 'SENT') return t('Next: record the decision from email', 'التالي: سجّل القرار الوارد بالبريد');
+    if (stage === 'DRAFT') return missing ? t(`Next: complete the case (${missing} missing)`, `التالي: استكمال الملف (ينقص ${missing})`) : t('Next: mark it ready for the Committee', 'التالي: تحديده جاهزاً للجنة');
+    if (stage === 'READY') return t('Next: include it in the Committee deck', 'التالي: إدراجه في العرض التقديمي للجنة');
+    if (stage === 'SENT') return t('Next: record the decision from email', 'التالي: تسجيل القرار الوارد بالبريد');
     if (stage === 'APPROVED') return t('On the invite list', 'في قائمة الدعوات');
     return '';
   };
@@ -358,7 +358,7 @@ function ArtistsView({ cases, filter, setFilter, stageLabel, count, thumb, works
     </div>}
 
     {loaded && !cases.length && !creating ? readOnly ? <Empty icon={<Users aria-hidden className="size-6" />} title={t('No artist cases yet', 'لا توجد ملفات فنانين بعد')}
-      body={t('When a coordinator starts scouting an artist, the case appears here.', 'عندما يبدأ أحد المنسقين استكشاف فنان، يظهر ملفه هنا.')} /> : <Empty icon={<Users aria-hidden className="size-6" />} title={t('Start by scouting an artist', 'ابدأ باستكشاف فنان')}
+      body={t('When a coordinator starts scouting an artist, the case appears here.', 'عندما يبدأ أحد المنسقين رصد فنان، يظهر ملفه هنا.')} /> : <Empty icon={<Users aria-hidden className="size-6" />} title={t('Start by scouting an artist', 'ابدأ برصد فنان')}
       body={t('Build a case from published sources only (exhibitions, catalogues, websites, press). Artists are not contacted until the Director approves them.', 'جهّز ملفاً من المصادر المنشورة فقط (المعارض والكتالوجات والمواقع والصحافة). لا يُتواصل مع الفنان إلا بعد اعتماد المدير.')}
       action={<div className="pt-2">{newButton}</div>} /> : cases.length > 0 && <>
       <ol aria-label={t('How a nomination moves', 'مراحل الترشيح')} className={`grid gap-1.5 sm:gap-2 ${stages.length > 4 ? 'grid-cols-5' : 'grid-cols-4'}`}>
@@ -422,7 +422,7 @@ function NewCaseForm({ busy, onCreate, onCancel }: { busy: boolean; onCreate: (d
     <label className={ui.label}>{t('Medium / practice', 'الوسيط / الممارسة الفنية')}<input required className={ui.field} value={d.medium} onChange={e => setD({ ...d, medium: e.target.value })} /></label>
     <label className={ui.label}>{t('Category', 'الفئة')}<select className={ui.field} value={d.category} onChange={e => setD({ ...d, category: e.target.value })}>
       <option value="Emerging">{t('Emerging', 'ناشئ')}</option><option value="Established">{t('Established', 'متمرّس')}</option></select></label>
-    <div className="flex items-end gap-3"><button className={ui.button} disabled={busy || !ok}>{t('Create case', 'إنشاء الترشيح')}</button><button type="button" className={ui.quiet} onClick={onCancel}>{t('Cancel', 'إلغاء')}</button></div>
+    <div className="flex items-end gap-3"><button className={ui.button} disabled={busy || !ok}>{t('Create case', 'إنشاء الملف')}</button><button type="button" className={ui.quiet} onClick={onCancel}>{t('Cancel', 'إلغاء')}</button></div>
   </form>;
 }
 
@@ -432,7 +432,7 @@ type SentEntry = { entry: CommitteeBatchCase; batch: CommitteeBatch };
 /** Where the case is on its way from scouting to a decision. */
 function StageTrack({ stage }: { stage: CaseStage }) {
   const { t } = useUiText();
-  const steps = [t('Scouting', 'استكشاف'), t('Ready', 'جاهز'), t('Sent to Committee', 'أُرسل إلى اللجنة'), stage === 'DECLINED' ? t('Declined', 'مرفوض') : t('Approved', 'معتمد')];
+  const steps = [t('Scouting', 'رصد'), t('Ready', 'جاهز'), t('Sent to Committee', 'مُرسَل إلى اللجنة'), stage === 'DECLINED' ? t('Declined', 'مرفوض') : t('Approved', 'معتمد')];
   const at = { DRAFT: 0, READY: 1, SENT: 2, APPROVED: 3, DECLINED: 3, OTHER: 0 }[stage];
   return <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm" aria-label={t('Progress', 'التقدم')}>
     {steps.map((s, i) => <li key={s} className="flex items-center gap-2" aria-current={i === at ? 'step' : undefined}>
@@ -481,7 +481,7 @@ function CaseDetail({ c, works, decisions, sent, urls, mine, readOnly, briefRead
     const { error } = await client!.from('artist_dossiers').update(toRow(draft)).eq('id', c.id);
     if (error) throw new Error(error.message);
   };
-  const save = () => run(persist, t('Case saved.', 'حُفظ الترشيح.'));
+  const save = () => run(persist, t('Case saved.', 'حُفظ الملف.'));
   useEffect(() => {
     if (!editable || !dirty || busy || autosave === 'saving' || attempted.current === row) return;
     const timer = window.setTimeout(() => {
@@ -497,11 +497,11 @@ function CaseDetail({ c, works, decisions, sent, urls, mine, readOnly, briefRead
     if (dirty) await persist();
     const { data, error } = await client!.from('artist_dossiers').update({ status: 'PENDING_COMMITTEE_REVIEW' }).eq('id', c.id).select('id');
     if (error) throw new Error(error.message);
-    if (!data?.length) throw new Error(t('The case could not be made ready for the Committee. Refresh and try again.', 'تعذّر تجهيز الترشيح للجنة. حدّث الصفحة وحاول مجدداً.'));
-  }, t('The case is ready for the Committee and locked. Next, add it to the Committee deck.', 'أصبح الترشيح جاهزاً للجنة وقُفل. الخطوة التالية: أضفه إلى العرض التقديمي للجنة.'));
+    if (!data?.length) throw new Error(t('The case could not be made ready for the Committee. Refresh and try again.', 'تعذّر تجهيز الملف للجنة. حدّث الصفحة وحاول مجدداً.'));
+  }, t('The case is ready for the Committee and locked. Next, add it to the Committee deck.', 'أصبح الملف جاهزاً للجنة وقُفل. الخطوة التالية: إضافته إلى العرض التقديمي للجنة.'));
 
   const category = c.category === 'Emerging' ? t('Emerging', 'ناشئ') : c.category === 'Established' ? t('Established', 'متمرّس') : c.category;
-  const participation = c.participation === 'EXISTING_WORK' ? t('Existing work', 'عمل قائم') : c.participation === 'NEW_COMMISSION' ? t('New commission', 'تكليف بعمل جديد') : '';
+  const participation = c.participation === 'EXISTING_WORK' ? t('Existing work', 'عمل منجز') : c.participation === 'NEW_COMMISSION' ? t('New commission', 'تكليف بعمل جديد') : '';
 
   return <article className="space-y-5" aria-label={isAr ? c.arabic_name : c.name}>
     <button type="button" className={ui.link} onClick={onBack}><ArrowLeft aria-hidden className="size-4 rtl:rotate-180" />{t('All artists', 'كل الفنانين')}</button>
@@ -526,9 +526,9 @@ function CaseDetail({ c, works, decisions, sent, urls, mine, readOnly, briefRead
               <option value="Emerging">{t('Emerging', 'ناشئ')}</option><option value="Established">{t('Established', 'متمرّس')}</option></select></label>
             <label className={ui.label}>{t('Medium / practice', 'الوسيط / الممارسة الفنية')}<input className={ui.field} id="case-medium" value={draft.medium} onChange={set('medium')} /></label>
             <label className={`${ui.label} sm:col-span-2`}>{t('Proposed participation', 'المشاركة المقترحة')}<select className={ui.field} value={draft.participation} onChange={set('participation')}>
-              <option value="">{t('Not decided yet', 'لم تُحدد بعد')}</option><option value="EXISTING_WORK">{t('Existing work', 'عمل قائم')}</option><option value="NEW_COMMISSION">{t('New commission', 'تكليف بعمل جديد')}</option></select></label>
+              <option value="">{t('Not decided yet', 'لم تُحدد بعد')}</option><option value="EXISTING_WORK">{t('Existing work', 'عمل منجز')}</option><option value="NEW_COMMISSION">{t('New commission', 'تكليف بعمل جديد')}</option></select></label>
             <label className={`${ui.label} sm:col-span-2`}>{t('Biography', 'النبذة التعريفية')}<span className={`block font-normal ${ui.muted}`}>{t('A short paragraph for the slide.', 'فقرة قصيرة للشريحة.')}</span><textarea rows={4} maxLength={6000} dir="auto" className={ui.field} id="case-biography" value={draft.biography} onChange={set('biography')} /></label>
-            <label className={`${ui.label} sm:col-span-2`}>{t('Rationale', 'مبررات الترشيح')}<span className={`block font-normal ${ui.muted}`}>{t('Why this artist, and how the work fits the festival brief: theme, venues, media and disciplines.', 'لماذا هذا الفنان، وكيف يتوافق العمل مع توجيهات المهرجان: الموضوع والمواقع والوسائط والتخصصات.')}</span><textarea rows={4} maxLength={6000} dir="auto" className={ui.field} id="case-rationale" value={draft.rationale} onChange={set('rationale')} /></label>
+            <label className={`${ui.label} sm:col-span-2`}>{t('Rationale', 'مبررات الترشيح')}<span className={`block font-normal ${ui.muted}`}>{t('Why this artist, and how the work fits the festival brief: theme, venues, media and disciplines.', 'سبب اختيار هذا الفنان، ومدى توافق عمله مع توجيهات المهرجان: الموضوع وأماكن العرض والوسائط والتخصصات.')}</span><textarea rows={4} maxLength={6000} dir="auto" className={ui.field} id="case-rationale" value={draft.rationale} onChange={set('rationale')} /></label>
             <label className={`${ui.label} sm:col-span-2`}>{t('Links (one per line)', 'روابط (رابط في كل سطر)')}<span className={`block font-normal ${ui.muted}`}>{t('Website, gallery, press.', 'الموقع الإلكتروني، صالة العرض، الصحافة.')}</span><textarea rows={2} dir="ltr" className={ui.field} value={draft.links} onChange={set('links')} /></label>
           </div>
           <div className="flex flex-wrap items-center gap-3"><button type="button" className={ui.quiet} disabled={busy || !dirty} onClick={() => void save()}>{t('Save changes', 'حفظ التغييرات')}</button>
@@ -569,8 +569,8 @@ function CaseDetail({ c, works, decisions, sent, urls, mine, readOnly, briefRead
               <span className="sr-only">{ok ? t('done', 'مكتمل') : t('missing', 'ناقص')}</span></li>; })}</ul>
             {dirty && <button type="button" className={`${ui.quiet} w-full`} disabled={busy} onClick={() => void save()}>{t('Save changes', 'حفظ التغييرات')}</button>}
             <button type="button" className={`${ui.button} w-full`} disabled={busy || missing.length > 0} onClick={() => void markReady()}>{t('Ready for Committee', 'جاهز للجنة')}</button>
-            <p className={ui.muted}>{missing.length ? t('Select a missing item to go to it. The button unlocks when everything is ticked.', 'اختر بنداً ناقصاً للانتقال إليه. يُفعَّل الزر عند اكتمال كل البنود.') : t('This locks the case so the Committee sees exactly what you prepared.', 'يُقفل هذا الملف حتى ترى اللجنة ما أعددته كما هو.')}</p>
-          </> : <><h3 className="font-serif text-lg">{t('Being scouted', 'قيد الاستكشاف')}</h3><p className={ui.muted}>{t('Only the coordinator who created this case can edit it.', 'لا يعدّل هذا الترشيح إلا المنسق الذي أنشأه.')}</p></>)}
+            <p className={ui.muted}>{missing.length ? t('Select a missing item to go to it. The button unlocks when everything is ticked.', 'اختر بنداً ناقصاً للانتقال إليه. يُفعَّل الزر عند اكتمال كل البنود.') : t('This locks the case so the Committee sees exactly what you prepared.', 'بذلك يُقفَل الملف، فترى اللجنة ما أعددته دون تغيير.')}</p>
+          </> : <><h3 className="font-serif text-lg">{t('Being scouted', 'قيد الرصد')}</h3><p className={ui.muted}>{t('Only the coordinator who created this case can edit it.', 'لا يعدّل هذا الملف إلا المنسق الذي أنشأه.')}</p></>)}
           {stage === 'READY' && <><h3 className="font-serif text-lg">{t('Add it to the Committee deck', 'أضفه إلى العرض التقديمي للجنة')}</h3>
             <p className={ui.muted}>{t('Download the PowerPoint, email it to the Committee, then record it as sent.', 'نزّل ملف PowerPoint وأرسله إلى اللجنة بالبريد، ثم سجّل الإرسال.')}</p>
             {!readOnly && <button type="button" className={`${ui.button} w-full`} onClick={onDeck}><Presentation aria-hidden className="size-4" />{t('Open the Committee deck', 'فتح العرض التقديمي للجنة')}</button>}</>}
@@ -578,21 +578,21 @@ function CaseDetail({ c, works, decisions, sent, urls, mine, readOnly, briefRead
             <p className={ui.muted}>{t('When the Committee and Director reply by email, record their decision.', 'عندما تردّ اللجنة والمدير بالبريد، سجّل قرارهما.')}</p>
             {mine && <button type="button" className={`${ui.button} w-full`} onClick={() => decisionRef.current?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' })}>{t('Record the decision', 'تسجيل القرار')}</button>}</>}
           {stage === 'APPROVED' && <><h3 className="font-serif text-lg">{t('Approved', 'معتمد')}</h3><p className={ui.muted}>{t('This artist is on the invite list. Contact begins at the invitation step.', 'هذا الفنان في قائمة الدعوات. يبدأ التواصل في خطوة الدعوة.')}</p></>}
-          {stage === 'DECLINED' && <><h3 className="font-serif text-lg">{t('Declined', 'مرفوض')}</h3><p className={ui.muted}>{t('The case and its reasons are kept in the history.', 'يُحفظ الملف وأسبابه في السجل.')}</p></>}
-          {stage !== 'APPROVED' && <p className="rounded-md bg-[#F7F1E6] ps-3 pe-3 py-2 text-xs text-[#5E554B]">{t('Artist not contacted. Use published sources only until the Director approves.', 'لم يُتواصل مع الفنان. استخدم المصادر المنشورة فقط حتى يعتمد المدير.')}</p>}
+          {stage === 'DECLINED' && <><h3 className="font-serif text-lg">{t('Declined', 'مرفوض')}</h3><p className={ui.muted}>{t('The case and its reasons are kept in the history.', 'يُحفظ الملف مع أسباب الرفض في السجل.')}</p></>}
+          {stage !== 'APPROVED' && <p className="rounded-md bg-[#F7F1E6] ps-3 pe-3 py-2 text-xs text-[#5E554B]">{t('Artist not contacted. Use published sources only until the Director approves.', 'لم يجرِ التواصل مع الفنان. استخدم المصادر المنشورة فقط حتى يعتمد المدير.')}</p>}
         </div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 ps-1 pe-1">
-          {!readOnly && <button type="button" className={ui.link} disabled={busy} onClick={onExport}><Download aria-hidden className="size-4" />{t('Export this case', 'تصدير هذا الترشيح')}</button>}
+          {!readOnly && <button type="button" className={ui.link} disabled={busy} onClick={onExport}><Download aria-hidden className="size-4" />{t('Export this case', 'تصدير هذا الملف')}</button>}
           {editable && !confirmDiscard && <button type="button" className="text-sm text-[#6E6259] underline-offset-4 hover:text-[#8B261E] hover:underline min-h-6 pointer-coarse:min-h-[44px]" disabled={busy} onClick={() => setConfirmDiscard(true)}>{t('Discard this draft', 'استبعاد هذه المسودة')}</button>}
         </div>
         {editable && confirmDiscard && <div className={`${ui.card} space-y-3 border-[#E3B8B1] ps-4 pe-4 py-4`}>
-          <p className="text-sm">{t('Discard this case? It disappears from the list and can no longer be edited or submitted.', 'استبعاد هذا الترشيح؟ سيختفي من القائمة ولن يمكن تعديله أو إرساله.')}</p>
+          <p className="text-sm">{t('Discard this case? It disappears from the list and can no longer be edited or submitted.', 'هل تريد استبعاد هذا الملف؟ سيختفي من القائمة ولن يمكن تعديله أو إرساله.')}</p>
           <div className="flex gap-2"><button type="button" className={ui.button} disabled={busy} onClick={() => void run(async () => {
             const { data, error } = await client!.from('artist_dossiers').update({ discarded_at: new Date().toISOString() }).eq('id', c.id).select('id');
             if (error) throw new Error(error.message);
-            if (!data?.length) throw new Error(t('The case could not be discarded.', 'تعذّر استبعاد الترشيح.'));
+            if (!data?.length) throw new Error(t('The case could not be discarded.', 'تعذّر استبعاد الملف.'));
           }, t('Draft discarded.', 'استُبعدت المسودة.')).then(ok => { if (ok) onBack(); })}>{t('Discard', 'استبعاد')}</button>
-            <button type="button" className={ui.quiet} onClick={() => setConfirmDiscard(false)}>{t('Keep it', 'إبقاء')}</button></div>
+            <button type="button" className={ui.quiet} onClick={() => setConfirmDiscard(false)}>{t('Keep it', 'الإبقاء عليه')}</button></div>
         </div>}
       </aside>
     </div>
@@ -625,7 +625,7 @@ function WorksSection({ c, works, urls, editable, busy, run }: { c: NominationCa
   const remove = (id: string) => run(async () => {
     const { error } = await client!.from('sadu_case_works').delete().eq('id', id);
     if (error) throw new Error(error.message);
-  }, t('Work removed from the case.', 'أُزيل العمل من الترشيح.'));
+  }, t('Work removed from the case.', 'أُزيل العمل من الملف.'));
 
   return <Section id="case-works" title={t('Selected works', 'الأعمال المختارة')} aside={<span className={ui.muted}>{t(`${works.length} of ${MAX_WORKS} · at least ${MIN_WORKS}`, `${works.length} من ${MAX_WORKS} · ${MIN_WORKS} على الأقل`)}</span>}>
     {works.length > 0 ? <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{works.map(work => <li key={work.id} className="space-y-1">
@@ -660,7 +660,7 @@ function CvUpload({ c, busy, run }: { c: NominationCase; busy: boolean; run: Run
   return <div className="space-y-3">
     <label className={ui.label}>{t('PDF or Word, from public or artist-provided sources', 'PDF أو Word، من مصادر عامة أو مقدّمة من الفنان')}
       <input type="file" accept={acceptAttribute.cv} className={ui.field} onChange={e => setFile(e.target.files?.[0] ?? null)} /></label>
-    {c.cv_url && <p className={ui.muted}>{t('A CV is attached. Uploading another replaces it in the case.', 'سيرة ذاتية مرفقة. رفع ملف آخر يستبدلها في الترشيح.')}</p>}
+    {c.cv_url && <p className={ui.muted}>{t('A CV is attached. Uploading another replaces it in the case.', 'أُرفقت سيرة ذاتية. إذا رفعت ملفاً آخر فسيحلّ محلها.')}</p>}
     {file && !ext && <p role="alert" className="text-[#8B261E]">{t('This file type or size is not accepted.', 'نوع الملف أو حجمه غير مقبول.')}</p>}
     <button type="button" className={ui.quiet} disabled={busy || !ext} onClick={() => void run(async () => {
       const path = await uploadCaseFile(client!, c.id, 'cv', file!, ext!);
@@ -705,7 +705,7 @@ function DecisionForm({ c, briefReady, busy, run }: { c: NominationCase; briefRe
       <div className="flex flex-wrap gap-2">{([['IN_BRIEF', t('Yes, it was in the brief', 'نعم، كان وارداً')], ['NOT_IN_BRIEF', t('No, it was not in the brief', 'لا، لم يكن وارداً')], ['NO_REASON_GIVEN', t('No reason was given', 'لم يُذكر سبب')]] as const).map(([value, label]) =>
         <label key={value} className={`flex cursor-pointer items-center gap-2 rounded-md border ps-3 pe-3 py-2 text-sm ${d.reason_in_brief === value ? 'border-[#8B261E] bg-[#FBF4F1] font-semibold' : 'border-[#D9CEBA] bg-white'}`}>
           <input type="radio" className="accent-[#8B261E]" name={`reason-in-brief-${c.id}`} value={value} checked={d.reason_in_brief === value} onChange={() => setD({ ...d, reason_in_brief: value })} />{label}</label>)}</div>
-      <p className="text-xs text-[#6E6259]">{t('This is your note, not the Committee’s. Over a round it shows which requirements were never written down.', 'هذه ملاحظتك لا ملاحظة اللجنة. وعلى مدى الدورة تبيّن المتطلبات التي لم تُكتب.')}</p></fieldset>}
+      <p className="text-xs text-[#6E6259]">{t('This is your note, not the Committee’s. Over a round it shows which requirements were never written down.', 'هذه ملاحظتك لا ملاحظة اللجنة. وعلى امتداد الدورة تكشف هذه الملاحظات المتطلبات التي لم تُدوَّن قط.')}</p></fieldset>}
     <label className={ui.label}>{t('The decision email, saved as PDF, .msg or .eml', 'رسالة القرار محفوظة بصيغة PDF أو ‎.msg أو ‎.eml')}
       <input type="file" accept={acceptAttribute.evidence} className={ui.field} onChange={e => setFile(e.target.files?.[0] ?? null)} /></label>
     {file && !ext && <p role="alert" className="text-[#8B261E]">{t('This file type or size is not accepted.', 'نوع الملف أو حجمه غير مقبول.')}</p>}
@@ -724,7 +724,7 @@ function SentHistory({ sent }: { sent: SentEntry[] }) {
     <h4 className="text-sm font-semibold text-[#5E554B]">{t('Sent to the Committee', 'الإرسال إلى اللجنة')}</h4>
     <ol className="space-y-2">{sent.map(({ entry, batch }) => <li key={batch.id} className="rounded-lg bg-[#FBF7F0] ps-3 pe-3 py-2">
       <p><bdi dir="ltr">{batch.sent_at.slice(0, 10)}</bdi> · <button type="button" className="break-all text-[#8B261E] underline" onClick={() => void open(batch.deck_path)}><bdi>{batch.deck_file_name}</bdi></button></p>
-      <p className="text-xs text-[#6E6259]">{batch.deck_language === 'ar' ? t('Arabic', 'العربية') : t('English', 'الإنجليزية')} · {t(`slide position ${entry.position}`, `الترتيب في العرض ${entry.position}`)} · {t('case as last edited on', 'الترشيح كما عُدّل آخر مرة في')} <bdi dir="ltr">{entry.case_version.slice(0, 16).replace('T', ' ')}</bdi></p>
+      <p className="text-xs text-[#6E6259]">{batch.deck_language === 'ar' ? t('Arabic', 'العربية') : t('English', 'الإنجليزية')} · {t(`slide position ${entry.position}`, `الترتيب في العرض ${entry.position}`)} · {t('case as last edited on', 'الملف كما كان عند آخر تعديل في')} <bdi dir="ltr">{entry.case_version.slice(0, 16).replace('T', ' ')}</bdi></p>
     </li>)}</ol>
   </div>;
 }
@@ -741,7 +741,7 @@ function DecisionHistory({ decisions, sent }: { decisions: NominationDecision[];
       {d.reason_in_brief && <p className="text-xs text-[#6E6259]">{reasonInBriefLabel(t)[d.reason_in_brief]}</p>}
       <p className="text-xs text-[#6E6259]">{t('Recorded from email by the coordinator', 'سجّله المنسق من البريد الإلكتروني')} · <bdi>{d.email_reference}</bdi></p>
       {(() => { const b = sent.find(s => s.batch.id === d.batch_id)?.batch; return <p className="text-xs text-[#6E6259]">{b
-        ? <>{t('Decided on the deck sent on', 'قرار بشأن العرض المُرسل في')} <bdi dir="ltr">{b.sent_at.slice(0, 10)}</bdi> · <bdi>{b.deck_file_name}</bdi></>
+        ? <>{t('Decided on the deck sent on', 'صدر القرار بناءً على العرض المُرسَل في')} <bdi dir="ltr">{b.sent_at.slice(0, 10)}</bdi> · <bdi>{b.deck_file_name}</bdi></>
         : t('No sent deck is recorded for this decision.', 'لا يوجد عرض مُرسل مسجّل لهذا القرار.')}</p>; })()}
     </li>)}</ol>
   </div>;
@@ -797,7 +797,7 @@ function ArtIdeas({ eventId, ideas, cases, userId, readOnly, busy, run }: { even
         </div>
       </li>;
     })}</ul> : !adding && <Empty icon={<Lightbulb aria-hidden className="size-6" />} title={t('No ideas yet', 'لا توجد أفكار بعد')}
-      body={readOnly ? t('Ideas the coordinators note while scouting appear here.', 'تظهر هنا الأفكار التي يدوّنها المنسقون أثناء الاستكشاف.') : t('Note a theme, material or kind of work you want at the festival. Link it to an artist when you find the right one.', 'دوّن موضوعاً أو خامة أو نوعاً من الأعمال تريده في المهرجان، واربطه بفنان عندما تجد الفنان المناسب.')} />}
+      body={readOnly ? t('Ideas the coordinators note while scouting appear here.', 'تظهر هنا الأفكار التي يدوّنها المنسقون أثناء الرصد.') : t('Note a theme, material or kind of work you want at the festival. Link it to an artist when you find the right one.', 'دوّن موضوعاً أو خامة أو نوعاً من الأعمال تريده في المهرجان، واربطه بفنان عندما تجد الفنان المناسب.')} />}
   </section>;
 }
 
@@ -844,7 +844,7 @@ function BriefView({ eventId, briefs, cases, decisions, readOnly, busy, run, onO
     <p className={ui.muted}>{t('Write down only what the festival management has decided. Leave a field empty if it has not been decided.', 'اكتب ما قررته إدارة المهرجان فقط، واترك الحقل فارغاً إن لم يُقرَّر بعد.')}</p>
     <label className={ui.label}>{t('Theme', 'الموضوع')}<input dir="auto" autoFocus maxLength={1000} className={ui.field} value={d.theme} onChange={e => setD({ ...d, theme: e.target.value })} /></label>
     <div className="grid gap-4 sm:grid-cols-2">
-      <label className={ui.label}>{t('Venues', 'المواقع')}<input dir="auto" maxLength={1000} className={ui.field} value={d.venues} onChange={e => setD({ ...d, venues: e.target.value })} /></label>
+      <label className={ui.label}>{t('Venues', 'أماكن العرض')}<input dir="auto" maxLength={1000} className={ui.field} value={d.venues} onChange={e => setD({ ...d, venues: e.target.value })} /></label>
       <label className={ui.label}>{t('Number of artists', 'عدد الفنانين')}<input type="number" min={1} max={1000} inputMode="numeric" className={ui.field} value={d.artist_count} onChange={e => setD({ ...d, artist_count: e.target.value })} /></label>
     </div>
     <label className={ui.label}>{t('Media and disciplines wanted', 'الوسائط والتخصصات المطلوبة')}<textarea rows={2} maxLength={2000} dir="auto" className={ui.field} value={d.media} onChange={e => setD({ ...d, media: e.target.value })} /></label>
@@ -862,7 +862,7 @@ function BriefView({ eventId, briefs, cases, decisions, readOnly, busy, run, onO
     {editing && form}
     {current ? <div className={`${ui.card} space-y-3 ps-5 pe-5 py-5`}>
       <dl className="grid gap-3 sm:grid-cols-2">
-        {field(t('Theme', 'الموضوع'), current.theme)}{field(t('Venues', 'المواقع'), current.venues)}
+        {field(t('Theme', 'الموضوع'), current.theme)}{field(t('Venues', 'أماكن العرض'), current.venues)}
         {field(t('Number of artists', 'عدد الفنانين'), current.artist_count)}{field(t('Media and disciplines', 'الوسائط والتخصصات'), current.media)}
         {field(t('Other requirements', 'متطلبات أخرى'), current.other_requirements)}
       </dl>
@@ -872,7 +872,7 @@ function BriefView({ eventId, briefs, cases, decisions, readOnly, busy, run, onO
           <p dir="auto">{b.theme}{b.venues ? ` · ${b.venues}` : ''}{b.artist_count ? ` · ${b.artist_count}` : ''}{b.media ? ` · ${b.media}` : ''}{b.other_requirements ? ` · ${b.other_requirements}` : ''}</p>
           <p className="text-xs text-[#6E6259]"><bdi>{b.source}</bdi> · <bdi dir="ltr">{b.recorded_at.slice(0, 10)}</bdi></p></li>)}</ol></details>}
     </div> : !editing && <Empty icon={<ClipboardList aria-hidden className="size-6" />} title={t('No brief recorded yet', 'لم تُسجَّل التوجيهات بعد')}
-      body={readOnly ? t('The theme, venues, number of artists and media the festival management sets appear here.', 'يظهر هنا ما تحدده إدارة المهرجان من موضوع ومواقع وعدد الفنانين والوسائط.') : t('Before scouting, write down the theme, venues, number of artists and the media and disciplines the festival management has set, and who set them.', 'قبل الاستكشاف، دوّن الموضوع والمواقع وعدد الفنانين والوسائط والتخصصات التي حددتها إدارة المهرجان، ومن حددها.')} />}
+      body={readOnly ? t('The theme, venues, number of artists and media the festival management sets appear here.', 'يظهر هنا ما تحدده إدارة المهرجان من موضوع وأماكن عرض وعدد الفنانين والوسائط.') : t('Before scouting, write down the theme, venues, number of artists and the media and disciplines the festival management has set, and who set them.', 'قبل بدء الرصد، دوّن الموضوع وأماكن العرض وعدد الفنانين والوسائط والتخصصات التي حددتها إدارة المهرجان، ومن حددها.')} />}
 
     <div className="space-y-3">
       <div><h3 className="font-serif text-xl">{t('Reasons nominations were not selected', 'أسباب عدم اختيار الترشيحات')}</h3>
@@ -884,7 +884,7 @@ function BriefView({ eventId, briefs, cases, decisions, readOnly, busy, run, onO
           <p dir="auto" className="whitespace-pre-line">{x.minute}</p>
           <p className="text-xs text-[#6E6259]">{x.reason_in_brief ? labels[x.reason_in_brief] : t('Not noted against the brief', 'لم يُقارَن بالتوجيهات')}</p>
         </li>)}</ul>
-      </> : <p className={ui.muted}>{t('No nomination has been declined or not recommended yet.', 'لم يُرفض أي ترشيح ولم يُستبعد أي ترشيح من التوصية بعد.')}</p>}
+      </> : <p className={ui.muted}>{t('No nomination has been declined or not recommended yet.', 'لا توجد بعد ترشيحات مرفوضة أو غير موصى بها.')}</p>}
     </div>
   </section>;
 }
