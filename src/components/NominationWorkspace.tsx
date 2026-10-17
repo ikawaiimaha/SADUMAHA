@@ -47,9 +47,8 @@ const unsaved = new Set<string>();
 const markUnsaved = (form: string, value: boolean) => { if (value) unsaved.add(form); else unsaved.delete(form); };
 /** True when it is fine to leave the open case: nothing unsaved, or the coordinator confirmed. */
 export function confirmLeavingCase(question: string): boolean {
-  if (unsaved.size && !window.confirm(question)) return false;
-  unsaved.clear();
-  return true;
+  // No clearing here: each form drops its own flag when it unmounts, so a leave that fails keeps the warning.
+  return !unsaved.size || window.confirm(question);
 }
 export const leaveCaseQuestion = (t: (en: string, ar: string) => string) =>
   t('This case has changes you have not saved. Leave without saving them?', 'في هذا الملف تغييرات غير محفوظة. هل تغادر دون حفظها؟');
