@@ -29,6 +29,7 @@ const onPilot = () => { const path = normalizePreviewPath(window.location.pathna
 /** sessionStorage is a display hint only; the server cookie is always verified. */
 export default function GlobalPasswordGate({ children }: { children: ReactNode }) {
   const [verified, setVerified] = useState(false);
+  const [open, setOpen] = useState(false); // The hosted site is open to anyone with the link: nothing to lock.
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [checking, setChecking] = useState(true);
@@ -41,7 +42,7 @@ export default function GlobalPasswordGate({ children }: { children: ReactNode }
     try {
       const r = await fetch('/api/prelaunch/session', { cache: 'no-store', signal: AbortSignal.timeout(10000) });
       const data = r.ok ? await r.json() : null;
-      setVerified(data?.verified === true);
+      setVerified(data?.verified === true); setOpen(data?.open === true);
     } catch { setVerified(false); setError('verifyError'); }
     finally { setChecking(false); }
   }, []);
@@ -61,13 +62,13 @@ export default function GlobalPasswordGate({ children }: { children: ReactNode }
   }, [verified]);
   if (verified) return <><aside ref={bar} aria-label={copy.sessionLabel} lang={language} dir={dir} className="flex flex-wrap items-center justify-between gap-2 border-b border-[#D9CEBA] bg-[#F7F1E6] ps-5 pe-5 py-2 text-sm text-[#111817]">
     {!executiveMode && <span>{onPilot() ? copy.pilotBanner : copy.banner}</span>}<LocalReplayControls copy={copy}/>
-    <button className="rounded border border-[#8C8173] ps-3 pe-3 py-2 font-semibold pointer-coarse:min-h-[44px] focus-visible:outline-2 focus-visible:outline-offset-2" disabled={busy} onClick={async () => {
+    {!open && <button className="rounded border border-[#8C8173] ps-3 pe-3 py-2 font-semibold pointer-coarse:min-h-[44px] focus-visible:outline-2 focus-visible:outline-offset-2" disabled={busy} onClick={async () => {
       if (!window.confirm(copy.lockConfirm)) return;
       setBusy(true); setError('');
       try { const r = await fetch('/api/prelaunch/lock', { method: 'POST', signal: AbortSignal.timeout(10000) }); if (!r.ok) throw new Error(); setVerified(false); }
       catch { setError('lockError'); }
       finally { setBusy(false); }
-    }}>{busy ? copy.locking : copy.lock}</button>
+    }}>{busy ? copy.locking : copy.lock}</button>}
     {error && <p role="alert" className="w-full">{copy[error]}</p>}
   </aside>{children}</>;
   if (checking) return <main lang={language} dir={language === 'ar' ? 'rtl' : 'ltr'} className="min-h-screen grid place-items-center bg-[#F7F1E6] text-[#111817]"><p role="status">{copy.checking}</p></main>;
