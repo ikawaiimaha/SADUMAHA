@@ -72,7 +72,7 @@ begin
     raise exception 'The date cannot be in the future';
   end if;
   if new.raised_with_director_on < (old.recorded_at at time zone 'Asia/Dubai')::date then
-    raise exception 'The note was raised after it was recorded';
+    raise exception 'A note cannot be raised with the Director before it was recorded';
   end if;
   return new;
 end $$;

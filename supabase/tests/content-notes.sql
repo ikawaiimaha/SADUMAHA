@@ -20,10 +20,11 @@ do $$begin
  begin insert into public.sadu_content_notes(dossier_id,origin,reported_by,note) values('cn-case','TEAM','Someone','Fictional note text');raise exception 'A team note named a reporter';exception when check_violation then null;end;
  begin insert into public.sadu_content_notes(dossier_id,origin,note,raised_with_director_on) values('cn-case','TEAM','Fictional note text',current_date);raise exception 'A note was born already raised';exception when raise_exception then null;end;
  -- Dates: raised first, then the Chairman; each set once.
- begin update public.sadu_content_notes set chairman_consulted_on=current_date where dossier_id='cn-case';raise exception 'Chairman date before the Director';exception when check_violation then null;end;
- begin update public.sadu_content_notes set raised_with_director_on=current_date+1 where dossier_id='cn-case';raise exception 'Future date accepted';exception when raise_exception then null;end;
- update public.sadu_content_notes set raised_with_director_on=current_date where dossier_id='cn-case';
- update public.sadu_content_notes set chairman_consulted_on=current_date where dossier_id='cn-case';
+ begin update public.sadu_content_notes set chairman_consulted_on=(now() at time zone 'Asia/Dubai')::date where dossier_id='cn-case';raise exception 'Chairman date before the Director';exception when check_violation then null;end;
+ begin update public.sadu_content_notes set raised_with_director_on=(now() at time zone 'Asia/Dubai')::date+1 where dossier_id='cn-case';exception when raise_exception then null;end;
+ if exists(select 1 from public.sadu_content_notes where dossier_id='cn-case' and raised_with_director_on is not null) then raise exception 'Future date accepted';end if;
+ update public.sadu_content_notes set raised_with_director_on=(now() at time zone 'Asia/Dubai')::date where dossier_id='cn-case';
+ update public.sadu_content_notes set chairman_consulted_on=(now() at time zone 'Asia/Dubai')::date where dossier_id='cn-case';
  begin update public.sadu_content_notes set raised_with_director_on=null where dossier_id='cn-case';raise exception 'A date was cleared';exception when insufficient_privilege then null;end;
  begin update public.sadu_content_notes set note='Changed note text' where dossier_id='cn-case';raise exception 'A note was edited';exception when insufficient_privilege then null;end;
  begin delete from public.sadu_content_notes;raise exception 'A note was deleted';exception when insufficient_privilege then null;end;
@@ -55,7 +56,7 @@ do $$begin
 end$$;
 select set_config('request.jwt.claims','{"sub":"c4444444-4444-4444-8444-444444444444","role":"authenticated","app_metadata":{"institutional_role":"BIENNIAL_DIRECTOR"}}',true);
 do $$begin
- if not exists(select 1 from public.sadu_content_notes where dossier_id='cn-case' and chairman_consulted_on=current_date) then raise exception 'Director cannot read the note';end if;
+ if not exists(select 1 from public.sadu_content_notes where dossier_id='cn-case' and chairman_consulted_on=(now() at time zone 'Asia/Dubai')::date) then raise exception 'Director cannot read the note';end if;
 end$$;
 reset role;
 rollback;

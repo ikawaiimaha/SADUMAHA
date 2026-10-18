@@ -830,9 +830,12 @@ const reasonTypeLabel = (t: (en: string, ar: string) => string): Record<ReasonTy
 /** Content notes on a case: private to their author and the Director, never in a deck or an export.
  *  As the General Exhibition Coordinator set it: the team notices, or someone reports; the Director
  *  sees it first, and consults the Chairman if he wants to check something. */
+// The database checks these dates against the day in Dubai, so the screen uses the same day.
+const dubaiDate = (d: Date | string) => new Date(d).toLocaleDateString('en-CA', { timeZone: 'Asia/Dubai' });
+
 function ContentNotes({ c, notes, busy, run }: { c: NominationCase; notes: ContentNote[]; busy: boolean; run: RunFn }) {
   const { t } = useUiText();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = dubaiDate(new Date());
   const empty = { origin: '' as ContentNote['origin'] | '', reported_by: '', note: '' };
   const [d, setD] = useState(empty);
   const [adding, setAdding] = useState(false);
@@ -854,10 +857,10 @@ function ContentNotes({ c, notes, busy, run }: { c: NominationCase; notes: Conte
     <p className={ui.muted}>{t('A concern about the artist’s content that the team noticed or someone reported. Only you and the Director see it, and it never goes into the Committee deck or an export. The Director sees it first; if he wants to check something, he consults the Chairman.', 'ملاحظة على محتوى الفنان لاحظها الفريق أو أبلغ عنها أحد. لا يطّلع عليها غيرك والمدير، ولا تُدرج في العرض التقديمي للجنة ولا في التصدير. ويطّلع عليها المدير أولاً، وإن أراد التأكد من أمر استشار رئيس الدائرة.')}</p>
     {notes.length > 0 && <ul className="space-y-2">{notes.map(n => <li key={n.id} className="space-y-2 rounded-lg bg-[#FBF7F0] ps-3 pe-3 py-2">
       <p dir="auto" className="whitespace-pre-line">{n.note}</p>
-      <p className="text-xs text-[#6E6259]">{n.origin === 'TEAM' ? t('The team noticed it', 'لاحظها الفريق') : t('Someone reported it', 'أبلغ عنها أحد')}{n.reported_by ? <> · <bdi>{n.reported_by}</bdi></> : null} · <bdi dir="ltr">{n.recorded_at.slice(0, 10)}</bdi></p>
+      <p className="text-xs text-[#6E6259]">{n.origin === 'TEAM' ? t('The team noticed it', 'لاحظها الفريق') : t('Someone reported it', 'أبلغ عنها أحد')}{n.reported_by ? <> · <bdi>{n.reported_by}</bdi></> : null} · <bdi dir="ltr">{dubaiDate(n.recorded_at)}</bdi></p>
       {n.raised_with_director_on
         ? <p className="text-xs text-[#6E6259]">{t('Raised with the Director on', 'عُرضت على المدير في')} <bdi dir="ltr">{n.raised_with_director_on}</bdi></p>
-        : <div className="flex flex-wrap items-center gap-2">{dateField(n, 'raised_with_director_on', n.recorded_at.slice(0, 10))}
+        : <div className="flex flex-wrap items-center gap-2">{dateField(n, 'raised_with_director_on', dubaiDate(n.recorded_at))}
           <button type="button" className={ui.quiet} disabled={busy} onClick={() => void setDate(n, 'raised_with_director_on', t('Recorded as raised with the Director.', 'سُجّل عرضها على المدير.'))}>{t('Raised with the Director', 'عُرضت على المدير')}</button></div>}
       {n.chairman_consulted_on
         ? <p className="text-xs text-[#6E6259]">{t('The Director consulted the Chairman on', 'استشار المدير رئيس الدائرة في')} <bdi dir="ltr">{n.chairman_consulted_on}</bdi></p>
