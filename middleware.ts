@@ -1,9 +1,15 @@
 import { next } from '@vercel/functions';
-import { createCloudPrelaunch } from './server/cloud-prelaunch.mjs';
 
-const gate = createCloudPrelaunch({ password: process.env.SADU_PRELAUNCH_PASSWORD });
-export const config = { runtime: 'nodejs', matcher: '/:path*' };
+export const config = { runtime: 'nodejs', matcher: '/api/prelaunch/:path*' };
 
+/**
+ * The hosted prototype is open to anyone with the link, so it can be shown without a preview password.
+ * Pilot records stay behind each person's own SADU sign-in and the database's access rules.
+ * The local rehearsal and connected-pilot servers keep their password gate (server/prelaunch-gate.mjs).
+ */
 export default function middleware(request: Request) {
-  return gate(request, next);
+  const path = new URL(request.url).pathname;
+  if (path === '/api/prelaunch/session') return Response.json({ verified: true, open: true }, { headers: { 'Cache-Control': 'no-store' } });
+  if (path === '/api/prelaunch/lock' || path === '/api/prelaunch/unlock') return Response.json({ verified: true, open: true });
+  return next();
 }
