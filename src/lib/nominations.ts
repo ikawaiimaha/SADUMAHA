@@ -27,8 +27,18 @@ export type NominationDecision = {
   minute: string; evidence_path: string; recorded_by: string; recorded_at: string; batch_id: string | null;
   /** Absent until the festival-brief migration is applied. */
   reason_in_brief?: ReasonInBrief | null;
+  /** Absent until the reason-types migration is applied. */
+  reason_types?: ReasonType[] | null;
 };
 export type ReasonInBrief = 'IN_BRIEF' | 'NOT_IN_BRIEF' | 'NO_REASON_GIVEN';
+/** The types of reason the General Exhibition Coordinator set on 17 October 2026, budget included. */
+export const REASON_TYPES = ['THEME', 'QUALITY', 'SHOWN_RECENTLY', 'CONTENT', 'LOGISTICS', 'BUDGET', 'BALANCE', 'OTHER'] as const;
+export type ReasonType = typeof REASON_TYPES[number];
+/** A concern about an artist's content, kept apart from the case: only its author and the Director read it. */
+export type ContentNote = {
+  id: string; dossier_id: string; origin: 'TEAM' | 'REPORTED'; reported_by: string | null; note: string;
+  recorded_by: string; recorded_at: string; raised_with_director_on: string | null; chairman_consulted_on: string | null;
+};
 /** One version of the festival brief as the festival management set it; the latest is current. */
 export type EventBrief = {
   id: string; event_id: string; theme: string; venues: string | null; artist_count: number | null; media: string | null;
