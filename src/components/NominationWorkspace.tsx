@@ -831,7 +831,11 @@ const reasonTypeLabel = (t: (en: string, ar: string) => string): Record<ReasonTy
  *  As the General Exhibition Coordinator set it: the team notices, or someone reports; the Director
  *  sees it first, and consults the Chairman if he wants to check something. */
 // The database checks these dates against the day in Dubai, so the screen uses the same day.
-const dubaiDate = (d: Date | string) => new Date(d).toLocaleDateString('en-CA', { timeZone: 'Asia/Dubai' });
+const dubaiParts = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Dubai', year: 'numeric', month: '2-digit', day: '2-digit' });
+const dubaiDate = (d: Date | string) => {
+  const p = Object.fromEntries(dubaiParts.formatToParts(new Date(d)).map(x => [x.type, x.value]));
+  return `${p.year}-${p.month}-${p.day}`;
+};
 
 function ContentNotes({ c, notes, busy, run }: { c: NominationCase; notes: ContentNote[]; busy: boolean; run: RunFn }) {
   const { t } = useUiText();
