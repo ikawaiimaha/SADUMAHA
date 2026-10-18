@@ -93,7 +93,16 @@ the same event or archive it. Ideas are never deleted and do not go to the Commi
 - **Record decision from email**, per artist: Committee recommendation (Recommended / Not
   recommended), Director confirmation (Approved / Declined / Returned for more information), the
   decision date, the email reference (sender, date, subject), the minute or reason, and the email
-  itself saved as PDF or .msg. Declines and returns require a reason.
+  itself saved as PDF or .msg. Declines and returns require a reason. Optionally, the types of
+  reason given, from the list the General Exhibition Coordinator set on 17 October 2026: fit with the
+  festival theme, quality of the work, shown recently, content concern, shipping/visa/timing,
+  budget, balance of countries or media, other. The minute stays the reason as given.
+- **Content notes**, per artist (`sadu_content_notes`): a concern about the artist's content that
+  the team noticed or someone reported (who, optionally). As the General Exhibition Coordinator set
+  it, the Director sees it first and consults the Chairman if he wants to check something, so a
+  note is read only by its author and the Director, never goes into a deck or an export, and records
+  the date it was raised with the Director and, if it happened, the date he consulted the Chairman.
+  Notes describe the work or what the artist is known for, not the artist's beliefs.
 - **Invite list:** approved artists, ready for the invitation slice.
 
 ## The presentation

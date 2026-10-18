@@ -8,7 +8,7 @@ import { canWriteToFolder, folderSink, sharedFolder, writeExport, zipSink, expor
 import {
   acceptAttribute, acceptedExtension, CASE_COLUMNS, caseStage, linksFromText, MAX_WORKS, MIN_WORKS, missingForReady,
   signedUrls, uploadCaseFile, recordCommitteeBatch, BUCKET,
-  type ArtIdea, type CaseStage, type EventBrief, type ReasonInBrief, type CaseWork, type CommitteeBatch, type CommitteeBatchCase, type MissingItem, type NominationCase, type NominationDecision, type NominationEvent,
+  type ArtIdea, type CaseStage, type ContentNote, type EventBrief, type ReasonInBrief, type ReasonType, REASON_TYPES, type CaseWork, type CommitteeBatch, type CommitteeBatchCase, type MissingItem, type NominationCase, type NominationDecision, type NominationEvent,
 } from '../lib/nominations';
 
 // One look for the whole Nominations area: white cards on the sand ground, brick for the one main action per screen.
@@ -81,6 +81,9 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
   const [briefReady, setBriefReady] = useState(false);
   // The event whose briefs are loaded; until it matches the selected event, briefs count as still loading.
   const [briefEvent, setBriefEvent] = useState('');
+  // False until the reason-types migration is applied; reason types and content notes stay hidden.
+  const [reasonsReady, setReasonsReady] = useState(false);
+  const [notes, setNotes] = useState<ContentNote[]>([]);
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [loaded, setLoaded] = useState(false);
   const [view, setView] = useState<View>('artists');
@@ -146,8 +149,13 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
       client.from('sadu_committee_batches').select('*').eq('event_id', activeEvent).order('sent_at'),
       client.from('sadu_committee_batch_cases').select('*').in('dossier_id', ids),
     ]) : [{ data: [], error: null }, { data: [], error: null }, { data: [], error: null }, { data: [], error: null }];
+    // Only the author's own notes come back (the Director reads them all, outside this workspace).
+    const cn = await client.from('sadu_content_notes').select('*').in('dossier_id', ids.length ? ids : ['']).order('recorded_at');
     const signed = await signedUrls(client, (ws.data ?? []).map(w => (w as CaseWork).image_path));
     if (stale()) return;
+    if (cn.error && cn.error.code !== 'PGRST205') setMessage(t('Content notes could not be loaded.', 'تعذّر تحميل الملاحظات على المحتوى.'));
+    setNotes(cn.error ? [] : (cn.data ?? []) as ContentNote[]);
+    setReasonsReady(!cn.error);
     setBriefs(br.error ? [] : (br.data ?? []) as EventBrief[]);
     setBriefReady(!br.error);
     setBriefEvent(activeEvent);
@@ -263,7 +271,8 @@ export function NominationWorkspace({ userId, readOnly = false }: { userId: stri
     {view === 'artists' && (selected
       ? <CaseDetail key={selected.id} onBack={() => go('artists')} onDeck={() => go('deck')} onExport={() => void exportCases([selected], 'CASE')} c={selected}
         works={worksFor(selected.id)} decisions={decisionsFor(selected.id)} sent={sentFor(selected.id)} urls={urls}
-        mine={!readOnly && selected.created_by === userId} readOnly={readOnly} briefReady={briefsLoaded && eventBriefs.length > 0} busy={busy} run={run} refresh={() => load()} missingLabel={missingLabel} stageLabel={stageLabel} />
+        mine={!readOnly && selected.created_by === userId} readOnly={readOnly} briefReady={briefsLoaded && eventBriefs.length > 0} reasonsReady={reasonsReady}
+        notes={notes.filter(n => n.dossier_id === selected.id)} busy={busy} run={run} refresh={() => load()} missingLabel={missingLabel} stageLabel={stageLabel} />
       : <ArtistsView cases={cases} filter={filter} setFilter={setFilter} stageLabel={stageLabel} count={count} thumb={thumb} worksFor={worksFor} userId={userId}
         loaded={loaded} busy={busy} readOnly={readOnly} creating={creating} setCreating={setCreating} onOpen={openCase} eventReady={!!eventId}
         onExportAll={pick => void exportCases(cases, 'ALL', pick)}
@@ -450,8 +459,8 @@ function Section({ title, children, aside, id }: { title: string; children: Reac
   </section>;
 }
 
-function CaseDetail({ c, works, decisions, sent, urls, mine, readOnly, briefReady, busy, run, refresh, missingLabel, stageLabel, onExport, onBack, onDeck }: {
-  c: NominationCase; works: CaseWork[]; decisions: NominationDecision[]; sent: SentEntry[]; urls: Record<string, string>; mine: boolean; readOnly: boolean; briefReady: boolean; busy: boolean;
+function CaseDetail({ c, works, decisions, sent, urls, mine, readOnly, briefReady, reasonsReady, notes, busy, run, refresh, missingLabel, stageLabel, onExport, onBack, onDeck }: {
+  c: NominationCase; works: CaseWork[]; decisions: NominationDecision[]; sent: SentEntry[]; urls: Record<string, string>; mine: boolean; readOnly: boolean; briefReady: boolean; reasonsReady: boolean; notes: ContentNote[]; busy: boolean;
   run: RunFn; refresh: () => Promise<void>; missingLabel: Record<MissingItem, string>; stageLabel: Record<CaseStage, string>; onExport: () => void; onBack: () => void; onDeck: () => void;
 }) {
   const [confirmDiscard, setConfirmDiscard] = useState(false);
@@ -550,7 +559,8 @@ function CaseDetail({ c, works, decisions, sent, urls, mine, readOnly, briefRead
         <WorksSection c={c} works={works} urls={urls} editable={editable} busy={busy} run={run} />
         {editable && <Section title={t('CV', 'السيرة الذاتية')} aside={<span className={ui.muted}>{t('Optional', 'اختياري')}</span>}><CvUpload c={c} busy={busy} run={run} /></Section>}
 
-        {mine && (stage === 'READY' || stage === 'SENT') && <div ref={decisionRef} className="scroll-mt-4"><DecisionForm c={c} briefReady={briefReady} busy={busy} run={run} /></div>}
+        {mine && (stage === 'READY' || stage === 'SENT') && <div ref={decisionRef} className="scroll-mt-4"><DecisionForm c={c} briefReady={briefReady} reasonsReady={reasonsReady} busy={busy} run={run} /></div>}
+        {!readOnly && reasonsReady && !c.discarded_at && <ContentNotes c={c} notes={notes} busy={busy} run={run} />}
         {(sent.length > 0 || decisions.length > 0) && <Section title={t('History', 'السجل')}>
           {sent.length > 0 && <SentHistory sent={sent} />}
           {decisions.length > 0 && <DecisionHistory decisions={decisions} sent={sent} />}
@@ -671,10 +681,10 @@ function CvUpload({ c, busy, run }: { c: NominationCase; busy: boolean; run: Run
   </div>;
 }
 
-function DecisionForm({ c, briefReady, busy, run }: { c: NominationCase; briefReady: boolean; busy: boolean; run: RunFn }) {
+function DecisionForm({ c, briefReady, reasonsReady, busy, run }: { c: NominationCase; briefReady: boolean; reasonsReady: boolean; busy: boolean; run: RunFn }) {
   const { t } = useUiText();
   const today = new Date().toISOString().slice(0, 10);
-  const [d, setD] = useState({ committee: '', director: '', decided_on: today, email_reference: '', minute: '', reason_in_brief: '' as ReasonInBrief | '' });
+  const [d, setD] = useState({ committee: '', director: '', decided_on: today, email_reference: '', minute: '', reason_in_brief: '' as ReasonInBrief | '', reason_types: [] as ReasonType[] });
   const [file, setFile] = useState<File | null>(null);
   const ext = file ? acceptedExtension(file, 'evidence') : null;
   const started = !!(d.committee || d.director || d.email_reference.trim() || d.minute.trim() || file);
@@ -687,7 +697,7 @@ function DecisionForm({ c, briefReady, busy, run }: { c: NominationCase; briefRe
 
   return <form className={`${ui.card} space-y-4 border-[#CBB89F] ps-5 pe-5 py-5`} onSubmit={e => { e.preventDefault(); if (ok) void run(async () => {
     const path = await uploadCaseFile(client!, c.id, 'decision-evidence', file!, ext!);
-    const { error } = await client!.from('sadu_nomination_decisions').insert({ dossier_id: c.id, committee_recommendation: d.committee, director_decision: d.director, decided_on: d.decided_on, email_reference: d.email_reference.trim(), minute: d.minute.trim(), evidence_path: path, ...(briefReady && d.reason_in_brief ? { reason_in_brief: d.reason_in_brief } : {}) });
+    const { error } = await client!.from('sadu_nomination_decisions').insert({ dossier_id: c.id, committee_recommendation: d.committee, director_decision: d.director, decided_on: d.decided_on, email_reference: d.email_reference.trim(), minute: d.minute.trim(), evidence_path: path, ...(briefReady && d.reason_in_brief ? { reason_in_brief: d.reason_in_brief } : {}), ...(reasonsReady && d.reason_types.length ? { reason_types: d.reason_types } : {}) });
     if (error) throw new Error(error.message);
   }, t('Decision recorded.', 'سُجّل القرار.')); }}>
     <div><h3 className="font-serif text-xl">{t('Record the decision from email', 'تسجيل القرار الوارد بالبريد الإلكتروني')}</h3>
@@ -701,6 +711,10 @@ function DecisionForm({ c, briefReady, busy, run }: { c: NominationCase; briefRe
       <label className={ui.label}>{t('Email reference (sender, date, subject)', 'مرجع البريد (المرسل، التاريخ، الموضوع)')}<input className={ui.field} value={d.email_reference} onChange={e => setD({ ...d, email_reference: e.target.value })} /></label>
     </div>
     <label className={ui.label}>{t('Minute or reason, as given (at least 10 characters)', 'المحضر أو السبب كما ورد (10 أحرف على الأقل)')}<textarea rows={3} maxLength={4000} className={ui.field} value={d.minute} onChange={e => setD({ ...d, minute: e.target.value })} /></label>
+    {reasonsReady && <fieldset className="space-y-2"><legend className={ui.label}>{t('Type of reason (optional, choose all that apply)', 'نوع السبب (اختياري، اختر كل ما ينطبق)')}</legend>
+      <div className="flex flex-wrap gap-2">{REASON_TYPES.map(value => { const on = d.reason_types.includes(value); return <label key={value} className={`flex cursor-pointer items-center gap-2 rounded-md border ps-3 pe-3 py-2 text-sm ${on ? 'border-[#8B261E] bg-[#FBF4F1] font-semibold' : 'border-[#D9CEBA] bg-white'}`}>
+        <input type="checkbox" className="accent-[#8B261E]" checked={on} onChange={() => setD({ ...d, reason_types: on ? d.reason_types.filter(x => x !== value) : REASON_TYPES.filter(x => x === value || d.reason_types.includes(x)) })} />{reasonTypeLabel(t)[value]}</label>; })}</div>
+      <p className="text-xs text-[#6E6259]">{t('Choose only what the Committee or the Director actually said. The minute above stays the reason as given.', 'اختر ما ذكرته اللجنة أو المدير فعلاً. ويبقى المحضر أعلاه هو السبب كما ورد.')}</p></fieldset>}
     {briefReady && <fieldset className="space-y-2"><legend className={ui.label}>{t('Was this reason in the festival brief? (optional)', 'هل كان هذا السبب وارداً في توجيهات المهرجان؟ (اختياري)')}</legend>
       <div className="flex flex-wrap gap-2">{([['IN_BRIEF', t('Yes, it was in the brief', 'نعم، كان وارداً')], ['NOT_IN_BRIEF', t('No, it was not in the brief', 'لا، لم يكن وارداً')], ['NO_REASON_GIVEN', t('No reason was given', 'لم يُذكر سبب')]] as const).map(([value, label]) =>
         <label key={value} className={`flex cursor-pointer items-center gap-2 rounded-md border ps-3 pe-3 py-2 text-sm ${d.reason_in_brief === value ? 'border-[#8B261E] bg-[#FBF4F1] font-semibold' : 'border-[#D9CEBA] bg-white'}`}>
@@ -738,6 +752,7 @@ function DecisionHistory({ decisions, sent }: { decisions: NominationDecision[];
     <ol className="space-y-2">{decisions.map(d => <li key={d.id} className="space-y-1 rounded-lg bg-[#FBF7F0] ps-3 pe-3 py-2">
       <p><strong>{outcome[d.director_decision]}</strong> · {t('Committee', 'اللجنة')}: {rec[d.committee_recommendation]} · <bdi dir="ltr">{d.decided_on}</bdi></p>
       <p dir="auto" className="whitespace-pre-line">{d.minute}</p>
+      {!!d.reason_types?.length && <p className="text-xs text-[#6E6259]">{d.reason_types.map(x => reasonTypeLabel(t)[x]).join(' · ')}</p>}
       {d.reason_in_brief && <p className="text-xs text-[#6E6259]">{reasonInBriefLabel(t)[d.reason_in_brief]}</p>}
       <p className="text-xs text-[#6E6259]">{t('Recorded from email by the coordinator', 'سجّله المنسق من البريد الإلكتروني')} · <bdi>{d.email_reference}</bdi></p>
       {(() => { const b = sent.find(s => s.batch.id === d.batch_id)?.batch; return <p className="text-xs text-[#6E6259]">{b
@@ -801,6 +816,77 @@ function ArtIdeas({ eventId, ideas, cases, userId, readOnly, busy, run }: { even
   </section>;
 }
 
+const reasonTypeLabel = (t: (en: string, ar: string) => string): Record<ReasonType, string> => ({
+  THEME: t('Fit with the festival theme', 'التوافق مع موضوع المهرجان'),
+  QUALITY: t('Quality of the work', 'مستوى العمل'),
+  SHOWN_RECENTLY: t('Shown recently', 'عُرض مؤخراً'),
+  CONTENT: t('Content concern', 'ملاحظة على المحتوى'),
+  LOGISTICS: t('Shipping, visa or timing', 'الشحن أو التأشيرة أو التوقيت'),
+  BUDGET: t('Budget', 'الميزانية'),
+  BALANCE: t('Balance of countries or media', 'التوازن بين الدول أو الوسائط'),
+  OTHER: t('Other', 'سبب آخر'),
+});
+
+/** Content notes on a case: private to their author and the Director, never in a deck or an export.
+ *  As the General Exhibition Coordinator set it: the team notices, or someone reports; the Director
+ *  sees it first, and consults the Chairman if he wants to check something. */
+// The database checks these dates against the day in Dubai, so the screen uses the same day.
+const dubaiParts = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Dubai', year: 'numeric', month: '2-digit', day: '2-digit' });
+const dubaiDate = (d: Date | string) => {
+  const p = Object.fromEntries(dubaiParts.formatToParts(new Date(d)).map(x => [x.type, x.value]));
+  return `${p.year}-${p.month}-${p.day}`;
+};
+
+function ContentNotes({ c, notes, busy, run }: { c: NominationCase; notes: ContentNote[]; busy: boolean; run: RunFn }) {
+  const { t } = useUiText();
+  const today = dubaiDate(new Date());
+  const empty = { origin: '' as ContentNote['origin'] | '', reported_by: '', note: '' };
+  const [d, setD] = useState(empty);
+  const [adding, setAdding] = useState(false);
+  const [dates, setDates] = useState<Record<string, string>>({});
+  const started = adding && !!(d.origin || d.reported_by.trim() || d.note.trim());
+  useEffect(() => { markUnsaved('content-note', started); }, [started]);
+  useEffect(() => () => markUnsaved('content-note', false), []);
+  const ok = !!d.origin && d.note.trim().length >= 10;
+  const setDate = (n: ContentNote, column: 'raised_with_director_on' | 'chairman_consulted_on', success: string) => run(async () => {
+    const value = dates[`${n.id}:${column}`] || today;
+    const { data, error } = await client!.from('sadu_content_notes').update({ [column]: value }).eq('id', n.id).select('id');
+    if (error) throw new Error(error.message);
+    if (!data?.length) throw new Error(t('The note could not be changed.', 'تعذّر تعديل الملاحظة.'));
+  }, success);
+  const dateField = (n: ContentNote, column: 'raised_with_director_on' | 'chairman_consulted_on', min: string) =>
+    <input type="date" min={min} max={today} aria-label={t('Date', 'التاريخ')} className={`${ui.field} w-auto`} value={dates[`${n.id}:${column}`] || today} onChange={e => setDates({ ...dates, [`${n.id}:${column}`]: e.target.value })} />;
+
+  return <Section title={t('Content notes', 'ملاحظات على المحتوى')} aside={<span className={ui.muted}>{t('Private', 'خاصة')}</span>}>
+    <p className={ui.muted}>{t('A concern about the artist’s content that the team noticed or someone reported. Only you and the Director see it, and it never goes into the Committee deck or an export. The Director sees it first; if he wants to check something, he consults the Chairman.', 'ملاحظة على محتوى الفنان لاحظها الفريق أو أبلغ عنها أحد. لا يطّلع عليها غيرك والمدير، ولا تُدرج في العرض التقديمي للجنة ولا في التصدير. ويطّلع عليها المدير أولاً، وإن أراد التأكد من أمر استشار رئيس الدائرة.')}</p>
+    {notes.length > 0 && <ul className="space-y-2">{notes.map(n => <li key={n.id} className="space-y-2 rounded-lg bg-[#FBF7F0] ps-3 pe-3 py-2">
+      <p dir="auto" className="whitespace-pre-line">{n.note}</p>
+      <p className="text-xs text-[#6E6259]">{n.origin === 'TEAM' ? t('The team noticed it', 'لاحظها الفريق') : t('Someone reported it', 'أبلغ عنها أحد')}{n.reported_by ? <> · <bdi>{n.reported_by}</bdi></> : null} · <bdi dir="ltr">{dubaiDate(n.recorded_at)}</bdi></p>
+      {n.raised_with_director_on
+        ? <p className="text-xs text-[#6E6259]">{t('Raised with the Director on', 'عُرضت على المدير في')} <bdi dir="ltr">{n.raised_with_director_on}</bdi></p>
+        : <div className="flex flex-wrap items-center gap-2">{dateField(n, 'raised_with_director_on', dubaiDate(n.recorded_at))}
+          <button type="button" className={ui.quiet} disabled={busy} onClick={() => void setDate(n, 'raised_with_director_on', t('Recorded as raised with the Director.', 'سُجّل عرضها على المدير.'))}>{t('Raised with the Director', 'عُرضت على المدير')}</button></div>}
+      {n.chairman_consulted_on
+        ? <p className="text-xs text-[#6E6259]">{t('The Director consulted the Chairman on', 'استشار المدير رئيس الدائرة في')} <bdi dir="ltr">{n.chairman_consulted_on}</bdi></p>
+        : n.raised_with_director_on && <div className="flex flex-wrap items-center gap-2">{dateField(n, 'chairman_consulted_on', n.raised_with_director_on)}
+          <button type="button" className={ui.quiet} disabled={busy} onClick={() => void setDate(n, 'chairman_consulted_on', t('Recorded that the Director consulted the Chairman.', 'سُجّلت استشارة المدير لرئيس الدائرة.'))}>{t('The Director consulted the Chairman', 'استشار المدير رئيس الدائرة')}</button></div>}
+    </li>)}</ul>}
+    {adding ? <form className="space-y-3" onSubmit={e => { e.preventDefault(); if (ok) void run(async () => {
+      const { error } = await client!.from('sadu_content_notes').insert({ dossier_id: c.id, origin: d.origin, reported_by: d.origin === 'REPORTED' ? d.reported_by.trim() || null : null, note: d.note.trim() });
+      if (error) throw new Error(error.message);
+      setD(empty); setAdding(false);
+    }, t('Note recorded. Only you and the Director can see it.', 'سُجّلت الملاحظة، ولا يطّلع عليها غيرك والمدير.')); }}>
+      <fieldset className="space-y-2"><legend className={ui.label}>{t('Where it came from', 'مصدر الملاحظة')}</legend>
+        <div className="flex flex-wrap gap-2">{([['TEAM', t('The team noticed it', 'لاحظها الفريق')], ['REPORTED', t('Someone reported it', 'أبلغ عنها أحد')]] as const).map(([value, label]) =>
+          <label key={value} className={`flex cursor-pointer items-center gap-2 rounded-md border ps-3 pe-3 py-2 text-sm ${d.origin === value ? 'border-[#8B261E] bg-[#FBF4F1] font-semibold' : 'border-[#D9CEBA] bg-white'}`}>
+            <input type="radio" className="accent-[#8B261E]" name={`note-origin-${c.id}`} value={value} checked={d.origin === value} onChange={() => setD({ ...d, origin: value })} />{label}</label>)}</div></fieldset>
+      {d.origin === 'REPORTED' && <label className={ui.label}>{t('Who reported it (optional)', 'من أبلغ عنها (اختياري)')}<input dir="auto" maxLength={200} className={ui.field} value={d.reported_by} onChange={e => setD({ ...d, reported_by: e.target.value })} /></label>}
+      <label className={ui.label}>{t('The note: what the work shows or what the artist is known for, not their beliefs (at least 10 characters)', 'الملاحظة: ما يتضمنه العمل أو ما يُعرف به الفنان، لا معتقداته (10 أحرف على الأقل)')}<textarea rows={3} maxLength={2000} dir="auto" className={ui.field} value={d.note} onChange={e => setD({ ...d, note: e.target.value })} /></label>
+      <div className="flex gap-3"><button type="submit" className={ui.button} disabled={busy || !ok}>{t('Add note', 'إضافة الملاحظة')}</button><button type="button" className={ui.quiet} onClick={() => { setAdding(false); setD(empty); }}>{t('Cancel', 'إلغاء')}</button></div>
+    </form> : <button type="button" className={ui.quiet} onClick={() => setAdding(true)}><Plus aria-hidden className="size-4" />{t('Add a content note', 'إضافة ملاحظة على المحتوى')}</button>}
+  </Section>;
+}
+
 const reasonInBriefLabel = (t: (en: string, ar: string) => string): Record<ReasonInBrief, string> => ({
   IN_BRIEF: t('The reason was in the festival brief', 'كان السبب وارداً في توجيهات المهرجان'),
   NOT_IN_BRIEF: t('The reason was not in the festival brief', 'لم يكن السبب وارداً في توجيهات المهرجان'),
@@ -832,6 +918,8 @@ function BriefView({ eventId, briefs, cases, decisions, readOnly, busy, run, onO
   const notSelected = decisions.filter(x => x.director_decision === 'DECLINED' || x.committee_recommendation === 'NOT_RECOMMENDED');
   const labels = reasonInBriefLabel(t);
   const tally = (v: ReasonInBrief | null) => notSelected.filter(x => (x.reason_in_brief ?? null) === v).length;
+  const typeLabels = reasonTypeLabel(t);
+  const typeTally = REASON_TYPES.map(r => [r, notSelected.filter(x => x.reason_types?.includes(r)).length] as const).filter(([, n]) => n > 0);
   const field = (label: string, value: string | number | null) => value ? <div><dt className="text-sm font-semibold text-[#5E554B]">{label}</dt><dd dir="auto" className="whitespace-pre-line">{value}</dd></div> : null;
 
   const form = <form className={`${ui.card} grid gap-4 ps-5 pe-5 py-5`} onSubmit={e => { e.preventDefault(); if (ok) void run(async () => {
@@ -878,10 +966,12 @@ function BriefView({ eventId, briefs, cases, decisions, readOnly, busy, run, onO
       <div><h3 className="font-serif text-xl">{t('Reasons nominations were not selected', 'أسباب عدم اختيار الترشيحات')}</h3>
         <p className={`max-w-2xl ${ui.muted}`}>{t('Each reason as the Committee or the Director gave it. Reasons that were not in the brief are requirements nobody had written down; review them with the General Exhibition Coordinator before the next round.', 'كل سبب كما ذكرته اللجنة أو المدير. والأسباب غير الواردة في التوجيهات متطلبات لم تُكتب من قبل؛ تُراجَع مع المنسقة العامة للمعارض قبل الدورة التالية.')}</p></div>
       {notSelected.length ? <>
+        {typeTally.length > 0 && <p className="text-sm">{typeTally.map(([r, n]) => `${typeLabels[r]}: ${n}`).join(' · ')}</p>}
         <p className="text-sm">{[`${tally('IN_BRIEF')} ${t('in the brief', 'واردة في التوجيهات')}`, `${tally('NOT_IN_BRIEF')} ${t('not in the brief', 'غير واردة')}`, `${tally('NO_REASON_GIVEN')} ${t('without a reason', 'دون سبب')}`, `${tally(null)} ${t('not noted', 'غير مصنّفة')}`].join(' · ')}</p>
         <ul className="space-y-2">{notSelected.slice().reverse().map(x => <li key={x.id} className={`${ui.card} space-y-1 ps-4 pe-4 py-3`}>
           <p><button type="button" className="font-semibold text-[#8B261E] underline-offset-4 hover:underline" onClick={() => onOpenCase(x.dossier_id)}>{name(x.dossier_id)}</button> · <bdi dir="ltr">{x.decided_on}</bdi></p>
           <p dir="auto" className="whitespace-pre-line">{x.minute}</p>
+          {!!x.reason_types?.length && <p className="text-xs text-[#6E6259]">{x.reason_types.map(r => typeLabels[r]).join(' · ')}</p>}
           <p className="text-xs text-[#6E6259]">{x.reason_in_brief ? labels[x.reason_in_brief] : t('Not noted against the brief', 'لم يُقارَن بالتوجيهات')}</p>
         </li>)}</ul>
       </> : <p className={ui.muted}>{t('No nomination has been declined or not recommended yet.', 'لا توجد بعد ترشيحات مرفوضة أو غير موصى بها.')}</p>}
